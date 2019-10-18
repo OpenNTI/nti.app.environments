@@ -1,0 +1,3 @@
+[run]
+source = onboarding
+omit = onboarding/test*
