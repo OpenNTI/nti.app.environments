@@ -19,7 +19,22 @@ requires = [
     'pyramid_zodbconn',
     'transaction',
     'ZODB',
+    'nti.mailer',
+    'pyramid-chameleon',
+    'pyramid-mako',
     'pyramid-zcml',
+    'zope.interface',
+    'zope.component',
+    'nti.schema',
+    'zope.container',
+    'zope.site',
+    'zope.generations',
+    'RelStorage==3.0b3',
+    'zc.zlibstorage',
+    'nti.i18n',
+    'z3c.schema',
+    'zope.i18n',
+    'zope.i18nmessageid'
 ]
 
 tests_require = [
@@ -29,7 +44,8 @@ tests_require = [
 ]
 
 docs_require = [
-    'sphinx'
+    'sphinx',
+    'repoze.sphinx.autointerface',
 ]
 
 setup(
@@ -54,6 +70,7 @@ setup(
     zip_safe=False,
     extras_require={
         'testing': tests_require,
+        'docs': docs_require
     },
     install_requires=requires,
     entry_points={
