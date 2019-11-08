@@ -1,0 +1,21 @@
+<!-- -*- mode: nxml -*- -->
+<configure	xmlns="http://namespaces.zope.org/zope"
+			xmlns:i18n="http://namespaces.zope.org/i18n"
+			xmlns:z3c="http://namespaces.zope.org/z3c"
+			xmlns:apidoc="http://namespaces.zope.org/apidoc"
+			xmlns:zcml="http://namespaces.zope.org/zcml">
+
+	<include package="zope.component" file="meta.zcml" />
+	<include package="zope.component" />
+
+	<include package="zope.container" />
+
+	<include package="nti.mailer" />	  
+
+	<utility factory=".authentication.HashChallengeCodeGenerator"
+		 provides=".interfaces.IEmailChallengeCodeGenerator"/>
+
+	<utility factory=".authentication.HashChallengeValidator"
+		 provides=".interfaces.IEmailChallengeValidator"/>
+
+</configure>

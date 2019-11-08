@@ -1,0 +1,39 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:metal="http://xml.zope.org/namespaces/metal"
+      xmlns:tal="http://xml.zope.org/namespaces/tal"
+      xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+      i18n:domain="nti.dataserver"
+      i18n:source="en">
+    <head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>Verify Your Identity</title>
+    </head>
+    <body>
+	<p i18n:translate="">Hi <span tal:content="options/name" i18n:name="name" class="realname tterm">John Doe</span>!</p>
+
+	<p i18n:translate="">
+	    We're excited to get started, but first we need to verify your identity.
+	</p>
+
+	<p>
+	    <strong i18n:translate="">Username:</strong> <span tal:content="options/code" class="tterm-color">111111</span> <br />
+	</p>
+
+	<p>
+	    <span i18n:translate="">Sincerely,</span><br />
+	    NextThought
+	</p>
+
+	<p style="font-size: smaller">
+	    <span i18n:translate="">If you feel this email was sent in error, or this account was created
+		without your consent, you may email us at
+		<a i18n:name="support_email" href="mailto:support@nextthought.com"
+		   tal:content="options/support_email|default"
+		   tal:attributes="href string:mailto:${options/support_email|default}">support@nextthought.com</a>
+	    </span>
+	</p>
+
+    </body>
+</html>

@@ -1,12 +1,38 @@
-from persistent.mapping import PersistentMapping
+from zope import interface
+
+from zope.container.folder import Folder
+
+from .interfaces import IOnboardingRoot
+
+from .customers import CustomersFolder
+
+_ROOT_KEY = 'onboarding_root'
+_USERS_KEY = 'users'
+_SITES_KEY = 'sites'
+
+@interface.implementer(IOnboardingRoot)
+class OnboardingRoot(Folder):
+    __parent__ = None
+    __name__ = None
 
 
-class MyModel(PersistentMapping):
-    __parent__ = __name__ = None
 
+def _install_root(zodb_root, key=_ROOT_KEY):
+    root = OnboardingRoot()
+    root.__name__ = key
 
+    customers = CustomersFolder()
+    customers.__name__ = 'customers'
+    root['customers'] = customers
+    
+    zodb_root[key] = root
+    return root
+    
 def appmaker(zodb_root):
-    if 'app_root' not in zodb_root:
-        app_root = MyModel()
-        zodb_root['app_root'] = app_root
-    return zodb_root['app_root']
+    if _ROOT_KEY not in zodb_root:
+        _install_root(zodb_root, key=_ROOT_KEY)
+    return zodb_root[_ROOT_KEY]
+
+def root_factory():
+    from IPython.core.debugger import Tracer; Tracer()()
+    return None
