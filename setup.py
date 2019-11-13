@@ -33,6 +33,7 @@ requires = [
     'zc.zlibstorage',
     'nti.i18n',
     'z3c.schema',
+    'zope.annotation',
     'zope.i18n',
     'zope.i18nmessageid'
 ]

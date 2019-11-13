@@ -20,10 +20,12 @@ from nti.i18n.locales.interfaces import ICcTLDInformation
 
 from nti.schema.interfaces import InvalidValue
 
+from nti.schema.field import Choice
 from nti.schema.field import ValidTextLine
 from nti.schema.field import Bool
 from nti.schema.field import DateTime
 from nti.schema.field import Object
+from nti.schema.field import ListOrTuple
 
 MessageFactory = zope.i18nmessageid.MessageFactory('nti.onboarding')
 _ = MessageFactory
@@ -202,17 +204,22 @@ class ISharedEnvironment(IEnvironment):
     Identifies an environment which contains sites for multiple customers.
     """
 
+_SITE_STATUS_OPTIONS = ('PENDING', 'ACTIVE', 'INACTIVE',)
+
 class ILMSSite(IContained):
     
     owner = Object(ICustomer,
                    title=u'The customer that owns this site',
                    required=True)
 
-    owner_username = ValidTextLine(title=u'The username the owner will have in their environment',
+    owner_username = ValidTextLine(title='The username the owner will have in their environment',
                                    required=True,
                                    constraint=checkUsername)
 
-    #dns_names = None
+    dns_names = ListOrTuple(value_type=ValidTextLine(min_length=1),
+                            title='DNS names this site is known to be accessible via',
+                            required=True,
+                            default=tuple())
 
     license = Object(ISiteLicense,
                      title=u'The license governing access to this site',
@@ -225,10 +232,13 @@ class ILMSSite(IContained):
     created = DateTime(title=u'The datetime this customer was created at',
                        required=True)
 
-    #status = None
+    status = Choice(title=u'The style of the highlight',
+                    values=_SITE_STATUS_OPTIONS,
+                    default='PENDING')
+    
 
+class ILMSSitesContainer(IContainer):
 
-# class ILMSSitesContainer(interface.Interface):
-#     pass
+    contains(ILMSSite)
 
 

@@ -10,6 +10,18 @@
 
 	<include package="zope.container" />
 
-	<include package="nti.mailer" />	  
+	<include package="nti.mailer" />
+
+	<include package="nti.i18n" />
+
+	<include package="zope.annotation" />
+
+	<utility
+	    factory=".authentication.EmailChallengeOTPGenerator"
+	    provides=".interfaces.IOTPGenerator"/>
+
+	<class class=".models.customers.PersistentCustomer">
+	  <implements interface="zope.annotation.interfaces.IAttributeAnnotatable" />
+	</class>
 
 </configure>

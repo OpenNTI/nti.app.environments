@@ -97,6 +97,10 @@ window. Surely that becomes a non issue?
           phone when going through the process at their machine). That
           flow of swapping devices "is a pain".
 
+.. question:: What if the user refreshes on this page? We lose the
+              first half of the code we put in the page. Can we avoid that?
+	      Can it go in the session?
+
 With that out of the way, the mechanics of email-based OTP
 authentication are pretty straightforward.
 

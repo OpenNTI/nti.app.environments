@@ -7,6 +7,6 @@ class IOTPGenerator(interface.Interface):
 
     def generate_passphrase():
         """
-        Returns an appropriate passphrase or one time challenges
+        Returns an appropriate passphrase or one time challenge
         """
 

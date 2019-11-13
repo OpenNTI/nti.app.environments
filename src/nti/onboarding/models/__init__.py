@@ -7,15 +7,11 @@ from .interfaces import IOnboardingRoot
 from .customers import CustomersFolder
 
 _ROOT_KEY = 'onboarding_root'
-_USERS_KEY = 'users'
-_SITES_KEY = 'sites'
 
 @interface.implementer(IOnboardingRoot)
 class OnboardingRoot(Folder):
     __parent__ = None
     __name__ = None
-
-
 
 def _install_root(zodb_root, key=_ROOT_KEY):
     root = OnboardingRoot()
@@ -31,8 +27,4 @@ def _install_root(zodb_root, key=_ROOT_KEY):
 def appmaker(zodb_root):
     if _ROOT_KEY not in zodb_root:
         _install_root(zodb_root, key=_ROOT_KEY)
-    return zodb_root[_ROOT_KEY]
-
-def root_factory():
-    from IPython.core.debugger import Tracer; Tracer()()
-    return None
+    return zodb_root

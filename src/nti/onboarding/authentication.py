@@ -1,8 +1,15 @@
+import datetime
+
+from zope import component
+
 import random
 
+from pyramid.security import forget as p_forget
 from pyramid.security import remember as p_remember
 
 from zope import interface
+
+from zope.annotation.interfaces import IAnnotations
 
 from .interfaces import IOTPGenerator
 
@@ -24,6 +31,67 @@ class EmailChallengeOTPGenerator(object):
 
     def generate_passphrase(self, length=_EMAIL_OTP_PASS_LENGTH):
         return ''.join(random.choices(self.alphabet, k=length))
+
+
+
+_CHALLENGE_EXPIRATION_TIME = 4*60*60 # 4 hours is pretty long
+_CHALLENGE_MAX_ATTEMPTS = 3
+_CHALLENGE_ANNOTATION_KEY = 'email_auth_challenge'
+
+
+def setup_challenge_for_customer(customer):
+    """
+    Sets up a customer to be challenged. Creates a one time passcode
+    with a limited number of attempts and assigns it to the user.
+
+    Returns the the one time use code
+    """
+    generator = component.getUtility(IOTPGenerator)
+    
+    code = generator.generate_passphrase()
+    now = datetime.datetime.utcnow()
+    attempts = 0
+
+    annotations = IAnnotations(customer)
+
+    # Setting up a new challenge invalidates the old challenge
+    # regardless of the attempts
+    annotations[_CHALLENGE_ANNOTATION_KEY] = (code, now, attempts)
+    return code
+
+    
+def validate_challenge_for_customer(customer, code):
+    """
+    Validates the provided challenge against the given customer.
+    Note that calling this is mutates state. each time we validate
+    we bump the number of attempts. Call this only once per challenge
+    validation.
+
+    Becareful not to leak information here
+    """
+    annotations = IAnnotations(customer)
+
+    try:
+        expected_code, created, attempts = annotations[_CHALLENGE_ANNOTATION_KEY]
+    except KeyError:
+        return False
+
+    now = datetime.datetime.utcnow()
+    age = now - created
+
+    remaining_attempts = _CHALLENGE_MAX_ATTEMPTS - attempts
+
+    if age.total_seconds() > _CHALLENGE_EXPIRATION_TIME or remaining_attempts < 1:
+        del annotations[_CHALLENGE_ANNOTATION_KEY]
+        return False
+
+    # we are good on age, and attempts
+    if code != expected_code:    
+        annotations[_CHALLENGE_ANNOTATION_KEY] = (expected_code, created, attempts+1)
+        return False
+
+    del annotations[_CHALLENGE_ANNOTATION_KEY]
+    return True
         
 
 def remember(request, userid, **kwargs):
@@ -32,3 +100,8 @@ def remember(request, userid, **kwargs):
     response.headerlist.extend(headers)
     return response
 
+def forget(request):
+    headers = p_forget(request)
+    response = request.response
+    response.headerlist.extend(headers)
+    return response
