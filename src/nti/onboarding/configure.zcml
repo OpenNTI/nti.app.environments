@@ -12,10 +12,4 @@
 
 	<include package="nti.mailer" />	  
 
-	<utility factory=".authentication.HashChallengeCodeGenerator"
-		 provides=".interfaces.IEmailChallengeCodeGenerator"/>
-
-	<utility factory=".authentication.HashChallengeValidator"
-		 provides=".interfaces.IEmailChallengeValidator"/>
-
 </configure>

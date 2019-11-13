@@ -1,21 +1,29 @@
+import random
+
 from pyramid.security import remember as p_remember
 
 from zope import interface
 
-from .interfaces import IEmailChallengeCodeGenerator
-from .interfaces import IEmailChallengeValidator
+from .interfaces import IOTPGenerator
 
-@interface.implementer(IEmailChallengeCodeGenerator)
-class HashChallengeCodeGenerator(object):
+_Z_BASE_32_ALPHABET = "13456789abcdefghijkmnopqrstuwxyz"
+_EMAIL_OTP_PASS_LENGTH = 12
 
-    def generate_challenge_code_for_email(self, email):
-        return str((hash(email) % 1000000))
+@interface.implementer(IOTPGenerator)
+class EmailChallengeOTPGenerator(object):
+    """
+    A one time passcode generator for use when sending email challenges.
 
-@interface.implementer(IEmailChallengeValidator)
-class HashChallengeValidator(object):
+    This implementation takes 12 characters from the z-base-32 alphabet
+    which should provide 60 bits of entropy. OTP returned from this generator
+    are intended to have a limited lifetime.
 
-    def validate_challenge(self, email, code):
-        return HashChallengeCodeGenerator().generate_challenge_code_for_email(email) == code
+    This implementation is based on https://github.com/portier/portier-broker/issues/69
+    """
+    alphabet = _Z_BASE_32_ALPHABET    
+
+    def generate_passphrase(self, length=_EMAIL_OTP_PASS_LENGTH):
+        return ''.join(random.choices(self.alphabet, k=length))
         
 
 def remember(request, userid, **kwargs):

@@ -17,6 +17,5 @@ def my_view(context, request):
 
     if code is None:
         mailer = component.getUtility(ITemplatedMailer)
-        from IPython.core.debugger import Tracer; Tracer()()
     
     return {'email': email, 'sent_email': (code is None)}
