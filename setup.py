@@ -19,7 +19,7 @@ requires = [
     'pyramid_zodbconn',
     'transaction',
     'ZODB',
-    'nti.mailer',
+    'nti.mailer @ git+ssh://git@github.com/NextThought/nti.mailer@queens',
     'pyramid-chameleon',
     'pyramid-mako',
     'pyramid-zcml',
@@ -52,9 +52,9 @@ docs_require = [
 ]
 
 setup(
-    name='nti.onboarding',
+    name='nti.app.environments',
     version='0.0',
-    description='NTI Onboarding',
+    description='NTI App Environments',
     long_description=README + '\n\n' + CHANGES,
     classifiers=[
         'Programming Language :: Python',
@@ -78,7 +78,7 @@ setup(
     install_requires=requires,
     entry_points={
         'paste.app_factory': [
-            'main = nti.onboarding:main',
+            'main = nti.app.environments:main',
         ],
     },
 )

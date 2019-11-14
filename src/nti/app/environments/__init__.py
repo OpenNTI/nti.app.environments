@@ -5,6 +5,8 @@ from pyramid.authorization import ACLAuthorizationPolicy
 
 from pyramid.config import Configurator
 
+from pyramid.session import SignedCookieSessionFactory
+
 from pyramid_zodbconn import get_connection
 
 import zope.i18nmessageid
@@ -12,7 +14,7 @@ import zope.i18nmessageid
 from .models import appmaker
 
 # TODO what setup is missing here to make this work
-MessageFactory = zope.i18nmessageid.MessageFactory('nti.onboarding')
+MessageFactory = zope.i18nmessageid.MessageFactory('nti.app.environments')
 
 
 def root_factory(request):
@@ -42,6 +44,9 @@ def main(global_config, **settings):
         config.set_authentication_policy(authn_policy)
         config.set_authorization_policy(authz_policy)
 
-        
+        # session factory
+        session_factory = SignedCookieSessionFactory('foo')
+        config.set_session_factory(session_factory)
+
         config.scan()
     return config.make_wsgi_app()

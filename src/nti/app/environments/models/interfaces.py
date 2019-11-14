@@ -27,7 +27,7 @@ from nti.schema.field import DateTime
 from nti.schema.field import Object
 from nti.schema.field import ListOrTuple
 
-MessageFactory = zope.i18nmessageid.MessageFactory('nti.onboarding')
+MessageFactory = zope.i18nmessageid.MessageFactory('nti.app.environments')
 _ = MessageFactory
 
 SITE_STATUS = ('new', 'pending', 'active', 'defunct',)
