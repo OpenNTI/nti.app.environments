@@ -9,7 +9,6 @@ build/
 dist/
 .tox/
 nosetests.xml
-env*/
 tmp/
 Data.fs*
 *.sublime-project
@@ -22,7 +21,7 @@ test
 *.sqlite
 .project
 .pydevproject
-
+.settings
 docs/_build
 
 var

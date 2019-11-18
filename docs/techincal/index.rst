@@ -14,7 +14,7 @@ Customers represent users which own sites. Customers are identified by
 email address. Conceptually customers may own many sites. In practice it is
 typically one.
 
-.. autointerface:: nti.onboarding.models.interfaces.ICustomer
+.. autointerface:: nti.app.environments.models.interfaces.ICustomer
 
 .. note:: Initially we plan to limit one trial site per customer. As
           customers are identified by emails that means one site per

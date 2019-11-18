@@ -1,4 +1,4 @@
-NTI Onboarding
+NTI App Environments
 ==============
 
 Getting Started
@@ -6,7 +6,7 @@ Getting Started
 
 - Change directory into your newly created project.
 
-    cd onboarding
+    cd nti.app.environments
 
 - Create a Python virtual environment.
 
