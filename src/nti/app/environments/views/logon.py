@@ -11,6 +11,9 @@ from pyramid.view import view_config
 
 from six.moves import urllib_parse
 
+from nti.app.environments.settings import GOOGLE_CLIENT_ID
+from nti.app.environments.settings import GOOGLE_CLIENT_SECRET
+
 logger = __import__('logging').getLogger(__name__)
 
 
@@ -24,9 +27,6 @@ LOGIN_VIEW = 'login'
 LOGON_GOOGLE_VIEW = 'logon.google'
 LOGON_GOOGLE_OAUTH2_VIEW = 'logon.google.oauth2'
 LOGOUT_VIEW = 'logout'
-
-API_CLIENT_ID = "780277944120-jk74ovddgoi42ec2u0gsinameki6cdna.apps.googleusercontent.com"
-API_CLIENT_SECRET = "3z9hNVsImCmvrBOy7cZ_78gj"
 
 
 def _get_google_hosted_domain():
@@ -49,7 +49,7 @@ def _get_redirect_uri(request):
              name=LOGON_GOOGLE_VIEW)
 def google_oauth1(context, request):
     if request.authenticated_userid:
-        return hexc.HTTPFound(location='/')
+        return hexc.HTTPFound(location='/', headers=request.response.headers)
 
     # Google oauth2 reference
     # https://developers.google.com/identity/protocols/OpenIDConnect
@@ -60,7 +60,7 @@ def google_oauth1(context, request):
         "state" : state,
         "response_type" : "code",
         "scope" : "openid email profile",
-        "client_id" : API_CLIENT_ID,
+        "client_id" : GOOGLE_CLIENT_ID,
         "redirect_uri" : _get_redirect_uri(request)
     }
 
@@ -95,9 +95,9 @@ def google_oauth2(context, request):
 
     try:
         data = {'code': code,
-                'client_id': API_CLIENT_ID,
+                'client_id': GOOGLE_CLIENT_ID,
                 'grant_type': 'authorization_code',
-                'client_secret': API_CLIENT_SECRET,
+                'client_secret': GOOGLE_CLIENT_SECRET,
                 'redirect_uri': _get_redirect_uri(request)}
         response = requests.post(token_url, data)
         if response.status_code != 200:
@@ -140,6 +140,8 @@ def google_oauth2(context, request):
              request_method='GET',
              name=LOGIN_VIEW)
 def login(context, request):
+    if request.authenticated_userid:
+        return hexc.HTTPFound(location='/', headers=request.response.headers)
     return {'rel_logon': urllib_parse.urljoin(request.application_url, LOGON_GOOGLE_VIEW)}
 
 

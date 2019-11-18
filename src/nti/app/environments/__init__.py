@@ -12,6 +12,7 @@ from pyramid_zodbconn import get_connection
 import zope.i18nmessageid
 
 from .models import appmaker
+from .settings import init_app_settings
 
 # TODO what setup is missing here to make this work
 MessageFactory = zope.i18nmessageid.MessageFactory('nti.app.environments')
@@ -47,6 +48,9 @@ def main(global_config, **settings):
         # session factory
         session_factory = SignedCookieSessionFactory('foo')
         config.set_session_factory(session_factory)
+
+        # initialize global constants
+        init_app_settings(settings)
 
         config.scan()
     return config.make_wsgi_app()

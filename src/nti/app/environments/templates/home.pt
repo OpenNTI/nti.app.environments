@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            margin: 0px;
+        }
+
+        .nav {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #333;
+            position: fixed;
+            top: 0;
+            width: 100%;
+        }
+
+        .nav .nav-item {
+            float: left;
+        }
+
+        .nav .nav-item img {
+            display: block;
+            width: 70px;
+            height: 70px;
+        }
+
+        .nav .nav-item a {
+            display: block;
+            color: white;
+            text-align: center;
+            padding: 0px 0px;
+            text-decoration: none;
+            line-height: 70px;
+            width: 70px;
+        }
+
+        .nav .nav-item a:hover:not(.active) {
+            background-color: #111;
+        }
+
+        .nav .nav-item .active {
+            background-color: #4CAF50;
+        }
+
+        .container {
+            position: relative;
+            margin-top: 140px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="nav">
+        <div class="nav-item"><img src="${request.static_url('nti.app.environments:static/logo.png')}" /></div>
+        <div style="float:right">
+            <metal:block tal:omit-tag="" tal:condition="logged_in">
+                <metal:block tal:omit-tag="" tal:condition="is_admin">
+                    <div class="nav-item"><a href="/admin">Admin</a></div>
+                </metal:block>
+                <div class="nav-item"><a href="/logout">Sign out</a></div>
+            </metal:block>
+            <metal:block tal:omit-tag="" tal:condition="not:logged_in">
+                <div class="nav-item"><a href="/login">Sign in</a></div>
+            </metal:block>
+        </div>
+    </div>
+
+    <div class="container">
+        <metal:block tal:omit-tag="" tal:condition="logged_in">
+            <h1>Welcome, ${username}.</h1>
+        </metal:block>
+        <metal:block tal:omit-tag="" tal:condition="not:logged_in">
+            <h1>Please sign in.</h1>
+        </metal:block>
+    </div>
+</body>
+
+</html>
