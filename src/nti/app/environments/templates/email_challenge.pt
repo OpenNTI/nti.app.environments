@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            margin: 0;
+        }
+
+        .main {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            min-height: 600px;
+        }
+
+        .container {
+            border-radius: 5px;
+            background-color: #f2f2f2;
+            padding: 20px;
+            width: 400px;
+            min-width: 400px;
+        }
+
+        input[type=text] {
+            width: 100%;
+            padding: 12px 20px;
+            margin: 8px 0;
+            display: inline-block;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        input[type=checkbox] {
+            padding: 0px 0px;
+            margin: 8px 0;
+            margin-right: 5px;
+            display: inline-block;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        input[type=submit] {
+            width: 100%;
+            background-color: #4CAF50;
+            color: white;
+            padding: 14px 20px;
+            margin: 8px 0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        input[type=submit]:hover {
+            background-color: #45a049;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        p {
+            text-align: center;
+        }
+
+        .title {
+            margin: 0;
+            font-size: 40px;
+            line-height: 40px;
+            text-align: center;
+        }
+
+        .subtitle {
+            margin-top: 10px;
+            font-size: 16px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="main">
+        <div class="container">
+            <p class="title">Welcome to NextThought</p>
+            <p class="subtitle">Complete your account details to get started.</p>
+            <form tal:attributes="action url" method="POST">
+            	<input type="text" id="firstname" placeholder="First Name" oninput="nameInput();" required>
+            	<input type="text" id="lastname" placeholder="Last Name" oninput="nameInput();" required>
+                <input type="text" name="email" placeholder="Email" required>
+                <input type="text" name="name" id="name" style="display:none">
+                <input type="checkbox" name="consent" required>By signing up you agree to the <a href="#">terms and
+                    conditions</a>.</input>
+                <input type="submit" value="Create An Account">
+            </form>
+            <div style="text-align:center;">
+                <a href="#">Already have a Trial Site?</a>
+            </div>
+        </div>
+    </div>
+
+</body>
+<script>
+    function nameInput() {
+        var value = document.getElementById('firstname').value + " " + document.getElementById('lastname').value;
+        document.getElementById("name").value = value;
+    }
+</script>
+</html>

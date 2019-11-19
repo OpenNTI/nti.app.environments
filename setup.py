@@ -14,6 +14,7 @@ requires = [
     'pyramid_chameleon',
     'pyramid_debugtoolbar',
     'waitress',
+    'pyramid_mako',
     'pyramid_retry',
     'pyramid_tm',
     'pyramid_zodbconn',

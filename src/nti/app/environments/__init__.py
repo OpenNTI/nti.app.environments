@@ -9,6 +9,8 @@ from pyramid.session import SignedCookieSessionFactory
 
 from pyramid_zodbconn import get_connection
 
+from zope.component import getGlobalSiteManager
+
 import zope.i18nmessageid
 
 from .models import appmaker
@@ -26,7 +28,10 @@ def root_factory(request):
 def main(global_config, **settings):
     """ This function returns a Pyramid WSGI application.
     """
-    with Configurator(settings=settings) as config:
+    # Use ZCA global site manager
+    globalreg = getGlobalSiteManager()
+    with Configurator(registry=globalreg) as config:
+        config.setup_registry(settings=settings)
         settings['tm.manager_hook'] = 'pyramid_tm.explicit_manager'
         config.include(pyramid_zcml)
         config.include('pyramid_tm')
@@ -34,6 +39,7 @@ def main(global_config, **settings):
         config.include('pyramid_zodbconn')
         config.set_root_factory(root_factory)
         config.include('pyramid_chameleon')
+        config.include('pyramid_mako')
         config.include('.routes')
         config.load_zcml('configure.zcml')
 

@@ -86,7 +86,7 @@ def validate_challenge_for_customer(customer, code):
         return False
 
     # we are good on age, and attempts
-    if code != expected_code:    
+    if not code or code.lower() != expected_code:    
         annotations[_CHALLENGE_ANNOTATION_KEY] = (expected_code, created, attempts+1)
         return False
 
