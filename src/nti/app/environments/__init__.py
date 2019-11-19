@@ -31,8 +31,10 @@ def main(global_config, **settings):
     # Use ZCA global site manager
     globalreg = getGlobalSiteManager()
     with Configurator(registry=globalreg) as config:
-        config.setup_registry(settings=settings)
+        settings['tm.commit_veto'] = 'nti.app.environments.transaction.default_commit_veto'
         settings['tm.manager_hook'] = 'pyramid_tm.explicit_manager'
+
+        config.setup_registry(settings=settings)
         config.include(pyramid_zcml)
         config.include('pyramid_tm')
         config.include('pyramid_retry')
