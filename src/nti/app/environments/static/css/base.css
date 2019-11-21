@@ -1,0 +1,50 @@
+body {
+    margin: 0px;
+}
+
+.nav {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333;
+    position: fixed;
+    top: 0;
+    width: 100%;
+}
+
+.nav .nav-item {
+    float: left;
+}
+
+.nav .nav-item img {
+    display: block;
+    width: 70px;
+    height: 70px;
+}
+
+.nav .nav-item a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 0px 0px;
+    text-decoration: none;
+    line-height: 70px;
+    width: 70px;
+}
+
+.nav .nav-item a:hover:not(.active) {
+    background-color: #111;
+}
+
+.nav .nav-item .active {
+    background-color: #4CAF50;
+}
+
+.success {
+    color: green;
+}
+
+.error {
+    color: red;
+}

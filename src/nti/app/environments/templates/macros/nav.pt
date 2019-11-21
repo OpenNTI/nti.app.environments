@@ -1,0 +1,14 @@
+<div class="nav" metal:define-macro="nav">
+    <div class="nav-item"><a href="/"><img src="${request.static_url('nti.app.environments:static/logo.png')}"/></a></div>
+    <div style="float:right">
+        <metal:block tal:omit-tag="" tal:condition="view.logged_in">
+            <metal:block tal:omit-tag="" tal:condition="view.is_admin">
+                <div class="nav-item"><a href="/admin">Admin</a></div>
+            </metal:block>
+            <div class="nav-item"><a href="/logout">Sign out</a></div>
+        </metal:block>
+        <metal:block tal:omit-tag="" tal:condition="not:view.logged_in">
+            <div class="nav-item"><a href="/login">Sign in</a></div>
+        </metal:block>
+    </div>
+</div>

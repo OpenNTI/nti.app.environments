@@ -2,6 +2,10 @@ from pyramid import httpexceptions as hexc
 from .utils import raise_json_error
 
 
+def is_admin(username):
+    return username and username.endswith('@nextthought.com')
+
+
 class BaseView(object):
 
     def __init__(self, context, request):
@@ -15,3 +19,15 @@ class BaseView(object):
         if not value and required:
             raise_json_error(hexc.HTTPBadRequest, 'Bad request')
         return value
+
+
+class BaseTemplateView(BaseView):
+
+    logged_in = None
+    is_admin = None
+
+    def __init__(self, context, request):
+        super(BaseTemplateView, self).__init__(context, request)
+        if self.request.authenticated_userid:
+            self.logged_in = True
+            self.is_admin = is_admin(self.request.authenticated_userid)

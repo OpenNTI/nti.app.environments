@@ -135,7 +135,7 @@
             data : data,
             success: function (result) {
                 var redirect_uri = result['redirect_uri'];
-                window.location.replace(redirect_uri);
+                window.location.href = redirect_uri;
             },
             error: function (xhr, exception) {
                 var result = JSON.parse(xhr.responseText);

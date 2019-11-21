@@ -31,7 +31,7 @@ def getOrCreateCustomer(container, email):
         customer = PersistentCustomer()
         customer.email = email
         customer.__name__ = email
-        customer.created = datetime.datetime.now()
+        customer.created = datetime.datetime.utcnow()
         container[customer.__name__] = customer
     return customer
 
