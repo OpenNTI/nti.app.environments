@@ -46,7 +46,7 @@
             box-sizing: border-box;
         }
 
-        input[type=submit] {
+        .btnCustom {
             width: 100%;
             background-color: #4CAF50;
             color: white;
@@ -57,7 +57,8 @@
             cursor: pointer;
         }
 
-        input[type=submit]:hover {
+        .btnCustom:hover,
+        .btnCustom:focus {
             background-color: #45a049;
         }
 
@@ -81,6 +82,14 @@
             font-size: 16px;
             text-align: center;
         }
+
+        .success {
+            color: green;
+        }
+
+        .error {
+            color: red;
+        }
     </style>
 </head>
 
@@ -90,14 +99,14 @@
         <div class="container">
             <p class="title">Welcome to NextThought</p>
             <p class="subtitle">Complete your account details to get started.</p>
-            <form tal:attributes="action url" method="POST">
-            	<input type="text" id="firstname" placeholder="First Name" oninput="nameInput();" required>
-            	<input type="text" id="lastname" placeholder="Last Name" oninput="nameInput();" required>
-                <input type="text" name="email" placeholder="Email" required>
-                <input type="text" name="name" id="name" style="display:none">
-                <input type="checkbox" name="consent" required>By signing up you agree to the <a href="#">terms and
+            <form onsubmit="return false;" id="submit_form" tal:attributes="action url" method="POST">
+                <input type="text" id="name" name="name" placeholder="Full Name" required/>
+                <input type="text" id="email" name="email" placeholder="Email" required/>
+                <input type="checkbox" id="consent" required>By signing up you agree to the <a href="#">terms and
                     conditions</a>.</input>
-                <input type="submit" value="Create An Account">
+                <button type="submit" class="btnCustom" onclick="submitForm();">Create An Account</button>
+                <div class="success" style="display:none;"></div>
+                <div class="error" style="display:none;"></div>
             </form>
             <div style="text-align:center;">
                 <a href="#">Already have a Trial Site?</a>
@@ -105,11 +114,62 @@
         </div>
     </div>
 
-</body>
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"
+        integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+        crossorigin="anonymous"></script>
+<script src="/static/js/base.js"></script>
 <script>
-    function nameInput() {
-        var value = document.getElementById('firstname').value + " " + document.getElementById('lastname').value;
-        document.getElementById("name").value = value;
+    function submitForm() {
+        var name = $('#name').val().trim();
+        var email = $('#email').val().trim();
+        var consent = $('#consent').prop('checked');
+        if(!name || !email || consent!==true) {
+            return;
+        }
+        var form = $('#submit_form');
+        var url = $(form).attr("action");
+        var data = $(form).serialize();
+        $.ajax({
+            url : url,
+            type: 'POST',
+            data : data,
+            success: function (result) {
+                var redirect_uri = result['redirect_uri'];
+                window.location.replace(redirect_uri);
+            },
+            error: function (xhr, exception) {
+                var result = JSON.parse(xhr.responseText);
+                showErrorMessage(result['message'], '.success', '.error');
+            }
+        });
     }
+
+    function getUrlParameter(name) {
+        var sPageURL = window.location.search.substring(1),
+            sURLVariables = sPageURL.split('&'),
+            sParameterName,
+            i;
+
+        for (i = 0; i < sURLVariables.length; i++) {
+            sParameterName = sURLVariables[i].split('=');
+
+            if (sParameterName[0] === name) {
+                return sParameterName[1] === undefined ? '' : decodeURIComponent(sParameterName[1]);
+            }
+        }
+    };
+
+    $(document).ready(function() {
+        var name = getUrlParameter('name');
+        var email = getUrlParameter('email');
+        if (name && email){
+            document.getElementById('name').value = name;
+            document.getElementById('email').value = email;
+            document.getElementById('consent').checked = 'checked';
+            submitForm();
+        }
+    });
+
 </script>
+</body>
 </html>
