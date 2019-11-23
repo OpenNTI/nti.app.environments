@@ -1,7 +1,5 @@
 from pyramid.view import view_config
 
-from zope import component
-
 from ..models.interfaces import IOnboardingRoot
 from .base import BaseTemplateView
 

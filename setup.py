@@ -9,6 +9,7 @@ with open(os.path.join(here, 'CHANGES.txt')) as f:
     CHANGES = f.read()
 
 requires = [
+    'python-dateutil',
     'plaster_pastedeploy',
     'pyramid',
     'pyramid_chameleon',
@@ -25,6 +26,7 @@ requires = [
     'pyramid-zcml',
     'zope.interface',
     'zope.component',
+    'nti.property',
     'nti.schema',
     'nti.transactions==3.1.0',
     'zope.container',
@@ -36,7 +38,8 @@ requires = [
     'z3c.schema',
     'zope.annotation',
     'zope.i18n',
-    'zope.i18nmessageid'
+    'zope.i18nmessageid',
+    'pyramid_zope_request'
 ]
 
 tests_require = [

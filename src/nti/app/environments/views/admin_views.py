@@ -3,30 +3,28 @@ from pyramid import httpexceptions as hexc
 
 from nti.app.environments.models.interfaces import ICustomer
 from nti.app.environments.models.interfaces import ICustomersContainer
+from nti.app.environments.models.interfaces import ILMSSite
+from nti.app.environments.models.interfaces import ILMSSitesContainer
 
 from nti.app.environments.views.base import BaseTemplateView
+from nti.app.environments.views._table_utils import CustomersTable
+from nti.app.environments.views._table_utils import SitesTable
+from nti.app.environments.views._table_utils import make_specific_table
 
 
-def format_date(dt, _format='%Y-%m-%dT%H:%M:%SZ'):
-    return dt.strftime(_format) if dt else ''
+def _format_date(value):
+    return value.strftime('%Y-%m-%dT%H:%M:%SZ') if value else ''
 
 
 @view_config(renderer='../templates/admin/customers.pt',
-             context=ICustomersContainer,
              request_method='GET',
-             name="details")
+             context=ICustomersContainer,
+             name='details')
 class CustomersDetailsView(BaseTemplateView):
 
     def __call__(self):
-        items = []
-        for x in self.context.values():
-            items.append({'email': x.email,
-                          'name': x.name,
-                          'hubspot': getattr(x.hubspot_contact, 'contact_vid', ''),
-                          'created': format_date(x.created),
-                          'last_verified': format_date(x.last_verified),
-                          'delete_url': self.request.resource_url(x)})
-        return {'items': items}
+        table = make_specific_table(CustomersTable, self.context, self.request)
+        return {'table': table}
 
 
 @view_config(renderer='json',
@@ -36,3 +34,26 @@ def deleteCustomerView(context, request):
     container = context.__parent__
     del container[context.__name__]
     return hexc.HTTPNoContent()
+
+
+@view_config(renderer='../templates/admin/sites.pt',
+             request_method='GET',
+             context=ILMSSitesContainer,
+             name='details')
+class SitesDetailsView(BaseTemplateView):
+
+    def __call__(self):
+        table = make_specific_table(SitesTable, self.context, self.request)
+        return {'table': table}
+
+
+@view_config(renderer='../templates/admin/site_detail.pt',
+             request_method='GET',
+             context=ILMSSite,
+             name='details')
+class SiteDetailView(BaseTemplateView):
+
+    def __call__(self):
+        return {'sites_list_link': self.request.resource_url(self.context.__parent__, '@@details'),
+                'site': {'created': _format_date(self.context.created),
+                         'owner_username': self.context.owner_username}}

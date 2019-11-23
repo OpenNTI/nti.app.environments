@@ -1,0 +1,102 @@
+/** table css */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th a {
+    text-decoration: none;
+    width: 100%;
+    display: block;
+    position: relative;
+    padding-right: 16px;
+}
+
+.table td,
+.table th {
+    text-align: left;
+    font-size: 16px;
+    padding: 10px 6px;
+    border: 1px solid #ced4da;
+}
+.table tbody > tr:hover {
+    background-color: #E6E9EF;
+}
+
+.table th.sorted-on.ascending a::after {
+    border: 4px solid transparent;
+    content: "";
+    display: block;
+    height: 0;
+    right: 20px;
+    top: 50%;
+    position: absolute;
+    width: 0;
+    border-bottom-color: #666;
+    margin-top: -9px;
+}
+
+.table th.sorted-on.descending a::after {
+    border: 4px solid transparent;
+    content: "";
+    display: block;
+    height: 0;
+    right: 20px;
+    top: 50%;
+    position: absolute;
+    width: 0;
+    border-top-color: #666;
+    margin-top: 1px;
+}
+
+.table th:not(.sorted-on) a::before,
+.table th:not(.sorted-on) a::after {
+    border: 4px solid transparent;
+    content: "";
+    display: block;
+    height: 0;
+    right: 20px;
+    top: 50%;
+    position: absolute;
+    width: 0;
+}
+.table th:not(.sorted-on) a::before {
+    border-bottom-color: #ced4da;
+    margin-top: -9px;
+}
+.table th:not(.sorted-on) a::after {
+    border-top-color: #ced4da;
+    margin-top: 1px;
+}
+
+.table-pagination {
+    display: inline-block;
+    margin: 16px 0;
+    font-size: 16px;
+    text-align: left;
+    width: 100%;
+    padding: 6px 6px 6px 0;
+}
+
+.table-pagination .pagination-detail {
+    float: left;
+}
+
+.table-pagination .pagination {
+    float: right;
+}
+
+.table-pagination .pagination a {
+    color: black;
+    padding: 6px 10px;
+    text-decoration: none;
+}
+
+.table-pagination .pagination a.current {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.table-pagination .pagination a:hover:not(.current) {
+    background-color: #ddd;
+}

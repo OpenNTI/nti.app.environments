@@ -27,11 +27,11 @@
     <div metal:use-macro="load: ../macros/nav.pt"/>
 
     <div class="container">
-        <h1>Consumers</h1>
+        <h1>Sites</h1>
         <input type="text" id='search' name="search" placeHolder="Search" class="search-input" onkeypress="return search(event);"/>
 		<table tal:condition="python: len(table.context)" tal:replace="structure python: table.render()" />
 		<div tal:condition="python: not len(table.context)">
-			No customers.
+			No sites.
 		</div>
 
 	    <div class="table-pagination" tal:define="table table" >
@@ -47,14 +47,14 @@
                 <h3>Deleting?</h3>
             </div>
             <div class="modal-body">
-                <p>Are you sure you want to delete customer <strong><span class="deleting_email"></span></strong>?</p>
+                <p>Are you sure you want to delete site <strong><span class="deleting_email"></span></strong>?</p>
                 <div class="success success-deletion" style="display:none;"></div>
                 <div class="error error-deletion" style="display:none;"></div>
             </div>
 
             <div class="modal-footer">
                 <button class='btnOK' onclick="deleteItem(this);">Delete</button>
-                <button class='btnNO' onclick="closeDeletingModal();">Cancel</button>
+                <button class='btnNO' onclick="document.getElementById('deletingModal').style.display = 'none';">Cancel</button>
             </div>
         </div>
     </div>
@@ -66,7 +66,7 @@
 <script>
 
     function postHandler() {
-        closeDeletingModal();
+        document.getElementById('deletingModal').style.display = none;
         window.location.reload();
     }
 
@@ -93,16 +93,14 @@
         modal.getElementsByClassName('deleting_email')[0].innerHTML = email;
     }
 
-    function closeDeletingModal() {
-        var modal = document.getElementById("deletingModal");
-        modal.style.display = "none";
-    }
-
     // When the user clicks anywhere outside of the modal, close it
     window.onclick = function(event) {
-        var modal = document.getElementById("deletingModal");
-        if (event.target == modal) {
-            modal.style.display = "none";
+        var ids = ["deletingModal", "editingModal"];
+        for(var i=0; i<ids.length; i++) {
+            var modal = document.getElementById(ids[i]);
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
         }
     }
 
@@ -121,6 +119,9 @@
             $('#search').val(email);
         }
     });
+
+
+
 
 </script>
 

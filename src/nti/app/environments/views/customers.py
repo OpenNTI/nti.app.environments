@@ -21,8 +21,6 @@ from ..models.customers import PersistentCustomer
 from .base import BaseView
 from .utils import raise_json_error
 
-import nti.app.environments as app_pkg
-
 
 def getOrCreateCustomer(container, email):
     try:

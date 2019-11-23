@@ -24,4 +24,10 @@
 	  <implements interface="zope.annotation.interfaces.IAttributeAnnotatable" />
 	</class>
 
+	<adapter factory=".models.sites.SitesNameChooser"
+			 for=".models.interfaces.ILMSSitesContainer"
+			 provides="zope.container.interfaces.INameChooser"/>
+
+    <include package=".views" file="configure_tables.zcml" />
+
 </configure>

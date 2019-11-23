@@ -48,3 +48,52 @@ body {
 .error {
     color: red;
 }
+
+/** form input */
+.form {
+    width: 80%;
+}
+.form .input-row {
+	width: 100%;
+	font-size: 16px;
+	position: relative;
+	margin-bottom: 16px;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-wrap: wrap;
+	flex-wrap: wrap;
+}
+
+.form .input-row .input-col-1 {
+    position: relative;
+    width: 100%;
+	-ms-flex: 0 0 20%;
+    flex: 0 0 20%;
+	max-width: 20%;
+	display: inline-block;
+	padding: 7px 15px;
+}
+
+.form .input-row .input-col-3 {
+    position: relative;
+    width: 100%;
+	-ms-flex: 0 0 60%;
+    flex: 0 0 60%;
+	max-width: 60%;
+}
+
+.form .input-row .input-col-3 input{
+	width: 100%;
+	padding: 6px 12px;
+	line-height: 16px;
+	font-size: 16px;
+}
+
+.form .btnCustom {
+	font-size: 16px;
+	line-height: 32px;
+	width: auto;
+	border-radius: 4px;	
+	margin-left: 6px;
+    margin-right: 6px;
+}
