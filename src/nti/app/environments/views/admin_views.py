@@ -16,7 +16,8 @@ def _format_date(value):
     return value.strftime('%Y-%m-%dT%H:%M:%SZ') if value else ''
 
 
-@view_config(renderer='../templates/admin/customers.pt',
+@view_config(route_name='admin',
+             renderer='../templates/admin/customers.pt',
              request_method='GET',
              context=ICustomersContainer,
              name='details')
@@ -36,7 +37,8 @@ def deleteCustomerView(context, request):
     return hexc.HTTPNoContent()
 
 
-@view_config(renderer='../templates/admin/sites.pt',
+@view_config(route_name='admin',
+             renderer='../templates/admin/sites.pt',
              request_method='GET',
              context=ILMSSitesContainer,
              name='details')
@@ -47,13 +49,14 @@ class SitesDetailsView(BaseTemplateView):
         return {'table': table}
 
 
-@view_config(renderer='../templates/admin/site_detail.pt',
+@view_config(route_name='admin',
+             renderer='../templates/admin/site_detail.pt',
              request_method='GET',
              context=ILMSSite,
              name='details')
 class SiteDetailView(BaseTemplateView):
 
     def __call__(self):
-        return {'sites_list_link': self.request.resource_url(self.context.__parent__, '@@details'),
+        return {'sites_list_link': self.request.route_url('admin', traverse=('sites', '@@details')),
                 'site': {'created': _format_date(self.context.created),
                          'owner_username': self.context.owner_username}}

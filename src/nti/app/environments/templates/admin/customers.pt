@@ -27,7 +27,7 @@
     <div metal:use-macro="load: ../macros/nav.pt"/>
 
     <div class="container">
-        <h1>Consumers</h1>
+        <h1>Customers</h1>
         <input type="text" id='search' name="search" placeHolder="Search" class="search-input" onkeypress="return search(event);"/>
 		<table tal:condition="python: len(table.context)" tal:replace="structure python: table.render()" />
 		<div tal:condition="python: not len(table.context)">

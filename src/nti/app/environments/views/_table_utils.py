@@ -188,7 +188,7 @@ class SiteDetailColumn(column.LinkColumn):
     linkContent = 'view'
 
     def getLinkURL(self, item):
-        return self.request.resource_url(item, '@@details')
+        return self.request.route_url('admin', traverse=('sites', item.__name__, '@@details'))
 
 
 class SiteDeleteColumn(DeleteColumn):
