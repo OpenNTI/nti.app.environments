@@ -1,6 +1,8 @@
 from pyramid.view import view_config
 from pyramid import httpexceptions as hexc
 
+from nti.app.environments.auth import ACT_ADMIN
+
 from nti.app.environments.models.interfaces import ICustomer
 from nti.app.environments.models.interfaces import ICustomersContainer
 from nti.app.environments.models.interfaces import ILMSSite
@@ -20,6 +22,7 @@ def _format_date(value):
              renderer='../templates/admin/customers.pt',
              request_method='GET',
              context=ICustomersContainer,
+             permission=ACT_ADMIN,
              name='details')
 class CustomersDetailsView(BaseTemplateView):
 
@@ -41,6 +44,7 @@ def deleteCustomerView(context, request):
              renderer='../templates/admin/sites.pt',
              request_method='GET',
              context=ILMSSitesContainer,
+             permission=ACT_ADMIN,
              name='details')
 class SitesDetailsView(BaseTemplateView):
 
@@ -53,6 +57,7 @@ class SitesDetailsView(BaseTemplateView):
              renderer='../templates/admin/site_detail.pt',
              request_method='GET',
              context=ILMSSite,
+             permission=ACT_ADMIN,
              name='details')
 class SiteDetailView(BaseTemplateView):
 

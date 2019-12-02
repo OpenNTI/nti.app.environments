@@ -1,0 +1,30 @@
+<!-- -*- mode: nxml -*- -->
+<configure	xmlns="http://namespaces.zope.org/zope"
+			xmlns:zcml="http://namespaces.zope.org/zcml"
+			xmlns:meta="http://namespaces.zope.org/meta">
+
+	<meta:directive
+		namespace="http://nextthought.com/ntp/securitypolicy"
+		name="grant"
+		schema=".zcml.IGrantDirective"
+		handler="zope.securitypolicy.metaconfigure.grant" />
+
+	<meta:directive
+		namespace="http://nextthought.com/ntp/securitypolicy"
+		name="grantAll"
+		schema=".zcml.IGrantAllDirective"
+		handler="zope.securitypolicy.metaconfigure.grantAll" />
+
+	<meta:directive
+		namespace="http://nextthought.com/ntp/securitypolicy"
+		name="role"
+		schema=".zcml.IDefineRoleDirective"
+		handler="zope.securitypolicy.metaconfigure.defineRole" />
+
+    <meta:directive
+		namespace="http://nextthought.com/ntp/securitypolicy"
+        name="principal"
+        schema=".zcml.IDefinePrincipalDirective"
+        handler="zope.principalregistry.metaconfigure.principal" />
+
+</configure>

@@ -29,5 +29,6 @@
 			 provides="zope.container.interfaces.INameChooser"/>
 
     <include package=".views" file="configure_tables.zcml" />
+    <include package=".securitypolicy" file="configure.zcml" />
 
 </configure>

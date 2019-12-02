@@ -1,6 +1,9 @@
 from persistent import Persistent
+from pyramid.security import Allow
 
 from zope import interface
+
+from zope.cachedescriptors.property import Lazy
 
 from zope.container.contained import Contained
 from zope.container.contained import NameChooser
@@ -12,6 +15,9 @@ from nti.property.property import alias
 
 from nti.schema.fieldproperty import createFieldProperties
 from nti.schema.schema import SchemaConfigured
+
+from nti.app.environments.auth import ACT_ADMIN
+from nti.app.environments.auth import ADMIN_ROLE
 
 from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import IEnterpriseLicense
@@ -55,6 +61,10 @@ class PersistentSite(SchemaConfigured, Persistent, Contained):
 
 @interface.implementer(ILMSSitesContainer)
 class SitesFolder(Folder):
+
+    @Lazy
+    def __acl__(self):
+        return [(Allow, ADMIN_ROLE, [ACT_ADMIN])]
 
     def addSite(self, site):
         if not site.__name__:

@@ -39,6 +39,8 @@ requires = [
     'zope.annotation',
     'zope.i18n',
     'zope.i18nmessageid',
+    'zope.principalregistry',
+    'zope.securitypolicy',
     'pyramid_zope_request'
 ]
 

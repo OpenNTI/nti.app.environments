@@ -1,6 +1,5 @@
 import pyramid_zcml
 
-from pyramid.authentication import AuthTktAuthenticationPolicy
 from pyramid.authorization import ACLAuthorizationPolicy
 
 from pyramid.config import Configurator
@@ -15,6 +14,7 @@ from zope.component import getGlobalSiteManager
 
 import zope.i18nmessageid
 
+from .auth import AuthenticationPolicy
 from .models import appmaker
 from .settings import init_app_settings
 
@@ -49,8 +49,8 @@ def main(global_config, **settings):
 
         
         # security policies
-        authn_policy = AuthTktAuthenticationPolicy('foo',
-                                                   hashalg='sha512')
+        authn_policy = AuthenticationPolicy('foo',
+                                            hashalg='sha512')
         authz_policy = ACLAuthorizationPolicy()
         config.set_authentication_policy(authn_policy)
         config.set_authorization_policy(authz_policy)
