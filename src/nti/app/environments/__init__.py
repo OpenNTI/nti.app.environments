@@ -7,6 +7,8 @@ from pyramid.config import Configurator
 
 from pyramid.session import SignedCookieSessionFactory
 
+from pyramid.tweens import EXCVIEW
+
 from pyramid_zodbconn import get_connection
 
 from zope.component import getGlobalSiteManager
@@ -32,12 +34,13 @@ def main(global_config, **settings):
     globalreg = getGlobalSiteManager()
     with Configurator(registry=globalreg) as config:
         config.setup_registry(settings=settings)
-        settings['tm.commit_veto'] = 'nti.app.environments.transaction.default_commit_veto'
-        settings['tm.manager_hook'] = 'pyramid_tm.explicit_manager'
         config.include(pyramid_zcml)
-        config.include('pyramid_tm')
         config.include('pyramid_retry')
         config.include('pyramid_zodbconn')
+
+        config.add_tween('nti.transactions.pyramid_tween.transaction_tween_factory',
+                         over=EXCVIEW)
+
         config.set_root_factory(root_factory)
         config.include('pyramid_chameleon')
         config.include('pyramid_mako')
