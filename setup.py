@@ -26,7 +26,7 @@ requires = [
     'zope.interface',
     'zope.component',
     'nti.schema',
-    'nti.transactions',
+    'nti.transactions==3.1.0',
     'zope.container',
     'zope.site',
     'zope.generations',
