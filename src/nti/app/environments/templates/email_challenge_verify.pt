@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<style>
+    body {
+        font-size: 15px;
+        line-height: 20px;
+    }
+
+    .main {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        min-height: 600px;
+    }
+
+    .container {
+        border-radius: 5px;
+        background-color: #f2f2f2;
+        padding: 20px;
+        width: 400px;
+        min-width: 400px;
+        display: flex-column;
+    }
+
+    input[type=text] {
+        width: 15%;
+        padding: 12px 20px;
+        margin: 8px 0;
+        display: inline-block;
+        border: 1px solid #ccc;
+        border-radius: 0px;
+        box-sizing: border-box;
+        font-size: 22px;
+    }
+
+    strong {
+        font-weight: bold;
+    }
+
+    h1 {
+        letter-spacing: -1px;
+    }
+
+    .code {
+        display: flex;
+        font-weight: 400;
+        font-size: 15px;
+    }
+
+    .code_input {
+        margin: 0px;
+        text-align: center;
+        border: 1px;
+        text-transform: uppercase;
+    }
+
+    .code_input_left {
+        border-bottom-left-radius: 4px;
+        border-top-left-radius: 4px;
+    }
+
+    .code_input_right {
+        border-bottom-right-radius: 4px;
+        border-top-right-radius: 4px;
+    }
+
+    .success {
+        color: green;
+    }
+
+    .error {
+        color: red;
+    }
+</style>
+
+<body>
+    <div class="main">
+        <div class="container">
+            <h1>Check your email!</h1>
+            <p>
+                We've sent a 6-alphanumeric confirmation code to
+                <strong>${email}</strong>
+                . It will expire shortly, so enter it soon.
+            </p>
+
+            <div class="code">
+                <input type="text" name="code[1]" aria-label autocomplete="off" class="code_input code_input_left">
+                <input type="text" name="code[2]" aria-label autocomplete="off" class="code_input">
+                <input type="text" name="code[3]" aria-label autocomplete="off" class="code_input code_input_right">
+                <div style="align-self: center; margin: 0 6px;"> &#8208; </div>
+                <input type="text" name="code[4]" aria-label autocomplete="off" class="code_input code_input_left">
+                <input type="text" name="code[5]" aria-label autocomplete="off" class="code_input">
+                <input type="text" name="code[6]" aria-label autocomplete="off" class="code_input code_input_right">
+            </div>
+
+            <form id="verify_form" tal:attributes="action url" method="POST">
+                <div style="display: none;">
+                    <input type="text" name="name" value="${name}" />
+                    <input type="text" name="email" value="${email}" />
+                    <input type="text" name="code" id="code" />
+                    <input type="text" id="code_prefix" value="${code_prefix}" />
+                </div>
+
+                <div class="success" style="display:none;"></div>
+                <div class="error" style="display:none;"></div>
+                <div class="spinnerText" style="display:none;">
+                    <span class="spinner-border" role="status" aria-hidden="true" style="width:19px;height:19px; border-width:3px; margin-right:4px;"></span>Verifying...
+                </div>
+            </form>
+
+            <p>Keep this window open while checking for your code.<br />Remember to try your spam folder!</p>
+
+        </div>
+    </div>
+</body>
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"
+        integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+        crossorigin="anonymous"></script>
+<script src="/static/js/base.js"></script>
+<script>
+
+    function getIndex($input) {
+        return parseInt($input.attr('name').split(/[\[\]]/)[1], 10);
+    }
+
+    function handleCodeInput(event) {
+        var $input = $(this),
+            index = getIndex($input),
+            digit = $input.val().slice(0,1),
+            rest = $input.val().slice(1),
+            $next;
+
+        if (rest.length > 0) {
+            $input.val(digit);
+            $next = $('.code_input[name="code['+ (index + 1) +']"]');
+
+            if ($next.length > 0 && index < 6) {
+                $next.val(rest);  // push the rest of the value into the next input
+                $next.focus();
+                handleCodeInput.call($next, event);  // run the same code on the next input
+            }
+        } else if (digit && index < 6) {
+            $next = $('.code_input[name="code['+ (index + 1) +']"]');
+            $next.focus();
+        }
+    }
+
+    function handleInput(event) {
+        var value = $(this).val();
+        $(this).val(value.replace(/[^a-z0-9]/gi,''));
+        handleCodeInput.call($(this), event);
+        if ($(this).val()) {
+            codeInput();
+        }
+    }
+
+    function handleBackspace(event) {
+        var $input = $(this),
+            index = getIndex($input),
+            $prev;
+
+        // if the user pressed backspace and the input is empty
+        if (event.which === 8 && !$(this).val()) {
+            $prev = $('.code_input[name="code['+ (index - 1) +']"]');
+            $prev.focus();
+        }
+    }
+
+    $('.code_input').on('input', handleInput)
+                    .on('keydown', handleBackspace);
+
+    function codeInput() {
+        var value = document.getElementById('code_prefix').value;
+        var items = document.getElementsByClassName('code_input');
+        for (i = 0; i < items.length; i++) {
+            value = value + items[i].value;
+        }
+        var code = document.getElementById("code");
+        code.value = value;
+
+        if (value.length == 12) {
+            verifyCode();
+        }
+    }
+
+    function verifyCode() {
+        clearMessages();
+        var form = $('#verify_form');
+        var url = $(form).attr('action');
+        var name = $(form.find('input[name="name"]')[0]).val();
+        var email = $(form.find('input[name="email"]')[0]).val();
+        var code = $(form.find('input[name="code"]')[0]).val();
+        var data = {'name': name,
+                    'email': email,
+                    'code': code};
+
+        var spinner = $(form).find('.spinnerText')[0];
+        $(spinner).show();
+
+        $.ajax({
+            url: url,
+            method: 'POST',
+            data: data,
+            success: function (result) {
+                $(spinner).hide();
+                showSuccessMessage("Verified!", 500);
+            },
+            error: function (xhr, exception) {
+                $(spinner).hide();
+                var result = JSON.parse(xhr.responseText);
+                showErrorMessage(result['message'], '.success', '.error');
+            }
+        });
+    }
+</script>
+</html>

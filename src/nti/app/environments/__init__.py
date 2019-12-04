@@ -7,7 +7,11 @@ from pyramid.config import Configurator
 
 from pyramid.session import SignedCookieSessionFactory
 
+from pyramid.tweens import EXCVIEW
+
 from pyramid_zodbconn import get_connection
+
+from zope.component import getGlobalSiteManager
 
 import zope.i18nmessageid
 
@@ -26,14 +30,20 @@ def root_factory(request):
 def main(global_config, **settings):
     """ This function returns a Pyramid WSGI application.
     """
-    with Configurator(settings=settings) as config:
-        settings['tm.manager_hook'] = 'pyramid_tm.explicit_manager'
+    # Use ZCA global site manager
+    globalreg = getGlobalSiteManager()
+    with Configurator(registry=globalreg) as config:
+        config.setup_registry(settings=settings)
         config.include(pyramid_zcml)
-        config.include('pyramid_tm')
         config.include('pyramid_retry')
         config.include('pyramid_zodbconn')
+
+        config.add_tween('nti.transactions.pyramid_tween.transaction_tween_factory',
+                         over=EXCVIEW)
+
         config.set_root_factory(root_factory)
         config.include('pyramid_chameleon')
+        config.include('pyramid_mako')
         config.include('.routes')
         config.load_zcml('configure.zcml')
 

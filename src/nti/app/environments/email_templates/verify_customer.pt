@@ -1,39 +1,82 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-	  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:metal="http://xml.zope.org/namespaces/metal"
-      xmlns:tal="http://xml.zope.org/namespaces/tal"
-      xmlns:i18n="http://xml.zope.org/namespaces/i18n"
-      i18n:domain="nti.dataserver"
-      i18n:source="en">
-    <head>
-	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
-	<title>Verify Your Identity</title>
-    </head>
-    <body>
-	<p i18n:translate="">Hi <span tal:content="options/name" i18n:name="name" class="realname tterm">John Doe</span>!</p>
-
-	<p i18n:translate="">
-	    We're excited to get started, but first we need to verify your identity.
-	</p>
-
-	<p>
-	    <strong i18n:translate="">Username:</strong> <span tal:content="options/code" class="tterm-color">111111</span> <br />
-	</p>
-
-	<p>
-	    <span i18n:translate="">Sincerely,</span><br />
-	    NextThought
-	</p>
-
-	<p style="font-size: smaller">
-	    <span i18n:translate="">If you feel this email was sent in error, or this account was created
-		without your consent, you may email us at
-		<a i18n:name="support_email" href="mailto:support@nextthought.com"
-		   tal:content="options/support_email|default"
-		   tal:attributes="href string:mailto:${options/support_email|default}">support@nextthought.com</a>
-	    </span>
-	</p>
-
-    </body>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:metal="http://xml.zope.org/namespaces/metal" xmlns:tal="http://xml.zope.org/namespaces/tal" xmlns:i18n="http://xml.zope.org/namespaces/i18n" i18n:domain="nti.app.environments" i18n:source="en">
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<title>
+			Confirm your email address
+		</title>
+		<style>
+			.main {
+				max-width: 500px;
+				margin: 0 auto;
+				font-size: 17px;
+			}
+			a {
+				text-decoration: none;
+			}
+			.code {
+				width: 100%;
+				text-align:center;
+				background-color:#f4f4f4;
+				margin: auto;
+				padding: 5px;
+				font-size: 30px;
+				line-height: 30px;
+			}
+			.footer {
+				font-size: 15px;
+				text-align:center;
+				line-height: 22px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="main">
+			<img src="https://d2ixlfeu83tci.cloudfront.net/images/email_logo.png" width="177" height="25" style="margin:15px 0 0 0"/>
+			<h1 class="font-size: 30px;">
+				<strong i18n:translate="">
+					Confirm your email address
+				</strong>
+			</h1>
+			<p i18n:translate="">
+				Thank you for signing up for NextThought. We're happy you're here!
+			</p>
+			<p i18n:translate="">
+				Enter the following code in the window where you began creating your new NextThought site:
+			</p>
+			<div class="code">
+				<p>
+					${code}
+				</p>
+			</div>
+			<p>
+				<span i18n:translate="">
+					This email contains private information for you - please don't forward it.
+					Questions about setting up your new NextThought site? Email us at
+					<a i18n:name="support_email" href="mailto:support@nextthought.com" tal:content="support_email|default" tal:attributes="href string:mailto:${support_email|default}">
+						support@nextthought.com
+					</a>
+					.
+				</span>
+			</p>
+		</div>
+		<hr style="border:1px solid #e1e1e4;border-bottom: 0;"/>
+		<div class="footer">
+			<p>
+				Made by NextThought, LLC
+				<br />
+				<a href="">
+					Terms of Service
+				</a>
+				-
+				<a href="">
+					Privacy Policy
+				</a>
+				-
+				<a href="https://www.nextthought.com/">
+					NextThought
+				</a>
+			</p>
+		</div>
+	</body>
 </html>
