@@ -1,9 +1,7 @@
 from pyramid import httpexceptions as hexc
 from .utils import raise_json_error
 
-
-def is_admin(username):
-    return username and username.endswith('@nextthought.com')
+from nti.app.environments.auth import is_admin
 
 
 class BaseView(object):

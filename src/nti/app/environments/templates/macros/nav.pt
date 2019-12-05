@@ -3,7 +3,8 @@
     <div style="float:right">
         <metal:block tal:omit-tag="" tal:condition="view.logged_in">
             <metal:block tal:omit-tag="" tal:condition="view.is_admin">
-                <div class="nav-item"><a href="/admin">Admin</a></div>
+                <div class="nav-item"><a href="/admin/customers/@@list">Customers</a></div>
+                <div class="nav-item"><a href="/admin/sites/@@list">Sites</a></div>
             </metal:block>
             <div class="nav-item"><a href="/logout">Sign out</a></div>
         </metal:block>

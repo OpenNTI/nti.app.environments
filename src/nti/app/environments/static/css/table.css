@@ -4,12 +4,21 @@
     border-collapse: collapse;
 }
 
-.table th a {
+.table a {
     text-decoration: none;
+}
+
+.table th a {
+    color: #000000;
     width: 100%;
     display: block;
     position: relative;
     padding-right: 16px;
+}
+
+.table .email {
+    text-decoration: none;
+    color: #000;
 }
 
 .table td,

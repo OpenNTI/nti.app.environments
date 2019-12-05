@@ -8,15 +8,18 @@ from pyramid.view import view_defaults
 from zope import component
 from zope.schema._bootstrapinterfaces import ConstraintNotSatisfied
 
-from ..models.interfaces import ICustomersContainer
+from nti.app.environments.models.interfaces import ICustomer
+from nti.app.environments.models.interfaces import ICustomersContainer
+
+from nti.app.environments.models.customers import PersistentCustomer
+
+from nti.app.environments.auth import ACT_DELETE
+from nti.app.environments.authentication import forget
+from nti.app.environments.authentication import remember
+from nti.app.environments.authentication import setup_challenge_for_customer
+from nti.app.environments.authentication import validate_challenge_for_customer
 
 from nti.mailer.interfaces import ITemplatedMailer
-
-from ..authentication import forget
-from ..authentication import remember
-from ..authentication import setup_challenge_for_customer
-from ..authentication import validate_challenge_for_customer
-from ..models.customers import PersistentCustomer
 
 from .base import BaseView
 from .utils import raise_json_error
@@ -164,3 +167,13 @@ class EmailChallengeVerifyView(BaseView):
                 'email': email,
                 'code_prefix': code_prefix,
                 'url': url}
+
+
+@view_config(renderer='json',
+             context=ICustomer,
+             request_method='DELETE',
+             permission=ACT_DELETE)
+def deleteCustomerView(context, request):
+    container = context.__parent__
+    del container[context.__name__]
+    return hexc.HTTPNoContent()

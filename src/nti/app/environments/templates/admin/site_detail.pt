@@ -1,6 +1,6 @@
 <html>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Consumers</title>
+    <title>Site Detail</title>
     <link href="/static/css/base.css" rel="stylesheet">
     <link href="/static/css/modal.css" rel="stylesheet">
     <style>
@@ -14,43 +14,68 @@
             cursor: pointer;
         }
 
-        .search-input {
-            font-size: 16px;
-            margin-bottom: 16px;
-            padding: 8px 6px;
+        .site-header {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .site-item {
+            margin-top: 16px;
             border: 1px solid #ced4da;
             border-radius: 4px;
+            padding: 16px 16px;
         }
+
+        .site-info {
+            width: 30%;
+            text-align: center;
+        }
+
+        .site-license {
+            margin-left: 16px;
+            width: 70%;
+        }
+
+        .site-footer{
+            margin-top: 16px; 
+        }
+
+        h3 {
+            margin: 0 0 8px 0;
+        }
+
     </style>
 <body>
     <div metal:use-macro="load: ../macros/nav.pt"/>
 
     <div class="container">
-        <h1>Site Detail</h1>
-        <form>
-            <div class="form">
-                <div class="input-row">
-                    <label class="input-col-1">Owner Username</label>
-                    <div class="input-col-3">
-                        <input type="text" name="owner_username" value="${site.owner_username}"/>
-                    </div>
-                </div>
-                <div class="input-row">
-                    <label class="input-col-1">Created</label>
-                    <div class="input-col-3">
-                        <input type="text" name="created" value="${site.created}"/>
-                    </div>
-                </div>
+        <div class="site-header"><br>
+            <div class="site-item site-info">
+                <img src="/static/logo.png" alt="Avatar" style="width:120px;border-radius: 50%;">
+                
+                <p>Created at <span tal:content="site.created"></span>.</p>
+            </div>
+            <div class="site-item site-license">
+                <h3>License</h3>
+            </div>
+        </div>
 
-                <div class="success" style="display:none;"></div>
-                <div class="error" style="display:none;"></div>
-            </div>
-        </form>
-            <div class="margin-top: 16px;">
-                <button class="btnCustom" onclick="window.location='${sites_list_link}';">
-                    Back To List
-                </button>
-            </div>
+        <div class="site-item">
+            <h3>Owner Info</h3>
+            <p>Name: <span tal:content="site.owner.name"><span></p>
+            <p>Email: <span tal:content="site.owner.email"><span></p>
+            <p>Username: <span tal:content="site.owner_username"></span></p>
+        </div>
+
+        <div class="site-item">
+            <h3>Site details</h3>
+        </div>
+
+        <div class="site-footer">
+            <button class="btnCustom" onclick="window.location='${sites_list_link}';">
+                Back To Sites
+            </button>
+        </div>
     </div>
 
 

@@ -19,6 +19,12 @@ from nti.app.environments.views.utils import raise_json_error
 from nti.app.environments.views.utils import find_iface
 from nti.app.environments.views.utils import parseDate
 
+from nti.app.environments.auth import ACT_CREATE
+from nti.app.environments.auth import ACT_DELETE
+from nti.app.environments.auth import ACT_UPDATE 
+from zope.schema._bootstrapinterfaces import RequiredMissing
+from zope.schema._bootstrapinterfaces import ValidationError
+
 
 class SiteBaseView(BaseView):
 
@@ -36,10 +42,21 @@ class SiteBaseView(BaseView):
         val = params.get(field)
         return val.strip() if isinstance(val, str) else val
 
+    def _handle(self, name, value=None):
+        if not value:
+            raise_json_error(hexc.HTTPUnprocessableEntity, "Missing required field: {}.".format(name))
+        return value
+
     def _handle_owner(self, name, value=None):
+        if not value:
+            raise_json_error(hexc.HTTPUnprocessableEntity, "Missing required field: email.")
+
         root = find_iface(self.context, IOnboardingRoot)
         folder = get_customers(root)
-        return folder.getCustomer(value)
+        customer = folder.getCustomer(value)
+        if customer is None:
+            raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid email.")
+        return customer
 
     def _handle_env(self, name, value):
         value = value or {}
@@ -61,20 +78,20 @@ class SiteBaseView(BaseView):
                              name)
         return TrialLicense() if value == 'trial' else EnterpriseLicense() 
 
-    def _handle_date(self, name, value):
-        return parseDate(value)
+    def _handle_date(self, name, value=None):
+        return parseDate(value) if value else value
 
-    def _generate_kwargs_for_site(self, params=None, denied_attrs = ()):
+    def _generate_kwargs_for_site(self, params=None, allowed = ()):
         params = self.params if params is None else params
         kwargs = {}
         for attr_name, _handle in (('owner', self._handle_owner),
-                                   ('owner_username', None),
+                                   ('owner_username', self._handle),
                                    ('environment', self._handle_env),
                                    ('license', self._handle_license),
-                                   ('dns_names', None),
-                                   ('status', None),
-                                   ('created', self._handle_date)):
-            if attr_name in params and attr_name not in denied_attrs:
+                                   ('status', self._handle),
+                                   ('created', self._handle_date),
+                                   ('dns_names', self._handle)):
+            if attr_name in params and (not allowed or attr_name in allowed):
                 attr_val = params[attr_name]
                 if isinstance(attr_val, str):
                     attr_val = attr_val.strip()
@@ -84,28 +101,35 @@ class SiteBaseView(BaseView):
 
 @view_config(renderer='json',
              context=ILMSSitesContainer,
-             request_method='POST')
+             request_method='POST',
+             permission=ACT_CREATE)
 class SiteCreationView(SiteBaseView):
 
     def _create_site(self):
-        kwargs = self._generate_kwargs_for_site()
-        site = PersistentSite(**kwargs)
-        return site
+        try:
+            kwargs = self._generate_kwargs_for_site()
+            site = PersistentSite(**kwargs)
+            return site
+        except RequiredMissing as e:
+            raise_json_error(hexc.HTTPUnprocessableEntity,"Missing required field: {}".format(e))
+        except ValidationError as e:
+            raise_json_error(hexc.HTTPUnprocessableEntity, str(type(e).__name__))
 
     def __call__(self):
         site = self._create_site()
         self.context.addSite(site)
-        return {"success": True}
+        return {}
 
 
 @view_config(renderer='json',
              context=ILMSSite,
-             request_method='PUT')
-class SiteUpdateView(BaseView):
+             request_method='PUT',
+             permission=ACT_UPDATE)
+class SiteUpdateView(SiteBaseView):
 
     def __call__(self):
         context = self.context
-        kwargs = self._generate_kwargs_for_site(denied_attrs=('environment', 'license', 'owner'))
+        kwargs = self._generate_kwargs_for_site(allowed=('status', 'dns_names'))
         if kwargs:
             for attr_name, attr_val in kwargs.items():
                 if getattr(context, attr_name) != attr_val:
@@ -115,7 +139,8 @@ class SiteUpdateView(BaseView):
 
 @view_config(renderer='json',
              context=ILMSSite,
-             request_method='DELETE')
+             request_method='DELETE',
+             permission=ACT_DELETE)
 def deleteSiteView(context, request):
     container = context.__parent__
     container.deleteSite(context)

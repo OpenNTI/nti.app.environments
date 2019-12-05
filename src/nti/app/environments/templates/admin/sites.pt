@@ -1,6 +1,6 @@
 <html>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Consumers</title>
+    <title>Sites</title>
     <link href="/static/css/base.css" rel="stylesheet">
     <link href="/static/css/modal.css" rel="stylesheet">
     <link href="/static/css/table.css" rel="stylesheet">
@@ -15,20 +15,26 @@
             cursor: pointer;
         }
 
-        .search-input {
-            font-size: 16px;
-            margin-bottom: 16px;
-            padding: 8px 6px;
+        .toolbar input,
+        .toolbar button {
+            padding: 6px 6px;
             border: 1px solid #ced4da;
             border-radius: 4px;
+            margin-bottom: 16px;
+            font-size: 14px;
         }
+
     </style>
 <body>
     <div metal:use-macro="load: ../macros/nav.pt"/>
 
     <div class="container">
         <h1>Sites</h1>
-        <input type="text" id='search' name="search" placeHolder="Search" class="search-input" onkeypress="return search(event);"/>
+
+        <div class="toolbar">
+            <button type="button" style="float: right;" onclick="document.getElementById('newModal').style.display = 'block';">Create New Site</button>
+        </div>
+
 		<table tal:condition="python: len(table.context)" tal:replace="structure python: table.render()" />
 		<div tal:condition="python: not len(table.context)">
 			No sites.
@@ -59,43 +65,88 @@
         </div>
     </div>
 
+    <div id="newModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Site</h3>
+            </div>
+            <div class="modal-body">
+                <div class="form">
+                    <div class="input-row">
+                        <label class="input-col-1">Email</label>
+                        <div class="input-col-3">
+                            <input type="text" name="owner" id="site_owner"/>
+                        </div>
+                    </div>
+                    <div class="input-row">
+                        <label class="input-col-1">Username</label>
+                        <div class="input-col-3">
+                            <input type="text" name="owner_username" id="site_owner_username"/>
+                        </div>
+                    </div>
+                    <div class="input-row">
+                        <label class="input-col-1">Environemnt</label>
+                        <select class="input-col-3" name="environment_type" id="site_environment_type" onchange="onEnvironmentChange()">
+                            <option value=""></option>
+                            <option value="shared">shared</option>
+                            <option value="dedicated">dedicated</option>
+                        </select>
+                    </div>
+                    <div class="input-row" style="display:none;" id="site_environment_details">
+                        <label class="input-col-1"></label>
+                        <div class="input-col-3">
+                            <input type="text" name="environment_name" id="site_environment_name" placeHolder="Name" style="display:none;"/>
+                            <input type="text" name="environment_containerid" id="site_environment_containerid" placeHolder="Container Id" style="display:none;"/>
+                        </div>
+                    </div>
+                    <div class="input-row">
+                        <label class="input-col-1">License</label>
+                        <select class="input-col-3" name="license" id="site_license">
+                            <option value=""></option>
+                            <option value="trial">trial</option>
+                            <option value="enterprise">enterprise</option>
+                        </select>
+                    </div>
+                    <div class="input-row">
+                        <label class="input-col-1">Status</label>
+                        <select class="input-col-3" name="status" id="site_status">
+                            <option value=""></option>
+                            <option value="PENDING">PENDING</option>
+                            <option value="ACTIVE">ACTIVE</option>
+                            <option value="INACTIVE">INACTIVE</option>
+                        </select>
+                    </div>
+                    <div class="input-row">
+                        <label class="input-col-1">Created</label>
+                        <div class="input-col-3">
+                            <input type="text" name="created" id="site_created" placeHolder="2019-12-05T00:00:00Z"/>
+                        </div>
+                    </div>
+                    <div class="input-row">
+                        <label class="input-col-1">DNS Names</label>
+                        <textarea class="input-col-3" rows="2" name="dns_names" id="site_dns_names"></textarea>
+                    </div>
+                </div>
+                <div class="success success-creation" style="display:none;"></div>
+                <div class="error error-creation" style="display:none;"></div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class='btnSave' onclick="saveItem(this, '${creation_url}');">Save</button>
+                <button type="button" class='btnNO' onclick="document.getElementById('newModal').style.display = 'none';">Cancel</button>
+            </div>
+        </div>
+    </div>
+
 <script src="https://code.jquery.com/jquery-3.4.1.min.js"
         integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
         crossorigin="anonymous"></script>
 <script src="/static/js/base.js"></script>
+<script src="/static/js/sites.js"></script>
 <script>
-
-    function postHandler() {
-        document.getElementById('deletingModal').style.display = none;
-        window.location.reload();
-    }
-
-    function deleteItem (me) {
-        var url = $(me).attr('delete_url');
-        $.ajax({
-            url: url,
-            method: 'DELETE',
-            data: {},
-            success: function (result) {
-                showSuccessMessage("Deleted successfully.", '.success-deletion', '.error-deletion', 500, postHandler);
-            },
-            error: function (jqXHR, exception) {
-                var res = JSON.parse(jqXHR.responseText);
-                showErrorMessage(res['message'], '.success-deletion', '.error-deletion');
-            }
-        });
-    }
-
-    function openDeletingModal(url, email) {
-        var modal = document.getElementById("deletingModal");
-        modal.style.display = "block";
-        modal.getElementsByClassName('btnOK')[0].setAttribute('delete_url', url);
-        modal.getElementsByClassName('deleting_email')[0].innerHTML = email;
-    }
-
     // When the user clicks anywhere outside of the modal, close it
     window.onclick = function(event) {
-        var ids = ["deletingModal", "editingModal"];
+        var ids = ["deletingModal", "newModal"];
         for(var i=0; i<ids.length; i++) {
             var modal = document.getElementById(ids[i]);
             if (event.target == modal) {
@@ -103,26 +154,6 @@
             }
         }
     }
-
-    function search(e) {
-        // When a enter key pressed, query the server.
-        if (e.which == 13 || e.keyCode == 13) {
-            var search = $('#search').val().trim();
-            var url = updateUrlParameter('email', search);
-            window.location.href = url;
-        }
-    }
-
-    $( document ).ready(function() {
-        var email = getUrlParameter('email');
-        if(email){
-            $('#search').val(email);
-        }
-    });
-
-
-
-
 </script>
 
 </body>

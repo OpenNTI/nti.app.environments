@@ -82,11 +82,14 @@ body {
 	max-width: 60%;
 }
 
-.form .input-row .input-col-3 input{
+.form .input-row .input-col-3 input,
+.form .input-row select,
+.form .input-row textarea{
 	width: 100%;
 	padding: 6px 12px;
 	line-height: 16px;
-	font-size: 16px;
+    font-size: 16px;
+    background-color: #fff;
 }
 
 .form .btnCustom {

@@ -57,8 +57,8 @@ class BaseTable(table.Table):
             super(BaseTable, self).batchRows()
 
 
-def make_specific_table(tableClassName, container, request):
-    the_table = tableClassName(container, IBrowserRequest(request))
+def make_specific_table(tableClassName, container, request, **kwargs):
+    the_table = tableClassName(container, IBrowserRequest(request), **kwargs)
     try:
         the_table.update()
     except IndexError:
@@ -68,10 +68,12 @@ def make_specific_table(tableClassName, container, request):
     return the_table
 
 
-class EmailColumn(column.GetAttrColumn):
+class EmailColumn(column.EMailColumn):
+
     weight = 1
     header = 'Email'
     attrName = 'email'
+    linkCSS = "email"
 
 
 class NameColumn(column.GetAttrColumn):
@@ -124,9 +126,19 @@ class LastVerifiedColumn(BaseDateColumn):
     attrName = 'last_verified'
 
 
-class DeleteColumn(column.Column):
+class DetailColumn(column.LinkColumn):
 
     weight = 6
+    header = ''
+    linkContent = 'details'
+
+    def getLinkURL(self, item):
+        return self.request.route_url('admin', traverse=('customers', item.__name__, '@@details'))
+
+
+class DeleteColumn(column.Column):
+
+    weight = 7
     buttonTitle = 'Delete'
 
     def renderCell(self, item):
@@ -162,7 +174,16 @@ class ValuesForCustomersTable(value.ValuesForContainer):
 
 
 class SitesTable(BaseTable):
-    pass
+
+    def __init__(self, context, request, **kwargs):
+        super(SitesTable, self).__init__(context, request)
+        self._email = kwargs.get('email')
+
+    @property
+    def values(self):
+        if self._email:
+            return [x for x in self.context.values() if x.owner.email == self._email]
+        return self.context.values()
 
 
 class SiteColumnHeader(header.SortingColumnHeader):
@@ -174,6 +195,13 @@ class SiteOwnerUsernameColumn(column.GetAttrColumn):
     weight = 1
     header = 'OwnerUsername'
     attrName = 'owner_username'
+
+
+class SiteStatusColumn(column.GetAttrColumn):
+    
+    weight = 1
+    header = 'status'
+    attrName = 'status'
 
 
 class SiteCreatedColumn(CreatedColumn):
