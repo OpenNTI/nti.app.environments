@@ -14,8 +14,15 @@
 				  login="alex.yang@nextthought.com"
 				  title="Alex Yang" />
 
+	<sp:principal id="chris.utz@nextthought.com"
+				  login="chris.utz@nextthought.com"
+				  title="Chris" />
+
 	<!-- roles to principals -->
 	<sp:grant role="nti.roles.admin"
 			  principal="alex.yang@nextthought.com" />
+
+	<sp:grant role="nti.roles.admin"
+			  principal="chris.utz@nextthought.com" />
 
 </configure>
