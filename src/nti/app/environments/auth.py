@@ -15,7 +15,7 @@ ACT_UPDATE = 'nti.actions.update'
 ACT_DELETE = 'nti.actions.delete'
 ACT_ADMIN = 'nti.actions.admin'
 
-ADMIN_ROLE = 'nti.roles.admin'
+ADMIN_ROLE = 'role:nti.roles.admin'
 
 
 def is_admin(userid):

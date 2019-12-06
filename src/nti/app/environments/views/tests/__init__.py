@@ -56,7 +56,7 @@ class DummyCookieHelper(object):
 
 def dummy_callback(userid='admin001', request=None):
     if userid == 'admin001':
-        return ['nti.roles.admin']
+        return ['role:nti.roles.admin']
     elif userid=='user001':
         return ['user001']
 
