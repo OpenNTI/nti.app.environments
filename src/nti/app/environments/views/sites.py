@@ -33,7 +33,7 @@ class SiteBaseView(BaseView):
         try:
             body = self.request.json_body
         except ValueError:
-            raise_json_error(hexc.HTTPBadRequest("Invalid json body."))
+            raise_json_error(hexc.HTTPBadRequest, "Invalid json body.")
         return body
 
     def _get_value(self, field, params=None):
@@ -118,6 +118,7 @@ class SiteCreationView(SiteBaseView):
     def __call__(self):
         site = self._create_site()
         self.context.addSite(site)
+        self.request.response.status = 201
         return {}
 
 
