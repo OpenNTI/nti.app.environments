@@ -15,7 +15,7 @@ class BaseView(object):
         value = params.get(name)
         value = value.strip() if value else None
         if not value and required:
-            raise_json_error(hexc.HTTPBadRequest, 'Bad request')
+            raise_json_error(hexc.HTTPBadRequest, 'Missing required {}'.format(name))
         return value
 
 

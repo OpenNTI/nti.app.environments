@@ -42,7 +42,8 @@ requires = [
     'zope.i18nmessageid',
     'zope.principalregistry',
     'zope.securitypolicy',
-    'pyramid_zope_request'
+    'pyramid_zope_request',
+    'hubspot3'
 ]
 
 tests_require = [

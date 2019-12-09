@@ -8,11 +8,15 @@ from pyramid.view import view_defaults
 from zope import component
 from zope.schema._bootstrapinterfaces import ConstraintNotSatisfied
 
+from nti.app.environments.api.hubspotclient import get_hubspot_client
+
 from nti.app.environments.models.interfaces import ICustomer
 from nti.app.environments.models.interfaces import ICustomersContainer
 
+from nti.app.environments.models.customers import HubspotContact
 from nti.app.environments.models.customers import PersistentCustomer
 
+from nti.app.environments.auth import ACT_CREATE
 from nti.app.environments.auth import ACT_DELETE
 from nti.app.environments.authentication import forget
 from nti.app.environments.authentication import remember
@@ -34,6 +38,13 @@ def getOrCreateCustomer(container, email):
         customer.__name__ = email
         customer.created = datetime.datetime.utcnow()
         container[customer.__name__] = customer
+    return customer
+
+
+def createCustomer(container, email, name, hs_contact_vid):
+    customer = getOrCreateCustomer(container, email)
+    customer.name = name
+    customer.hubspot_contact = HubspotContact(contact_vid=str(hs_contact_vid))
     return customer
 
 
@@ -177,3 +188,34 @@ def deleteCustomerView(context, request):
     container = context.__parent__
     del container[context.__name__]
     return hexc.HTTPNoContent()
+
+
+@view_defaults(renderer='json',
+               context=ICustomersContainer,
+               request_method='POST',
+               permission=ACT_CREATE)
+class CustomerCreationView(BaseView):
+
+    @property
+    def client(self):
+        return get_hubspot_client()
+
+    @view_config(name="hubspot")
+    def with_hubspot(self):
+        email = self._get_param('email')
+        customer = self.context.getCustomer(email)
+        if customer is not None:
+            raise_json_error(hexc.HTTPConflict,
+                             "Existing customer: {}".format(email))
+
+        contact = self.client.fetch_contact_by_email(email)
+        if not contact:
+            raise_json_error(hexc.HTTPUnprocessableEntity,
+                             "No hubspot contact found: {}".format(email))
+
+        customer = createCustomer(self.context,
+                                  email=email,
+                                  name=contact['name'],
+                                  hs_contact_vid=contact['canonical-vid'])
+        self.request.response.status = 201
+        return {}

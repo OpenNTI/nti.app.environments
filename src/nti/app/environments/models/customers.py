@@ -12,11 +12,19 @@ from zope.container.folder import Folder
 from nti.property.property import LazyOnClass
 
 from nti.schema.fieldproperty import createFieldProperties
+from nti.schema.schema import SchemaConfigured
 
 from nti.app.environments.auth import ADMIN_ROLE
 
 from nti.app.environments.models.interfaces import ICustomer
 from nti.app.environments.models.interfaces import ICustomersContainer
+from nti.app.environments.models.interfaces import IHubspotContact
+
+
+@interface.implementer(IHubspotContact)
+class HubspotContact(SchemaConfigured, Persistent, Contained):
+
+    createFieldProperties(IHubspotContact)
 
 
 @interface.implementer(ICustomersContainer)
@@ -31,6 +39,6 @@ class CustomersFolder(Folder):
 
 
 @interface.implementer(ICustomer)
-class PersistentCustomer(Persistent, Contained):
+class PersistentCustomer(SchemaConfigured, Persistent, Contained):
 
     createFieldProperties(ICustomer)

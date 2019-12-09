@@ -24,13 +24,15 @@ function showErrorMessage(error, successSelector, errorSelector) {
     $(errorSelector).show();
 }
 
-function clearMessages() {
-    success = $('.success');
-    error = $('.error');
-    $(success).html('');
-    $(success).hide();
-    $(error).html('');
-    $(error).hide();
+function clearMessages(successSelector, errorSelector) {
+    successSelector = successSelector ? successSelector : '.success';
+    errorSelector = errorSelector ? errorSelector : '.error';
+    successSelector = $('.success');
+    errorSelector = $('.error');
+    $(successSelector).html('');
+    $(successSelector).hide();
+    $(errorSelector).html('');
+    $(errorSelector).hide();
 }
 
 

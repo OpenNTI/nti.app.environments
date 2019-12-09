@@ -28,7 +28,12 @@
 
     <div class="container">
         <h1>Customers</h1>
-        <input type="text" id='search' name="search" placeHolder="Search" class="search-input" onkeypress="return search(event);"/>
+
+        <div class="toolbar">
+            <input type="text" id='search' name="search" placeHolder="Search" class="search-input" onkeypress="return search(event);"/>
+            <button type="button" style="float: right;" onclick="document.getElementById('newModal').style.display = 'block';">Add Via Hubspot</button>
+        </div>
+
 		<table tal:condition="python: len(table.context)" tal:replace="structure python: table.render()" />
 		<div tal:condition="python: not len(table.context)">
 			No customers.
@@ -59,45 +64,37 @@
         </div>
     </div>
 
+    <div id="newModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Via Hubspot</h3>
+            </div>
+            <div class="modal-body">
+                <div class="form">
+                    <div class="input-row">
+                        <label class="input-col-1">Email</label>
+                        <div class="input-col-3">
+                            <input type="text" name="email" id="hubspot_email"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="success success-creation" style="display:none;"></div>
+                <div class="error error-creation" style="display:none;"></div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class='btnSave' onclick="saveItem(this, '${creation_url}');">Save</button>
+                <button type="button" class='btnNO' onclick="openNewModal();">Cancel</button>
+            </div>
+        </div>
+    </div>
+
 <script src="https://code.jquery.com/jquery-3.4.1.min.js"
         integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
         crossorigin="anonymous"></script>
 <script src="/static/js/base.js"></script>
+<script src="/static/js/customers.js"></script>
 <script>
-
-    function postHandler() {
-        closeDeletingModal();
-        window.location.reload();
-    }
-
-    function deleteItem (me) {
-        var url = $(me).attr('delete_url');
-        $.ajax({
-            url: url,
-            method: 'DELETE',
-            data: {},
-            success: function (result) {
-                showSuccessMessage("Deleted successfully.", '.success-deletion', '.error-deletion', 500, postHandler);
-            },
-            error: function (jqXHR, exception) {
-                var res = JSON.parse(jqXHR.responseText);
-                showErrorMessage(res['message'], '.success-deletion', '.error-deletion');
-            }
-        });
-    }
-
-    function openDeletingModal(url, email) {
-        var modal = document.getElementById("deletingModal");
-        modal.style.display = "block";
-        modal.getElementsByClassName('btnOK')[0].setAttribute('delete_url', url);
-        modal.getElementsByClassName('deleting_email')[0].innerHTML = email;
-    }
-
-    function closeDeletingModal() {
-        var modal = document.getElementById("deletingModal");
-        modal.style.display = "none";
-    }
-
     // When the user clicks anywhere outside of the modal, close it
     window.onclick = function(event) {
         var modal = document.getElementById("deletingModal");

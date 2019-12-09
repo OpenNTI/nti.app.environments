@@ -29,7 +29,8 @@ class CustomersListView(BaseTemplateView):
 
     def __call__(self):
         table = make_specific_table(CustomersTable, self.context, self.request)
-        return {'table': table}
+        return {'table': table,
+                'creation_url': self.request.resource_url(self.context, '@@hubspot')}
 
 
 @view_config(route_name='admin',
@@ -49,7 +50,8 @@ class CustomerDetailView(BaseTemplateView):
         table = make_specific_table(SitesTable, sites, self.request, email=self.context.email)
         return {'customers_list_link': self.request.route_url('admin', traverse=('customers', '@@list')),
                 'customer': {'email': self.context.email,
-                             'name': self.context.name},
+                             'name': self.context.name,
+                             'hubspot': self.context.hubspot_contact.contact_vid if self.context.hubspot_contact else ''},
                 'table': table}
 
 

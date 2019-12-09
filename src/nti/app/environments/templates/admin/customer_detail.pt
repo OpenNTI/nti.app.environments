@@ -31,6 +31,7 @@
             <img src="/static/image/avatar.png" alt="Avatar" style="width:120px;border-radius: 50%;">
             <p>Name: <span tal:content="customer.name or 'Unknown'"></span></p>
             <p>Email: <span tal:content="customer.email"></span></p>
+            <p>Hubspot: <span tal:content="customer.hubspot"></span></p>
         </div>
 
         <h1 style="margin-top: 32px;">Sites</h1>

@@ -14,16 +14,6 @@
         button {
             cursor: pointer;
         }
-
-        .toolbar input,
-        .toolbar button {
-            padding: 6px 6px;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            margin-bottom: 16px;
-            font-size: 14px;
-        }
-
     </style>
 <body>
     <div metal:use-macro="load: ../macros/nav.pt"/>
