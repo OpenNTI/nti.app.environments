@@ -51,7 +51,7 @@
     <div class="container">
         <div class="site-header"><br>
             <div class="site-item site-info">
-                <img src="/static/logo.png" alt="Avatar" style="width:120px;border-radius: 50%;">
+                <img src="/static/logo.png" alt="Avatar" style="width:120px;border-radius: 50%;" tal:attributes="src site.logo_url | nothing or '/static/logo.png'">
                 
                 <p>Created at <span tal:content="site.created"></span>.</p>
             </div>
