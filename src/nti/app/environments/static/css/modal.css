@@ -1,0 +1,81 @@
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+.modal-content {
+	background-color: #fefefe;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 0px 16px;
+    border: 1px solid #888;
+	max-width: 600px; /* Could be more or less, depending on screen size */
+	border-radius: 4px;
+	position: relative;
+	box-shadow: 0 4px 10px 0 rgba(0,0,0,0.2), 0 4px 20px 0 rgba(0,0,0,0.19);
+}
+
+.modal-header {
+	width: 100%;
+	padding: 0;
+}
+
+.modal-header h3 {
+	font-size: 28px;
+	padding: 12px 0;
+	margin: 0;
+	font-weight: 600px;
+}
+
+.modal-body {
+	width: 100%;
+	padding: 0;
+}
+
+.modal-body p {
+	font-size: 20px;
+	padding: 6px 0;
+	margin: 0;
+}
+
+.modal-footer {
+	width: 100%;
+	margin: 12px 0;
+	text-align:right;
+}
+
+.modal-footer .btnOK,
+.modal-footer .btnNO,
+.modal-footer .btnSave {
+	font-size: 16px;
+	line-height: 32px;
+	width: 80px;
+	border-radius: 4px;	
+	margin-left: 6px;
+	margin-right: 6px;
+}
+
+.modal-footer .btnNO {
+	color: #fff;
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+
+.modal-footer .btnOK {
+	color: #fff;
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.modal-footer .btnSave {
+	color: #fff;
+    background-color: #4CAF50;
+    border-color: #4CAF50;
+}

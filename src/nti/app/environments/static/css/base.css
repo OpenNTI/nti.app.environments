@@ -1,0 +1,102 @@
+body {
+    margin: 0px;
+}
+
+.nav {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333;
+    position: fixed;
+    top: 0;
+    width: 100%;
+}
+
+.nav .nav-item {
+    float: left;
+}
+
+.nav .nav-item img {
+    display: block;
+    width: 70px;
+    height: 70px;
+}
+
+.nav .nav-item a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 0px 0px;
+    text-decoration: none;
+    line-height: 70px;
+    width: 70px;
+}
+
+.nav .nav-item a:hover:not(.active) {
+    background-color: #111;
+}
+
+.nav .nav-item .active {
+    background-color: #4CAF50;
+}
+
+.success {
+    color: green;
+}
+
+.error {
+    color: red;
+}
+
+/** form input */
+.form {
+    width: 80%;
+}
+.form .input-row {
+	width: 100%;
+	font-size: 16px;
+	position: relative;
+	margin-bottom: 16px;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-wrap: wrap;
+	flex-wrap: wrap;
+}
+
+.form .input-row .input-col-1 {
+    position: relative;
+    width: 100%;
+	-ms-flex: 0 0 20%;
+    flex: 0 0 20%;
+	max-width: 20%;
+	display: inline-block;
+	padding: 7px 15px;
+}
+
+.form .input-row .input-col-3 {
+    position: relative;
+    width: 100%;
+	-ms-flex: 0 0 60%;
+    flex: 0 0 60%;
+	max-width: 60%;
+}
+
+.form .input-row .input-col-3 input,
+.form .input-row select,
+.form .input-row textarea{
+	width: 100%;
+	padding: 6px 12px;
+	line-height: 16px;
+    font-size: 16px;
+    background-color: #fff;
+}
+
+.form .btnCustom {
+	font-size: 16px;
+	line-height: 32px;
+	width: auto;
+	border-radius: 4px;	
+	margin-left: 6px;
+    margin-right: 6px;
+}

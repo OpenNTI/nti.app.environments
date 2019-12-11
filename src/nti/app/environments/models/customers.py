@@ -1,26 +1,44 @@
 from persistent import Persistent
 
-from zope import interface
+from pyramid.security import Allow
+from pyramid.security import ALL_PERMISSIONS
 
-from zope.container.interfaces import INameChooser
+from zope import interface
 
 from zope.container.contained import Contained
 
 from zope.container.folder import Folder
 
+from nti.property.property import LazyOnClass
+
 from nti.schema.fieldproperty import createFieldProperties
+from nti.schema.schema import SchemaConfigured
+
+from nti.app.environments.auth import ADMIN_ROLE
+
+from nti.app.environments.models.interfaces import ICustomer
+from nti.app.environments.models.interfaces import ICustomersContainer
+from nti.app.environments.models.interfaces import IHubspotContact
 
 
-from .interfaces import ICustomer
-from .interfaces import ICustomersContainer
+@interface.implementer(IHubspotContact)
+class HubspotContact(SchemaConfigured, Persistent, Contained):
+
+    createFieldProperties(IHubspotContact)
+
 
 @interface.implementer(ICustomersContainer)
 class CustomersFolder(Folder):
 
-    pass
+    @LazyOnClass
+    def __acl__(self):
+        return [(Allow, ADMIN_ROLE, ALL_PERMISSIONS)]
+
+    def getCustomer(self, email):
+        return self.get(email)
+
 
 @interface.implementer(ICustomer)
-class PersistentCustomer(Persistent, Contained):
+class PersistentCustomer(SchemaConfigured, Persistent, Contained):
 
     createFieldProperties(ICustomer)
-

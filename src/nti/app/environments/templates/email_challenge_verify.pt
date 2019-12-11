@@ -204,7 +204,7 @@
             data: data,
             success: function (result) {
                 $(spinner).hide();
-                showSuccessMessage("Verified!", 500);
+                showSuccessMessage("Verified!");
             },
             error: function (xhr, exception) {
                 $(spinner).hide();

@@ -1,0 +1,126 @@
+<!-- -*- mode: nxml -*- -->
+<configure	xmlns="http://namespaces.zope.org/zope"
+			xmlns:i18n="http://namespaces.zope.org/i18n"
+			xmlns:zcml="http://namespaces.zope.org/zcml">
+
+	<include package="zope.component" file="meta.zcml" />
+	<include package="zope.security" file="meta.zcml" />
+	<include package="zope.component" />
+	<include package="zope.security" />
+	
+	<include package="z3c.table" />
+
+	<adapter factory="._table_utils.TrivialTableAbsoluteURL" />
+
+	<!-- Customers table -->
+	<adapter factory="._table_utils.EmailColumn"
+			 for="* * ._table_utils.CustomersTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="email" />
+
+	<adapter factory="._table_utils.NameColumn"
+			 for="* * ._table_utils.CustomersTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="name" />
+
+	<adapter factory="._table_utils.CreatedColumn"
+			 for="* * ._table_utils.CustomersTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="created" />
+
+	<adapter factory="._table_utils.HubSpotColumn"
+			 for="* * ._table_utils.CustomersTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="hubspot" />
+
+	<adapter factory="._table_utils.LastVerifiedColumn"
+			 for="* * ._table_utils.CustomersTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="last_verified" />
+
+	<adapter factory="._table_utils.DetailColumn"
+			 for="* * ._table_utils.CustomersTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="details" />
+
+	<adapter factory="._table_utils.DeleteColumn"
+			 for="* * ._table_utils.CustomersTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="delete" />
+
+	<adapter factory="._table_utils.CustomerColumnHeader"
+			 for="* * * ._table_utils.EmailColumn"
+			 provides="z3c.table.interfaces.IColumnHeader"/>
+
+	<adapter factory="._table_utils.CustomerColumnHeader"
+             for="* * * ._table_utils.NameColumn"
+			 provides="z3c.table.interfaces.IColumnHeader"/>
+
+	<adapter factory="._table_utils.CustomerColumnHeader"
+             for="* * * ._table_utils.CreatedColumn"
+			 provides="z3c.table.interfaces.IColumnHeader"/>
+
+	<adapter factory="._table_utils.CustomerColumnHeader"
+             for="* * * ._table_utils.LastVerifiedColumn"
+			 provides="z3c.table.interfaces.IColumnHeader"/>
+
+	<adapter factory="._table_utils.CustomerColumnHeader"
+             for="* * * ._table_utils.HubSpotColumn"
+			 provides="z3c.table.interfaces.IColumnHeader"/>
+
+	<adapter factory="._table_utils.ValuesForCustomersTable"
+			 for="nti.app.environments.models.interfaces.ICustomersContainer
+			 	  zope.publisher.interfaces.browser.IBrowserRequest
+			 	  ._table_utils.CustomersTable"
+			 provides="z3c.table.interfaces.IValues"/>
+
+    <!-- Sites table -->
+	<adapter factory="._table_utils.SiteOwnerUsernameColumn"
+			 for="* * ._table_utils.SitesTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="owner_username" />
+
+	<adapter factory="._table_utils.SiteStatusColumn"
+			 for="* * ._table_utils.SitesTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="status" />
+
+	<adapter factory="._table_utils.SiteCreatedColumn"
+			 for="* * ._table_utils.SitesTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="created" />
+
+	<adapter factory="._table_utils.SiteDeleteColumn"
+			 for="* * ._table_utils.SitesTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="delete" />
+
+	<adapter factory="._table_utils.SiteDetailColumn"
+			 for="* * ._table_utils.SitesTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="details" />
+
+	<adapter factory="._table_utils.SiteColumnHeader"
+			 for="* * * ._table_utils.SiteOwnerUsernameColumn"
+			 provides="z3c.table.interfaces.IColumnHeader"/>
+
+	<adapter factory="._table_utils.SiteColumnHeader"
+			 for="* * * ._table_utils.SiteStatusColumn"
+			 provides="z3c.table.interfaces.IColumnHeader"/>
+
+	<adapter factory="._table_utils.SiteColumnHeader"
+             for="* * * ._table_utils.SiteCreatedColumn"
+			 provides="z3c.table.interfaces.IColumnHeader"/>
+
+	<!-- default batch provider -->
+	<adapter factory="._table_utils.DefaultTableBatchProvider"
+			 for="* * ._table_utils.BaseTable"
+			 provides="z3c.table.interfaces.IBatchProvider"
+			 name="default-batch" />
+
+	<!-- https://github.com/zopefoundation/pyramid_zope_request -->
+	<adapter factory="pyramid_zope_request.PyramidPublisherRequest"
+			 for="pyramid.interfaces.IRequest"
+			 provides="zope.publisher.interfaces.browser.IBrowserRequest" />
+
+</configure>

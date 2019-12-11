@@ -22,7 +22,6 @@ from nti.schema.interfaces import InvalidValue
 
 from nti.schema.field import Choice
 from nti.schema.field import ValidTextLine
-from nti.schema.field import Bool
 from nti.schema.field import DateTime
 from nti.schema.field import Object
 from nti.schema.field import ListOrTuple
@@ -126,11 +125,11 @@ def checkUsername(username):
     """
     Duplicated from nti.dataserver.entity.py
     """
-    username = unicode(username)
+    username = str(username)
     for c in username:
         if c not in _ALLOWED_USERNAME_CHARS:
             raise UsernameContainsIllegalChar(username, _ALLOWED_USERNAME_CHARS)
-
+    return True
 
 class IHubspotContact(interface.Interface):
     """
@@ -198,16 +197,24 @@ class IDedicatedEnvironment(IEnvironment):
     """
     Identifies an environment dedicated to a particular customer.
     """
+    containerId = ValidTextLine(title="The container id for this environment.",
+                                required=True)
 
 class ISharedEnvironment(IEnvironment):
     """
     Identifies an environment which contains sites for multiple customers.
     """
+    name = ValidTextLine(title="The name identifier for this environment.",
+                         required=True)
+
 
 _SITE_STATUS_OPTIONS = ('PENDING', 'ACTIVE', 'INACTIVE',)
 
 class ILMSSite(IContained):
-    
+
+    id = ValidTextLine(title="The identifier of this site.",
+                       required=True)
+
     owner = Object(ICustomer,
                    title=u'The customer that owns this site',
                    required=True)
@@ -229,16 +236,14 @@ class ILMSSite(IContained):
                          title=u'The environment this site is running out of',
                          required=True)
 
-    created = DateTime(title=u'The datetime this customer was created at',
+    created = DateTime(title=u'The datetime this site was created at',
                        required=True)
 
     status = Choice(title=u'The style of the highlight',
                     values=_SITE_STATUS_OPTIONS,
                     default='PENDING')
-    
+
 
 class ILMSSitesContainer(IContainer):
 
     contains(ILMSSite)
-
-

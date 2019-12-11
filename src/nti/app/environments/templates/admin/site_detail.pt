@@ -1,0 +1,90 @@
+<html>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Site Detail</title>
+    <link href="/static/css/base.css" rel="stylesheet">
+    <link href="/static/css/modal.css" rel="stylesheet">
+    <style>
+        .container {
+            margin: auto;
+            margin-top: 80px;
+            width: 80%;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        .site-header {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .site-item {
+            margin-top: 16px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            padding: 16px 16px;
+        }
+
+        .site-info {
+            width: 30%;
+            text-align: center;
+        }
+
+        .site-license {
+            margin-left: 16px;
+            width: 70%;
+        }
+
+        .site-footer{
+            margin-top: 16px; 
+        }
+
+        h3 {
+            margin: 0 0 8px 0;
+        }
+
+    </style>
+<body>
+    <div metal:use-macro="load: ../macros/nav.pt"/>
+
+    <div class="container">
+        <div class="site-header"><br>
+            <div class="site-item site-info">
+                <img src="/static/logo.png" alt="Avatar" style="width:120px;border-radius: 50%;" tal:attributes="src site.logo_url | nothing or '/static/logo.png'">
+                
+                <p>Created at <span tal:content="site.created"></span>.</p>
+            </div>
+            <div class="site-item site-license">
+                <h3>License</h3>
+            </div>
+        </div>
+
+        <div class="site-item">
+            <h3>Owner Info</h3>
+            <p>Name: <span tal:content="site.owner.name"><span></p>
+            <p>Email: <span tal:content="site.owner.email"><span></p>
+            <p>Username: <span tal:content="site.owner_username"></span></p>
+        </div>
+
+        <div class="site-item">
+            <h3>Site details</h3>
+        </div>
+
+        <div class="site-footer">
+            <button class="btnCustom" onclick="window.location='${sites_list_link}';">
+                Back To Sites
+            </button>
+        </div>
+    </div>
+
+
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"
+        integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+        crossorigin="anonymous"></script>
+<script src="/static/js/base.js"></script>
+<script>
+
+</script>
+</body>
+</html>

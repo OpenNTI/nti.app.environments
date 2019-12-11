@@ -1,0 +1,28 @@
+<configure xmlns="http://namespaces.zope.org/zope"
+		   xmlns:sp="http://nextthought.com/ntp/securitypolicy">
+
+	<include package="nti.app.environments.securitypolicy" file="meta.zcml" />
+
+	<include package="zope.principalregistry" />
+
+	<!-- roles -->
+	<sp:role id="role:nti.roles.admin"
+			 title="A role for admin." />
+
+	<!-- principals -->
+	<sp:principal id="alex.yang@nextthought.com"
+				  login="alex.yang@nextthought.com"
+				  title="Alex Yang" />
+
+	<sp:principal id="chris.utz@nextthought.com"
+				  login="chris.utz@nextthought.com"
+				  title="Chris" />
+
+	<!-- roles to principals -->
+	<sp:grant role="role:nti.roles.admin"
+			  principal="alex.yang@nextthought.com" />
+
+	<sp:grant role="role:nti.roles.admin"
+			  principal="chris.utz@nextthought.com" />
+
+</configure>
