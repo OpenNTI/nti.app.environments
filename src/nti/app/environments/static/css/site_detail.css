@@ -1,0 +1,29 @@
+.site-header {
+    display: flex;
+    justify-content: space-between;
+}
+
+.site-item {
+    margin-top: 16px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 16px 16px;
+}
+
+.site-logo {
+    width: 30%;
+    text-align: center;
+}
+
+.site-info {
+    margin-left: 16px;
+    width: 70%;
+}
+
+.site-footer{
+    margin-top: 16px; 
+}
+
+h3 {
+    margin: 0 0 8px 0;
+}

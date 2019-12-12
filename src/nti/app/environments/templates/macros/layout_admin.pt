@@ -1,0 +1,24 @@
+<!DOCTYPE html metal:define-macro="layout_admin">
+<html lang="{{request.locale_name}}">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="NextThought">
+    <title metal:define-slot="title">NextThought Site Onboarding</title>
+    <link href="/static/css/base.css" rel="stylesheet">
+    <metal:slot metal:define-slot="css"></metal:slot>
+<body>
+    <div metal:use-macro="load: ./nav.pt"/>
+
+    <!-- content -->
+    <div class="content">
+        <metal:slot metal:define-slot="content"></metal:slot>
+    </div>
+
+    <!-- ========javascript======== -->
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+            integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+            crossorigin="anonymous"></script>
+    <script src="/static/js/base.js"></script>
+    <metal:slot metal:define-slot="script"></metal:slot>
+</body>
+</html>

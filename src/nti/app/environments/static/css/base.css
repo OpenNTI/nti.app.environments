@@ -41,6 +41,12 @@ body {
     background-color: #4CAF50;
 }
 
+.content {
+    margin: auto;
+    margin-top: 80px;
+    width: 80%;
+}
+
 .success {
     color: green;
 }
@@ -103,4 +109,12 @@ body {
 	border-radius: 4px;	
 	margin-left: 6px;
     margin-right: 6px;
+}
+
+button {
+    cursor: pointer;
+}
+
+a {
+    text-decoration: none;
 }

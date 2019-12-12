@@ -1,32 +1,22 @@
-<html>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Consumers</title>
-    <link href="/static/css/base.css" rel="stylesheet">
-    <link href="/static/css/modal.css" rel="stylesheet">
-    <link href="/static/css/table.css" rel="stylesheet">
-    <style>
-        .container {
-            margin: auto;
-            margin-top: 80px;
-            width: 80%;
-        }
+<metal:block metal:use-macro="load: ../macros/layout_admin.pt">
+    <title metal:fill-slot="title">
+        Customers
+    </title>
+	<metal:block metal:fill-slot="css">
+        <link href="/static/css/modal.css" rel="stylesheet">
+        <link href="/static/css/table.css" rel="stylesheet">
+        <style>
+            .search-input {
+                font-size: 16px;
+                margin-bottom: 16px;
+                padding: 8px 6px;
+                border: 1px solid #ced4da;
+                border-radius: 4px;
+            }
+        </style>
+    </metal:block>
 
-        button {
-            cursor: pointer;
-        }
-
-        .search-input {
-            font-size: 16px;
-            margin-bottom: 16px;
-            padding: 8px 6px;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-        }
-    </style>
-<body>
-    <div metal:use-macro="load: ../macros/nav.pt"/>
-
-    <div class="container">
+    <metal:block metal:fill-slot="content">
         <h1>Customers</h1>
 
         <div class="toolbar">
@@ -44,86 +34,81 @@
                 <span tal:replace="structure python: table.renderBatch()"/>
             </div>
 	    </div>
-	</div>
 
-    <div id="deletingModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Deleting?</h3>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete customer <strong><span class="deleting_email"></span></strong>?</p>
-                <div class="success success-deletion" style="display:none;"></div>
-                <div class="error error-deletion" style="display:none;"></div>
-            </div>
+        <div id="deletingModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Deleting?</h3>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete customer <strong><span class="deleting_email"></span></strong>?</p>
+                    <div class="success success-deletion" style="display:none;"></div>
+                    <div class="error error-deletion" style="display:none;"></div>
+                </div>
 
-            <div class="modal-footer">
-                <button class='btnOK' onclick="deleteItem(this);">Delete</button>
-                <button class='btnNO' onclick="closeDeletingModal();">Cancel</button>
+                <div class="modal-footer">
+                    <button class='btnOK' onclick="deleteItem(this);">Delete</button>
+                    <button class='btnNO' onclick="closeDeletingModal();">Cancel</button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div id="newModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Add Via Hubspot</h3>
-            </div>
-            <div class="modal-body">
-                <div class="form">
-                    <div class="input-row">
-                        <label class="input-col-1">Email</label>
-                        <div class="input-col-3">
-                            <input type="text" name="email" id="hubspot_email"/>
+        <div id="newModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Add Via Hubspot</h3>
+                </div>
+                <div class="modal-body">
+                    <div class="form">
+                        <div class="input-row">
+                            <label class="input-col-1">Email</label>
+                            <div class="input-col-3">
+                                <input type="text" name="email" id="hubspot_email"/>
+                            </div>
                         </div>
                     </div>
+                    <div class="success success-creation" style="display:none;"></div>
+                    <div class="error error-creation" style="display:none;"></div>
                 </div>
-                <div class="success success-creation" style="display:none;"></div>
-                <div class="error error-creation" style="display:none;"></div>
-            </div>
 
-            <div class="modal-footer">
-                <button type="button" class='btnSave' onclick="saveItem(this, '${creation_url}');">Save</button>
-                <button type="button" class='btnNO' onclick="document.getElementById('newModal').style.display = 'none';">Cancel</button>
+                <div class="modal-footer">
+                    <button type="button" class='btnSave' onclick="saveItem(this, '${creation_url}');">Save</button>
+                    <button type="button" class='btnNO' onclick="document.getElementById('newModal').style.display = 'none';">Cancel</button>
+                </div>
             </div>
         </div>
-    </div>
 
-<script src="https://code.jquery.com/jquery-3.4.1.min.js"
-        integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
-        crossorigin="anonymous"></script>
-<script src="/static/js/base.js"></script>
-<script src="/static/js/customers.js"></script>
-<script>
-    // When the user clicks anywhere outside of the modal, close it
-    window.onclick = function(event) {
-        var ids = ["deletingModal"];
-        for(var i=0; i<ids.length; i++) {
-            var modal = document.getElementById(ids[i]);
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
-        }
-    }
+        <metal:block metal:fill-slot="script">
+            <script src="/static/js/customers.js"></script>
+            <script>
+                // When the user clicks anywhere outside of the modal, close it
+                window.onclick = function(event) {
+                    var ids = ["deletingModal"];
+                    for(var i=0; i<ids.length; i++) {
+                        var modal = document.getElementById(ids[i]);
+                        if (event.target == modal) {
+                            modal.style.display = "none";
+                        }
+                    }
+                }
 
-    function search(e) {
-        // When a enter key pressed, query the server.
-        if (e.which == 13 || e.keyCode == 13) {
-            var search = $('#search').val().trim();
-            var url = updateUrlParameter('email', search);
-            window.location.href = url;
-        }
-    }
+                function search(e) {
+                    // When a enter key pressed, query the server.
+                    if (e.which == 13 || e.keyCode == 13) {
+                        var search = $('#search').val().trim();
+                        var url = updateUrlParameter('email', search);
+                        window.location.href = url;
+                    }
+                }
 
-    $( document ).ready(function() {
-        var email = getUrlParameter('email');
-        if(email){
-            $('#search').val(email);
-        }
-    });
+                $( document ).ready(function() {
+                    var email = getUrlParameter('email');
+                    if(email){
+                        $('#search').val(email);
+                    }
+                });
 
-</script>
-
-</body>
-
-</html>
+            </script>
+        </metal:block>
+    </metal:block>
+</metal:block>

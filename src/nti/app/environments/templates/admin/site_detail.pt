@@ -1,58 +1,13 @@
-<html>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Site Detail</title>
-    <link href="/static/css/base.css" rel="stylesheet">
-    <link href="/static/css/modal.css" rel="stylesheet">
-    <style>
-        .container {
-            margin: auto;
-            margin-top: 80px;
-            width: 80%;
-        }
+<metal:block metal:use-macro="load: ../macros/layout_admin.pt">
+    <title metal:fill-slot="title">
+        Site Detail
+    </title>
+	<metal:block metal:fill-slot="css">
+        <link href="/static/css/modal.css" rel="stylesheet">
+        <link href="/static/css/site_detail.css" rel="stylesheet">
+    </metal:block>
 
-        button {
-            cursor: pointer;
-        }
-
-        .site-header {
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .site-item {
-            margin-top: 16px;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            padding: 16px 16px;
-        }
-
-        .site-logo {
-            width: 30%;
-            text-align: center;
-        }
-
-        .site-info {
-            margin-left: 16px;
-            width: 70%;
-        }
-
-        .site-footer{
-            margin-top: 16px; 
-        }
-
-        h3 {
-            margin: 0 0 8px 0;
-        }
-
-        a {
-            text-decoration: none;
-        }
-
-    </style>
-<body>
-    <div metal:use-macro="load: ../macros/nav.pt"/>
-
-    <div class="container">
+    <metal:block metal:fill-slot="content">
         <div class="site-header"><br>
             <div class="site-item site-logo">
                 <a href="#" tal:attributes="href site.site_url|nothing or '#'">
@@ -103,15 +58,5 @@
                 Back To Sites
             </button>
         </div>
-    </div>
-
-
-<script src="https://code.jquery.com/jquery-3.4.1.min.js"
-        integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
-        crossorigin="anonymous"></script>
-<script src="/static/js/base.js"></script>
-<script>
-
-</script>
-</body>
-</html>
+    </metal:block>
+</metal:block>

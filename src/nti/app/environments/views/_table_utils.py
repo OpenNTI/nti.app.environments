@@ -182,7 +182,7 @@ class SitesTable(BaseTable):
     @property
     def values(self):
         if self._email:
-            return [x for x in self.context.values() if x.owner.email == self._email]
+            return [x for x in self.context.values() if x.owner and x.owner.email == self._email]
         return self.context.values()
 
 

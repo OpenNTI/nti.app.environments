@@ -1,4 +1,3 @@
-from pyramid import httpexceptions as hexc
 from pyramid.view import forbidden_view_config
 from .base import BaseTemplateView
 

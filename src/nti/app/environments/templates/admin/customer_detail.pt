@@ -1,32 +1,12 @@
-<html>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Customer Detail</title>
-    <link href="/static/css/base.css" rel="stylesheet">
-    <link href="/static/css/modal.css" rel="stylesheet">
-    <link href="/static/css/table.css" rel="stylesheet">
-    <style>
-        .container {
-            margin: auto;
-            margin-top: 80px;
-            width: 80%;
-        }
-
-        button {
-            cursor: pointer;
-        }
-
-        .search-input {
-            font-size: 16px;
-            margin-bottom: 16px;
-            padding: 8px 6px;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-        }
-    </style>
-<body>
-    <div metal:use-macro="load: ../macros/nav.pt"/>
-
-    <div class="container">
+<metal:block metal:use-macro="load: ../macros/layout_admin.pt">
+    <title metal:fill-slot="title">
+        Customer Detail
+    </title>
+	<metal:block metal:fill-slot="css">
+        <link href="/static/css/modal.css" rel="stylesheet">
+        <link href="/static/css/table.css" rel="stylesheet">
+    </metal:block>
+    <metal:block metal:fill-slot="content">
         <div class="customer-info"><br>
             <img src="/static/image/avatar.png" alt="Avatar" style="width:120px;border-radius: 50%;">
             <p>Name: <span tal:content="customer.name or 'Unknown'"></span></p>
@@ -51,69 +31,67 @@
                 Back To Customers
             </button>
         </div>
-    </div>
 
-    <div id="deletingModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Deleting?</h3>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete site <strong><span class="deleting_email"></span></strong>?</p>
-                <div class="success success-deletion" style="display:none;"></div>
-                <div class="error error-deletion" style="display:none;"></div>
-            </div>
+        <div id="deletingModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Deleting?</h3>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete site <strong><span class="deleting_email"></span></strong>?</p>
+                    <div class="success success-deletion" style="display:none;"></div>
+                    <div class="error error-deletion" style="display:none;"></div>
+                </div>
 
-            <div class="modal-footer">
-                <button class='btnOK' onclick="deleteItem(this);">Delete</button>
-                <button class='btnNO' onclick="document.getElementById('deletingModal').style.display = 'none';">Cancel</button>
+                <div class="modal-footer">
+                    <button class='btnOK' onclick="deleteItem(this);">Delete</button>
+                    <button class='btnNO' onclick="document.getElementById('deletingModal').style.display = 'none';">Cancel</button>
+                </div>
             </div>
         </div>
-    </div>
 
-<script src="https://code.jquery.com/jquery-3.4.1.min.js"
-        integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
-        crossorigin="anonymous"></script>
-<script src="/static/js/base.js"></script>
-<script>
-    function postHandler() {
-        document.getElementById('deletingModal').style.display = "none";
-        window.location.reload();
-    }
+        <metal:block metal:fill-slot="script">
+            <script>
+                function postHandler() {
+                    document.getElementById('deletingModal').style.display = "none";
+                    window.location.reload();
+                }
 
-    function deleteItem (me) {
-        var url = $(me).attr('delete_url');
-        $.ajax({
-            url: url,
-            method: 'DELETE',
-            data: {},
-            success: function (result) {
-                showSuccessMessage("Deleted successfully.", '.success-deletion', '.error-deletion', 500, postHandler);
-            },
-            error: function (jqXHR, exception) {
-                var res = JSON.parse(jqXHR.responseText);
-                showErrorMessage(res['message'], '.success-deletion', '.error-deletion');
-            }
-        });
-    }
+                function deleteItem (me) {
+                    var url = $(me).attr('delete_url');
+                    $.ajax({
+                        url: url,
+                        method: 'DELETE',
+                        data: {},
+                        success: function (result) {
+                            showSuccessMessage("Deleted successfully.", '.success-deletion', '.error-deletion', 500, postHandler);
+                        },
+                        error: function (jqXHR, exception) {
+                            var res = JSON.parse(jqXHR.responseText);
+                            showErrorMessage(res['message'], '.success-deletion', '.error-deletion');
+                        }
+                    });
+                }
 
-    function openDeletingModal(url, email) {
-        var modal = document.getElementById("deletingModal");
-        modal.style.display = "block";
-        modal.getElementsByClassName('btnOK')[0].setAttribute('delete_url', url);
-        modal.getElementsByClassName('deleting_email')[0].innerHTML = email;
-    }
+                function openDeletingModal(url, email) {
+                    var modal = document.getElementById("deletingModal");
+                    modal.style.display = "block";
+                    modal.getElementsByClassName('btnOK')[0].setAttribute('delete_url', url);
+                    modal.getElementsByClassName('deleting_email')[0].innerHTML = email;
+                }
 
-    // When the user clicks anywhere outside of the modal, close it
-    window.onclick = function(event) {
-        var ids = ["deletingModal", "editingModal"];
-        for(var i=0; i<ids.length; i++) {
-            var modal = document.getElementById(ids[i]);
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
-        }
-    }
-</script>
-</body>
-</html>
+                // When the user clicks anywhere outside of the modal, close it
+                window.onclick = function(event) {
+                    var ids = ["deletingModal", "editingModal"];
+                    for(var i=0; i<ids.length; i++) {
+                        var modal = document.getElementById(ids[i]);
+                        if (event.target == modal) {
+                            modal.style.display = "none";
+                        }
+                    }
+                }
+            </script>
+        </metal:block>
+
+    </metal:block>
+</metal:block>
