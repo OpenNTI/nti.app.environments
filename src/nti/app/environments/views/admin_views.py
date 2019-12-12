@@ -20,7 +20,7 @@ from nti.app.environments.views.base import BaseTemplateView
 from nti.app.environments.views._table_utils import CustomersTable
 from nti.app.environments.views._table_utils import SitesTable
 from nti.app.environments.views._table_utils import make_specific_table
-from nti.app.environments.views.utils import find_iface
+from nti.app.environments.utils import find_iface
 from nti.app.environments.models import get_sites
 
 
@@ -114,16 +114,19 @@ class SiteDetailView(BaseTemplateView):
                     'host': env.host}
         raise ValueError('Unknown environment type.')
 
+    def _format_owner(self, owner=None):
+        return {'owner': owner,
+                'detail_url': self.request.route_url('admin', traverse=('customers', self.context.owner.__name__, '@@details')) if owner else None}
+
     def __call__(self):
         extra_info = self._site_extra_info() or {}
         return {'sites_list_link': self.request.route_url('admin', traverse=('sites', '@@list')),
                 'site': {'created': _format_date(self.context.created),
                          'owner_username': self.context.owner_username,
-                         'owner': self.context.owner,
+                         'owner': self._format_owner(self.context.owner),
                          'site_id': self.context.id,
                          'status': self.context.status,
                          'dns_names': self.context.dns_names,
                          'license': self._format_license(self.context.license),
                          'environment': self._format_env(self.context.environment),
-                         'customer_detail_url': self.request.route_url('admin', traverse=('customers', self.context.owner.__name__, '@@details')),
                          **extra_info}}

@@ -71,10 +71,12 @@
 
         <div class="site-item">
             <h3>Owner Info</h3>
-            <p>Name: <span tal:content="site.owner.name"><span></p>
-            <p>Email: <span tal:content="site.owner.email"><span></p>
             <p>Username: <span tal:content="site.owner_username"></span></p>
-            <a href="#" tal:attributes="href site.customer_detail_url">View details</a>
+            <metal:block tal:omit-tag="" tal:condition="site.owner.owner">
+                <p>Name: <span tal:content="site.owner.owner.name"><span></p>
+                <p>Email: <span tal:content="site.owner.owner.email"><span></p>
+                <a href="#" tal:attributes="href site.owner.detail_url">View details</a>
+            </metal:block>
         </div>
 
         <div class="site-item">

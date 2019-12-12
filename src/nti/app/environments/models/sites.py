@@ -17,14 +17,19 @@ from nti.property.property import LazyOnClass
 from nti.schema.fieldproperty import createFieldProperties
 from nti.schema.schema import SchemaConfigured
 
+from nti.wref.interfaces import IWeakRef
+
 from nti.app.environments.auth import ADMIN_ROLE
 
 from nti.app.environments.models.interfaces import ITrialLicense
+from nti.app.environments.models.interfaces import ICustomersContainer
 from nti.app.environments.models.interfaces import IEnterpriseLicense
 from nti.app.environments.models.interfaces import ISharedEnvironment
 from nti.app.environments.models.interfaces import IDedicatedEnvironment
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ILMSSitesContainer
+
+from nti.app.environments.utils import find_iface
 
 
 @interface.implementer(ISharedEnvironment)
@@ -57,6 +62,17 @@ class PersistentSite(SchemaConfigured, Persistent, Contained):
     createFieldProperties(ILMSSite)
 
     id = alias('__name__')
+
+    def _get_owner(self):
+        owner = self._owner_ref() if self._owner_ref else None
+        if find_iface(owner, ICustomersContainer) is None:
+            return None
+        return owner
+
+    def _set_owner(self, owner):
+        self._owner_ref = IWeakRef(owner) if owner else None
+
+    owner = property(_get_owner, _set_owner)
 
 
 @interface.implementer(ILMSSitesContainer)

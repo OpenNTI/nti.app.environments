@@ -16,6 +16,8 @@
 
 	<include package="zope.annotation" />
 
+	<include package="nti.wref"/>
+
 	<utility
 	    factory=".authentication.EmailChallengeOTPGenerator"
 	    provides=".interfaces.IOTPGenerator"/>

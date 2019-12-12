@@ -243,7 +243,7 @@ class ILMSSite(IContained):
 
     owner = Object(ICustomer,
                    title=u'The customer that owns this site',
-                   required=True)
+                   required=False)
 
     owner_username = ValidTextLine(title='The username the owner will have in their environment',
                                    required=True,

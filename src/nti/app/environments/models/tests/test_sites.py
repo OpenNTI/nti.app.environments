@@ -29,6 +29,7 @@ from nti.app.environments.models.interfaces import IDedicatedEnvironment
 from nti.app.environments.models.interfaces import ILMSSite
 
 from nti.app.environments.models.customers import PersistentCustomer
+from nti.app.environments.models.customers import CustomersFolder
 
 from nti.app.environments.tests import BaseTest
 
@@ -112,10 +113,15 @@ class TestSites(BaseTest):
                                           'dns_names': (),
                                           'status': 'PENDING'}))
         errors = getValidationErrors(ILMSSite, inst)
-        assert_that(errors, has_length(6))
+        assert_that(errors, has_length(5))
 
+        inst = PersistentSite(owner=PersistentCustomer(email='103@gmail.com', created=datetime.datetime.utcnow()))
+        assert_that(inst.owner, is_(None))
+
+        folder = CustomersFolder()
+        owner = folder.addCustomer(PersistentCustomer(email='103@gmail.com', created=datetime.datetime.utcnow()))
         inst = PersistentSite(id='xxxxid',
-                              owner=PersistentCustomer(email='103@gmail.com', created=datetime.datetime.utcnow()),
+                              owner=owner,
                               owner_username='test',
                               environment=SharedEnvironment(name='alpha'),
                               license=TrialLicense(start_date=datetime.datetime.utcnow(), end_date=datetime.datetime.utcnow()),
