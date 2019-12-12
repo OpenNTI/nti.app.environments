@@ -3,7 +3,6 @@
 
 from hamcrest import assert_that
 from hamcrest import has_length
-from hamcrest import is_
 from hamcrest import is_in
 from hamcrest import only_contains
 

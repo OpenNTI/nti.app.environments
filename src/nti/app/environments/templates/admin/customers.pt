@@ -31,7 +31,7 @@
 
         <div class="toolbar">
             <input type="text" id='search' name="search" placeHolder="Search" class="search-input" onkeypress="return search(event);"/>
-            <button type="button" style="float: right;" onclick="document.getElementById('newModal').style.display = 'block';">Add Via Hubspot</button>
+            <button type="button" style="float: right;" onclick="openNewModal();">Add Via Hubspot</button>
         </div>
 
 		<table tal:condition="python: len(table.context)" tal:replace="structure python: table.render()" />
@@ -84,7 +84,7 @@
 
             <div class="modal-footer">
                 <button type="button" class='btnSave' onclick="saveItem(this, '${creation_url}');">Save</button>
-                <button type="button" class='btnNO' onclick="openNewModal();">Cancel</button>
+                <button type="button" class='btnNO' onclick="document.getElementById('newModal').style.display = 'none';">Cancel</button>
             </div>
         </div>
     </div>
@@ -97,9 +97,12 @@
 <script>
     // When the user clicks anywhere outside of the modal, close it
     window.onclick = function(event) {
-        var modal = document.getElementById("deletingModal");
-        if (event.target == modal) {
-            modal.style.display = "none";
+        var ids = ["deletingModal"];
+        for(var i=0; i<ids.length; i++) {
+            var modal = document.getElementById(ids[i]);
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
         }
     }
 

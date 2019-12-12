@@ -26,3 +26,4 @@ docs/_build
 
 var
 .vscode
+htmlcov/

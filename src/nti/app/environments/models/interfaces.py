@@ -14,7 +14,7 @@ from zope.container.interfaces import IContained
 
 from zope.i18n import translate
 
-import zope.i18nmessageid
+import zope.i18nmessageid as zope_i18nmessageid
 
 from nti.i18n.locales.interfaces import ICcTLDInformation
 
@@ -26,10 +26,15 @@ from nti.schema.field import DateTime
 from nti.schema.field import Object
 from nti.schema.field import ListOrTuple
 
-MessageFactory = zope.i18nmessageid.MessageFactory('nti.app.environments')
+MessageFactory = zope_i18nmessageid.MessageFactory('nti.app.environments')
 _ = MessageFactory
 
 SITE_STATUS = ('new', 'pending', 'active', 'defunct',)
+
+SHARED_ENV_NAMES = ('alpha', 'test', 'prod', 'assoc', 'hrpros')
+
+SITE_STATUS_OPTIONS = ('PENDING', 'ACTIVE', 'INACTIVE',)
+
 
 class IOnboardingRoot(IContainer):
     """
@@ -63,7 +68,7 @@ def _isValidEmail(email):
 
 
 def checkEmailAddress(value):
-    return value and _isValidEmail(value)
+    return bool(value and _isValidEmail(value))
 
 
 def checkRealname(value):
@@ -172,11 +177,27 @@ class ICustomersContainer(IContainer):
 
     contains(ICustomer)
 
+    def addCustomer(customer):
+        """
+        Add customer into this container, keyed by email.
+        """
+
+    def getCustomer(email):
+        """
+        Return a customer object or None.
+        """
+
 
 class ISiteLicense(interface.Interface):
     """
     The license governing this site.
     """
+    start_date = DateTime(title='The datetime this license starts.',
+                          required=True)
+
+    end_date = DateTime(title='The datetime this license ends.',
+                        required=True)
+
 
 class ITrialLicense(ISiteLicense):
     """
@@ -197,22 +218,27 @@ class IDedicatedEnvironment(IEnvironment):
     """
     Identifies an environment dedicated to a particular customer.
     """
-    containerId = ValidTextLine(title="The container id for this environment.",
-                                required=True)
+    pod_id = ValidTextLine(title="The container id for this environment.",
+                           required=True)
+
+    host = ValidTextLine(title="The identifier of physical hardware that this environment is running on.",
+                         min_length=1,
+                         required=True)
+
 
 class ISharedEnvironment(IEnvironment):
     """
     Identifies an environment which contains sites for multiple customers.
     """
-    name = ValidTextLine(title="The name identifier for this environment.",
-                         required=True)
+    name = Choice(title="The name for this environment.",
+                  values=SHARED_ENV_NAMES,
+                  required=True)
 
-
-_SITE_STATUS_OPTIONS = ('PENDING', 'ACTIVE', 'INACTIVE',)
 
 class ILMSSite(IContained):
 
     id = ValidTextLine(title="The identifier of this site.",
+                       max_length=40,
                        required=True)
 
     owner = Object(ICustomer,
@@ -240,10 +266,21 @@ class ILMSSite(IContained):
                        required=True)
 
     status = Choice(title=u'The style of the highlight',
-                    values=_SITE_STATUS_OPTIONS,
+                    values=SITE_STATUS_OPTIONS,
                     default='PENDING')
 
 
 class ILMSSitesContainer(IContainer):
 
     contains(ILMSSite)
+
+    def addSite(site, siteId=None):
+        """
+        Add a new site into this container, a site id would be generated for site
+        if the given site doens't have an id and siteId is not provided.
+        """
+
+    def deleteSite(siteId):
+        """
+        Remove site with given id.
+        """

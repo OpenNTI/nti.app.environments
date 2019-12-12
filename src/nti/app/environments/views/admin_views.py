@@ -4,10 +4,17 @@ from nti.app.environments.api.siteinfo import nt_client
 
 from nti.app.environments.auth import ACT_ADMIN
 
-from nti.app.environments.models.interfaces import ICustomer, IOnboardingRoot
+from nti.app.environments.models.interfaces import ICustomer
+from nti.app.environments.models.interfaces import IEnterpriseLicense
+from nti.app.environments.models.interfaces import ISharedEnvironment
+from nti.app.environments.models.interfaces import IDedicatedEnvironment
+from nti.app.environments.models.interfaces import IOnboardingRoot
+from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import ICustomersContainer
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ILMSSitesContainer
+from nti.app.environments.models.interfaces import SITE_STATUS_OPTIONS
+from nti.app.environments.models.interfaces import SHARED_ENV_NAMES
 
 from nti.app.environments.views.base import BaseTemplateView
 from nti.app.environments.views._table_utils import CustomersTable
@@ -68,7 +75,9 @@ class SitesListView(BaseTemplateView):
     def __call__(self):
         table = make_specific_table(SitesTable, self.context, self.request)
         return {'table': table,
-                'creation_url': self.request.resource_url(self.context)}
+                'creation_url': self.request.resource_url(self.context),
+                'site_status_options': SITE_STATUS_OPTIONS,
+                'env_shared_options': SHARED_ENV_NAMES}
 
 
 @view_config(route_name='admin',
@@ -83,13 +92,38 @@ class SiteDetailView(BaseTemplateView):
         hostname = self.context.dns_names[0] if self.context.dns_names else None
         return nt_client.fetch_site_info(hostname) if hostname else None
 
+    def _license_type(self, lic):
+        if ITrialLicense.providedBy(lic):
+            return 'trial'
+        elif IEnterpriseLicense.providedBy(lic):
+            return 'enterprise'
+        raise ValueError('Unknown license type.')
+
+    def _format_license(self, lic):
+        return {'type': self._license_type(lic),
+                'start_date': _format_date(lic.start_date),
+                'end_date': _format_date(lic.end_date)}
+
+    def _format_env(self, env):
+        if ISharedEnvironment.providedBy(env):
+            return {'type': 'shared',
+                    'name': env.name}
+        elif IDedicatedEnvironment.providedBy(env):
+            return {'type': 'dedicated',
+                    'pod_id': env.pod_id,
+                    'host': env.host}
+        raise ValueError('Unknown environment type.')
+
     def __call__(self):
         extra_info = self._site_extra_info() or {}
         return {'sites_list_link': self.request.route_url('admin', traverse=('sites', '@@list')),
                 'site': {'created': _format_date(self.context.created),
                          'owner_username': self.context.owner_username,
                          'owner': self.context.owner,
+                         'site_id': self.context.id,
+                         'status': self.context.status,
                          'dns_names': self.context.dns_names,
-                         'license': self.context.license,
-                         'environment': self.context.environment,
+                         'license': self._format_license(self.context.license),
+                         'environment': self._format_env(self.context.environment),
+                         'customer_detail_url': self.request.route_url('admin', traverse=('customers', self.context.owner.__name__, '@@details')),
                          **extra_info}}

@@ -92,6 +92,10 @@ body {
     background-color: #fff;
 }
 
+.form .input-row .input-col-3 select {
+    height: 32px;
+}
+
 .form .btnCustom {
 	font-size: 16px;
 	line-height: 32px;

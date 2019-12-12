@@ -8,27 +8,33 @@ from hamcrest import is_
 
 from pyramid.interfaces import IRootFactory
 from nti.app.environments.views.customers import getOrCreateCustomer
-from nti.app.environments.views.tests import BaseTest
+from nti.app.environments.views.tests import BaseAppTest
 from nti.app.environments.views.tests import with_test_app
 from nti.app.environments.views.tests import ensure_free_txn
-from nti.app.environments.models.sites import TrialLicense
+from nti.app.environments.models.sites import TrialLicense, EnterpriseLicense
 
 
-class TestSiteCreationView(BaseTest):
+class TestSiteCreationView(BaseAppTest):
 
     @property
     def _root(self):
         return component.getUtility(IRootFactory)(self.request)
 
-    def _params(self):
+    def _params(self, env_type='shared', license_type="trial", site_id=None):
+        env = {'name': 'assoc'} if env_type == 'shared' else {'pod_id': 'xxx', 'host': 'okc.com'}
         return {
+            'site_id': site_id,
             "owner": "test@gmail.com",
             "owner_username": "test004",
             "environment": {
-                "type": "shared",
-                "name": "assoc"
+                "type": env_type,
+                **env,
             },
-            "license": "trial",
+            "license": {
+                "type": license_type,
+                'start_date': '2019-11-27T00:00:00',
+                'end_date': '2019-11-28T00:00:00'
+            },
             "dns_names": ["t1.nextthought.com", "t2.nextthought.com"],
             "status": "PENDING",
             "created": "2019-11-26T00:00:00"
@@ -77,3 +83,17 @@ class TestSiteCreationView(BaseTest):
         with ensure_free_txn():
             sites = self._root.get('sites')
             assert_that(sites, has_length(0))
+
+        params = self._params(env_type='dedicated', license_type="enterprise", site_id='S1id')
+        self.testapp.post_json(url, params=params, status=201, extra_environ=self._make_environ(username='admin001'))
+        with ensure_free_txn():
+            sites = self._root.get('sites')
+            assert_that(sites, has_length(1))
+            site = [x for x in sites.values()][0]
+            assert_that(site, has_properties({'owner': has_properties({'email': 'test@gmail.com'}),
+                                                               'id': 'S1id',
+                                                               'owner_username': 'test004',
+                                                               'environment': has_properties({'pod_id': 'xxx', 'host': 'okc.com'}),
+                                                               'license': instance_of(EnterpriseLicense),
+                                                               'status': 'PENDING',
+                                                               'dns_names': ['t1.nextthought.com', 't2.nextthought.com']}))

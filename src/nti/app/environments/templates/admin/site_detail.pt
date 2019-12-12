@@ -26,12 +26,12 @@
             padding: 16px 16px;
         }
 
-        .site-info {
+        .site-logo {
             width: 30%;
             text-align: center;
         }
 
-        .site-license {
+        .site-info {
             margin-left: 16px;
             width: 70%;
         }
@@ -44,19 +44,28 @@
             margin: 0 0 8px 0;
         }
 
+        a {
+            text-decoration: none;
+        }
+
     </style>
 <body>
     <div metal:use-macro="load: ../macros/nav.pt"/>
 
     <div class="container">
         <div class="site-header"><br>
-            <div class="site-item site-info">
-                <img src="/static/logo.png" alt="Avatar" style="width:120px;border-radius: 50%;" tal:attributes="src site.logo_url | nothing or '/static/logo.png'">
-                
-                <p>Created at <span tal:content="site.created"></span>.</p>
+            <div class="site-item site-logo">
+                <a href="#" tal:attributes="href site.site_url|nothing or '#'">
+                    <img src="/static/logo.png" alt="Click to the site." title="Click to the site."  tal:attributes="src python: site.get('logo_url') or '/static/logo.png'">
+                </a>
             </div>
-            <div class="site-item site-license">
-                <h3>License</h3>
+            <div class="site-item site-info">
+                <h3>Site Info</h3>
+                <p>Site ID: <span tal:content="python: site.site_id|nothing"></span></p>
+                <p>Site name: <span tal:content="python: site.brand_name|nothing"></span></p>
+                <p>Status: <span tal:content="site.status"></span></p>
+                <p>Created: <span tal:content="site.created"></span></p>
+                <p>DNS Names: <span tal:repeat="dns_name site.dns_names"><a href="https://${dns_name}">${dns_name}</a></span></p>
             </div>
         </div>
 
@@ -65,10 +74,26 @@
             <p>Name: <span tal:content="site.owner.name"><span></p>
             <p>Email: <span tal:content="site.owner.email"><span></p>
             <p>Username: <span tal:content="site.owner_username"></span></p>
+            <a href="#" tal:attributes="href site.customer_detail_url">View details</a>
         </div>
 
         <div class="site-item">
-            <h3>Site details</h3>
+            <h3>Environment</h3>
+            <p>Type: <span tal:content="site.environment.type"></span></p>
+            <metal:block tal:omit-tag="" tal:condition="site.environment.type=='shared'">
+                <p>Name: <span tal:content="site.environment.name"></span></p>
+            </metal:block>
+            <metal:block tal:omit-tag="" tal:condition="site.environment.type=='dedicated'">
+                <p>PodId (ContainerId): <span tal:content="site.environment.pod_id"></span></p>
+                <p>Host: <span tal:content="site.environment.host"></span></p>
+            </metal:block>
+        </div>
+
+        <div class="site-item">
+            <h3>License</h3>
+            <p>Type: <span tal:content="site.license.type"></span></p>
+            <p>Start Date: <span tal:content="site.license.start_date"></span></p>
+            <p>End Date: <span tal:content="site.license.end_date"></span></p>
         </div>
 
         <div class="site-footer">

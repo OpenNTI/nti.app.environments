@@ -1,3 +1,5 @@
+import uuid
+
 from persistent import Persistent
 
 from pyramid.security import Allow
@@ -6,10 +8,8 @@ from pyramid.security import ALL_PERMISSIONS
 from zope import interface
 
 from zope.container.contained import Contained
-from zope.container.contained import NameChooser
 
 from zope.container.folder import Folder
-from zope.container.interfaces import INameChooser
 
 from nti.property.property import alias
 from nti.property.property import LazyOnClass
@@ -66,18 +66,15 @@ class SitesFolder(Folder):
     def __acl__(self):
         return [(Allow, ADMIN_ROLE, ALL_PERMISSIONS)]
 
-    def addSite(self, site):
-        if not site.__name__:
-            chooser = INameChooser(self)
-            key = chooser.chooseName(site.owner_username, site)
-            self[key] = site
+    def addSite(self, site, siteId=None):
+        siteId = site.__name__ or siteId or _generate_site_id()
+        self[siteId] = site
         return site
 
-    def deleteSite(self, key):
-        key = getattr(key, '__name__', key)
-        del self[key]
+    def deleteSite(self, siteId):
+        siteId = getattr(siteId, '__name__', siteId)
+        del self[siteId]
 
 
-@interface.implementer(INameChooser)
-class SitesNameChooser(NameChooser):
-    pass
+def _generate_site_id():
+    return 'S' + uuid.uuid4().hex

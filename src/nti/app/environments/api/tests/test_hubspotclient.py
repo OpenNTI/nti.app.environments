@@ -1,7 +1,11 @@
+import hubspot3
 import unittest
+
 from unittest import mock
 
 from hamcrest import is_
+from hamcrest import calling
+from hamcrest import raises
 from hamcrest import assert_that
 from hamcrest import has_entries
 
@@ -25,6 +29,19 @@ class TestHubspotClient(unittest.TestCase):
                                          'canonical-vid': 12630274}))
 
         # No found
+        def _get(*args, **kwargs):
+            raise hubspot3.error.HubspotNotFound(None, None)
+        mockcontacts.get_contact_by_email.side_effect = _get
+        result = client.fetch_contact_by_email('testing@gmail.com')
+        assert_that(result, is_(None))
+
+        def _get2(*args, **kwargs):
+            raise hubspot3.error.HubspotError(None, None)
+        mockcontacts.get_contact_by_email.side_effect = _get2
+        assert_that(calling(client.fetch_contact_by_email).with_args('testing@gmail.com'),
+                    raises(hubspot3.error.HubspotError))
+
+        mockcontacts.get_contact_by_email.side_effect = None
         mockcontacts.get_contact_by_email.return_value = None
         result = client.fetch_contact_by_email('testing@gmail.com')
         assert_that(result, is_(None))

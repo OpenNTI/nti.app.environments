@@ -62,5 +62,5 @@ function closeDeletingModal() {
 function openNewModal() {
     clearMessages('.success-creation', '.error-creation');
     document.getElementById('hubspot_email').value = '';
-    document.getElementById('newModal').style.display = 'none';
+    document.getElementById('newModal').style.display = 'block';
 }

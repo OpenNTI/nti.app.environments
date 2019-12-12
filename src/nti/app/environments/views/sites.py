@@ -36,10 +36,12 @@ class SiteBaseView(BaseView):
             raise_json_error(hexc.HTTPBadRequest, "Invalid json body.")
         return body
 
-    def _get_value(self, field, params=None):
+    def _get_value(self, field, params=None, expected_type=None):
         if params is None:
             params = self.params
         val = params.get(field)
+        if expected_type is not None and not isinstance(val, (expected_type, None)):
+            raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid {}".format(field), field)
         return val.strip() if isinstance(val, str) else val
 
     def _handle(self, name, value=None):
@@ -60,6 +62,8 @@ class SiteBaseView(BaseView):
 
     def _handle_env(self, name, value):
         value = value or {}
+        if not isinstance(value, dict):
+            raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid {}.".format(name))
         type_ = self._get_value('type', value)
         if type_ not in ('shared', 'dedicated'):
             raise_json_error(hexc.HTTPUnprocessableEntity,
@@ -69,21 +73,35 @@ class SiteBaseView(BaseView):
         if type_ == 'shared':
             return SharedEnvironment(name=self._get_value('name', value))
         else:
-            return DedicatedEnvironment(containerId=self._get_value('containerId', value))
+            return DedicatedEnvironment(pod_id=self._get_value('pod_id', value),
+                                        host=self._get_value('host', value))
 
     def _handle_license(self, name, value):
-        if value not in ('trial', 'enterprise'):
+        value = value or {}
+        if not isinstance(value, dict):
+            raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid {}.".format(name))
+        type_ = self._get_value('type', value)
+        if type_ not in ('trial', 'enterprise'):
             raise_json_error(hexc.HTTPUnprocessableEntity,
                              "Invalid license.",
                              name)
-        return TrialLicense() if value == 'trial' else EnterpriseLicense() 
+
+        kwargs = {'start_date': self._handle_date('start_date', value.get('start_date')),
+                  'end_date': self._handle_date('end_date', value.get('end_date'))}
+        return TrialLicense(**kwargs) if type_ == 'trial' else EnterpriseLicense(**kwargs) 
 
     def _handle_date(self, name, value=None):
-        return parseDate(value) if value else value
+        try:
+            return parseDate(value) if value else None
+        except:
+            raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid date format for {}".format(name))
 
     def _generate_kwargs_for_site(self, params=None, allowed = ()):
         params = self.params if params is None else params
         kwargs = {}
+        site_id = self._get_value('site_id', params)
+        if site_id:
+            kwargs['id'] = site_id
         for attr_name, _handle in (('owner', self._handle_owner),
                                    ('owner_username', self._handle),
                                    ('environment', self._handle_env),

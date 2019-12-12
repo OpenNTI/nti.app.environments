@@ -16,7 +16,7 @@ from nti.app.environments import main
 from nti.app.environments import root_factory
 
 
-class BaseTest(unittest.TestCase):
+class BaseAppTest(unittest.TestCase):
 
     testapp = None
     request = None
