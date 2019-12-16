@@ -3,7 +3,7 @@ from pyramid import httpexceptions as hexc
 
 from zope.cachedescriptors.property import Lazy
 
-from nti.app.environments.models import get_customers
+from nti.app.environments.models.utils import get_customers_folder
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ILMSSitesContainer
 from nti.app.environments.models.interfaces import IOnboardingRoot
@@ -54,7 +54,7 @@ class SiteBaseView(BaseView):
             raise_json_error(hexc.HTTPUnprocessableEntity, "Missing required field: email.")
 
         root = find_iface(self.context, IOnboardingRoot)
-        folder = get_customers(root)
+        folder = get_customers_folder(root)
         customer = folder.getCustomer(value)
         if customer is None:
             raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid email.")

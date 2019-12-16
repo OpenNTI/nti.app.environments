@@ -26,6 +26,10 @@
 	  <implements interface="zope.annotation.interfaces.IAttributeAnnotatable" />
 	</class>
 
+    <adapter factory="nti.app.environments.models.wref.CustomerWeakRef"
+             for="nti.app.environments.models.customers.PersistentCustomer"
+             provides="nti.wref.interfaces.IWeakRef" />
+
     <include package=".views" file="configure_tables.zcml" />
     <include package=".securitypolicy" file="configure.zcml" />
 

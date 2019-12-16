@@ -21,7 +21,7 @@ from nti.app.environments.views._table_utils import CustomersTable
 from nti.app.environments.views._table_utils import SitesTable
 from nti.app.environments.views._table_utils import make_specific_table
 from nti.app.environments.utils import find_iface
-from nti.app.environments.models import get_sites
+from nti.app.environments.models.utils import get_sites_folder
 
 
 def _format_date(value):
@@ -52,7 +52,7 @@ class CustomerDetailView(BaseTemplateView):
 
     def _get_sites_folder(self):
         onboarding_root = find_iface(self.context, IOnboardingRoot)
-        return get_sites(onboarding_root)
+        return get_sites_folder(onboarding_root)
 
     def __call__(self):
         sites = self._get_sites_folder()

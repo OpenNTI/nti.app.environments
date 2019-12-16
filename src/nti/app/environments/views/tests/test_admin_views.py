@@ -90,11 +90,12 @@ class TestAdminViews(BaseAppTest):
 
     @with_test_app()
     @mock.patch('nti.app.environments.views.admin_views.SiteDetailView._site_extra_info')
-    def testSiteDetailView(self, mock_info):
+    @mock.patch('nti.app.environments.models.wref.get_customers_folder')
+    def testSiteDetailView(self, mock_customers, mock_info):
         mock_info.return_value = {}
         siteId = 'Sxxx'
         with ensure_free_txn():
-            customers = self._root().get('customers')
+            mock_customers.return_value = customers = self._root().get('customers')
             customer = customers.addCustomer(PersistentCustomer(email='123@gmail.com',
                                                                 name="testname",
                                                                 hubspot_contact=HubspotContact(contact_vid='vid001')))

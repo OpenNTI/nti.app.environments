@@ -1,5 +1,7 @@
 import datetime
 
+from unittest import mock
+
 from hamcrest import is_
 from hamcrest import raises
 from hamcrest import calling
@@ -102,7 +104,9 @@ class TestSites(BaseTest):
         errors = getValidationErrors(IEnterpriseLicense, inst)
         assert_that(errors, has_length(0))
 
-    def testPersistentSite(self):
+    @mock.patch("nti.app.environments.models.wref.get_customers_folder")
+    def testPersistentSite(self, mock_customers):
+        mock_customers.return_value = folder = CustomersFolder()
         inst = PersistentSite()
         assert_that(inst, has_properties({'id': None,
                                           'environment': None,
@@ -118,7 +122,6 @@ class TestSites(BaseTest):
         inst = PersistentSite(owner=PersistentCustomer(email='103@gmail.com', created=datetime.datetime.utcnow()))
         assert_that(inst.owner, is_(None))
 
-        folder = CustomersFolder()
         owner = folder.addCustomer(PersistentCustomer(email='103@gmail.com', created=datetime.datetime.utcnow()))
         inst = PersistentSite(id='xxxxid',
                               owner=owner,
@@ -139,7 +142,9 @@ class TestSites(BaseTest):
         errors = getValidationErrors(ILMSSite, inst)
         assert_that(errors, has_length(0))
 
-    def testSitesFolder(self):
+    @mock.patch("nti.app.environments.models.wref.get_customers_folder")
+    def testSitesFolder(self, mock_customers):
+        mock_customers.return_value = CustomersFolder()
         folder = SitesFolder()
         site = PersistentSite(id='xxxxid',
                               owner=PersistentCustomer(email='103@gmail.com', created=datetime.datetime.utcnow()),

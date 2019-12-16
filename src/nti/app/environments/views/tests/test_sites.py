@@ -1,3 +1,4 @@
+from unittest import mock
 from hamcrest import assert_that
 from hamcrest import has_length
 from hamcrest import has_properties
@@ -34,7 +35,8 @@ class TestSiteCreationView(BaseAppTest):
         }
 
     @with_test_app()
-    def test_site(self):
+    @mock.patch('nti.app.environments.models.wref.get_customers_folder')
+    def test_site(self, mock_customers):
         url = '/sites'
         params = self._params()
         self.testapp.post_json(url, params=params, status=401, extra_environ=self._make_environ(username=None))
@@ -47,6 +49,7 @@ class TestSiteCreationView(BaseAppTest):
             sites = self._root().get('sites')
             assert_that(sites, has_length(0))
             getOrCreateCustomer(self._root().get('customers'), 'test@gmail.com')
+            mock_customers.return_value = self._root().get('customers')
 
         result = self.testapp.post_json(url, params=params, status=201, extra_environ=self._make_environ(username='admin001'))
         result = result.json_body
