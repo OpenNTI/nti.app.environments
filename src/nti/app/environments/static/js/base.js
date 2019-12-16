@@ -56,22 +56,24 @@ function updateUrlParameter(name, value, url) {
         i = 0;
         existing = false;
     prefix += '?';
-    for (i = 0; i < vars.length; i++) {
-        qname = vars[i].split('=');
-        if (qname[0] === name) {
-            qname[1] = encodeURIComponent(value);
-            existing = true;
+    if (vars.length > 1 || (vars.length == 1 && vars[0] !== '')) {
+        for (i = 0; i < vars.length; i++) {
+            qname = vars[i].split('=');
+            if (qname[0] === name) {
+                qname[1] = encodeURIComponent(value);
+                existing = true;
+            }
+            if (i > 0) {
+                prefix = prefix.concat('&');
+            }
+            prefix = prefix.concat(qname[0] + '=' + qname[1]);
         }
-        if (i > 0) {
-            prefix = prefix.concat('&');
-        }
-        prefix = prefix.concat(qname[0] + '=' + qname[1]);
     }
     if (!existing) {
         if (i > 0){
             prefix = prefix.concat('&');
         }
-        prefix = prefix.concat(name + '=' + value);
+        prefix = prefix.concat(name + '=' + encodeURIComponent(value));
     }
     return prefix;
 }

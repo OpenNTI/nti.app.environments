@@ -96,13 +96,13 @@
                     // When a enter key pressed, query the server.
                     if (e.which == 13 || e.keyCode == 13) {
                         var search = $('#search').val().trim();
-                        var url = updateUrlParameter('email', search);
+                        var url = updateUrlParameter('search', search);
                         window.location.href = url;
                     }
                 }
 
                 $( document ).ready(function() {
-                    var email = getUrlParameter('email');
+                    var email = getUrlParameter('search');
                     if(email){
                         $('#search').val(email);
                     }

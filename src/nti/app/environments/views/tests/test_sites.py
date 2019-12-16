@@ -1,12 +1,9 @@
-from zope import component
-
 from hamcrest import assert_that
 from hamcrest import has_length
 from hamcrest import has_properties
 from hamcrest import instance_of
 from hamcrest import is_
 
-from pyramid.interfaces import IRootFactory
 from nti.app.environments.views.customers import getOrCreateCustomer
 from nti.app.environments.views.tests import BaseAppTest
 from nti.app.environments.views.tests import with_test_app
@@ -15,10 +12,6 @@ from nti.app.environments.models.sites import TrialLicense, EnterpriseLicense
 
 
 class TestSiteCreationView(BaseAppTest):
-
-    @property
-    def _root(self):
-        return component.getUtility(IRootFactory)(self.request)
 
     def _params(self, env_type='shared', license_type="trial", site_id=None):
         env = {'name': 'assoc'} if env_type == 'shared' else {'pod_id': 'xxx', 'host': 'okc.com'}
@@ -51,9 +44,9 @@ class TestSiteCreationView(BaseAppTest):
         assert_that(result, {})
 
         with ensure_free_txn():
-            sites = self._root.get('sites')
+            sites = self._root().get('sites')
             assert_that(sites, has_length(0))
-            getOrCreateCustomer(self._root.get('customers'), 'test@gmail.com')
+            getOrCreateCustomer(self._root().get('customers'), 'test@gmail.com')
 
         result = self.testapp.post_json(url, params=params, status=201, extra_environ=self._make_environ(username='admin001'))
         result = result.json_body
@@ -81,13 +74,13 @@ class TestSiteCreationView(BaseAppTest):
         # delete
         self.testapp.delete(site_url, status=204, extra_environ=self._make_environ(username='admin001'))
         with ensure_free_txn():
-            sites = self._root.get('sites')
+            sites = self._root().get('sites')
             assert_that(sites, has_length(0))
 
         params = self._params(env_type='dedicated', license_type="enterprise", site_id='S1id')
         self.testapp.post_json(url, params=params, status=201, extra_environ=self._make_environ(username='admin001'))
         with ensure_free_txn():
-            sites = self._root.get('sites')
+            sites = self._root().get('sites')
             assert_that(sites, has_length(1))
             site = [x for x in sites.values()][0]
             assert_that(site, has_properties({'owner': has_properties({'email': 'test@gmail.com'}),

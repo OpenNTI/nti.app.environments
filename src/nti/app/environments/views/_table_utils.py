@@ -32,7 +32,7 @@ class TrivialTableAbsoluteURL(object):
 @interface.implementer(IBatchProvider)
 class DefaultTableBatchProvider(batch.BatchProvider):
 
-    _request_args = ['%(prefix)s-sortOn', '%(prefix)s-sortOrder', 'email']
+    _request_args = ['%(prefix)s-sortOn', '%(prefix)s-sortOrder', 'search']
 
 
 class BaseTable(table.Table):
@@ -153,7 +153,7 @@ class CustomersTable(BaseTable):
 
 class CustomerColumnHeader(header.SortingColumnHeader):
 
-    _request_args = ['email']
+    _request_args = ['search']
 
 
 class ValuesForCustomersTable(value.ValuesForContainer):
@@ -168,7 +168,7 @@ class ValuesForCustomersTable(value.ValuesForContainer):
     @property
     def values(self):
         params = self.request.params
-        email = self._get_filter('email', params)
+        email = self._get_filter('search', params)
         return self.context.values() if not email \
                          else [x for x in self.context.values() if self._predicate(x, email.lower())]
 

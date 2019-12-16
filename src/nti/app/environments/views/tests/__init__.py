@@ -9,6 +9,7 @@ from zope.testing.cleanup import cleanUp
 
 from pyramid import testing
 from pyramid.interfaces import IAuthenticationPolicy
+from pyramid.interfaces import IRootFactory
 
 from webtest import TestApp
 
@@ -38,6 +39,9 @@ class BaseAppTest(unittest.TestCase):
     def _make_environ(self, username=None):
         result = { 'REMOTE_USER': username } if username else {}
         return result
+
+    def _root(self, request=None):
+        return component.getUtility(IRootFactory)(request or self.request)
 
 
 class DummyCookieHelper(object):
