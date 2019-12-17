@@ -113,3 +113,32 @@ function openNewModal() {
     document.getElementById('hubspot_email').value = '';
     document.getElementById('newModal').style.display = 'none';
 }
+
+
+function uploadFile(me, url) {
+    var data = new FormData();
+    var files = $('#sites_upload')[0].files;
+    if (files.length == 0 || files[0].type !== 'text/csv'){
+        return;
+    }
+    data.append('sites', files[0], files[0].name);
+    $.ajax({
+        url: url,
+        type: 'post',
+        data: data,
+        dataType: 'json',
+        cache: false,
+        contentType: false,
+        processData: false,
+        success: function (result) {
+            showSuccessMessage("Upload successfully.", '.success-upload', '.error-upload', 500, function(){
+                document.getElementById('uploadModal').style.display = "none";
+                window.location.reload();
+            });
+        },
+        error: function (jqXHR, exception) {
+            var res = JSON.parse(jqXHR.responseText);
+            showErrorMessage(res['message'], '.success-upload', '.error-upload');
+        }
+    });
+}

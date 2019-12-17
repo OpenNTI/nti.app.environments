@@ -76,6 +76,7 @@ class SitesListView(BaseTemplateView):
         table = make_specific_table(SitesTable, self.context, self.request)
         return {'table': table,
                 'creation_url': self.request.resource_url(self.context),
+                'sites_upload_url': self.request.resource_url(self.context, '@@upload_sites'),
                 'site_status_options': SITE_STATUS_OPTIONS,
                 'env_shared_options': SHARED_ENV_NAMES}
 

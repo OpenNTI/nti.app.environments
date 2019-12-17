@@ -1,6 +1,8 @@
 from zope import interface
 from zope import component
 
+from zope.cachedescriptors.property import Lazy
+
 from zope.publisher.interfaces.browser import IBrowserRequest
 
 from zope.traversing.browser.interfaces import IAbsoluteURL
@@ -44,8 +46,8 @@ class BaseTable(table.Table):
                   'tr':'tr',
                   'td':'td'}
 
-    batchSize = 5
-    startBatchingAt = 5
+    batchSize = 25
+    startBatchingAt = 25
 
     batchProviderName = "default-batch"
 
@@ -179,21 +181,39 @@ class SitesTable(BaseTable):
         super(SitesTable, self).__init__(context, request)
         self._email = kwargs.get('email')
 
-    @property
-    def values(self):
+    @Lazy
+    def _raw_values(self):
         if self._email:
             return [x for x in self.context.values() if x.owner and x.owner.email == self._email]
         return self.context.values()
+
+    @property
+    def values(self):
+        return self._raw_values
 
 
 class SiteColumnHeader(header.SortingColumnHeader):
     pass
 
 
+class SiteURLColumn(column.GetAttrColumn):
+
+    weight = 0
+    header = 'Site'
+    attrName = 'dns_names'
+
+    def getValue(self, obj):
+        names = getattr(obj, self.attrName)
+        return names[0] if names else ''
+
+    def getSortKey(self, item):
+        return self.getValue(item)
+
+
 class SiteStatusColumn(column.GetAttrColumn):
     
     weight = 1
-    header = 'status'
+    header = 'Status'
     attrName = 'status'
 
 

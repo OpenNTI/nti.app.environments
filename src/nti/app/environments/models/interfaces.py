@@ -33,7 +33,16 @@ SITE_STATUS = ('new', 'pending', 'active', 'defunct',)
 
 SHARED_ENV_NAMES = ('alpha', 'test', 'prod', 'assoc', 'hrpros')
 
-SITE_STATUS_OPTIONS = ('PENDING', 'ACTIVE', 'INACTIVE',)
+SITE_STATUS_PENDING = 'PENDING'
+SITE_STATUS_ACTIVE = 'ACTIVE'
+SITE_STATUS_INACTIVE = 'INACTIVE'
+SITE_STATUS_UNKNOWN = 'UNKNOWN'
+SITE_STATUS_CANCELLED = 'CANCELLED'
+SITE_STATUS_OPTIONS = (SITE_STATUS_PENDING,
+                       SITE_STATUS_ACTIVE,
+                       SITE_STATUS_INACTIVE,
+                       SITE_STATUS_CANCELLED,
+                       SITE_STATUS_UNKNOWN)
 
 
 class IOnboardingRoot(IContainer):
@@ -263,7 +272,7 @@ class ILMSSite(IContained):
 
     status = Choice(title=u'The style of the highlight',
                     values=SITE_STATUS_OPTIONS,
-                    default='PENDING')
+                    default=SITE_STATUS_PENDING)
 
 
 class ILMSSitesContainer(IContainer):

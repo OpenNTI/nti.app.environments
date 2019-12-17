@@ -11,7 +11,10 @@
         <h1>Sites</h1>
 
         <div class="toolbar">
-            <button type="button" style="float: right;" onclick="document.getElementById('newModal').style.display = 'block';">Create New Site</button>
+            <div style="float: right;">
+                <button type="button" onclick="document.getElementById('newModal').style.display = 'block';">Create New Site</button>
+                <button type="button" onclick="document.getElementById('uploadModal').style.display = 'block';" style="margin-left: 6px;">Upload CSV File</button>
+            </div>
         </div>
 
 		<table tal:condition="python: len(table.context)" tal:replace="structure python: table.render()" />
@@ -20,6 +23,9 @@
 		</div>
 
 	    <div class="table-pagination" tal:define="table table" >
+            <div class="pagination-detail" tal:condition="python: len(table._raw_values)">
+                Total: ${len(table._raw_values)}.
+            </div>
             <div class="pagination" tal:condition="python: len(table.context) > table.batchSize">
                 <span tal:replace="structure python: table.renderBatch()"/>
             </div>
@@ -124,6 +130,28 @@
                 </div>
             </div>
         </div><!-- end of new modal -->
+
+        <div id="uploadModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Upload CSV File</h3>
+                </div>
+                <div class="modal-body">
+                    <div class="form">
+                        <div class="input-row">
+                            <input type="file" id="sites_upload" name="sites" accept=".csv" size="100"/>
+                        </div>
+                    </div>
+                    <div class="success success-upload" style="display:none;"></div>
+                    <div class="error error-upload" style="display:none;"></div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class='btnSave' onclick="uploadFile(this, '${sites_upload_url}');">Upload</button>
+                    <button type="button" class='btnNO' onclick="document.getElementById('uploadModal').style.display = 'none';">Cancel</button>
+                </div>
+            </div>
+        </div><!-- end of upload modal -->
 
         <metal:block metal:fill-slot="script">
             <script src="/static/js/sites.js"></script>
