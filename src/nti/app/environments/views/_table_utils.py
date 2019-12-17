@@ -190,13 +190,6 @@ class SiteColumnHeader(header.SortingColumnHeader):
     pass
 
 
-class SiteOwnerUsernameColumn(column.GetAttrColumn):
-
-    weight = 1
-    header = 'OwnerUsername'
-    attrName = 'owner_username'
-
-
 class SiteStatusColumn(column.GetAttrColumn):
     
     weight = 1

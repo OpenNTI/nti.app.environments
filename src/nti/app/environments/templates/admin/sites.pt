@@ -63,12 +63,6 @@
                             </div>
                         </div>
                         <div class="input-row">
-                            <label class="input-col-1">Username</label>
-                            <div class="input-col-3">
-                                <input type="text" name="owner_username" id="site_owner_username"/>
-                            </div>
-                        </div>
-                        <div class="input-row">
                             <label class="input-col-1">Environemnt</label>
                             <select class="input-col-3" name="environment_type" id="site_environment_type" onchange="onEnvironmentChange()">
                                 <option value=""></option>

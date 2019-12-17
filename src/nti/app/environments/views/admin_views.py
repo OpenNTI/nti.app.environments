@@ -122,7 +122,6 @@ class SiteDetailView(BaseTemplateView):
         extra_info = self._site_extra_info() or {}
         return {'sites_list_link': self.request.route_url('admin', traverse=('sites', '@@list')),
                 'site': {'created': _format_date(self.context.created),
-                         'owner_username': self.context.owner_username,
                          'owner': self._format_owner(self.context.owner),
                          'site_id': self.context.id,
                          'status': self.context.status,

@@ -103,7 +103,6 @@ class SiteBaseView(BaseView):
         if site_id:
             kwargs['id'] = site_id
         for attr_name, _handle in (('owner', self._handle_owner),
-                                   ('owner_username', self._handle),
                                    ('environment', self._handle_env),
                                    ('license', self._handle_license),
                                    ('status', self._handle),

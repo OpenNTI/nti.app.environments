@@ -19,7 +19,6 @@ class TestSiteCreationView(BaseAppTest):
         return {
             'site_id': site_id,
             "owner": "test@gmail.com",
-            "owner_username": "test004",
             "environment": {
                 "type": env_type,
                 **env,
@@ -57,7 +56,6 @@ class TestSiteCreationView(BaseAppTest):
         assert_that(sites, has_length(1))
         site = [x for x in sites.values()][0]
         assert_that(site, has_properties({'owner': has_properties({'email': 'test@gmail.com'}),
-                                                           'owner_username': 'test004',
                                                            'environment': has_properties({'name': 'assoc'}),
                                                            'license': instance_of(TrialLicense),
                                                            'status': 'PENDING',
@@ -88,7 +86,6 @@ class TestSiteCreationView(BaseAppTest):
             site = [x for x in sites.values()][0]
             assert_that(site, has_properties({'owner': has_properties({'email': 'test@gmail.com'}),
                                                                'id': 'S1id',
-                                                               'owner_username': 'test004',
                                                                'environment': has_properties({'pod_id': 'xxx', 'host': 'okc.com'}),
                                                                'license': instance_of(EnterpriseLicense),
                                                                'status': 'PENDING',

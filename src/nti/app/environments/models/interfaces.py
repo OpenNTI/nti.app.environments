@@ -245,10 +245,6 @@ class ILMSSite(IContained):
                    title=u'The customer that owns this site',
                    required=False)
 
-    owner_username = ValidTextLine(title='The username the owner will have in their environment',
-                                   required=True,
-                                   constraint=checkUsername)
-
     dns_names = ListOrTuple(value_type=ValidTextLine(min_length=1),
                             title='DNS names this site is known to be accessible via',
                             required=True,

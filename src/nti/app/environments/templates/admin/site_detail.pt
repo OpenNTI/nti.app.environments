@@ -26,7 +26,6 @@
 
         <div class="site-item">
             <h3>Owner Info</h3>
-            <p>Username: <span tal:content="site.owner_username"></span></p>
             <metal:block tal:omit-tag="" tal:condition="site.owner.owner">
                 <p>Name: <span tal:content="site.owner.owner.name"><span></p>
                 <p>Email: <span tal:content="site.owner.owner.email"><span></p>

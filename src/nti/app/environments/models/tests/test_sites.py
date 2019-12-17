@@ -112,12 +112,11 @@ class TestSites(BaseTest):
                                           'environment': None,
                                           'license': None,
                                           'owner': None,
-                                          'owner_username': None,
                                           'created': None,
                                           'dns_names': (),
                                           'status': 'PENDING'}))
         errors = getValidationErrors(ILMSSite, inst)
-        assert_that(errors, has_length(5))
+        assert_that(errors, has_length(4))
 
         inst = PersistentSite(owner=PersistentCustomer(email='103@gmail.com', created=datetime.datetime.utcnow()))
         assert_that(inst.owner, is_(None))
@@ -125,7 +124,6 @@ class TestSites(BaseTest):
         owner = folder.addCustomer(PersistentCustomer(email='103@gmail.com', created=datetime.datetime.utcnow()))
         inst = PersistentSite(id='xxxxid',
                               owner=owner,
-                              owner_username='test',
                               environment=SharedEnvironment(name='alpha'),
                               license=TrialLicense(start_date=datetime.datetime.utcnow(), end_date=datetime.datetime.utcnow()),
                               created=datetime.datetime.utcnow(),
@@ -135,7 +133,6 @@ class TestSites(BaseTest):
                                           'environment': not_none(),
                                           'license': not_none(),
                                           'owner': not_none(),
-                                          'owner_username': 'test',
                                           'created': not_none(),
                                           'dns_names': ['t.nt.com'],
                                           'status': 'ACTIVE'}))
@@ -148,7 +145,6 @@ class TestSites(BaseTest):
         folder = SitesFolder()
         site = PersistentSite(id='xxxxid',
                               owner=PersistentCustomer(email='103@gmail.com', created=datetime.datetime.utcnow()),
-                              owner_username='test',
                               environment=SharedEnvironment(name='alpha'),
                               license=TrialLicense(start_date=datetime.datetime.utcnow(), end_date=datetime.datetime.utcnow()),
                               created=datetime.datetime.utcnow(),

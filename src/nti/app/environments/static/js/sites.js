@@ -8,7 +8,6 @@ function getValue(id) {
 function saveItem (me, url) {
     var site_id = getValue("site_id");
     var owner = getValue("site_owner");
-    var owner_username = getValue("site_owner_username");
     var environment = {
             "type": getValue("site_environment_type"),
             "name": getValue("site_environment_name"),
@@ -28,7 +27,6 @@ function saveItem (me, url) {
     var data = {
         "site_id": site_id,
         "owner": owner,
-        "owner_username": owner_username,
         "environment": environment,
         "license": license,
         "dns_names": dns_names,

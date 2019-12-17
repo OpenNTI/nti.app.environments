@@ -101,8 +101,7 @@ class TestAdminViews(BaseAppTest):
                                                                 hubspot_contact=HubspotContact(contact_vid='vid001')))
 
             sites = self._root().get('sites')
-            site = sites.addSite(PersistentSite(owner_username='testusername',
-                                                license=TrialLicense(start_date=datetime.datetime(2019, 12, 12, 0, 0, 0),
+            site = sites.addSite(PersistentSite(license=TrialLicense(start_date=datetime.datetime(2019, 12, 12, 0, 0, 0),
                                                                      end_date=datetime.datetime(2019, 12, 13, 0, 0, 0)),
                                                 environment=SharedEnvironment(name='test'),
                                                 created=datetime.datetime(2019, 12, 11, 0, 0, 0),
@@ -121,7 +120,6 @@ class TestAdminViews(BaseAppTest):
             result = view()
             assert_that(result, has_entries({'sites_list_link': 'http://example.com/admin/sites/@@list',
                                              'site': {'created': '2019-12-11T00:00:00Z',
-                                                 'owner_username': 'testusername',
                                                  'owner': {'owner': customer, 'detail_url': 'http://example.com/admin/customers/123@gmail.com/@@details'},
                                                  'site_id': siteId,
                                                  'status': 'ACTIVE',
