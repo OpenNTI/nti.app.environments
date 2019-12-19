@@ -11,6 +11,7 @@
         <h1>Sites</h1>
 
         <div class="toolbar">
+            <input type="text" id='search' name="search" placeHolder="Search" class="search-input" onkeypress="return search(event);"/>
             <div style="float: right;">
                 <button type="button" onclick="document.getElementById('newModal').style.display = 'block';">Create New Site</button>
                 <button type="button" onclick="document.getElementById('uploadModal').style.display = 'block';" style="margin-left: 6px;">Upload CSV File</button>
@@ -166,6 +167,22 @@
                         }
                     }
                 }
+
+                function search(e) {
+                    // When a enter key pressed, query the server.
+                    if (e.which == 13 || e.keyCode == 13) {
+                        var search = $('#search').val().trim();
+                        var url = updateUrlParameter('search', search);
+                        window.location.href = url;
+                    }
+                }
+
+                $( document ).ready(function() {
+                    var email = getUrlParameter('search');
+                    if(email){
+                        $('#search').val(email);
+                    }
+                });
             </script>
         </metal:block>
     </metal:block><!-- end of content -->

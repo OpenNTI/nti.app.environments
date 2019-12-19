@@ -11,7 +11,9 @@
             <img src="/static/image/avatar.png" alt="Avatar" style="width:120px;border-radius: 50%;">
             <p>Name: <span tal:content="customer.name or 'Unknown'"></span></p>
             <p>Email: <span tal:content="customer.email"></span></p>
-            <p>Hubspot: <span tal:content="customer.hubspot"></span></p>
+            <metal:block tal:omit-tag="" tal:condition="customer.hubspot">
+                <p>Hubspot: <a href="${customer.hubspot.profile_url}" target="_blank">${customer.hubspot.contact_vid}</a></p>
+            </metal:block>
         </div>
 
         <h1 style="margin-top: 32px;">Sites</h1>

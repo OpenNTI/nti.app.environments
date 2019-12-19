@@ -10,7 +10,7 @@
     <metal:block metal:fill-slot="content">
         <div class="site-header"><br>
             <div class="site-item site-logo">
-                <a href="#" tal:attributes="href site.site_url|nothing or '#'">
+                <a href="#" tal:attributes="href site.site_url|nothing or '#'" target="_blank">
                     <img src="/static/logo.png" alt="Click to the site." title="Click to the site."  tal:attributes="src python: site.get('logo_url') or '/static/logo.png'">
                 </a>
             </div>
@@ -20,7 +20,7 @@
                 <p>Site name: <span tal:content="python: site.brand_name|nothing"></span></p>
                 <p>Status: <span tal:content="site.status"></span></p>
                 <p>Created: <span tal:content="site.created"></span></p>
-                <p>DNS Names: <span tal:repeat="dns_name site.dns_names"><a href="https://${dns_name}">${dns_name}</a></span></p>
+                <p>DNS Names: <span tal:repeat="dns_name site.dns_names"><a href="https://${dns_name}" target="_blank">${dns_name}</a></span></p>
             </div>
         </div>
 

@@ -16,11 +16,6 @@
     padding-right: 16px;
 }
 
-.table .email {
-    text-decoration: none;
-    color: #000;
-}
-
 .table td,
 .table th {
     text-align: left;

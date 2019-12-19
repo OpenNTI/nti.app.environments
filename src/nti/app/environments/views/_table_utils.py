@@ -15,6 +15,7 @@ from z3c.table import batch
 
 from z3c.table.interfaces import ITable
 from z3c.table.interfaces import IBatchProvider
+from nti.app.environments.models.interfaces import ITrialLicense
 
 
 @interface.implementer(IAbsoluteURL)
@@ -70,12 +71,16 @@ def make_specific_table(tableClassName, container, request, **kwargs):
     return the_table
 
 
-class EmailColumn(column.EMailColumn):
+class EmailColumn(column.LinkColumn):
 
     weight = 1
     header = 'Email'
-    attrName = 'email'
-    linkCSS = "email"
+
+    def getLinkURL(self, item):
+        return self.request.route_url('admin', traverse=('customers', item.__name__, '@@details'))
+
+    def getLinkContent(self, item):
+        return item.email
 
 
 class NameColumn(column.GetAttrColumn):
@@ -128,16 +133,6 @@ class LastVerifiedColumn(BaseDateColumn):
     attrName = 'last_verified'
 
 
-class DetailColumn(column.LinkColumn):
-
-    weight = 6
-    header = ''
-    linkContent = 'details'
-
-    def getLinkURL(self, item):
-        return self.request.route_url('admin', traverse=('customers', item.__name__, '@@details'))
-
-
 class DeleteColumn(column.Column):
 
     weight = 7
@@ -158,11 +153,14 @@ class CustomerColumnHeader(header.SortingColumnHeader):
     _request_args = ['search']
 
 
-class ValuesForCustomersTable(value.ValuesForContainer):
+class _FilterMixin(object):
 
     def _get_filter(self, name, params):
         value = params.get(name) or ''
         return value.strip()
+
+
+class ValuesForCustomersTable(value.ValuesForContainer, _FilterMixin):
 
     def _predicate(self, item, email):
         return email in item.email.lower()
@@ -175,7 +173,7 @@ class ValuesForCustomersTable(value.ValuesForContainer):
                          else [x for x in self.context.values() if self._predicate(x, email.lower())]
 
 
-class SitesTable(BaseTable):
+class SitesTable(BaseTable, _FilterMixin):
 
     def __init__(self, context, request, **kwargs):
         super(SitesTable, self).__init__(context, request)
@@ -187,16 +185,27 @@ class SitesTable(BaseTable):
             return [x for x in self.context.values() if x.owner and x.owner.email == self._email]
         return self.context.values()
 
+    def _predicate(self, item, term):
+        if term in item.id.lower():
+            return True
+        for dns in item.dns_names:
+            if term in dns.lower():
+                return True
+        return False
+
     @property
     def values(self):
-        return self._raw_values
+        params = self.request.params
+        term = self._get_filter('search', params)
+        return self._raw_values if not term else [x for x in self._raw_values if self._predicate(x, term.lower())]
 
 
 class SiteColumnHeader(header.SortingColumnHeader):
-    pass
+
+    _request_args = ['search']
 
 
-class SiteURLColumn(column.GetAttrColumn):
+class SiteURLColumn(column.LinkColumn):
 
     weight = 0
     header = 'Site'
@@ -209,10 +218,26 @@ class SiteURLColumn(column.GetAttrColumn):
     def getSortKey(self, item):
         return self.getValue(item)
 
+    def getLinkURL(self, item):
+        return self.request.route_url('admin', traverse=('sites', item.__name__, '@@details'))
+
+    def getLinkContent(self, item):
+        return self.getValue(item)
+
+
+class SiteLicenseColumn(column.GetAttrColumn):
+
+    weight = 1
+    header = 'License'
+    attrName = 'license'
+
+    def getValue(self, obj):
+        return 'trial' if ITrialLicense.providedBy(obj.license) else 'enterprise'
+
 
 class SiteStatusColumn(column.GetAttrColumn):
     
-    weight = 1
+    weight = 2
     header = 'Status'
     attrName = 'status'
 
@@ -220,16 +245,6 @@ class SiteStatusColumn(column.GetAttrColumn):
 class SiteCreatedColumn(CreatedColumn):
 
     weight = 4
-
-
-class SiteDetailColumn(column.LinkColumn):
-
-    weight = 5
-    header = ''
-    linkContent = 'view'
-
-    def getLinkURL(self, item):
-        return self.request.route_url('admin', traverse=('sites', item.__name__, '@@details'))
 
 
 class SiteDeleteColumn(DeleteColumn):

@@ -2,6 +2,8 @@ from pyramid.view import view_config
 
 from nti.app.environments.api.siteinfo import nt_client
 
+from nti.app.environments.api.hubspotclient import get_hubspot_profile_url
+
 from nti.app.environments.auth import ACT_ADMIN
 
 from nti.app.environments.models.interfaces import ICustomer
@@ -54,13 +56,17 @@ class CustomerDetailView(BaseTemplateView):
         onboarding_root = find_iface(self.context, IOnboardingRoot)
         return get_sites_folder(onboarding_root)
 
+    def _format_hubspot(self, contact=None):
+        return {'contact_vid': contact.contact_vid,
+                'profile_url': get_hubspot_profile_url(contact.contact_vid)}
+
     def __call__(self):
         sites = self._get_sites_folder()
         table = make_specific_table(SitesTable, sites, self.request, email=self.context.email)
         return {'customers_list_link': self.request.route_url('admin', traverse=('customers', '@@list')),
                 'customer': {'email': self.context.email,
                              'name': self.context.name,
-                             'hubspot': self.context.hubspot_contact.contact_vid if self.context.hubspot_contact else ''},
+                             'hubspot': self._format_hubspot(self.context.hubspot_contact) if self.context.hubspot_contact else None},
                 'table': table}
 
 

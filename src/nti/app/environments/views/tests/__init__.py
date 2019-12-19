@@ -29,7 +29,8 @@ class BaseAppTest(unittest.TestCase):
             'zodbconn.uri' : 'memory://',
             'google_client_id': 'xxx',
             'google_client_secret': 'yyy',
-            'hubspot_api_key': 'zzz'
+            'hubspot_api_key': 'zzz',
+            'hubspot_portal_id': 'kkk'
         }
 
     def tearDown(self):
