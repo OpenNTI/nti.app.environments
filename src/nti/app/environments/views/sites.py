@@ -10,7 +10,8 @@ from zope.schema._bootstrapinterfaces import RequiredMissing
 from zope.schema._bootstrapinterfaces import ValidationError
 
 from nti.app.environments.models.utils import get_customers_folder
-from nti.app.environments.models.interfaces import ILMSSite
+from nti.app.environments.models.interfaces import ILMSSite, ITrialLicense,\
+    ISharedEnvironment, IDedicatedEnvironment
 from nti.app.environments.models.interfaces import ILMSSitesContainer
 from nti.app.environments.models.interfaces import IOnboardingRoot
 from nti.app.environments.models.interfaces import SITE_STATUS_UNKNOWN
@@ -26,7 +27,9 @@ from nti.app.environments.views.base import BaseView
 from nti.app.environments.views.utils import raise_json_error
 from nti.app.environments.views.utils import parseDate
 from nti.app.environments.views.utils import convertToUTC
+from nti.app.environments.views.utils import formatDate
 
+from nti.app.environments.auth import ACT_READ
 from nti.app.environments.auth import ACT_CREATE
 from nti.app.environments.auth import ACT_DELETE
 from nti.app.environments.auth import ACT_UPDATE 
@@ -35,6 +38,7 @@ from nti.app.environments.api.hubspotclient import get_hubspot_client
 
 from .base import createCustomer
 from .base import getOrCreateCustomer
+from .base_csv import CSVBaseView
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -312,3 +316,37 @@ class SitesUploadCSVView(SiteBaseView):
         result['skip_sites'] = skipped
         logger.info("End processing sites creation.")
         return result
+
+
+@view_config(context=ILMSSitesContainer,
+             request_method='GET',
+             permission=ACT_READ,
+             name="export_sites")
+class SiteCSVExportView(CSVBaseView):
+
+    def header(self, params):
+        return ['Site', 'Owner', 'License', 'License Start Date', 'License End Date',
+                'Environment', 'Host Machine',
+                'Status', 'DNS Names', 'Created',]
+
+    def filename(self):
+        return 'sites.csv'
+
+    def records(self, params):
+        return self.context.values()
+
+    def _format_env(self, envir):
+        return "{}:{}".format('shared' if ISharedEnvironment.providedBy(envir) else 'dedicated',
+                              envir.name if ISharedEnvironment.providedBy(envir) else envir.pod_id)
+
+    def row_data_for_record(self, record):
+        return {'Site': record.id,
+                'Owner': record.owner.email,
+                'License': 'trial' if ITrialLicense.providedBy(record.license) else 'enterprise',
+                'License Start Date': formatDate(record.license.start_date),
+                'License End Date': formatDate(record.license.end_date),
+                'Environment': self._format_env(record.environment),
+                'Host Machine': record.environment.host if IDedicatedEnvironment.providedBy(record.environment) else '',
+                'Status': record.status,
+                'DNS Names': ','.join(record.dns_names),
+                'Created': formatDate(record.created)}

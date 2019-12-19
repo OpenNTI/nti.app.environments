@@ -29,3 +29,7 @@ def parseDate(strDate, local_tz='US/Central', safe=False, convert=True, ignoretz
         if safe:
             return None
         raise e
+
+
+def formatDate(dt, _format='%Y-%m-%dT%H:%M:%SZ', default=''):
+    return dt.strftime(_format) if dt else default

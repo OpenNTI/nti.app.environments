@@ -83,6 +83,7 @@ class SitesListView(BaseTemplateView):
         return {'table': table,
                 'creation_url': self.request.resource_url(self.context),
                 'sites_upload_url': self.request.resource_url(self.context, '@@upload_sites'),
+                'sites_export_url': self.request.resource_url(self.context, '@@export_sites'),
                 'site_status_options': SITE_STATUS_OPTIONS,
                 'env_shared_options': SHARED_ENV_NAMES}
 
