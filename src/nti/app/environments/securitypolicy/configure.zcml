@@ -28,7 +28,7 @@
 
 	<sp:principal id="josh.zuech@nextthought.com"
 				  login="josh.zuech@nextthought.com"
-				  title="Josh ZueCh" />
+				  title="Josh Zuech" />
 
 	<!-- roles to principals -->
 	<sp:grant role="role:nti.roles.admin"
