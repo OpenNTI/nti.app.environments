@@ -16,7 +16,19 @@
 
 	<sp:principal id="chris.utz@nextthought.com"
 				  login="chris.utz@nextthought.com"
-				  title="Chris" />
+				  title="Chris Utz" />
+
+	<sp:principal id="tony.tarleton@nextthought.com"
+				  login="tony.tarleton@nextthought.com"
+				  title="Tony Tarleton" />
+
+	<sp:principal id="sean.jones@nextthought.com"
+				  login="sean.jones@nextthought.com"
+				  title="Sean Jones" />
+
+	<sp:principal id="josh.zuech@nextthought.com"
+				  login="josh.zuech@nextthought.com"
+				  title="Josh Zuech" />
 
 	<!-- roles to principals -->
 	<sp:grant role="role:nti.roles.admin"
@@ -24,5 +36,14 @@
 
 	<sp:grant role="role:nti.roles.admin"
 			  principal="chris.utz@nextthought.com" />
+
+	<sp:grant role="role:nti.roles.admin"
+			  principal="tony.tarleton@nextthought.com" />
+
+	<sp:grant role="role:nti.roles.admin"
+			  principal="sean.jones@nextthought.com" />
+
+	<sp:grant role="role:nti.roles.admin"
+			  principal="josh.zuech@nextthought.com" />
 
 </configure>
