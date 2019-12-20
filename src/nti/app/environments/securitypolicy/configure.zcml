@@ -20,7 +20,7 @@
 
 	<sp:principal id="tony.tarleton@nextthought.com"
 				  login="tony.tarleton@nextthought.com"
-				  title="Tony" />
+				  title="Tony Tarleton" />
 
 	<sp:principal id="sean.jones@nextthought.com"
 				  login="sean.jones@nextthought.com"
