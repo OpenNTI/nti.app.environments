@@ -5,6 +5,7 @@ from hubspot3.error import HubspotNotFound
 from hubspot3.error import HubspotError
 
 from nti.app.environments.settings import HUBSPOT_API_KEY
+from nti.app.environments.settings import HUBSPOT_PORTAL_ID
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -56,3 +57,8 @@ def get_hubspot_client():
     if _hubspot_client is None:
         _hubspot_client = HubspotClient(HUBSPOT_API_KEY)
     return _hubspot_client
+
+
+def get_hubspot_profile_url(contact_vid):
+    return "https://app.hubspot.com/contacts/{portal_id}/contact/{vid}".format(portal_id=HUBSPOT_PORTAL_ID,
+                                                                               vid=contact_vid)

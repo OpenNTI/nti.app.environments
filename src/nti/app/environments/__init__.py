@@ -12,14 +12,14 @@ from pyramid_zodbconn import get_connection
 
 from zope.component import getGlobalSiteManager
 
-import zope.i18nmessageid
+import zope.i18nmessageid as zope_i18nmessageid
 
 from .auth import AuthenticationPolicy
 from .models import appmaker
 from .settings import init_app_settings
 
 # TODO what setup is missing here to make this work
-MessageFactory = zope.i18nmessageid.MessageFactory('nti.app.environments')
+MessageFactory = zope_i18nmessageid.MessageFactory('nti.app.environments')
 
 
 def root_factory(request):

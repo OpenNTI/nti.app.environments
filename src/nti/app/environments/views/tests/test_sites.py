@@ -1,41 +1,41 @@
-from zope import component
-
+from unittest import mock
 from hamcrest import assert_that
 from hamcrest import has_length
 from hamcrest import has_properties
 from hamcrest import instance_of
 from hamcrest import is_
 
-from pyramid.interfaces import IRootFactory
 from nti.app.environments.views.customers import getOrCreateCustomer
-from nti.app.environments.views.tests import BaseTest
+from nti.app.environments.views.tests import BaseAppTest
 from nti.app.environments.views.tests import with_test_app
 from nti.app.environments.views.tests import ensure_free_txn
-from nti.app.environments.models.sites import TrialLicense
+from nti.app.environments.models.sites import TrialLicense, EnterpriseLicense
 
 
-class TestSiteCreationView(BaseTest):
+class TestSiteCreationView(BaseAppTest):
 
-    @property
-    def _root(self):
-        return component.getUtility(IRootFactory)(self.request)
-
-    def _params(self):
+    def _params(self, env_type='shared', license_type="trial", site_id=None):
+        env = {'name': 'assoc'} if env_type == 'shared' else {'pod_id': 'xxx', 'host': 'okc.com'}
         return {
+            'site_id': site_id,
             "owner": "test@gmail.com",
-            "owner_username": "test004",
             "environment": {
-                "type": "shared",
-                "name": "assoc"
+                "type": env_type,
+                **env,
             },
-            "license": "trial",
+            "license": {
+                "type": license_type,
+                'start_date': '2019-11-27T00:00:00',
+                'end_date': '2019-11-28T00:00:00'
+            },
             "dns_names": ["t1.nextthought.com", "t2.nextthought.com"],
             "status": "PENDING",
             "created": "2019-11-26T00:00:00"
         }
 
     @with_test_app()
-    def test_site(self):
+    @mock.patch('nti.app.environments.models.wref.get_customers_folder')
+    def test_site(self, mock_customers):
         url = '/sites'
         params = self._params()
         self.testapp.post_json(url, params=params, status=401, extra_environ=self._make_environ(username=None))
@@ -45,9 +45,10 @@ class TestSiteCreationView(BaseTest):
         assert_that(result, {})
 
         with ensure_free_txn():
-            sites = self._root.get('sites')
+            sites = self._root().get('sites')
             assert_that(sites, has_length(0))
-            getOrCreateCustomer(self._root.get('customers'), 'test@gmail.com')
+            getOrCreateCustomer(self._root().get('customers'), 'test@gmail.com')
+            mock_customers.return_value = self._root().get('customers')
 
         result = self.testapp.post_json(url, params=params, status=201, extra_environ=self._make_environ(username='admin001'))
         result = result.json_body
@@ -55,7 +56,6 @@ class TestSiteCreationView(BaseTest):
         assert_that(sites, has_length(1))
         site = [x for x in sites.values()][0]
         assert_that(site, has_properties({'owner': has_properties({'email': 'test@gmail.com'}),
-                                                           'owner_username': 'test004',
                                                            'environment': has_properties({'name': 'assoc'}),
                                                            'license': instance_of(TrialLicense),
                                                            'status': 'PENDING',
@@ -75,5 +75,18 @@ class TestSiteCreationView(BaseTest):
         # delete
         self.testapp.delete(site_url, status=204, extra_environ=self._make_environ(username='admin001'))
         with ensure_free_txn():
-            sites = self._root.get('sites')
+            sites = self._root().get('sites')
             assert_that(sites, has_length(0))
+
+        params = self._params(env_type='dedicated', license_type="enterprise", site_id='S1id')
+        self.testapp.post_json(url, params=params, status=201, extra_environ=self._make_environ(username='admin001'))
+        with ensure_free_txn():
+            sites = self._root().get('sites')
+            assert_that(sites, has_length(1))
+            site = [x for x in sites.values()][0]
+            assert_that(site, has_properties({'owner': has_properties({'email': 'test@gmail.com'}),
+                                                               'id': 'S1id',
+                                                               'environment': has_properties({'pod_id': 'xxx', 'host': 'okc.com'}),
+                                                               'license': instance_of(EnterpriseLicense),
+                                                               'status': 'PENDING',
+                                                               'dns_names': ['t1.nextthought.com', 't2.nextthought.com']}))

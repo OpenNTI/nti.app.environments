@@ -18,14 +18,6 @@ class OnboardingRoot(Folder):
     __name__ = None
 
 
-def get_customers(onboarding_root):
-    return onboarding_root[CUSTOMERS]
-
-
-def get_sites(onboarding_root):
-    return onboarding_root[SITES]
-
-
 def _install_customers(onboarding_root):
     if CUSTOMERS not in onboarding_root:
         customers = CustomersFolder()

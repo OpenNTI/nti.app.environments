@@ -34,6 +34,10 @@ class CustomersFolder(Folder):
     def __acl__(self):
         return [(Allow, ADMIN_ROLE, ALL_PERMISSIONS)]
 
+    def addCustomer(self, customer):
+        self[customer.email] = customer
+        return customer
+
     def getCustomer(self, email):
         return self.get(email)
 

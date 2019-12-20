@@ -13,9 +13,6 @@ from nti.app.environments.api.hubspotclient import get_hubspot_client
 from nti.app.environments.models.interfaces import ICustomer
 from nti.app.environments.models.interfaces import ICustomersContainer
 
-from nti.app.environments.models.customers import HubspotContact
-from nti.app.environments.models.customers import PersistentCustomer
-
 from nti.app.environments.auth import ACT_CREATE
 from nti.app.environments.auth import ACT_DELETE
 from nti.app.environments.authentication import forget
@@ -26,26 +23,9 @@ from nti.app.environments.authentication import validate_challenge_for_customer
 from nti.mailer.interfaces import ITemplatedMailer
 
 from .base import BaseView
+from .base import getOrCreateCustomer
+from .base import createCustomer
 from .utils import raise_json_error
-
-
-def getOrCreateCustomer(container, email):
-    try:
-        customer = container[email]
-    except KeyError:
-        customer = PersistentCustomer()
-        customer.email = email
-        customer.__name__ = email
-        customer.created = datetime.datetime.utcnow()
-        container[customer.__name__] = customer
-    return customer
-
-
-def createCustomer(container, email, name, hs_contact_vid):
-    customer = getOrCreateCustomer(container, email)
-    customer.name = name
-    customer.hubspot_contact = HubspotContact(contact_vid=str(hs_contact_vid))
-    return customer
 
 
 @view_config(context=ICustomersContainer,

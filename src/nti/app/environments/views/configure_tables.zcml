@@ -38,11 +38,6 @@
 			 provides="z3c.table.interfaces.IColumn"
 			 name="last_verified" />
 
-	<adapter factory="._table_utils.DetailColumn"
-			 for="* * ._table_utils.CustomersTable"
-			 provides="z3c.table.interfaces.IColumn"
-			 name="details" />
-
 	<adapter factory="._table_utils.DeleteColumn"
 			 for="* * ._table_utils.CustomersTable"
 			 provides="z3c.table.interfaces.IColumn"
@@ -75,10 +70,15 @@
 			 provides="z3c.table.interfaces.IValues"/>
 
     <!-- Sites table -->
-	<adapter factory="._table_utils.SiteOwnerUsernameColumn"
+	<adapter factory="._table_utils.SiteURLColumn"
 			 for="* * ._table_utils.SitesTable"
 			 provides="z3c.table.interfaces.IColumn"
-			 name="owner_username" />
+			 name="site" />
+
+	<adapter factory="._table_utils.SiteLicenseColumn"
+			 for="* * ._table_utils.SitesTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="license" />
 
 	<adapter factory="._table_utils.SiteStatusColumn"
 			 for="* * ._table_utils.SitesTable"
@@ -95,13 +95,12 @@
 			 provides="z3c.table.interfaces.IColumn"
 			 name="delete" />
 
-	<adapter factory="._table_utils.SiteDetailColumn"
-			 for="* * ._table_utils.SitesTable"
-			 provides="z3c.table.interfaces.IColumn"
-			 name="details" />
+	<adapter factory="._table_utils.SiteColumnHeader"
+			 for="* * * ._table_utils.SiteURLColumn"
+			 provides="z3c.table.interfaces.IColumnHeader"/>
 
 	<adapter factory="._table_utils.SiteColumnHeader"
-			 for="* * * ._table_utils.SiteOwnerUsernameColumn"
+			 for="* * * ._table_utils.SiteLicenseColumn"
 			 provides="z3c.table.interfaces.IColumnHeader"/>
 
 	<adapter factory="._table_utils.SiteColumnHeader"

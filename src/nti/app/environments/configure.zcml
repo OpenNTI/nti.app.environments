@@ -16,6 +16,8 @@
 
 	<include package="zope.annotation" />
 
+	<include package="nti.wref"/>
+
 	<utility
 	    factory=".authentication.EmailChallengeOTPGenerator"
 	    provides=".interfaces.IOTPGenerator"/>
@@ -24,9 +26,9 @@
 	  <implements interface="zope.annotation.interfaces.IAttributeAnnotatable" />
 	</class>
 
-	<adapter factory=".models.sites.SitesNameChooser"
-			 for=".models.interfaces.ILMSSitesContainer"
-			 provides="zope.container.interfaces.INameChooser"/>
+    <adapter factory="nti.app.environments.models.wref.CustomerWeakRef"
+             for="nti.app.environments.models.customers.PersistentCustomer"
+             provides="nti.wref.interfaces.IWeakRef" />
 
     <include package=".views" file="configure_tables.zcml" />
     <include package=".securitypolicy" file="configure.zcml" />

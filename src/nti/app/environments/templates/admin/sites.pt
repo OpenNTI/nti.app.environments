@@ -1,28 +1,22 @@
-<html>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Sites</title>
-    <link href="/static/css/base.css" rel="stylesheet">
-    <link href="/static/css/modal.css" rel="stylesheet">
-    <link href="/static/css/table.css" rel="stylesheet">
-    <style>
-        .container {
-            margin: auto;
-            margin-top: 80px;
-            width: 80%;
-        }
+<metal:block metal:use-macro="load: ../macros/layout_admin.pt">
+    <title metal:fill-slot="title">
+        Sites
+    </title>
+	<metal:block metal:fill-slot="css">
+        <link href="/static/css/modal.css" rel="stylesheet">
+        <link href="/static/css/table.css" rel="stylesheet">
+    </metal:block>
 
-        button {
-            cursor: pointer;
-        }
-    </style>
-<body>
-    <div metal:use-macro="load: ../macros/nav.pt"/>
-
-    <div class="container">
+    <metal:block metal:fill-slot="content">
         <h1>Sites</h1>
 
         <div class="toolbar">
-            <button type="button" style="float: right;" onclick="document.getElementById('newModal').style.display = 'block';">Create New Site</button>
+            <input type="text" id='search' name="search" placeHolder="Search" class="search-input" onkeypress="return search(event);"/>
+            <div style="float: right;">
+                <button type="button" onclick="document.getElementById('newModal').style.display = 'block';">Create New Site</button>
+                <button type="button" onclick="document.getElementById('uploadModal').style.display = 'block';" style="margin-left: 6px;">Upload CSV File</button>
+                <a href="${sites_export_url}" style="margin-left: 6px;" target="_blank">Export</a>
+            </div>
         </div>
 
 		<table tal:condition="python: len(table.context)" tal:replace="structure python: table.render()" />
@@ -31,121 +25,166 @@
 		</div>
 
 	    <div class="table-pagination" tal:define="table table" >
+            <div class="pagination-detail" tal:condition="python: len(table._raw_values)">
+                Total: ${len(table._raw_values)}.
+            </div>
             <div class="pagination" tal:condition="python: len(table.context) > table.batchSize">
                 <span tal:replace="structure python: table.renderBatch()"/>
             </div>
 	    </div>
-	</div>
 
-    <div id="deletingModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Deleting?</h3>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete site <strong><span class="deleting_email"></span></strong>?</p>
-                <div class="success success-deletion" style="display:none;"></div>
-                <div class="error error-deletion" style="display:none;"></div>
-            </div>
-
-            <div class="modal-footer">
-                <button class='btnOK' onclick="deleteItem(this);">Delete</button>
-                <button class='btnNO' onclick="document.getElementById('deletingModal').style.display = 'none';">Cancel</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="newModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Add New Site</h3>
-            </div>
-            <div class="modal-body">
-                <div class="form">
-                    <div class="input-row">
-                        <label class="input-col-1">Email</label>
-                        <div class="input-col-3">
-                            <input type="text" name="owner" id="site_owner"/>
-                        </div>
-                    </div>
-                    <div class="input-row">
-                        <label class="input-col-1">Username</label>
-                        <div class="input-col-3">
-                            <input type="text" name="owner_username" id="site_owner_username"/>
-                        </div>
-                    </div>
-                    <div class="input-row">
-                        <label class="input-col-1">Environemnt</label>
-                        <select class="input-col-3" name="environment_type" id="site_environment_type" onchange="onEnvironmentChange()">
-                            <option value=""></option>
-                            <option value="shared">shared</option>
-                            <option value="dedicated">dedicated</option>
-                        </select>
-                    </div>
-                    <div class="input-row" style="display:none;" id="site_environment_details">
-                        <label class="input-col-1"></label>
-                        <div class="input-col-3">
-                            <input type="text" name="environment_name" id="site_environment_name" placeHolder="Name" style="display:none;"/>
-                            <input type="text" name="environment_containerid" id="site_environment_containerid" placeHolder="Container Id" style="display:none;"/>
-                        </div>
-                    </div>
-                    <div class="input-row">
-                        <label class="input-col-1">License</label>
-                        <select class="input-col-3" name="license" id="site_license">
-                            <option value=""></option>
-                            <option value="trial">trial</option>
-                            <option value="enterprise">enterprise</option>
-                        </select>
-                    </div>
-                    <div class="input-row">
-                        <label class="input-col-1">Status</label>
-                        <select class="input-col-3" name="status" id="site_status">
-                            <option value=""></option>
-                            <option value="PENDING">PENDING</option>
-                            <option value="ACTIVE">ACTIVE</option>
-                            <option value="INACTIVE">INACTIVE</option>
-                        </select>
-                    </div>
-                    <div class="input-row">
-                        <label class="input-col-1">Created</label>
-                        <div class="input-col-3">
-                            <input type="text" name="created" id="site_created" placeHolder="2019-12-05T00:00:00Z"/>
-                        </div>
-                    </div>
-                    <div class="input-row">
-                        <label class="input-col-1">DNS Names</label>
-                        <textarea class="input-col-3" rows="2" name="dns_names" id="site_dns_names"></textarea>
-                    </div>
+        <div id="deletingModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Deleting?</h3>
                 </div>
-                <div class="success success-creation" style="display:none;"></div>
-                <div class="error error-creation" style="display:none;"></div>
-            </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete site <strong><span class="deleting_email"></span></strong>?</p>
+                    <div class="success success-deletion" style="display:none;"></div>
+                    <div class="error error-deletion" style="display:none;"></div>
+                </div>
 
-            <div class="modal-footer">
-                <button type="button" class='btnSave' onclick="saveItem(this, '${creation_url}');">Save</button>
-                <button type="button" class='btnNO' onclick="document.getElementById('newModal').style.display = 'none';">Cancel</button>
+                <div class="modal-footer">
+                    <button class='btnOK' onclick="deleteItem(this);">Delete</button>
+                    <button class='btnNO' onclick="document.getElementById('deletingModal').style.display = 'none';">Cancel</button>
+                </div>
             </div>
         </div>
-    </div>
 
-<script src="https://code.jquery.com/jquery-3.4.1.min.js"
-        integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
-        crossorigin="anonymous"></script>
-<script src="/static/js/base.js"></script>
-<script src="/static/js/sites.js"></script>
-<script>
-    // When the user clicks anywhere outside of the modal, close it
-    window.onclick = function(event) {
-        var ids = ["deletingModal", "newModal"];
-        for(var i=0; i<ids.length; i++) {
-            var modal = document.getElementById(ids[i]);
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
-        }
-    }
-</script>
+        <div id="newModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Add New Site</h3>
+                </div>
+                <div class="modal-body">
+                    <div class="form">
+                        <div class="input-row">
+                            <label class="input-col-1">Site ID</label>
+                            <div class="input-col-3">
+                                <input type="text" name="site_id" id="site_id" placeHolder="Optional"/>
+                            </div>
+                        </div>
+                        <div class="input-row">
+                            <label class="input-col-1">Email</label>
+                            <div class="input-col-3">
+                                <input type="text" name="owner" id="site_owner"/>
+                            </div>
+                        </div>
+                        <div class="input-row">
+                            <label class="input-col-1">Environemnt</label>
+                            <select class="input-col-3" name="environment_type" id="site_environment_type" onchange="onEnvironmentChange()">
+                                <option value=""></option>
+                                <option value="shared">shared</option>
+                                <option value="dedicated">dedicated</option>
+                            </select>
+                        </div>
+                        <div class="input-row" style="display:none;" id="site_environment_details">
+                            <label class="input-col-1"></label>
+                            <div class="input-col-3">
+                                <select name="environment_name" id="site_environment_name" style="display:none;">
+                                    <option value="">Select a name</option>
+                                    <metal:block tal:omit-tag="" tal:repeat="option env_shared_options"><option value="${option}">${option}</option></metal:block>
+                                </select>
+                                <input type="text" name="environment_containerid" id="site_environment_pod_id" placeHolder="Pod Id" style="display:none;"/>
+                                <input type="text" name="site_environment_host" id="site_environment_host" placeHolder="Host" style="display:none; margin-top: 16px;"/>
+                            </div>
+                        </div>
+                        <div class="input-row">
+                            <label class="input-col-1">License</label>
+                            <select class="input-col-3" name="license" id="site_license" onchange="onLicenseChange()">
+                                <option value=""></option>
+                                <option value="trial">trial</option>
+                                <option value="enterprise">enterprise</option>
+                            </select>
+                        </div>
+                        <div class="input-row" style="display:none;" id="site_license_details">
+                            <label class="input-col-1"></label>
+                            <div class="input-col-3">
+                                <input type="text" name="site_license_start_date" id="site_license_start_date" placeHolder="Start Date"/>
+                                <input type="text" name="site_license_end_date" id="site_license_end_date" placeHolder="End Date" style="margin-top: 16px;"/>
+                            </div>
+                        </div>
+                        <div class="input-row">
+                            <label class="input-col-1">Status</label>
+                            <select class="input-col-3" name="status" id="site_status">
+                                <option value=""></option>
+                                <metal:block tal:omit-tag="" tal:repeat="option site_status_options"><option value="${option}">${option}</option></metal:block>
+                            </select>
+                        </div>
+                        <div class="input-row">
+                            <label class="input-col-1">Created</label>
+                            <div class="input-col-3">
+                                <input type="text" name="created" id="site_created" placeHolder="2019-12-05T00:00:00"/>
+                            </div>
+                        </div>
+                        <div class="input-row">
+                            <label class="input-col-1">DNS Names</label>
+                            <textarea class="input-col-3" rows="2" name="dns_names" id="site_dns_names"></textarea>
+                        </div>
+                    </div>
+                    <div class="success success-creation" style="display:none;"></div>
+                    <div class="error error-creation" style="display:none;"></div>
+                </div>
 
-</body>
+                <div class="modal-footer">
+                    <button type="button" class='btnSave' onclick="saveItem(this, '${creation_url}');">Save</button>
+                    <button type="button" class='btnNO' onclick="document.getElementById('newModal').style.display = 'none';">Cancel</button>
+                </div>
+            </div>
+        </div><!-- end of new modal -->
 
-</html>
+        <div id="uploadModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Upload CSV File</h3>
+                </div>
+                <div class="modal-body">
+                    <div class="form">
+                        <div class="input-row">
+                            <input type="file" id="sites_upload" name="sites" accept=".csv" size="100"/>
+                        </div>
+                    </div>
+                    <div class="success success-upload" style="display:none;"></div>
+                    <div class="error error-upload" style="display:none;"></div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class='btnSave' onclick="uploadFile(this, '${sites_upload_url}');">Upload</button>
+                    <button type="button" class='btnNO' onclick="document.getElementById('uploadModal').style.display = 'none';">Cancel</button>
+                </div>
+            </div>
+        </div><!-- end of upload modal -->
+
+        <metal:block metal:fill-slot="script">
+            <script src="/static/js/sites.js"></script>
+            <script>
+                // When the user clicks anywhere outside of the modal, close it
+                window.onclick = function(event) {
+                    var ids = ["deletingModal", "newModal"];
+                    for(var i=0; i<ids.length; i++) {
+                        var modal = document.getElementById(ids[i]);
+                        if (event.target == modal) {
+                            modal.style.display = "none";
+                        }
+                    }
+                }
+
+                function search(e) {
+                    // When a enter key pressed, query the server.
+                    if (e.which == 13 || e.keyCode == 13) {
+                        var search = $('#search').val().trim();
+                        var url = updateUrlParameter('search', search);
+                        window.location.href = url;
+                    }
+                }
+
+                $( document ).ready(function() {
+                    var email = getUrlParameter('search');
+                    if(email){
+                        $('#search').val(email);
+                    }
+                });
+            </script>
+        </metal:block>
+    </metal:block><!-- end of content -->
+</metal:block>

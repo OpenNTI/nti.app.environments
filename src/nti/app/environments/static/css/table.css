@@ -16,11 +16,6 @@
     padding-right: 16px;
 }
 
-.table .email {
-    text-decoration: none;
-    color: #000;
-}
-
 .table td,
 .table th {
     text-align: left;
@@ -111,10 +106,12 @@
 }
 
 .toolbar input,
-.toolbar button {
+.toolbar button,
+.toolbar a {
     padding: 6px 6px;
     border: 1px solid #ced4da;
     border-radius: 4px;
     margin-bottom: 16px;
     font-size: 14px;
+    color: #000;
 }

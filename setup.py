@@ -29,6 +29,7 @@ requires = [
     'nti.property',
     'nti.schema',
     'nti.transactions==3.1.0',
+    'nti.wref==1.0.0',
     'zope.container',
     'zope.site',
     'zope.generations',

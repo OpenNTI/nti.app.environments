@@ -11,6 +11,7 @@ body {
     position: fixed;
     top: 0;
     width: 100%;
+    z-index: 1;
 }
 
 .nav .nav-item {
@@ -39,6 +40,12 @@ body {
 
 .nav .nav-item .active {
     background-color: #4CAF50;
+}
+
+.content {
+    margin: auto;
+    margin-top: 80px;
+    width: 80%;
 }
 
 .success {
@@ -92,6 +99,10 @@ body {
     background-color: #fff;
 }
 
+.form .input-row .input-col-3 select {
+    height: 32px;
+}
+
 .form .btnCustom {
 	font-size: 16px;
 	line-height: 32px;
@@ -99,4 +110,12 @@ body {
 	border-radius: 4px;	
 	margin-left: 6px;
     margin-right: 6px;
+}
+
+button {
+    cursor: pointer;
+}
+
+a {
+    text-decoration: none;
 }

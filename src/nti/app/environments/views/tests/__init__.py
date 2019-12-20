@@ -9,6 +9,7 @@ from zope.testing.cleanup import cleanUp
 
 from pyramid import testing
 from pyramid.interfaces import IAuthenticationPolicy
+from pyramid.interfaces import IRootFactory
 
 from webtest import TestApp
 
@@ -16,7 +17,7 @@ from nti.app.environments import main
 from nti.app.environments import root_factory
 
 
-class BaseTest(unittest.TestCase):
+class BaseAppTest(unittest.TestCase):
 
     testapp = None
     request = None
@@ -28,7 +29,8 @@ class BaseTest(unittest.TestCase):
             'zodbconn.uri' : 'memory://',
             'google_client_id': 'xxx',
             'google_client_secret': 'yyy',
-            'hubspot_api_key': 'zzz'
+            'hubspot_api_key': 'zzz',
+            'hubspot_portal_id': 'kkk'
         }
 
     def tearDown(self):
@@ -38,6 +40,9 @@ class BaseTest(unittest.TestCase):
     def _make_environ(self, username=None):
         result = { 'REMOTE_USER': username } if username else {}
         return result
+
+    def _root(self, request=None):
+        return component.getUtility(IRootFactory)(request or self.request)
 
 
 class DummyCookieHelper(object):

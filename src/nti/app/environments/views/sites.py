@@ -1,12 +1,20 @@
+import csv
+import datetime
+
 from pyramid.view import view_config
 from pyramid import httpexceptions as hexc
 
 from zope.cachedescriptors.property import Lazy
 
-from nti.app.environments.models import get_customers
-from nti.app.environments.models.interfaces import ILMSSite
+from zope.schema._bootstrapinterfaces import RequiredMissing
+from zope.schema._bootstrapinterfaces import ValidationError
+
+from nti.app.environments.models.utils import get_customers_folder
+from nti.app.environments.models.interfaces import ILMSSite, ITrialLicense,\
+    ISharedEnvironment, IDedicatedEnvironment
 from nti.app.environments.models.interfaces import ILMSSitesContainer
 from nti.app.environments.models.interfaces import IOnboardingRoot
+from nti.app.environments.models.interfaces import SITE_STATUS_UNKNOWN
 
 from nti.app.environments.models.sites import DedicatedEnvironment
 from nti.app.environments.models.sites import SharedEnvironment
@@ -14,16 +22,25 @@ from nti.app.environments.models.sites import PersistentSite
 from nti.app.environments.models.sites import TrialLicense
 from nti.app.environments.models.sites import EnterpriseLicense
 
+from nti.app.environments.utils import find_iface
 from nti.app.environments.views.base import BaseView
 from nti.app.environments.views.utils import raise_json_error
-from nti.app.environments.views.utils import find_iface
 from nti.app.environments.views.utils import parseDate
+from nti.app.environments.views.utils import convertToUTC
+from nti.app.environments.views.utils import formatDate
 
+from nti.app.environments.auth import ACT_READ
 from nti.app.environments.auth import ACT_CREATE
 from nti.app.environments.auth import ACT_DELETE
 from nti.app.environments.auth import ACT_UPDATE 
-from zope.schema._bootstrapinterfaces import RequiredMissing
-from zope.schema._bootstrapinterfaces import ValidationError
+
+from nti.app.environments.api.hubspotclient import get_hubspot_client
+
+from .base import createCustomer
+from .base import getOrCreateCustomer
+from .base_csv import CSVBaseView
+
+logger = __import__('logging').getLogger(__name__)
 
 
 class SiteBaseView(BaseView):
@@ -36,10 +53,12 @@ class SiteBaseView(BaseView):
             raise_json_error(hexc.HTTPBadRequest, "Invalid json body.")
         return body
 
-    def _get_value(self, field, params=None):
+    def _get_value(self, field, params=None, expected_type=None):
         if params is None:
             params = self.params
         val = params.get(field)
+        if expected_type is not None and not isinstance(val, (expected_type, None)):
+            raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid {}".format(field), field)
         return val.strip() if isinstance(val, str) else val
 
     def _handle(self, name, value=None):
@@ -52,7 +71,7 @@ class SiteBaseView(BaseView):
             raise_json_error(hexc.HTTPUnprocessableEntity, "Missing required field: email.")
 
         root = find_iface(self.context, IOnboardingRoot)
-        folder = get_customers(root)
+        folder = get_customers_folder(root)
         customer = folder.getCustomer(value)
         if customer is None:
             raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid email.")
@@ -60,6 +79,8 @@ class SiteBaseView(BaseView):
 
     def _handle_env(self, name, value):
         value = value or {}
+        if not isinstance(value, dict):
+            raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid {}.".format(name))
         type_ = self._get_value('type', value)
         if type_ not in ('shared', 'dedicated'):
             raise_json_error(hexc.HTTPUnprocessableEntity,
@@ -69,23 +90,36 @@ class SiteBaseView(BaseView):
         if type_ == 'shared':
             return SharedEnvironment(name=self._get_value('name', value))
         else:
-            return DedicatedEnvironment(containerId=self._get_value('containerId', value))
+            return DedicatedEnvironment(pod_id=self._get_value('pod_id', value),
+                                        host=self._get_value('host', value))
 
     def _handle_license(self, name, value):
-        if value not in ('trial', 'enterprise'):
+        value = value or {}
+        if not isinstance(value, dict):
+            raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid {}.".format(name))
+        type_ = self._get_value('type', value)
+        if type_ not in ('trial', 'enterprise'):
             raise_json_error(hexc.HTTPUnprocessableEntity,
                              "Invalid license.",
                              name)
-        return TrialLicense() if value == 'trial' else EnterpriseLicense() 
+
+        kwargs = {'start_date': self._handle_date('start_date', value.get('start_date')),
+                  'end_date': self._handle_date('end_date', value.get('end_date'))}
+        return TrialLicense(**kwargs) if type_ == 'trial' else EnterpriseLicense(**kwargs) 
 
     def _handle_date(self, name, value=None):
-        return parseDate(value) if value else value
+        try:
+            return parseDate(value) if value else None
+        except:
+            raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid date format for {}".format(name))
 
     def _generate_kwargs_for_site(self, params=None, allowed = ()):
         params = self.params if params is None else params
         kwargs = {}
+        site_id = self._get_value('site_id', params)
+        if site_id:
+            kwargs['id'] = site_id
         for attr_name, _handle in (('owner', self._handle_owner),
-                                   ('owner_username', self._handle),
                                    ('environment', self._handle_env),
                                    ('license', self._handle_license),
                                    ('status', self._handle),
@@ -146,3 +180,173 @@ def deleteSiteView(context, request):
     container = context.__parent__
     container.deleteSite(context)
     return hexc.HTTPNoContent()
+
+
+@view_config(renderer='json',
+             context=ILMSSitesContainer,
+             request_method='POST',
+             permission=ACT_CREATE,
+             name="upload_sites")
+class SitesUploadCSVView(SiteBaseView):
+    """
+    Create sites with csv file.
+    @param delimiter, csv delimiter, default to comma.
+    @param sites, filename
+    """
+    _default_owner_email = 'tony.tarleton@nextthought.com'
+    _default_site_created = convertToUTC(datetime.datetime(2011, 4, 1, 0, 0, 0))
+    _default_site_status = SITE_STATUS_UNKNOWN
+    _default_license_start_date = convertToUTC(datetime.datetime(2011, 4, 1, 0, 0, 0))
+    _default_license_end_date = convertToUTC(datetime.datetime(2029, 12, 31, 0, 0, 0))
+    _default_environment_host = 'host3.4pp'
+
+    @Lazy
+    def _customers(self):
+        root = find_iface(self.context, IOnboardingRoot)
+        folder = get_customers_folder(root)
+        return folder
+
+    @Lazy
+    def _client(self):
+        return get_hubspot_client()
+
+    def _process_license(self, dic):
+        licenseType = dic['License Type'].strip()
+        start_date = parseDate(dic['LicenseStartDate'].strip()) if dic.get('LicenseStartDate') else self._default_license_start_date
+        end_date = parseDate(dic['LicenseEndDate'].strip()) if dic.get('LicenseEndDate') else self._default_license_end_date
+        if licenseType == 'trial':
+            return TrialLicense(start_date=start_date,
+                                end_date=end_date)
+        elif licenseType == 'enterprise':
+            return EnterpriseLicense(start_date=start_date,
+                                     end_date=end_date)
+        elif licenseType == 'internal':
+            return EnterpriseLicense(start_date=start_date,
+                                     end_date=end_date)
+        raise ValueError("Unknown license type: {}.".format(licenseType))
+
+    def _process_environment(self, dic):
+        contents = dic['Environment'].split(':')
+        if len(contents) != 2:
+            raise ValueError('Invalid Environment.')
+        _type, _id = contents[0].strip(), contents[1].strip()
+        if _type not in ('shared', 'dedicated'):
+            raise ValueError("Invalid Environment.")
+
+        if _type == 'shared':
+            return SharedEnvironment(name=_id)
+
+        host = dic['Host Machine'].strip() or self._default_environment_host
+        return DedicatedEnvironment(pod_id=_id,
+                                    host=host)
+
+    def _process_dns(self, dic):
+        site_url = dic['nti_site'].strip()
+        extra_site_url = dic['nti_URL'].strip() or None
+        return [site_url, extra_site_url] if extra_site_url else [site_url]
+
+    def _process_owner(self, dic, created=True):
+        email = dic['Hubspot Contact'].strip() or self._default_owner_email
+        customer = self._customers.getCustomer(email)
+        if customer is None:
+            if created is False:
+                raise ValueError("No customer found for email: {}.".format(email))
+            contact = self._client.fetch_contact_by_email(email)
+            if contact:
+                customer = createCustomer(self._customers,
+                                          email=email,
+                                          name=contact['name'],
+                                          hs_contact_vid=contact['canonical-vid'])
+            else:
+                customer = getOrCreateCustomer(self._customers, email)
+        return customer
+
+    def _process_row(self, row, createdCustomer=True):
+        try:
+            kwargs = dict()
+            kwargs['owner'] = self._process_owner(row, created=createdCustomer)
+            kwargs['license'] = self._process_license(row)
+            kwargs['environment'] = self._process_environment(row)
+            kwargs['dns_names'] = self._process_dns(row)
+            kwargs['created'] = parseDate(row['Site Created Date']) if row['Site Created Date'] else self._default_site_created
+            kwargs['status'] = row['Status'] or self._default_site_status
+
+            try:
+                # Use pod_id as the site id if it's dedicated environment,
+                # this may conflicts, for now just raise error.
+                siteId = kwargs['environment'].pod_id if isinstance(kwargs['environment'], DedicatedEnvironment) else None
+                site = PersistentSite(**kwargs)
+                self.context.addSite(site, siteId=siteId)
+            except KeyError as e:
+                raise ValueError("Existing site id: {}.".format(siteId))
+        except KeyError as e:
+            raise_json_error(hexc.HTTPUnprocessableEntity, 'Missing field {}.'.format(str(e)))
+        except ValueError as e:
+            raise_json_error(hexc.HTTPUnprocessableEntity, str(e))
+
+    def _is_empty(self, line):
+        return not line or line == len(line) * ','
+
+    def __call__(self):
+        post = self.request.POST
+
+        createdCustomerIfNotExists = post.get('created_customer') or True
+        delimiter = str('\t') if post.get("delimiter") == "tab" else str(',')
+        field = post.get('sites')
+        if field is None or not field.file:
+            raise_json_error(hexc.HTTPUnprocessableEntity, "Must provide a named file.")
+
+        logger.info("Begin processing sites creation.")
+        contents = field.value.decode('utf-8')
+        contents = [x for x in contents.splitlines() if not self._is_empty(x)]
+        rows = csv.DictReader(contents, delimiter=delimiter)
+
+        total = 0
+        skipped = 0
+        for row in rows:
+            logger.debug('Processing line %s', total+1)
+            if row['Parent Site']:
+                skipped += 1
+                continue
+            self._process_row(row, createdCustomer=createdCustomerIfNotExists)
+            total += 1
+
+        result = dict()
+        result['total_sites'] = total
+        result['skip_sites'] = skipped
+        logger.info("End processing sites creation.")
+        return result
+
+
+@view_config(context=ILMSSitesContainer,
+             request_method='GET',
+             permission=ACT_READ,
+             name="export_sites")
+class SiteCSVExportView(CSVBaseView):
+
+    def header(self, params):
+        return ['Site', 'Owner', 'License', 'License Start Date', 'License End Date',
+                'Environment', 'Host Machine',
+                'Status', 'DNS Names', 'Created',]
+
+    def filename(self):
+        return 'sites.csv'
+
+    def records(self, params):
+        return self.context.values()
+
+    def _format_env(self, envir):
+        return "{}:{}".format('shared' if ISharedEnvironment.providedBy(envir) else 'dedicated',
+                              envir.name if ISharedEnvironment.providedBy(envir) else envir.pod_id)
+
+    def row_data_for_record(self, record):
+        return {'Site': record.id,
+                'Owner': record.owner.email,
+                'License': 'trial' if ITrialLicense.providedBy(record.license) else 'enterprise',
+                'License Start Date': formatDate(record.license.start_date),
+                'License End Date': formatDate(record.license.end_date),
+                'Environment': self._format_env(record.environment),
+                'Host Machine': record.environment.host if IDedicatedEnvironment.providedBy(record.environment) else '',
+                'Status': record.status,
+                'DNS Names': ','.join(record.dns_names),
+                'Created': formatDate(record.created)}
