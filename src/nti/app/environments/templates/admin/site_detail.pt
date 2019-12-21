@@ -35,21 +35,91 @@
 
         <div class="site-item">
             <h3>Environment</h3>
-            <p>Type: <span tal:content="site.environment.type"></span></p>
-            <metal:block tal:omit-tag="" tal:condition="site.environment.type=='shared'">
-                <p>Name: <span tal:content="site.environment.name"></span></p>
-            </metal:block>
-            <metal:block tal:omit-tag="" tal:condition="site.environment.type=='dedicated'">
-                <p>PodId (ContainerId): <span tal:content="site.environment.pod_id"></span></p>
-                <p>Host: <span tal:content="site.environment.host"></span></p>
-            </metal:block>
+            <div id="view_environment">
+                <p>Type: <span class="site_environment_type" tal:content="site.environment.type"></span></p>
+                <metal:block tal:omit-tag="" tal:condition="site.environment.type=='shared'">
+                    <p>Name: <span class="site_environment_name" tal:content="site.environment.name"></span></p>
+                </metal:block>
+                <metal:block tal:omit-tag="" tal:condition="site.environment.type=='dedicated'">
+                    <p>PodId (ContainerId): <span class="site_environment_pod_id" tal:content="site.environment.pod_id"></span></p>
+                    <p>Host: <span class="site_environment_host" tal:content="site.environment.host"></span></p>
+                </metal:block>
+                <a href="javascript:showEnvironmentEditView();">Edit</a>
+            </div>
+
+            <div id="edit_environment" style="display:none;">
+                 <div class="form-group">
+                    <div class="form-group-item">
+                        <label>Type</label>
+                        <select class="site_environment_type" onchange="onEnvironmentChange()">
+                            <option value="shared">shared</option>
+                            <option value="dedicated">dedicated</option>
+                        </select>
+                    </div>
+                    <div class="form-group-item name_group_item">
+                        <label>Name</label>
+                        <select class="site_environment_name" style="display:none;">
+                            <option value="">Select a name</option>
+                            <metal:block tal:omit-tag="" tal:repeat="option env_shared_options">
+                                <option value="${option}">${option}</option>
+                            </metal:block>
+                        </select>
+                    </div>
+                    <div class="form-group-item pod_group_item">
+                        <label>Pod Id</label>
+                        <input type="text" class="site_environment_pod_id" placeHolder="Pod Id" style="display:none;"/>
+                    </div>
+                    <div class="form-group-item host_group_item">
+                        <label>Host</label>
+                        <input type="text" class="site_environment_host" placeHolder="Host" style="display:none;"/>
+                    </div>
+                    <div class="form-group-item">
+                        <div class="success success-edit-environment" style="display:none;"></div>
+                        <div class="error error-edit-environment" style="display:none;"></div>
+                    </div>
+                    <div class="form-group-item">
+                        <button type="button" class="btnCustom" onclick="saveEnvironmentView(this, '${site_edit_link}');">Save</button>
+                        <button type="button" class="btnCustom" onclick="cancelEnvironmentEditView();">Cancel</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="site-item">
-            <h3>License</h3>
-            <p>Type: <span tal:content="site.license.type"></span></p>
-            <p>Start Date: <span tal:content="site.license.start_date"></span></p>
-            <p>End Date: <span tal:content="site.license.end_date"></span></p>
+            <div id="view_license">
+                <h3>License</h3>
+                <p>Type: <span class="site_license_type" tal:content="site.license.type"></span></p>
+                <p>Start Date: <span class="site_license_start_date" tal:content="site.license.start_date"></span></p>
+                <p>End Date: <span class="site_license_end_date" tal:content="site.license.end_date"></span></p>
+                <a href="javascript:showLicenseEditView();">Edit</a>
+            </div>
+            <div id="edit_license" style="display:none;">
+                 <div class="form-group">
+                    <div class="form-group-item">
+                        <label>Type</label>
+                        <select class="site_license_type">
+                            <option value="trial">trial</option>
+                            <option value="enterprise">enterprise</option>
+                        </select>
+                    </div>
+                    <div class="form-group-item">
+                        <label>Start Date</label>
+                        <input type="text" class="site_license_start_date"/>
+                    </div>
+                    <div class="form-group-item">
+                        <label>End Date</label>
+                        <input type="text" class="site_license_end_date"/>
+                    </div>
+                    <div class="form-group-item">
+                        <div class="success success-edit-license" style="display:none;"></div>
+                        <div class="error error-edit-license" style="display:none;"></div>
+                    </div>
+                    <div class="form-group-item">
+                        <button type="button" class="btnCustom" onclick="saveLicenseView(this, '${site_edit_link}');">Save</button>
+                        <button type="button" class="btnCustom" onclick="cancelLicenseEditView();">Cancel</button>
+                    </div>
+                </div><!-- end form group-->
+            </div> <!-- end edit license-->
         </div>
 
         <div class="site-footer">
@@ -57,5 +127,9 @@
                 Back To Sites
             </button>
         </div>
+
+        <metal:block metal:fill-slot="script">
+            <script src="/static/js/site_detail.js"></script>
+        </metal:block>
     </metal:block>
 </metal:block>

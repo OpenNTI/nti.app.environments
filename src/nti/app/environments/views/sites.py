@@ -162,14 +162,26 @@ class SiteCreationView(SiteBaseView):
              permission=ACT_UPDATE)
 class SiteUpdateView(SiteBaseView):
 
-    def __call__(self):
+    def _execute_call(self, _callable, *args, **kwargs):
+        try:
+            return _callable(*args, **kwargs)
+        except RequiredMissing as e:
+            raise_json_error(hexc.HTTPUnprocessableEntity,"Missing required field: {}".format(e))
+        except ValidationError as e:
+            raise_json_error(hexc.HTTPUnprocessableEntity, str(type(e).__name__))
+
+    def _update_site(self, site):
         context = self.context
-        kwargs = self._generate_kwargs_for_site(allowed=('status', 'dns_names'))
+        kwargs = self._generate_kwargs_for_site(allowed=('status', 'dns_names', 'environment', 'license'))
         if kwargs:
             for attr_name, attr_val in kwargs.items():
                 if getattr(context, attr_name) != attr_val:
                     setattr(context, attr_name, attr_val)
-        return kwargs
+        return site
+
+    def __call__(self):
+        self._execute_call(self._update_site, self.context)
+        return {}
 
 
 @view_config(renderer='json',

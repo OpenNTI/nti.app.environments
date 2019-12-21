@@ -129,6 +129,8 @@ class SiteDetailView(BaseTemplateView):
     def __call__(self):
         extra_info = self._site_extra_info() or {}
         return {'sites_list_link': self.request.route_url('admin', traverse=('sites', '@@list')),
+                'site_edit_link': self.request.resource_url(self.context),
+                'env_shared_options': SHARED_ENV_NAMES,
                 'site': {'created': _format_date(self.context.created),
                          'owner': self._format_owner(self.context.owner),
                          'site_id': self.context.id,
