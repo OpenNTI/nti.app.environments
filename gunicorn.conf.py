@@ -14,7 +14,7 @@ bind = [":6543", "unix:var/pserve.sock"]
 workers = "1" or multiprocessing.cpu_count() * 2 + 1
 worker_class = "gevent"
 timeout = 1800
-preload_app = True
+preload_app = False
 
 forwarded_allow_ips = "" or "*"
 
