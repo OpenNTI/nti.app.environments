@@ -1,3 +1,5 @@
+import datetime
+
 from unittest import mock
 from hamcrest import assert_that
 from hamcrest import has_length
@@ -9,7 +11,11 @@ from nti.app.environments.views.customers import getOrCreateCustomer
 from nti.app.environments.views.tests import BaseAppTest
 from nti.app.environments.views.tests import with_test_app
 from nti.app.environments.views.tests import ensure_free_txn
-from nti.app.environments.models.sites import TrialLicense, EnterpriseLicense
+from nti.app.environments.models.customers import PersistentCustomer
+from nti.app.environments.models.sites import TrialLicense, EnterpriseLicense, PersistentSite, SharedEnvironment
+from nti.app.environments.models.interfaces import IEnterpriseLicense,\
+    ITrialLicense, ISharedEnvironment, IDedicatedEnvironment
+from hamcrest.library.collection.isdict_containingentries import has_entries
 
 
 class TestSiteCreationView(BaseAppTest):
@@ -90,3 +96,156 @@ class TestSiteCreationView(BaseAppTest):
                                                                'license': instance_of(EnterpriseLicense),
                                                                'status': 'PENDING',
                                                                'dns_names': ['t1.nextthought.com', 't2.nextthought.com']}))
+
+class TestSitePutView(BaseAppTest):
+
+    @with_test_app()
+    def testSiteLicensePutView(self):
+        siteId = 'Sxxx'
+        with ensure_free_txn():
+            customers = self._root().get('customers')
+            customer = customers.addCustomer(PersistentCustomer(email='123@gmail.com',
+                                                                name="testname"))
+
+            sites = self._root().get('sites')
+            site = sites.addSite(PersistentSite(license=TrialLicense(start_date=datetime.datetime(2019, 12, 12, 0, 0, 0),
+                                                                     end_date=datetime.datetime(2019, 12, 13, 0, 0, 0)),
+                                                environment=SharedEnvironment(name='test'),
+                                                created=datetime.datetime(2019, 12, 11, 0, 0, 0),
+                                                status='ACTIVE',
+                                                dns_names=['x', 'y'],
+                                                owner=customer), siteId=siteId)
+            assert_that(ITrialLicense.providedBy(site.license), is_(True))
+
+        url = '/sites/{}/@@license'.format(siteId)
+        params = {'type': 'trial',
+                  'start_date': '2019-12-30',
+                  'end_date': '2029-12-30'}
+        self.testapp.put_json(url, params=params, status=401, extra_environ=self._make_environ(username=None))
+        self.testapp.put_json(url, params=params, status=403, extra_environ=self._make_environ(username='user001'))
+        self.testapp.put_json(url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
+        with ensure_free_txn():
+            assert_that(ITrialLicense.providedBy(site.license), is_(True))
+            assert_that(site.license.start_date.strftime('%Y-%m-%d%H:%M:%S'), '2019-12-30 00:00:00')
+            assert_that(site.license.end_date.strftime('%Y-%m-%d%H:%M:%S'), '2029-12-30 00:00:00')
+
+        params = {'type': 'enterprise',
+                  'start_date': '2019-12-30',
+                  'end_date': '2029-12-30'}
+        self.testapp.put_json(url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
+        with ensure_free_txn():
+            assert_that(IEnterpriseLicense.providedBy(site.license), is_(True))
+            assert_that(site.license.start_date.strftime('%Y-%m-%d%H:%M:%S'), '2019-12-30 00:00:00')
+            assert_that(site.license.end_date.strftime('%Y-%m-%d%H:%M:%S'), '2029-12-30 00:00:00')
+
+        params = {'type': 'enterprise',
+                  'start_date': '2019-11-30',
+                  'end_date': '2029-11-30'}
+        self.testapp.put_json(url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
+        with ensure_free_txn():
+            assert_that(IEnterpriseLicense.providedBy(site.license), is_(True))
+            assert_that(site.license.start_date.strftime('%Y-%m-%d%H:%M:%S'), '2019-11-30 00:00:00')
+            assert_that(site.license.end_date.strftime('%Y-%m-%d%H:%M:%S'), '2029-11-30 00:00:00')
+
+        params = {'type': 'enterprise2',
+                  'start_date': '2019-12-30',
+                  'end_date': '2029-12-30'}
+        result = self.testapp.put_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
+        assert_that(result.json_body, has_entries({"message": "Unknown license type."}))
+
+        params = {'start_date': '2019-23'}
+        result = self.testapp.put_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
+        assert_that(result.json_body, has_entries({"message": "Unknown license type."}))
+
+        params = {'type': 'enterprise',
+                  'start_date': '2019-23',
+                  'end_date': '2016-07'}
+        result = self.testapp.put_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
+        assert_that(result.json_body, has_entries({"message": "Invalid date format for start_date."}))
+
+        params = {'type': 'enterprise',
+                  'end_date': '2016-07'}
+        result = self.testapp.put_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
+        assert_that(result.json_body, has_entries({"message": "Missing required field: start_date."}))
+
+        params = {'type': 'enterprise',
+                  'start_date': '2016-07'}
+        result = self.testapp.put_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
+        assert_that(result.json_body, has_entries({"message": "Missing required field: end_date."}))
+
+    @with_test_app()
+    def testSiteEnvironmentPutView(self):
+        siteId = 'Sxxx'
+        with ensure_free_txn():
+            customers = self._root().get('customers')
+            customer = customers.addCustomer(PersistentCustomer(email='123@gmail.com',
+                                                                name="testname"))
+
+            sites = self._root().get('sites')
+            site = sites.addSite(PersistentSite(license=TrialLicense(start_date=datetime.datetime(2019, 12, 12, 0, 0, 0),
+                                                                     end_date=datetime.datetime(2019, 12, 13, 0, 0, 0)),
+                                                environment=SharedEnvironment(name='test'),
+                                                created=datetime.datetime(2019, 12, 11, 0, 0, 0),
+                                                status='ACTIVE',
+                                                dns_names=['x', 'y'],
+                                                owner=customer), siteId=siteId)
+            assert_that(ITrialLicense.providedBy(site.license), is_(True))
+
+        url = '/sites/{}/@@environment'.format(siteId)
+        params = {'type': 'shared',
+                  'name': 'prod'}
+        self.testapp.put_json(url, params=params, status=401, extra_environ=self._make_environ(username=None))
+        self.testapp.put_json(url, params=params, status=403, extra_environ=self._make_environ(username='user001'))
+        self.testapp.put_json(url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
+        with ensure_free_txn():
+            assert_that(ISharedEnvironment.providedBy(site.environment), is_(True))
+            assert_that(site.environment.name, is_('prod'))
+
+        params = {'type': 'dedicated',
+                  'pod_id': 'okc',
+                  'host': 'okc2'}
+        self.testapp.put_json(url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
+        with ensure_free_txn():
+            assert_that(IDedicatedEnvironment.providedBy(site.environment), is_(True))
+            assert_that(site.environment, has_properties({'pod_id': 'okc',
+                                                          'host': 'okc2'}))
+
+        params = {'type': 'dedicated',
+                  'pod_id': 'pod',
+                  'host': 'pod2'}
+        self.testapp.put_json(url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
+        with ensure_free_txn():
+            assert_that(IDedicatedEnvironment.providedBy(site.environment), is_(True))
+            assert_that(site.environment, has_properties({'pod_id': 'pod',
+                                                          'host': 'pod2'}))
+
+        params = {'type': 'dedicated2',
+                  'pod_id': 'pod',
+                  'host': 'pod2'}
+        result = self.testapp.put_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
+        assert_that(result.json_body, has_entries({'message': 'Unknown environment type.'}))
+
+        params = {'pod_id': 'pod',
+                  'host': 'pod2'}
+        result = self.testapp.put_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
+        assert_that(result.json_body, has_entries({'message': 'Unknown environment type.'}))
+
+        params = {'type': 'dedicated',
+                  'host': 'pod2'}
+        result = self.testapp.put_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
+        assert_that(result.json_body, has_entries({'message': 'Missing required field: pod_id.'}))
+
+        params = {'type': 'dedicated',
+                  'pod_id': 'pod2'}
+        result = self.testapp.put_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
+        assert_that(result.json_body, has_entries({'message': 'Missing required field: host.'}))
+
+        params = {'type': 'shared',
+                  'name': None}
+        result = self.testapp.put_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
+        assert_that(result.json_body, has_entries({'message': 'Missing required field: name.'}))
+
+        params = {'type': 'shared',
+                  'name': 3}
+        result = self.testapp.put_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
+        assert_that(result.json_body, has_entries({'message': 'Invalid name.'}))

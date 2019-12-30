@@ -14,6 +14,8 @@ ACT_CREATE = 'nti.actions.create'
 ACT_UPDATE = 'nti.actions.update'
 ACT_DELETE = 'nti.actions.delete'
 ACT_ADMIN = 'nti.actions.admin'
+ACT_EDIT_SITE_LICENSE = 'nti.app.environments.actions.edit_site_license'
+ACT_EDIT_SITE_ENVIRONMENT = 'nti.app.environments.actions.edit_site_environment'
 
 ADMIN_ROLE = 'role:nti.roles.admin'
 

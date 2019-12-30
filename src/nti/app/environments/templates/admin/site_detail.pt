@@ -44,7 +44,9 @@
                     <p>PodId (ContainerId): <span class="site_environment_pod_id" tal:content="site.environment.pod_id"></span></p>
                     <p>Host: <span class="site_environment_host" tal:content="site.environment.host"></span></p>
                 </metal:block>
-                <a href="javascript:showEnvironmentEditView();">Edit</a>
+                <metal:block tal:omit-tag="" tal:condition="site.environment.edit_link|nothing">
+                    <a href="javascript:showEnvironmentEditView();">Edit</a>
+                </metal:block>
             </div>
 
             <div id="edit_environment" style="display:none;">
@@ -78,7 +80,7 @@
                         <div class="error error-edit-environment" style="display:none;"></div>
                     </div>
                     <div class="form-group-item">
-                        <button type="button" class="btnCustom" onclick="saveEnvironmentView(this, '${site_edit_link}');">Save</button>
+                        <button type="button" class="btnCustom" onclick="saveEnvironmentView(this, '${site.environment.edit_link}');">Save</button>
                         <button type="button" class="btnCustom" onclick="cancelEnvironmentEditView();">Cancel</button>
                     </div>
                 </div>
@@ -86,12 +88,14 @@
         </div>
 
         <div class="site-item">
+            <h3>License</h3>
             <div id="view_license">
-                <h3>License</h3>
                 <p>Type: <span class="site_license_type" tal:content="site.license.type"></span></p>
                 <p>Start Date: <span class="site_license_start_date" tal:content="site.license.start_date"></span></p>
                 <p>End Date: <span class="site_license_end_date" tal:content="site.license.end_date"></span></p>
-                <a href="javascript:showLicenseEditView();">Edit</a>
+                <metal:block tal:omit-tag="" tal:condition="site.license.edit_link|nothing">
+                    <a href="javascript:showLicenseEditView();">Edit</a>
+                </metal:block>
             </div>
             <div id="edit_license" style="display:none;">
                  <div class="form-group">
@@ -115,7 +119,7 @@
                         <div class="error error-edit-license" style="display:none;"></div>
                     </div>
                     <div class="form-group-item">
-                        <button type="button" class="btnCustom" onclick="saveLicenseView(this, '${site_edit_link}');">Save</button>
+                        <button type="button" class="btnCustom" onclick="saveLicenseView(this, '${site.license.edit_link}');">Save</button>
                         <button type="button" class="btnCustom" onclick="cancelLicenseEditView();">Cancel</button>
                     </div>
                 </div><!-- end form group-->

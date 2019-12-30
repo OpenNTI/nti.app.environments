@@ -94,12 +94,12 @@ function onEnvironmentChange () {
 function saveEnvironmentView(me, url)  {
     var form = $(me).closest('.form-group')[0];
     var _type = $($(form).find('.site_environment_type')[0]).val();
-    var data = { 'environment': {'type': _type} };
+    var data = {'type': _type};
     if(_type==='shared') {
-        data['environment']['name'] = $($(form).find('.site_environment_name')[0]).val().trim();
+        data['name'] = $($(form).find('.site_environment_name')[0]).val().trim();
     } else {
-        data['environment']['pod_id'] = $($(form).find('.site_environment_pod_id')[0]).val().trim();
-        data['environment']['host'] = $($(form).find('.site_environment_host')[0]).val().trim();
+        data['pod_id'] = $($(form).find('.site_environment_pod_id')[0]).val().trim();
+        data['host'] = $($(form).find('.site_environment_host')[0]).val().trim();
     }
 
     data = JSON.stringify(data);
@@ -135,11 +135,10 @@ function saveLicenseView(me, url) {
     var start_date = $($(form).find('.site_license_start_date')[0]).val();
     var end_date = $($(form).find('.site_license_end_date')[0]).val();
     var data = {
-        'license':{
-            'type': _type,
-            'start_date': start_date,
-            'end_date': end_date
-    }}
+        'type': _type,
+        'start_date': start_date,
+        'end_date': end_date
+    };
     data = JSON.stringify(data);
     doUpdate(url, data, '.success-edit-license', '.error-edit-license')
 }

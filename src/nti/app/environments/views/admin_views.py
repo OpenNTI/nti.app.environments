@@ -22,12 +22,9 @@ from nti.app.environments.views.base import BaseTemplateView
 from nti.app.environments.views._table_utils import CustomersTable
 from nti.app.environments.views._table_utils import SitesTable
 from nti.app.environments.views._table_utils import make_specific_table
+from nti.app.environments.views.utils import formatDateToLocal
 from nti.app.environments.utils import find_iface
 from nti.app.environments.models.utils import get_sites_folder
-
-
-def _format_date(value):
-    return value.strftime('%Y-%m-%dT%H:%M:%SZ') if value else ''
 
 
 @view_config(route_name='admin',
@@ -108,18 +105,23 @@ class SiteDetailView(BaseTemplateView):
         raise ValueError('Unknown license type.')
 
     def _format_license(self, lic):
+        edit_link = self.request.resource_url(self.context, '@@license')
         return {'type': self._license_type(lic),
-                'start_date': _format_date(lic.start_date),
-                'end_date': _format_date(lic.end_date)}
+                'start_date': formatDateToLocal(lic.start_date),
+                'end_date': formatDateToLocal(lic.end_date),
+                'edit_link': edit_link}
 
     def _format_env(self, env):
+        edit_link = self.request.resource_url(self.context, '@@environment')
         if ISharedEnvironment.providedBy(env):
             return {'type': 'shared',
-                    'name': env.name}
+                    'name': env.name,
+                    'edit_link': edit_link}
         elif IDedicatedEnvironment.providedBy(env):
             return {'type': 'dedicated',
                     'pod_id': env.pod_id,
-                    'host': env.host}
+                    'host': env.host,
+                    'edit_link': edit_link}
         raise ValueError('Unknown environment type.')
 
     def _format_owner(self, owner=None):
@@ -129,9 +131,8 @@ class SiteDetailView(BaseTemplateView):
     def __call__(self):
         extra_info = self._site_extra_info() or {}
         return {'sites_list_link': self.request.route_url('admin', traverse=('sites', '@@list')),
-                'site_edit_link': self.request.resource_url(self.context),
                 'env_shared_options': SHARED_ENV_NAMES,
-                'site': {'created': _format_date(self.context.created),
+                'site': {'created': formatDateToLocal(self.context.created),
                          'owner': self._format_owner(self.context.owner),
                          'site_id': self.context.id,
                          'status': self.context.status,
