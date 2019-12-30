@@ -9,6 +9,7 @@ with open(os.path.join(here, 'CHANGES.txt')) as f:
     CHANGES = f.read()
 
 requires = [
+    'gunicorn[gevent]',
     'python-dateutil',
     'plaster_pastedeploy',
     'pyramid',
@@ -89,6 +90,9 @@ setup(
     entry_points={
         'paste.app_factory': [
             'main = nti.app.environments:main',
+        ],
+        'console_scripts': [
+            "nti_pserve=nti.app.environments.nti_gunicorn:main",
         ],
     },
 )
