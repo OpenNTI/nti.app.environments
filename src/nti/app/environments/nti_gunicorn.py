@@ -1,6 +1,10 @@
 """
 A hack to help us ensure that we are loading and monkey-patching
-the entire system before Pyramid loads
+the entire system before Pyramid loads.
+
+NOTE: You shouldn't need to use this entry point unless you are
+preloading with gunicorn and gevent.
+
 """
 
 # NOTE: We must not import *anything* before the patch
