@@ -5,7 +5,7 @@ from zope.cachedescriptors.property import Lazy
 
 from zope.schema._bootstrapinterfaces import ValidationError
 
-from nti.app.environments.auth import is_admin
+from nti.app.environments.auth import is_admin_or_account_mgr
 
 from nti.app.environments.models.customers import HubspotContact
 from nti.app.environments.models.customers import PersistentCustomer
@@ -56,7 +56,7 @@ class BaseTemplateView(BaseView):
         super(BaseTemplateView, self).__init__(context, request)
         if self.request.authenticated_userid:
             self.logged_in = True
-            self.is_admin = is_admin(self.request.authenticated_userid)
+            self.is_admin = is_admin_or_account_mgr(self.request.authenticated_userid)
 
 
 class BaseFieldPutView(BaseView):

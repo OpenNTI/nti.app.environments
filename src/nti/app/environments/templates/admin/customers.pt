@@ -13,6 +13,11 @@
                 border: 1px solid #ced4da;
                 border-radius: 4px;
             }
+            <metal:block tal:omit-tag="" tal:condition="not:is_deletion_allowed|nothing">
+                .nti_delete {
+                    display: none;
+                }
+            </metal:block>
         </style>
     </metal:block>
 
@@ -21,7 +26,9 @@
 
         <div class="toolbar">
             <input type="text" id='search' name="search" placeHolder="Search" class="search-input" onkeypress="return search(event);"/>
-            <button type="button" style="float: right;" onclick="openNewModal();">Add Via Hubspot</button>
+            <metal:block tal:omit-tag="" tal:condition="creation_url|nothing">
+                <button type="button" style="float: right;" onclick="openNewModal();">Add Via Hubspot</button>
+            </metal:block>
         </div>
 
 		<table tal:condition="python: len(table.context)" tal:replace="structure python: table.render()" />
