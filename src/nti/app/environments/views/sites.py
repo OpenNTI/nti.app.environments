@@ -465,6 +465,8 @@ class SiteCSVExportView(CSVBaseView):
         return self.context.values()
 
     def _format_env(self, envir):
+        if envir is None:
+            return ''
         return "{}:{}".format('shared' if ISharedEnvironment.providedBy(envir) else 'dedicated',
                               envir.name if ISharedEnvironment.providedBy(envir) else envir.pod_id)
 
