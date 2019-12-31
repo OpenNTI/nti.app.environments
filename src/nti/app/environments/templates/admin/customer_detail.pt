@@ -5,13 +5,6 @@
 	<metal:block metal:fill-slot="css">
         <link href="/static/css/modal.css" rel="stylesheet">
         <link href="/static/css/table.css" rel="stylesheet">
-        <style>
-            <metal:block tal:omit-tag="" tal:condition="not:is_deletion_allowed|nothing">
-                .nti_delete {
-                    display: none;
-                }
-            </metal:block>
-        </style>
     </metal:block>
     <metal:block metal:fill-slot="content">
         <div class="customer-info"><br>

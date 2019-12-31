@@ -16,8 +16,6 @@ from z3c.table import batch
 from z3c.table.interfaces import ITable
 from z3c.table.interfaces import IBatchProvider
 
-from nti.app.environments.auth import ACT_DELETE
-
 from nti.app.environments.models.interfaces import ITrialLicense
 
 from nti.app.environments.views.utils import formatDateToLocal
@@ -142,22 +140,15 @@ class DeleteColumn(column.Column):
 
     weight = 7
     buttonTitle = 'Delete'
-    cssClasses = {'td': 'nti_delete',
-                  'th': 'nti_delete'}
 
     def renderCell(self, item):
-        if self.request.has_permission(ACT_DELETE, item):
-            template = """<button onclick="openDeletingModal('{url}', '{id}');">Delete</button>"""
-            return  template.format(url=self.request.resource_url(item),
-                                    id=item.__name__)
-        return ''
+        template = """<button onclick="openDeletingModal('{url}', '{id}');">Delete</button>"""
+        return  template.format(url=self.request.resource_url(item),
+                                id=item.__name__)
 
 
 class CustomersTable(BaseTable):
-
-    @Lazy
-    def _raw_values(self):
-        return self.context.values()
+    pass
 
 
 class CustomerColumnHeader(header.SortingColumnHeader):

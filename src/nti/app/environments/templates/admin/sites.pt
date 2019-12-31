@@ -5,13 +5,6 @@
 	<metal:block metal:fill-slot="css">
         <link href="/static/css/modal.css" rel="stylesheet">
         <link href="/static/css/table.css" rel="stylesheet">
-        <style>
-            <metal:block tal:omit-tag="" tal:condition="not:is_deletion_allowed|nothing">
-                .nti_delete {
-                    display: none;
-                }
-            </metal:block>
-        </style>
     </metal:block>
 
     <metal:block metal:fill-slot="content">
@@ -20,12 +13,8 @@
         <div class="toolbar">
             <input type="text" id='search' name="search" placeHolder="Search" class="search-input" onkeypress="return search(event);"/>
             <div style="float: right;">
-                <metal:block tal:omit-tag="" tal:condition="creation_url|nothing">
-                    <button type="button" onclick="document.getElementById('newModal').style.display = 'block';">Create New Site</button>
-                </metal:block>
-                <metal:block tal:omit-tag="" tal:condition="sites_upload_url|nothing">
-                    <button type="button" onclick="document.getElementById('uploadModal').style.display = 'block';" style="margin-left: 6px;">Upload CSV File</button>
-                </metal:block>
+                <button type="button" onclick="document.getElementById('newModal').style.display = 'block';">Create New Site</button>
+                <button type="button" onclick="document.getElementById('uploadModal').style.display = 'block';" style="margin-left: 6px;">Upload CSV File</button>
                 <a href="${sites_export_url}" style="margin-left: 6px;" target="_blank">Export</a>
             </div>
         </div>

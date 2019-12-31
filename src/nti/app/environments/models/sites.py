@@ -20,8 +20,6 @@ from nti.schema.schema import SchemaConfigured
 from nti.wref.interfaces import IWeakRef
 
 from nti.app.environments.auth import ADMIN_ROLE
-from nti.app.environments.auth import ACCOUNT_MANAGEMENT_ROLE
-from nti.app.environments.auth import ACT_READ
 
 from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import ICustomersContainer
@@ -82,8 +80,7 @@ class SitesFolder(Folder):
 
     @LazyOnClass
     def __acl__(self):
-        return [(Allow, ADMIN_ROLE, ALL_PERMISSIONS),
-                (Allow, ACCOUNT_MANAGEMENT_ROLE, ACT_READ)]
+        return [(Allow, ADMIN_ROLE, ALL_PERMISSIONS)]
 
     def addSite(self, site, siteId=None):
         siteId = site.__name__ or siteId or _generate_site_id()

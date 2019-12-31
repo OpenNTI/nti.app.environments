@@ -42,7 +42,7 @@ class TestAdminViews(BaseAppTest):
             view = CustomersListView(customers, self.request)
             result = view()
             assert_that(result, has_entries({'table': instance_of(CustomersTable),
-                                             'creation_url': None}))
+                                             'creation_url': 'http://example.com/customers/@@hubspot'}))
 
     @with_test_app()
     def testCustomerDetailView(self):
@@ -84,7 +84,7 @@ class TestAdminViews(BaseAppTest):
             view = SitesListView(sites, self.request)
             result = view()
             assert_that(result, has_entries({'table': instance_of(SitesTable),
-                                             'creation_url': None,
+                                             'creation_url': 'http://example.com/sites/',
                                              'site_status_options': SITE_STATUS_OPTIONS,
                                              'env_shared_options': SHARED_ENV_NAMES}))
 
@@ -125,7 +125,7 @@ class TestAdminViews(BaseAppTest):
                                                  'status': 'ACTIVE',
                                                  'dns_names': ['x', 'y'],
                                                  'license': {'type': 'trial', 'start_date': '2019-12-11T18:00:00', 'end_date': '2019-12-12T18:00:00',
-                                                             'edit_link': None},
+                                                             'edit_link': 'http://example.com/sites/Sxxx/@@license'},
                                                  'environment': {'type': 'shared', 'name': 'test',
-                                                                 'edit_link': None}
+                                                                 'edit_link': 'http://example.com/sites/Sxxx/@@environment'}
                                              }}))

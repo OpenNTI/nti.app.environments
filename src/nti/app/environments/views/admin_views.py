@@ -4,11 +4,7 @@ from nti.app.environments.api.siteinfo import nt_client
 
 from nti.app.environments.api.hubspotclient import get_hubspot_profile_url
 
-from nti.app.environments.auth import ACT_READ
-from nti.app.environments.auth import ACT_DELETE
-from nti.app.environments.auth import ACT_CREATE
-from nti.app.environments.auth import ACT_EDIT_SITE_LICENSE
-from nti.app.environments.auth import ACT_EDIT_SITE_ENVIRONMENT
+from nti.app.environments.auth import ACT_ADMIN
 
 from nti.app.environments.models.interfaces import ICustomer
 from nti.app.environments.models.interfaces import IEnterpriseLicense
@@ -31,36 +27,27 @@ from nti.app.environments.utils import find_iface
 from nti.app.environments.models.utils import get_sites_folder
 
 
-class _TableMixin(object):
-
-    def _is_deletion_allowed(self, table):
-        if table._raw_values:
-            return any(bool(self.request.has_permission(ACT_DELETE, x)) for x in table._raw_values)
-        return False
-
-
 @view_config(route_name='admin',
              renderer='../templates/admin/customers.pt',
              request_method='GET',
              context=ICustomersContainer,
-             permission=ACT_READ,
+             permission=ACT_ADMIN,
              name='list')
-class CustomersListView(BaseTemplateView, _TableMixin):
+class CustomersListView(BaseTemplateView):
 
     def __call__(self):
         table = make_specific_table(CustomersTable, self.context, self.request)
         return {'table': table,
-                'creation_url': self.request.resource_url(self.context, '@@hubspot') if self.request.has_permission(ACT_CREATE, self.context) else None,
-                'is_deletion_allowed': self._is_deletion_allowed(table)}
+                'creation_url': self.request.resource_url(self.context, '@@hubspot')}
 
 
 @view_config(route_name='admin',
              renderer='../templates/admin/customer_detail.pt',
              request_method='GET',
              context=ICustomer,
-             permission=ACT_READ,
+             permission=ACT_ADMIN,
              name='details')
-class CustomerDetailView(BaseTemplateView, _TableMixin):
+class CustomerDetailView(BaseTemplateView):
 
     def _get_sites_folder(self):
         onboarding_root = find_iface(self.context, IOnboardingRoot)
@@ -77,34 +64,32 @@ class CustomerDetailView(BaseTemplateView, _TableMixin):
                 'customer': {'email': self.context.email,
                              'name': self.context.name,
                              'hubspot': self._format_hubspot(self.context.hubspot_contact) if self.context.hubspot_contact else None},
-                'table': table,
-                'is_deletion_allowed': self._is_deletion_allowed(table)}
+                'table': table}
 
 
 @view_config(route_name='admin',
              renderer='../templates/admin/sites.pt',
              request_method='GET',
              context=ILMSSitesContainer,
-             permission=ACT_READ,
+             permission=ACT_ADMIN,
              name='list')
-class SitesListView(BaseTemplateView, _TableMixin):
+class SitesListView(BaseTemplateView):
 
     def __call__(self):
         table = make_specific_table(SitesTable, self.context, self.request)
         return {'table': table,
-                'creation_url': self.request.resource_url(self.context) if self.request.has_permission(ACT_CREATE, self.context) else None,
-                'sites_upload_url': self.request.resource_url(self.context, '@@upload_sites') if self.request.has_permission(ACT_CREATE, self.context) else None,
+                'creation_url': self.request.resource_url(self.context),
+                'sites_upload_url': self.request.resource_url(self.context, '@@upload_sites'),
                 'sites_export_url': self.request.resource_url(self.context, '@@export_sites'),
                 'site_status_options': SITE_STATUS_OPTIONS,
-                'env_shared_options': SHARED_ENV_NAMES,
-                'is_deletion_allowed': self._is_deletion_allowed(table)}
+                'env_shared_options': SHARED_ENV_NAMES}
 
 
 @view_config(route_name='admin',
              renderer='../templates/admin/site_detail.pt',
              request_method='GET',
              context=ILMSSite,
-             permission=ACT_READ,
+             permission=ACT_ADMIN,
              name='details')
 class SiteDetailView(BaseTemplateView):
 
@@ -120,14 +105,14 @@ class SiteDetailView(BaseTemplateView):
         raise ValueError('Unknown license type.')
 
     def _format_license(self, lic):
-        edit_link = self.request.resource_url(self.context, '@@license') if self.request.has_permission(ACT_EDIT_SITE_LICENSE, self.context) else None
+        edit_link = self.request.resource_url(self.context, '@@license')
         return {'type': self._license_type(lic),
                 'start_date': formatDateToLocal(lic.start_date),
                 'end_date': formatDateToLocal(lic.end_date),
                 'edit_link': edit_link}
 
     def _format_env(self, env):
-        edit_link = self.request.resource_url(self.context, '@@environment') if self.request.has_permission(ACT_EDIT_SITE_ENVIRONMENT, self.context) else None
+        edit_link = self.request.resource_url(self.context, '@@environment')
         if ISharedEnvironment.providedBy(env):
             return {'type': 'shared',
                     'name': env.name,

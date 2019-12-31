@@ -18,24 +18,14 @@ ACT_EDIT_SITE_LICENSE = 'nti.app.environments.actions.edit_site_license'
 ACT_EDIT_SITE_ENVIRONMENT = 'nti.app.environments.actions.edit_site_environment'
 
 ADMIN_ROLE = 'role:nti.roles.admin'
-ACCOUNT_MANAGEMENT_ROLE = 'role:nti.roles.account-management'
 
 
-def is_admin_or_account_mgr(userid):
+def is_admin(userid):
     roles = principalRoleManager.getRolesForPrincipal(userid)
     for role, access in roles or ():
-        if role in (ADMIN_ROLE, ACCOUNT_MANAGEMENT_ROLE) and access == Allow:
+        if role == ADMIN_ROLE and access == Allow:
             return True
     return False
-
-
-def _registered_roles(userid):
-    result = []
-    roles = principalRoleManager.getRolesForPrincipal(userid)
-    for role, access in roles or ():
-        if role in (ADMIN_ROLE, ACCOUNT_MANAGEMENT_ROLE) and access == Allow:
-            result.append(role)
-    return result
 
 
 @interface.implementer(IAuthenticationPolicy)
@@ -44,7 +34,6 @@ class AuthenticationPolicy(_AuthTktAuthenticationPolicy):
     def effective_principals(self, request):
         result = _AuthTktAuthenticationPolicy.effective_principals(self, request)
         userid = self.unauthenticated_userid(request)
-        if userid:
-            roles = _registered_roles(userid)
-            result.extend(roles)
+        if userid and is_admin(userid):
+            result.append(ADMIN_ROLE)
         return result

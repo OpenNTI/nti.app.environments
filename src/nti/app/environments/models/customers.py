@@ -15,8 +15,6 @@ from nti.schema.fieldproperty import createFieldProperties
 from nti.schema.schema import SchemaConfigured
 
 from nti.app.environments.auth import ADMIN_ROLE
-from nti.app.environments.auth import ACCOUNT_MANAGEMENT_ROLE
-from nti.app.environments.auth import ACT_READ
 
 from nti.app.environments.models.interfaces import ICustomer
 from nti.app.environments.models.interfaces import ICustomersContainer
@@ -34,8 +32,7 @@ class CustomersFolder(Folder):
 
     @LazyOnClass
     def __acl__(self):
-        return [(Allow, ADMIN_ROLE, ALL_PERMISSIONS),
-                (Allow, ACCOUNT_MANAGEMENT_ROLE, ACT_READ)]
+        return [(Allow, ADMIN_ROLE, ALL_PERMISSIONS)]
 
     def addCustomer(self, customer):
         self[customer.email] = customer
