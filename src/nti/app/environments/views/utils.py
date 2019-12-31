@@ -2,11 +2,14 @@ import json
 import pytz
 from dateutil import parser
 
+from zope.i18n import translate
+from zope.i18nmessageid import Message
+
 from zope.schema._bootstrapinterfaces import ConstraintNotSatisfied
 from zope.schema._bootstrapinterfaces import ValidationError
 
 
-def raise_json_error(factory, error, field=None):
+def raise_json_error(factory, error, field=None, request=None):
     if isinstance(error, ValidationError):
         if isinstance(error, ConstraintNotSatisfied):
             message = 'Invalid {}.'.format(error.args[1])
@@ -16,6 +19,8 @@ def raise_json_error(factory, error, field=None):
         message = error
 
     body = {'message': message} if not isinstance(message, dict) else message
+    if isinstance(body['message'], Message):
+        body['message'] = translate(body['message'], context=request)
     if field:
         body['field'] = field
     body = json.dumps(body)

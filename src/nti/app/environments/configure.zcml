@@ -12,9 +12,20 @@
 
 	<include package="nti.mailer" />
 
+	<include package="zope.annotation" />
+
+	<include package="nti.wref"/>
+
+	<!-- i18n -->
+	<include package="zope.i18n" file="meta.zcml" />
 	<include package="nti.i18n" />
 
-	<include package="zope.annotation" />
+	<!-- zope.i18n for translating python code -->
+	<i18n:registerTranslations directory="locales" domain="nti.app.environments"/>
+
+	<!-- Pyramid ITranslationDirectories, see pyramid_chameleon localization,
+		 both pyramid localizer and zope translator share the same locales dirs-->
+	<utility factory=".i18n.ZopeTranslationDirectories" />
 
 	<include package="nti.wref"/>
 

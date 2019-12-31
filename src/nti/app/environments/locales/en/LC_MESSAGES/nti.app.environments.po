@@ -1,0 +1,53 @@
+# English translations for nti.app.environments.
+# Copyright (C) 2019 ORGANIZATION
+# This file is distributed under the same license as the
+# nti.app.environments
+# project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2019.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: nti.app.environments 0.0\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2019-12-31 11:44-0600\n"
+"PO-Revision-Date: 2019-12-31 11:54-0600\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: en\n"
+"Language-Team: en <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.7.0\n"
+
+#: src/nti/app/environments/email_templates/verify_customer.pt:37
+msgid "Confirm your email address"
+msgstr ""
+
+#: src/nti/app/environments/email_templates/verify_customer.pt:41
+msgid "Thank you for signing up for NextThought. We're happy you're here!"
+msgstr ""
+
+#: src/nti/app/environments/email_templates/verify_customer.pt:44
+msgid ""
+"Enter the following code in the window where you began creating your new "
+"NextThought site:"
+msgstr ""
+
+#: src/nti/app/environments/email_templates/verify_customer.pt:53
+msgid ""
+"This email contains private information for you - please don't forward "
+"it. Questions about setting up your new NextThought site? Email us at "
+"${support_email} ."
+msgstr ""
+
+#: src/nti/app/environments/models/interfaces.py:121
+msgid ""
+"Username contains an illegal character. Only letters, digits, and "
+"${allowed_chars} are allowed."
+msgstr ""
+
+#: src/nti/app/environments/templates/admin/sites.pt:20
+msgid "Sites"
+msgstr ""
+
