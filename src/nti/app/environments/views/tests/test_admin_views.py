@@ -126,6 +126,8 @@ class TestAdminViews(BaseAppTest):
                                                  'dns_names': ['x', 'y'],
                                                  'license': {'type': 'trial', 'start_date': '2019-12-11T18:00:00', 'end_date': '2019-12-12T18:00:00',
                                                              'edit_link': None},
-                                                 'environment': {'type': 'shared', 'name': 'test',
-                                                                 'edit_link': None}
+                                                 'environment': {'type': 'shared', 'name': 'test'},
+                                                 'environment_edit_link': None,
+                                                 'requesting_email': None,
+                                                 'client_name': None
                                              }}))

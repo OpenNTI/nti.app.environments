@@ -3,17 +3,23 @@ import pytz
 from dateutil import parser
 
 from zope.schema._bootstrapinterfaces import ConstraintNotSatisfied
+from zope.schema._bootstrapinterfaces import RequiredMissing
 from zope.schema._bootstrapinterfaces import ValidationError
+from zope.schema._bootstrapinterfaces import WrongContainedType
 
 
 def raise_json_error(factory, error, field=None):
     if isinstance(error, ValidationError):
         if isinstance(error, ConstraintNotSatisfied):
             message = 'Invalid {}.'.format(error.args[1])
+        elif isinstance(error, WrongContainedType) \
+            and error.args[0] \
+            and isinstance(error.args[0][0], RequiredMissing):
+            message = 'Missing required field: {}.'.format(error.args[1])
         else:
             message = error.args[0] if error.args else str(error)
     else:
-        message = error
+        message = str(error)
 
     body = {'message': message} if not isinstance(message, dict) else message
     if field:
