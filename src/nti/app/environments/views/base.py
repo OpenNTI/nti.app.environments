@@ -5,10 +5,14 @@ from zope.cachedescriptors.property import Lazy
 
 from zope.schema._bootstrapinterfaces import ValidationError
 
-from nti.app.environments.auth import is_admin_or_account_mgr
+from nti.app.environments.auth import ACT_READ
 
 from nti.app.environments.models.customers import HubspotContact
 from nti.app.environments.models.customers import PersistentCustomer
+
+from nti.app.environments.models.utils import get_onboarding_root
+from nti.app.environments.models.utils import get_customers_folder
+from nti.app.environments.models.utils import get_sites_folder
 
 from nti.app.environments.views.utils import raise_json_error
 
@@ -50,13 +54,19 @@ class BaseView(object):
 class BaseTemplateView(BaseView):
 
     logged_in = None
-    is_admin = None
+    is_customers_visible = None
+    is_sites_visible = None
+
+    @Lazy
+    def _onboarding_root(self):
+        return get_onboarding_root(self.request)
 
     def __init__(self, context, request):
         super(BaseTemplateView, self).__init__(context, request)
         if self.request.authenticated_userid:
             self.logged_in = True
-            self.is_admin = is_admin_or_account_mgr(self.request.authenticated_userid)
+            self.is_customers_visible = self.request.has_permission(ACT_READ, get_customers_folder(self._onboarding_root, request))
+            self.is_sites_visible = self.request.has_permission(ACT_READ, get_sites_folder(self._onboarding_root, request))
 
 
 class BaseFieldPutView(BaseView):

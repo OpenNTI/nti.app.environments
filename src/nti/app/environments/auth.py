@@ -21,14 +21,6 @@ ADMIN_ROLE = 'role:nti.roles.admin'
 ACCOUNT_MANAGEMENT_ROLE = 'role:nti.roles.account-management'
 
 
-def is_admin_or_account_mgr(userid):
-    roles = principalRoleManager.getRolesForPrincipal(userid)
-    for role, access in roles or ():
-        if role in (ADMIN_ROLE, ACCOUNT_MANAGEMENT_ROLE) and access == Allow:
-            return True
-    return False
-
-
 def _registered_roles(userid):
     result = []
     roles = principalRoleManager.getRolesForPrincipal(userid)
@@ -47,4 +39,8 @@ class AuthenticationPolicy(_AuthTktAuthenticationPolicy):
         if userid:
             roles = _registered_roles(userid)
             result.extend(roles)
+
+            # For now we grant all NextThought users account management role.
+            if userid.endswith('@nextthought.com'):
+                result.append(ACCOUNT_MANAGEMENT_ROLE)
         return result
