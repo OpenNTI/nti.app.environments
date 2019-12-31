@@ -119,11 +119,13 @@ class TestAdminViews(BaseAppTest):
             view = SiteDetailView(site, self.request)
             result = view()
             assert_that(result, has_entries({'sites_list_link': 'http://example.com/admin/sites/@@list',
-                                             'site': {'created': '2019-12-11T00:00:00Z',
+                                             'site': {'created': '2019-12-10T18:00:00',
                                                  'owner': {'owner': customer, 'detail_url': 'http://example.com/admin/customers/123@gmail.com/@@details'},
                                                  'site_id': siteId,
                                                  'status': 'ACTIVE',
                                                  'dns_names': ['x', 'y'],
-                                                 'license': {'type': 'trial', 'start_date': '2019-12-12T00:00:00Z', 'end_date': '2019-12-13T00:00:00Z'},
-                                                 'environment': {'type': 'shared', 'name': 'test'}
+                                                 'license': {'type': 'trial', 'start_date': '2019-12-11T18:00:00', 'end_date': '2019-12-12T18:00:00',
+                                                             'edit_link': 'http://example.com/sites/Sxxx/@@license'},
+                                                 'environment': {'type': 'shared', 'name': 'test',
+                                                                 'edit_link': 'http://example.com/sites/Sxxx/@@environment'}
                                              }}))

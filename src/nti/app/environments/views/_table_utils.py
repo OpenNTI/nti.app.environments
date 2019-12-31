@@ -15,7 +15,10 @@ from z3c.table import batch
 
 from z3c.table.interfaces import ITable
 from z3c.table.interfaces import IBatchProvider
+
 from nti.app.environments.models.interfaces import ITrialLicense
+
+from nti.app.environments.views.utils import formatDateToLocal
 
 
 @interface.implementer(IAbsoluteURL)
@@ -113,7 +116,7 @@ class BaseDateColumn(column.GetAttrColumn):
 
     def getValue(self, item):
         value = getattr(item, self.attrName)
-        return value.strftime('%Y-%m-%dT%H:%M:%SZ') if value else ''
+        return formatDateToLocal(value)
 
     def getSortKey(self, item):
         return self.getValue(item)

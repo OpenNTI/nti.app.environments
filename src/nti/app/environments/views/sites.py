@@ -10,8 +10,10 @@ from zope.schema._bootstrapinterfaces import RequiredMissing
 from zope.schema._bootstrapinterfaces import ValidationError
 
 from nti.app.environments.models.utils import get_customers_folder
-from nti.app.environments.models.interfaces import ILMSSite, ITrialLicense,\
-    ISharedEnvironment, IDedicatedEnvironment
+from nti.app.environments.models.interfaces import ILMSSite
+from nti.app.environments.models.interfaces import ITrialLicense
+from nti.app.environments.models.interfaces import ISharedEnvironment
+from nti.app.environments.models.interfaces import IDedicatedEnvironment
 from nti.app.environments.models.interfaces import ILMSSitesContainer
 from nti.app.environments.models.interfaces import IOnboardingRoot
 from nti.app.environments.models.interfaces import SITE_STATUS_UNKNOWN
@@ -32,10 +34,13 @@ from nti.app.environments.views.utils import formatDate
 from nti.app.environments.auth import ACT_READ
 from nti.app.environments.auth import ACT_CREATE
 from nti.app.environments.auth import ACT_DELETE
-from nti.app.environments.auth import ACT_UPDATE 
+from nti.app.environments.auth import ACT_UPDATE
+from nti.app.environments.auth import ACT_EDIT_SITE_LICENSE
+from nti.app.environments.auth import ACT_EDIT_SITE_ENVIRONMENT
 
 from nti.app.environments.api.hubspotclient import get_hubspot_client
 
+from .base import BaseFieldPutView
 from .base import createCustomer
 from .base import getOrCreateCustomer
 from .base_csv import CSVBaseView
@@ -162,14 +167,80 @@ class SiteCreationView(SiteBaseView):
              permission=ACT_UPDATE)
 class SiteUpdateView(SiteBaseView):
 
-    def __call__(self):
-        context = self.context
+    def _execute_call(self, _callable, *args, **kwargs):
+        try:
+            return _callable(*args, **kwargs)
+        except RequiredMissing as e:
+            raise_json_error(hexc.HTTPUnprocessableEntity,"Missing required field: {}".format(e))
+        except ValidationError as e:
+            raise_json_error(hexc.HTTPUnprocessableEntity, str(type(e).__name__))
+
+    def _update_site(self, site):
         kwargs = self._generate_kwargs_for_site(allowed=('status', 'dns_names'))
         if kwargs:
             for attr_name, attr_val in kwargs.items():
-                if getattr(context, attr_name) != attr_val:
-                    setattr(context, attr_name, attr_val)
-        return kwargs
+                if getattr(site, attr_name) != attr_val:
+                    setattr(site, attr_name, attr_val)
+        return site
+
+    def __call__(self):
+        self._execute_call(self._update_site, self.context)
+        return {}
+
+
+@view_config(renderer='json',
+             context=ILMSSite,
+             request_method='PUT',
+             permission=ACT_EDIT_SITE_ENVIRONMENT,
+             name="environment")
+class SiteEnvironmentPutView(BaseFieldPutView):
+
+    def _allowed_attr_names(self, field_value):
+        return ('pod_id', 'host') if IDedicatedEnvironment.providedBy(field_value) else ('name',)
+
+    def _incoming_field_value(self, params):
+        type_ = self._get_body_value('type', params)
+        if type_ not in ('shared', 'dedicated'):
+            raise_json_error(hexc.HTTPUnprocessableEntity,
+                             "Unknown environment type.")
+
+        if type_ == 'shared':
+            return SharedEnvironment(name=self._get_body_value('name', params, required=True))
+        else:
+            return DedicatedEnvironment(pod_id=self._get_body_value('pod_id', params, required=True),
+                                        host=self._get_body_value('host', params, required=True))
+
+
+@view_config(renderer='json',
+             context=ILMSSite,
+             request_method='PUT',
+             permission=ACT_EDIT_SITE_LICENSE,
+             name="license")
+class SiteLicensePutView(BaseFieldPutView):
+
+    def _allowed_attr_names(self, field_value):
+        return ('start_date', 'end_date')
+
+    def _handle_date(self, name, value):
+        try:
+            return parseDate(value) if value is not None else None
+        except:
+            raise_json_error(hexc.HTTPUnprocessableEntity,
+                             "Invalid date format for {}.".format(name))
+
+    def _incoming_field_value(self, params):
+        type_ = self._get_body_value('type', params)
+        if type_ not in ('trial', 'enterprise'):
+            raise_json_error(hexc.HTTPUnprocessableEntity,
+                             "Unknown license type.")
+
+        kwargs = {'start_date': self._handle_date('start_date', self._get_body_value('start_date', params, required=True)),
+                  'end_date': self._handle_date('end_date', self._get_body_value('end_date', params, required=True))}
+
+        if type_ == 'trial':
+            return TrialLicense(**kwargs)
+        else:
+            return EnterpriseLicense(**kwargs)
 
 
 @view_config(renderer='json',
