@@ -9,6 +9,9 @@
 	<sp:role id="role:nti.roles.admin"
 			 title="A role for admin." />
 
+	<sp:role id="role:nti.roles.account-management"
+			 title="A role for operations or sales." />
+
 	<!-- principals -->
 	<sp:principal id="alex.yang@nextthought.com"
 				  login="alex.yang@nextthought.com"
