@@ -95,6 +95,7 @@ class SitesListView(BaseTemplateView, _TableMixin):
                 'creation_url': self.request.resource_url(self.context) if self.request.has_permission(ACT_CREATE, self.context) else None,
                 'sites_upload_url': self.request.resource_url(self.context, '@@upload_sites') if self.request.has_permission(ACT_CREATE, self.context) else None,
                 'sites_export_url': self.request.resource_url(self.context, '@@export_sites'),
+                'trial_site_request_url': self.request.resource_url(self.context, '@@request_trial_site') if self.request.has_permission(ACT_CREATE, self.context) else None,
                 'site_status_options': SITE_STATUS_OPTIONS,
                 'env_shared_options': SHARED_ENV_NAMES,
                 'is_deletion_allowed': self._is_deletion_allowed(table)}
@@ -126,17 +127,14 @@ class SiteDetailView(BaseTemplateView):
                 'end_date': formatDateToLocal(lic.end_date),
                 'edit_link': edit_link}
 
-    def _format_env(self, env):
-        edit_link = self.request.resource_url(self.context, '@@environment') if self.request.has_permission(ACT_EDIT_SITE_ENVIRONMENT, self.context) else None
+    def _format_env(self, env=None):
         if ISharedEnvironment.providedBy(env):
             return {'type': 'shared',
-                    'name': env.name,
-                    'edit_link': edit_link}
+                    'name': env.name}
         elif IDedicatedEnvironment.providedBy(env):
             return {'type': 'dedicated',
                     'pod_id': env.pod_id,
-                    'host': env.host,
-                    'edit_link': edit_link}
+                    'host': env.host}
         raise ValueError('Unknown environment type.')
 
     def _format_owner(self, owner=None):
@@ -144,6 +142,7 @@ class SiteDetailView(BaseTemplateView):
                 'detail_url': self.request.route_url('admin', traverse=('customers', self.context.owner.__name__, '@@details')) if owner else None}
 
     def __call__(self):
+        request = self.request
         extra_info = self._site_extra_info() or {}
         return {'sites_list_link': self.request.route_url('admin', traverse=('sites', '@@list')),
                 'env_shared_options': SHARED_ENV_NAMES,
@@ -153,5 +152,8 @@ class SiteDetailView(BaseTemplateView):
                          'status': self.context.status,
                          'dns_names': self.context.dns_names,
                          'license': self._format_license(self.context.license),
-                         'environment': self._format_env(self.context.environment),
+                         'environment': self._format_env(self.context.environment) if self.context.environment else None,
+                         'environment_edit_link': request.resource_url(self.context, '@@environment') if request.has_permission(ACT_EDIT_SITE_ENVIRONMENT, self.context) else None,
+                         'requesting_email': self.context.requesting_email,
+                         'client_name': self.context.client_name,
                          **extra_info}}

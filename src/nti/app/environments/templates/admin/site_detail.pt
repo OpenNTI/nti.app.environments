@@ -17,9 +17,15 @@
             <div class="site-item site-info">
                 <h3>Site Info</h3>
                 <p>Site ID: <span tal:content="python: site.site_id|nothing"></span></p>
-                <p>Site name: <span tal:content="python: site.brand_name|nothing"></span></p>
+                <p>Site Name: <span tal:content="python: site.brand_name|nothing"></span></p>
                 <p>Status: <span tal:content="site.status"></span></p>
                 <p>Created: <span tal:content="site.created"></span></p>
+                <metal:block tal:omit-tag="" tal:condition="site.requesting_email">
+                    <p>Requesting Email: <span tal:content="site.requesting_email"></span></p>
+                </metal:block>
+                <metal:block tal:omit-tag="" tal:condition="site.client_name">
+                    <p>Client Name: <span tal:content="site.client_name"></span></p>
+                </metal:block>
                 <p>DNS Names: <span tal:repeat="dns_name site.dns_names"><a href="https://${dns_name}" target="_blank">${dns_name}</a></span></p>
             </div>
         </div>
@@ -36,15 +42,17 @@
         <div class="site-item">
             <h3>Environment</h3>
             <div id="view_environment">
-                <p>Type: <span class="site_environment_type" tal:content="site.environment.type"></span></p>
-                <metal:block tal:omit-tag="" tal:condition="site.environment.type=='shared'">
-                    <p>Name: <span class="site_environment_name" tal:content="site.environment.name"></span></p>
+                <metal:block tal:omit-tag="" tal:condition="site.environment">
+                    <p>Type: <span class="site_environment_type" tal:content="site.environment.type"></span></p>
+                    <metal:block tal:omit-tag="" tal:condition="site.environment.type=='shared'">
+                        <p>Name: <span class="site_environment_name" tal:content="site.environment.name"></span></p>
+                    </metal:block>
+                    <metal:block tal:omit-tag="" tal:condition="site.environment.type=='dedicated'">
+                        <p>PodId (ContainerId): <span class="site_environment_pod_id" tal:content="site.environment.pod_id"></span></p>
+                        <p>Host: <span class="site_environment_host" tal:content="site.environment.host"></span></p>
+                    </metal:block>
                 </metal:block>
-                <metal:block tal:omit-tag="" tal:condition="site.environment.type=='dedicated'">
-                    <p>PodId (ContainerId): <span class="site_environment_pod_id" tal:content="site.environment.pod_id"></span></p>
-                    <p>Host: <span class="site_environment_host" tal:content="site.environment.host"></span></p>
-                </metal:block>
-                <metal:block tal:omit-tag="" tal:condition="site.environment.edit_link|nothing">
+                <metal:block tal:omit-tag="" tal:condition="site.environment_edit_link|nothing">
                     <a href="javascript:showEnvironmentEditView();">Edit</a>
                 </metal:block>
             </div>
@@ -80,7 +88,7 @@
                         <div class="error error-edit-environment" style="display:none;"></div>
                     </div>
                     <div class="form-group-item">
-                        <button type="button" class="btnCustom" onclick="saveEnvironmentView(this, '${site.environment.edit_link}');">Save</button>
+                        <button type="button" class="btnCustom" onclick="saveEnvironmentView(this, '${site.environment_edit_link}');">Save</button>
                         <button type="button" class="btnCustom" onclick="cancelEnvironmentEditView();">Cancel</button>
                     </div>
                 </div>

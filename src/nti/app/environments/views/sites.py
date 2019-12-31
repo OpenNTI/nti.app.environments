@@ -10,7 +10,7 @@ from zope.schema._bootstrapinterfaces import RequiredMissing
 from zope.schema._bootstrapinterfaces import ValidationError
 
 from nti.app.environments.models.utils import get_customers_folder
-from nti.app.environments.models.interfaces import ILMSSite
+from nti.app.environments.models.interfaces import ILMSSite, SITE_STATUS_PENDING
 from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import ISharedEnvironment
 from nti.app.environments.models.interfaces import IDedicatedEnvironment
@@ -124,7 +124,8 @@ class SiteBaseView(BaseView):
         site_id = self._get_value('site_id', params)
         if site_id:
             kwargs['id'] = site_id
-        for attr_name, _handle in (('owner', self._handle_owner),
+        for attr_name, _handle in (('client_name', None),
+                                   ('owner', self._handle_owner),
                                    ('environment', self._handle_env),
                                    ('license', self._handle_license),
                                    ('status', self._handle),
@@ -159,6 +160,63 @@ class SiteCreationView(SiteBaseView):
         self.context.addSite(site)
         self.request.response.status = 201
         return {}
+
+
+@view_config(renderer='json',
+             context=ILMSSitesContainer,
+             request_method='POST',
+             permission=ACT_CREATE,
+             name="request_trial_site")
+class RequestTrialSiteView(SiteBaseView):
+
+    @Lazy
+    def _client(self):
+        return get_hubspot_client()
+
+    def _handle_owner(self, name, value=None):
+        """
+        Create a new customer if it's found via hubspot.
+        """
+        if not value:
+            raise_json_error(hexc.HTTPUnprocessableEntity, "Missing required field: email.")
+
+        root = find_iface(self.context, IOnboardingRoot)
+        folder = get_customers_folder(root)
+        customer = folder.getCustomer(value)
+        if customer is None:
+            contact = self._client.fetch_contact_by_email(value)
+            if contact:
+                customer = createCustomer(self._customers,
+                                          email=value,
+                                          name=contact['name'],
+                                          hs_contact_vid=contact['canonical-vid'])
+            else:
+                customer = getOrCreateCustomer(folder, value)
+
+            if customer is None:
+                raise_json_error(hexc.HTTPUnprocessableEntity,
+                                 "No customer found with email: {}.".format(value))
+        return customer
+
+    def __call__(self):
+        try:
+            _now = datetime.datetime.utcnow()
+            kwargs = self._generate_kwargs_for_site(allowed=('client_name', 'owner', 'dns_names'))
+            kwargs.update({'status': SITE_STATUS_PENDING,
+                           'created': _now,
+                           'license': TrialLicense(start_date=_now,
+                                                   end_date=_now)})
+            # When requesting user is not owner,
+            # set the requesting_email as the requesting user.
+            if kwargs['owner'].email != self.request.authenticated_userid:
+                kwargs['requesting_email'] = self.request.authenticated_userid
+
+            site = PersistentSite(**kwargs)
+            self.context.addSite(site)
+            self.request.response.status = 201
+            return {}
+        except ValidationError as err:
+            raise_json_error(hexc.HTTPUnprocessableEntity, err)
 
 
 @view_config(renderer='json',
