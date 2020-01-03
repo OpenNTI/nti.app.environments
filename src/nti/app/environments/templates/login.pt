@@ -1,56 +1,74 @@
 <!DOCTYPE html>
 <html>
 
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-        body {
-            font-family: Arial, Helvetica, sans-serif;
-        }
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="/static/css/base.css" rel="stylesheet">
+        <style>
+         body {
+             font-family: Arial, Helvetica, sans-serif;
+             background-color: #f9f9f9;
+         }
 
-        form {
-            border: 3px solid #f1f1f1;
-        }
+         form {
+             border: 3px solid #f1f1f1;
+         }
 
-        button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 14px 20px;
-            margin: 8px 0;
-            border: none;
-            cursor: pointer;
-            width: 100%;
-            font-size: 14px;
-            font-weight: 800;
-        }
+         h2 {
+             text-align: center;
+         }
 
-        button:hover {
-            opacity: 0.8;
-        }
+         img.logo {
+             display: block;
+             margin-left: auto;
+             margin-right: auto;
+             width: 80px;
+             border: 2px solid transparent;
+             border-radius: 50%;
+             overflow: hidden;
+         }
 
-        .container {
-            margin:auto;
-            width: 400px;
-            height: 400px;
-        }
-        .form-container {
-            padding: 16px;
-        }
+         button {
+             background-color: #4CAF50;
+             color: white;
+             padding: 14px 20px;
+             margin: 8px 0;
+             border: none;
+             cursor: pointer;
+             width: 100%;
+             font-size: 14px;
+             font-weight: 800;
+         }
 
-    </style>
-</head>
+         button:hover {
+             opacity: 0.8;
+         }
 
-<body>
+         .container {
+             margin: auto;
+             padding-top: 100px;
+             width: 400px;
+             height: 400px;
+         }
+         .form-container {
+             padding: 16px;
+         }
 
-    <div class="container">
-        <h2>Welcome to NextThought</h2>
-        <form action="${rel_logon}" method="get">
-            <div class="form-container">
-                <button type="submit">Sign in with Google</button>
-            </div>
-        </form>
-    </div>
+        </style>
+    </head>
 
-</body>
+    <body>
+
+        <div class="container">
+            <img class="logo" src="${request.static_url('nti.app.environments:static/logo.png')}"/>
+            <h2>Sign in to Site Manager</h2>
+            <form action="${rel_logon}" method="get">
+                <div class="form-container">
+                    <button type="submit">Sign in with Google</button>
+                </div>
+            </form>
+        </div>
+
+    </body>
 
 </html>
