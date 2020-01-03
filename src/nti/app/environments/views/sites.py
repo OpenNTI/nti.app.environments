@@ -1,12 +1,13 @@
 import csv
 import datetime
 
-from pyramid.view import view_config
 from pyramid import httpexceptions as hexc
 
-from zope import component
+from pyramid.view import view_config
 
 from zope.cachedescriptors.property import Lazy
+
+from zope.event import notify
 
 from zope.schema._bootstrapinterfaces import RequiredMissing
 from zope.schema._bootstrapinterfaces import ValidationError
@@ -20,6 +21,8 @@ from nti.app.environments.models.interfaces import ILMSSitesContainer
 from nti.app.environments.models.interfaces import IOnboardingRoot
 from nti.app.environments.models.interfaces import SITE_STATUS_UNKNOWN
 from nti.app.environments.models.interfaces import SITE_STATUS_PENDING
+
+from nti.app.environments.models.events import SiteCreatedEvent
 
 from nti.app.environments.models.sites import DedicatedEnvironment
 from nti.app.environments.models.sites import SharedEnvironment
@@ -41,11 +44,7 @@ from nti.app.environments.auth import ACT_UPDATE
 from nti.app.environments.auth import ACT_EDIT_SITE_LICENSE
 from nti.app.environments.auth import ACT_EDIT_SITE_ENVIRONMENT
 
-from nti.app.environments.settings import NEW_SITE_REQUEST_NOTIFICATION_EMAIL
-
 from nti.app.environments.api.hubspotclient import get_hubspot_client
-
-from nti.mailer.interfaces import ITemplatedMailer
 
 from .base import BaseFieldPutView
 from .base import createCustomer
@@ -205,22 +204,6 @@ class RequestTrialSiteView(SiteBaseView):
                                  "No customer found with email: {}.".format(value))
         return customer
 
-    def _send_notification(self, site):
-        template_args = {
-            'requesting_user': self.request.authenticated_userid,
-            'site_id': site.id,
-            'client': site.client_name,
-            'email': site.owner.email,
-            'url': site.dns_names[0],
-            'site_detail_link': self.request.route_url('admin', traverse=('sites', site.__name__, '@@details'))
-        }
-        mailer = component.getUtility(ITemplatedMailer, name='default')
-        mailer.queue_simple_html_text_email("nti.app.environments:email_templates/new_site_request",
-                                            subject="New Site Request",
-                                            recipients=[NEW_SITE_REQUEST_NOTIFICATION_EMAIL],
-                                            template_args=template_args,
-                                            text_template_extension='.mak')
-
     def __call__(self):
         try:
             _now = datetime.datetime.utcnow()
@@ -228,7 +211,7 @@ class RequestTrialSiteView(SiteBaseView):
             kwargs.update({'status': SITE_STATUS_PENDING,
                            'created': _now,
                            'license': TrialLicense(start_date=_now,
-                                                   end_date=_now)})
+                                                   end_date=_now + datetime.timedelta(days=90))})
             # When requesting user is not owner,
             # set the requesting_email as the requesting user.
             if kwargs['owner'].email != self.request.authenticated_userid:
@@ -237,8 +220,12 @@ class RequestTrialSiteView(SiteBaseView):
             site = PersistentSite(**kwargs)
             self.context.addSite(site)
 
-            # send email
-            self._send_notification(site)
+            # send email, etc.
+            notify(SiteCreatedEvent(site))
+
+            logger.info("%s has requested a new trial site be created, site id: %s.",
+                        self.request.authenticated_userid,
+                        site.id)
 
             self.request.response.status = 201
             return {'redirect_url': self.request.route_url('admin', traverse=('sites', site.__name__, '@@details'))}

@@ -34,6 +34,10 @@ def main(global_config, **settings):
     globalreg = getGlobalSiteManager()
     with Configurator(registry=globalreg) as config:
         config.setup_registry(settings=settings)
+
+        # initialize global constants
+        init_app_settings(settings)
+
         config.include(pyramid_zcml)
         config.include('pyramid_retry')
         config.include('pyramid_zodbconn')
@@ -58,9 +62,6 @@ def main(global_config, **settings):
         # session factory
         session_factory = SignedCookieSessionFactory('foo')
         config.set_session_factory(session_factory)
-
-        # initialize global constants
-        init_app_settings(settings)
 
         config.scan()
     return config.make_wsgi_app()
