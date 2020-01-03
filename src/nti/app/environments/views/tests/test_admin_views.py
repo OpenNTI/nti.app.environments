@@ -32,7 +32,7 @@ class TestAdminViews(BaseAppTest):
     def testCustomersListView(self):
         url = '/admin/customers/@@list'
         params = {}
-        self.testapp.get(url, params=params, status=401, extra_environ=self._make_environ(username=None))
+        self.testapp.get(url, params=params, status=302, extra_environ=self._make_environ(username=None))
         self.testapp.get(url, params=params, status=403, extra_environ=self._make_environ(username='user001'))
         result = self.testapp.get(url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
         assert_that(b"<h1>Customers</h1>" in result.body, is_(True))
@@ -55,7 +55,7 @@ class TestAdminViews(BaseAppTest):
 
         url = '/admin/customers/{}/@@details'.format(email)
         params = {}
-        self.testapp.get(url, params=params, status=401, extra_environ=self._make_environ(username=None))
+        self.testapp.get(url, params=params, status=302, extra_environ=self._make_environ(username=None))
         self.testapp.get(url, params=params, status=403, extra_environ=self._make_environ(username='user001'))
         result = self.testapp.get(url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
         assert_that(b'Customer Detail' in result.body, is_(True))
@@ -74,7 +74,7 @@ class TestAdminViews(BaseAppTest):
     def testSitesListView(self):
         url = '/admin/sites/@@list'
         params = {}
-        self.testapp.get(url, params=params, status=401, extra_environ=self._make_environ(username=None))
+        self.testapp.get(url, params=params, status=302, extra_environ=self._make_environ(username=None))
         self.testapp.get(url, params=params, status=403, extra_environ=self._make_environ(username='user001'))
         result = self.testapp.get(url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
         assert_that(b"<h1>Sites</h1>" in result.body, is_(True))
@@ -111,7 +111,7 @@ class TestAdminViews(BaseAppTest):
 
         url = '/admin/sites/{}/@@details'.format(siteId)
         params = {}
-        self.testapp.get(url, params=params, status=401, extra_environ=self._make_environ(username=None))
+        self.testapp.get(url, params=params, status=302, extra_environ=self._make_environ(username=None))
         self.testapp.get(url, params=params, status=403, extra_environ=self._make_environ(username='user001'))
         result = self.testapp.get(url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
         assert_that(b'Site Detail' in result.body, is_(True))

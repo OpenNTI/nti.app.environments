@@ -30,7 +30,8 @@ class BaseAppTest(unittest.TestCase):
             'google_client_id': 'xxx',
             'google_client_secret': 'yyy',
             'hubspot_api_key': 'zzz',
-            'hubspot_portal_id': 'kkk'
+            'hubspot_portal_id': 'kkk',
+            'new_site_request_notification_email': 'test@example.com'
         }
 
     def tearDown(self):

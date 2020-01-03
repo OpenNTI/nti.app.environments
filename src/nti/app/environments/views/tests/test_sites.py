@@ -44,7 +44,7 @@ class TestSiteCreationView(BaseAppTest):
     def test_site(self, mock_customers):
         url = '/sites'
         params = self._params()
-        self.testapp.post_json(url, params=params, status=401, extra_environ=self._make_environ(username=None))
+        self.testapp.post_json(url, params=params, status=302, extra_environ=self._make_environ(username=None))
         self.testapp.post_json(url, params=params, status=403, extra_environ=self._make_environ(username='user001'))
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
         result = result.json_body
@@ -121,7 +121,7 @@ class TestSitePutView(BaseAppTest):
         params = {'type': 'trial',
                   'start_date': '2019-12-30',
                   'end_date': '2029-12-30'}
-        self.testapp.put_json(url, params=params, status=401, extra_environ=self._make_environ(username=None))
+        self.testapp.put_json(url, params=params, status=302, extra_environ=self._make_environ(username=None))
         self.testapp.put_json(url, params=params, status=403, extra_environ=self._make_environ(username='user001'))
         self.testapp.put_json(url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
         with ensure_free_txn():
@@ -194,7 +194,7 @@ class TestSitePutView(BaseAppTest):
         url = '/sites/{}/@@environment'.format(siteId)
         params = {'type': 'shared',
                   'name': 'prod'}
-        self.testapp.put_json(url, params=params, status=401, extra_environ=self._make_environ(username=None))
+        self.testapp.put_json(url, params=params, status=302, extra_environ=self._make_environ(username=None))
         self.testapp.put_json(url, params=params, status=403, extra_environ=self._make_environ(username='user001'))
         self.testapp.put_json(url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
         with ensure_free_txn():

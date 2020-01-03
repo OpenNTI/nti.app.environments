@@ -1,0 +1,34 @@
+<metal:block metal:use-macro="load: ../macros/layout_admin.pt">
+    <title metal:fill-slot="title">
+        Trial Site Request
+    </title>
+    <metal:block metal:fill-slot="content">
+        <div class="form-container">
+            <h2 style="margin-top: 32px;margin-bottom: 32px;">Trial Site Request Form</h2>
+            <div class="row-group">
+                <label>Client (example: chegg.com)</label>
+                <input type="text" id="site_trial_client"/>
+            </div>
+            <div class="row-group">
+                <label>Email <span style="color:red;">*</span></label>
+                <input type="text" id="site_trial_email"/>
+            </div>
+            <div class="row-group">
+                <label>Trial Site's URL (example: newclient.nextthought.io) <span style="color:red;">*</span></label>
+                <input type="text" id="site_trial_url"/>
+            </div>
+            <div class="row-group">
+                <div class="success success-request-trial-site" style="display:none;"></div>
+                <div class="error error-request-trial-site" style="display:none;"></div>
+            </div>
+            <div class="row-group">
+                <button type="button" class='btnSave' onclick="requestTrialSite(this, '${trial_site_request_url}');">
+                    Save
+                </button>
+            </div>
+        </div>
+    </metal:block>
+    <metal:block metal:fill-slot="script">
+        <script src="/static/js/request_site.js"></script>
+    </metal:block>
+</metal:block>
