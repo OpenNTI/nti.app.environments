@@ -45,6 +45,9 @@
     <div class="container">
         <h2>Welcome to NextThought</h2>
         <form action="${rel_logon}" method="get">
+            <metal:block tal:omit-tag="" tal:condition="success">
+                <input name="success" style="display:none;" value="${success}"/>
+            </metal:block>
             <div class="form-container">
                 <button type="submit">Sign in with Google</button>
             </div>

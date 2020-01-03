@@ -95,7 +95,7 @@ class SitesListView(BaseTemplateView, _TableMixin):
                 'creation_url': self.request.resource_url(self.context) if self.request.has_permission(ACT_CREATE, self.context) else None,
                 'sites_upload_url': self.request.resource_url(self.context, '@@upload_sites') if self.request.has_permission(ACT_CREATE, self.context) else None,
                 'sites_export_url': self.request.resource_url(self.context, '@@export_sites'),
-                'trial_site_request_url': self.request.resource_url(self.context, '@@request_trial_site') if self.request.has_permission(ACT_CREATE, self.context) else None,
+                'trial_site_request_url': self.request.route_url('admin', traverse=('sites', '@@request_trial_site')) if self.request.has_permission(ACT_CREATE, self.context) else None,
                 'site_status_options': SITE_STATUS_OPTIONS,
                 'env_shared_options': SHARED_ENV_NAMES,
                 'is_deletion_allowed': self._is_deletion_allowed(table)}
@@ -157,3 +157,17 @@ class SiteDetailView(BaseTemplateView):
                          'requesting_email': self.context.requesting_email,
                          'client_name': self.context.client_name,
                          **extra_info}}
+
+
+@view_config(route_name='admin',
+             renderer='../templates/admin/request_site.pt',
+             request_method='GET',
+             context=ILMSSitesContainer,
+             permission=ACT_READ,
+             name='request_trial_site')
+class SiteRequestView(BaseTemplateView):
+
+    def __call__(self):
+        return {
+            'trial_site_request_url': self.request.resource_url(self.context, '@@request_trial_site') if self.request.has_permission(ACT_CREATE, self.context) else None
+        }

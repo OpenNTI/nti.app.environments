@@ -4,19 +4,22 @@ import datetime
 from pyramid.view import view_config
 from pyramid import httpexceptions as hexc
 
+from zope import component
+
 from zope.cachedescriptors.property import Lazy
 
 from zope.schema._bootstrapinterfaces import RequiredMissing
 from zope.schema._bootstrapinterfaces import ValidationError
 
 from nti.app.environments.models.utils import get_customers_folder
-from nti.app.environments.models.interfaces import ILMSSite, SITE_STATUS_PENDING
+from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import ISharedEnvironment
 from nti.app.environments.models.interfaces import IDedicatedEnvironment
 from nti.app.environments.models.interfaces import ILMSSitesContainer
 from nti.app.environments.models.interfaces import IOnboardingRoot
 from nti.app.environments.models.interfaces import SITE_STATUS_UNKNOWN
+from nti.app.environments.models.interfaces import SITE_STATUS_PENDING
 
 from nti.app.environments.models.sites import DedicatedEnvironment
 from nti.app.environments.models.sites import SharedEnvironment
@@ -38,7 +41,11 @@ from nti.app.environments.auth import ACT_UPDATE
 from nti.app.environments.auth import ACT_EDIT_SITE_LICENSE
 from nti.app.environments.auth import ACT_EDIT_SITE_ENVIRONMENT
 
+from nti.app.environments.settings import NEW_SITE_REQUEST_NOTIFICATION_EMAIL
+
 from nti.app.environments.api.hubspotclient import get_hubspot_client
+
+from nti.mailer.interfaces import ITemplatedMailer
 
 from .base import BaseFieldPutView
 from .base import createCustomer
@@ -186,7 +193,7 @@ class RequestTrialSiteView(SiteBaseView):
         if customer is None:
             contact = self._client.fetch_contact_by_email(value)
             if contact:
-                customer = createCustomer(self._customers,
+                customer = createCustomer(folder,
                                           email=value,
                                           name=contact['name'],
                                           hs_contact_vid=contact['canonical-vid'])
@@ -197,6 +204,21 @@ class RequestTrialSiteView(SiteBaseView):
                 raise_json_error(hexc.HTTPUnprocessableEntity,
                                  "No customer found with email: {}.".format(value))
         return customer
+
+    def _send_notification(self, site):
+        template_args = {
+            'requesting_user': self.request.authenticated_userid,
+            'client': site.client_name,
+            'email': site.owner.email,
+            'url': site.dns_names[0],
+            'site_detail_link': self.request.route_url('admin', traverse=('sites', site.__name__, '@@details'))
+        }
+        mailer = component.getUtility(ITemplatedMailer, name='default')
+        mailer.queue_simple_html_text_email("nti.app.environments:email_templates/new_site_request",
+                                            subject="New Site Request",
+                                            recipients=[NEW_SITE_REQUEST_NOTIFICATION_EMAIL],
+                                            template_args=template_args,
+                                            text_template_extension='.mak')
 
     def __call__(self):
         try:
@@ -213,6 +235,10 @@ class RequestTrialSiteView(SiteBaseView):
 
             site = PersistentSite(**kwargs)
             self.context.addSite(site)
+
+            # send email
+            self._send_notification(site)
+
             self.request.response.status = 201
             return {}
         except ValidationError as err:

@@ -20,7 +20,7 @@
         <div class="toolbar">
             <input type="text" id='search' name="search" placeHolder="Search" class="search-input" onkeypress="return search(event);"/>
             <div style="float: right;">
-                <button type="button" onclick="document.getElementById('requestSiteModal').style.display = 'block';">Request Trial Site</button>
+                <a href="${trial_site_request_url}" style="margin-left: 6px;">Request Trial Site</a>
                 <metal:block tal:omit-tag="" tal:condition="creation_url|nothing">
                     <button type="button" onclick="document.getElementById('newModal').style.display = 'block';" style="margin-left: 6px;">Create New Site</button>
                 </metal:block>
@@ -59,43 +59,6 @@
                 <div class="modal-footer">
                     <button class='btnOK' onclick="deleteItem(this);">Delete</button>
                     <button class='btnNO' onclick="document.getElementById('deletingModal').style.display = 'none';">Cancel</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="requestSiteModal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Request Trial Site</h3>
-                </div>
-                <div class="modal-body">
-                    <div class="form">
-                        <div class="input-row">
-                            <label class="input-col-1">Client</label>
-                            <div class="input-col-3">
-                                <input type="text" id="site_trial_client" placeHolder="example: chegg.com"/>
-                            </div>
-                        </div>
-                        <div class="input-row">
-                            <label class="input-col-1">Email</label>
-                            <div class="input-col-3">
-                                <input type="text" id="site_trial_email"/>
-                            </div>
-                        </div>
-                        <div class="input-row">
-                            <label class="input-col-1">URL</label>
-                            <div class="input-col-3">
-                                <input type="text" id="site_trial_url" placeHolder="example: newclient.nextthought.io"/>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="success success-request-trial-site" style="display:none;"></div>
-                    <div class="error error-request-trial-site" style="display:none;"></div>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class='btnSave' onclick="requestTrialSite(this, '${trial_site_request_url}');">Save</button>
-                    <button type="button" class='btnNO' onclick="document.getElementById('requestSiteModal').style.display = 'none';">Cancel</button>
                 </div>
             </div>
         </div>
