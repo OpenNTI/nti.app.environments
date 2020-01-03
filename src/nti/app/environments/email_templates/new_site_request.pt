@@ -19,6 +19,9 @@
 	<body>
 		<div class="main">
 			<img src="https://d2ixlfeu83tci.cloudfront.net/images/email_logo.png" width="177" height="25" style="margin:15px 0 0 0"/>
+			<p>
+				${requesting_user} has requested a new site be created.
+			</p>
 			<p i18n:translate="">
 				Site ID: ${site_id}
 			</p>
