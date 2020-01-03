@@ -22,9 +22,13 @@ function requestTrialSite (me, url) {
         method: 'POST',
         data: data,
         success: function (result) {
-            showSuccessMessage("Save successfully.", '.success-request-trial-site', '.error-request-trial-site', 500, function(){
-                window.location.reload();
-            });
+            if (result['redirect_url']) {
+                window.location.href = result['redirect_url'];
+            } else {
+                showSuccessMessage("Save successfully.", '.success-request-trial-site', '.error-request-trial-site', 500, function(){
+                    window.location.reload();
+                });
+            }
         },
         error: function (jqXHR, exception) {
             var res = JSON.parse(jqXHR.responseText);
