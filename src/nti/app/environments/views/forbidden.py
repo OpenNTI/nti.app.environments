@@ -11,7 +11,7 @@ class ForbiddenView(BaseTemplateView):
     def __call__(self):
         if not self.request.authenticated_userid:
             self.request.response.status_code = 401
-            success = self.request.url.split(self.request.application_url)[1]
+            success = self.request.path_qs
             return hexc.HTTPFound(location='/login?success={}'.format(success))
         else:
             self.request.response.status_code = 403
