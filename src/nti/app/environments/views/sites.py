@@ -208,6 +208,7 @@ class RequestTrialSiteView(SiteBaseView):
     def _send_notification(self, site):
         template_args = {
             'requesting_user': self.request.authenticated_userid,
+            'site_id': site.id,
             'client': site.client_name,
             'email': site.owner.email,
             'url': site.dns_names[0],
@@ -240,7 +241,7 @@ class RequestTrialSiteView(SiteBaseView):
             self._send_notification(site)
 
             self.request.response.status = 201
-            return {}
+            return {'redirect_url': self.request.route_url('admin', traverse=('sites', site.__name__, '@@details'))}
         except ValidationError as err:
             raise_json_error(hexc.HTTPUnprocessableEntity, err)
 
