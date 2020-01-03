@@ -303,3 +303,10 @@ class ILMSSitesContainer(IContainer):
         """
         Remove site with given id.
         """
+
+
+class ILMSSiteCreatedEvent(interface.Interface):
+
+    site = Object(ILMSSite,
+                  title="The site object created.",
+                  required=True)
