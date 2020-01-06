@@ -10,10 +10,6 @@
 
 	<include package="." file="configure_tables.zcml" />
 
-	<subscriber for="nti.app.environments.models.interfaces.ILMSSite"
-				factory=".notification.SiteCreatedEmailNotifier"
-				provides="nti.app.environments.interfaces.ISiteCreatedNotifier"/>
-
 	<!-- handlers -->
 	<subscriber handler=".subscribers._site_created_event" />
 

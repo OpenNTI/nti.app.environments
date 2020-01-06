@@ -33,7 +33,7 @@ class NTClient(object):
                     'brand_name': resp['brand_name'],
                     'site_url': SITE_URL.format(host_name=host_name)}
         except requests.exceptions.ConnectionError:
-            logger.exception("Unknown site host.")
+            logger.warn("Unknown site host: %s.", host_name)
             return None
 
 

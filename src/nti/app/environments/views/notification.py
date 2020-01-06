@@ -1,13 +1,10 @@
 import json
 
 from zope import component
-from zope import interface
 
 from pyramid.threadlocal import get_current_request
 
 from pyramid_mailer.message import Attachment
-
-from nti.app.environments.interfaces import ISiteCreatedNotifier
 
 from nti.app.environments.settings import NEW_SITE_REQUEST_NOTIFICATION_EMAIL
 
@@ -42,7 +39,6 @@ class BaseEmailNotifier(object):
                                             text_template_extension='.mak')
 
 
-@interface.implementer(ISiteCreatedNotifier)
 class SiteCreatedEmailNotifier(BaseEmailNotifier):
 
     _template = 'nti.app.environments:email_templates/new_site_request'
