@@ -9,8 +9,6 @@ from zope import interface
 
 from zope.container.contained import Contained
 
-from zope.container.folder import Folder
-
 from nti.property.property import alias
 from nti.property.property import LazyOnClass
 
@@ -30,6 +28,8 @@ from nti.app.environments.models.interfaces import ISharedEnvironment
 from nti.app.environments.models.interfaces import IDedicatedEnvironment
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ILMSSitesContainer
+
+from nti.app.environments.models.base import BaseFolder
 
 from nti.app.environments.utils import find_iface
 
@@ -88,7 +88,7 @@ class PersistentSite(SchemaConfigured, Persistent, Contained):
 
 
 @interface.implementer(ILMSSitesContainer)
-class SitesFolder(Folder):
+class SitesFolder(BaseFolder):
 
     @LazyOnClass
     def __acl__(self):

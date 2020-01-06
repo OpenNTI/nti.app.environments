@@ -33,4 +33,8 @@
              for=".interfaces.ILMSSite"
              provides="nti.externalization.interfaces.IInternalObjectExternalizer"/>
 
+    <adapter factory=".internalization.SiteInternalizer"
+             for=".interfaces.ILMSSite"
+             provides="nti.externalization.interfaces.IInternalObjectUpdater"/>
+
 </configure>

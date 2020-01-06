@@ -9,8 +9,7 @@ from zope.cachedescriptors.property import Lazy
 
 from zope.event import notify
 
-from zope.schema._bootstrapinterfaces import RequiredMissing
-from zope.schema._bootstrapinterfaces import ValidationError
+from zope.container.interfaces import InvalidItemType
 
 from nti.app.environments.models.utils import get_customers_folder
 from nti.app.environments.models.interfaces import ILMSSite
@@ -47,26 +46,20 @@ from nti.app.environments.auth import ACT_EDIT_SITE_ENVIRONMENT
 from nti.app.environments.api.hubspotclient import get_hubspot_client
 
 from .base import BaseFieldPutView
+from .base import ObjectCreateUpdateViewMixin
 from .base import createCustomer
 from .base import getOrCreateCustomer
 from .base_csv import CSVBaseView
+
 
 logger = __import__('logging').getLogger(__name__)
 
 
 class SiteBaseView(BaseView):
 
-    @Lazy
-    def params(self):
-        try:
-            body = self.request.json_body
-        except ValueError:
-            raise_json_error(hexc.HTTPBadRequest, "Invalid json body.")
-        return body
-
     def _get_value(self, field, params=None, expected_type=None):
         if params is None:
-            params = self.params
+            params = self.body_params
         val = params.get(field)
         if expected_type is not None and not isinstance(val, (expected_type, None)):
             raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid {}".format(field), field)
@@ -74,12 +67,12 @@ class SiteBaseView(BaseView):
 
     def _handle(self, name, value=None):
         if not value:
-            raise_json_error(hexc.HTTPUnprocessableEntity, "Missing required field: {}.".format(name))
+            raise_json_error(hexc.HTTPUnprocessableEntity, "Missing field: {}.".format(name))
         return value
 
     def _handle_owner(self, name, value=None):
         if not value:
-            raise_json_error(hexc.HTTPUnprocessableEntity, "Missing required field: email.")
+            raise_json_error(hexc.HTTPUnprocessableEntity, "Missing field: email.")
 
         root = find_iface(self.context, IOnboardingRoot)
         folder = get_customers_folder(root)
@@ -88,36 +81,6 @@ class SiteBaseView(BaseView):
             raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid email.")
         return customer
 
-    def _handle_env(self, name, value):
-        value = value or {}
-        if not isinstance(value, dict):
-            raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid {}.".format(name))
-        type_ = self._get_value('type', value)
-        if type_ not in ('shared', 'dedicated'):
-            raise_json_error(hexc.HTTPUnprocessableEntity,
-                             "Invalid environment.",
-                             name)
-
-        if type_ == 'shared':
-            return SharedEnvironment(name=self._get_value('name', value))
-        else:
-            return DedicatedEnvironment(pod_id=self._get_value('pod_id', value),
-                                        host=self._get_value('host', value))
-
-    def _handle_license(self, name, value):
-        value = value or {}
-        if not isinstance(value, dict):
-            raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid {}.".format(name))
-        type_ = self._get_value('type', value)
-        if type_ not in ('trial', 'enterprise'):
-            raise_json_error(hexc.HTTPUnprocessableEntity,
-                             "Invalid license.",
-                             name)
-
-        kwargs = {'start_date': self._handle_date('start_date', value.get('start_date')),
-                  'end_date': self._handle_date('end_date', value.get('end_date'))}
-        return TrialLicense(**kwargs) if type_ == 'trial' else EnterpriseLicense(**kwargs) 
-
     def _handle_date(self, name, value=None):
         try:
             return parseDate(value) if value else None
@@ -125,15 +88,13 @@ class SiteBaseView(BaseView):
             raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid date format for {}".format(name))
 
     def _generate_kwargs_for_site(self, params=None, allowed = ()):
-        params = self.params if params is None else params
+        params = self.body_params if params is None else params
         kwargs = {}
         site_id = self._get_value('site_id', params)
         if site_id:
             kwargs['id'] = site_id
         for attr_name, _handle in (('client_name', None),
                                    ('owner', self._handle_owner),
-                                   ('environment', self._handle_env),
-                                   ('license', self._handle_license),
                                    ('status', self._handle),
                                    ('created', self._handle_date),
                                    ('dns_names', self._handle)):
@@ -149,22 +110,30 @@ class SiteBaseView(BaseView):
              context=ILMSSitesContainer,
              request_method='POST',
              permission=ACT_CREATE)
-class SiteCreationView(SiteBaseView):
+class SiteCreationView(SiteBaseView, ObjectCreateUpdateViewMixin):
 
-    def _create_site(self):
-        try:
-            kwargs = self._generate_kwargs_for_site()
-            site = PersistentSite(**kwargs)
-            return site
-        except RequiredMissing as e:
-            raise_json_error(hexc.HTTPUnprocessableEntity,"Missing required field: {}".format(e))
-        except ValidationError as e:
-            raise_json_error(hexc.HTTPUnprocessableEntity, str(type(e).__name__))
+    def _handle_license(self, value):
+        if isinstance(value, dict):
+            value['start_date'] = self._handle_date('start_date', value.get('start_date'))
+            value['end_date'] = self._handle_date('end_date', value.get('end_date'))
+        return value
+
+    def readInput(self):
+        params = super(SiteCreationView, self).readInput()
+        if params.get('id') is None:
+            params.pop('id', None)
+        params['owner'] = self._handle_owner('owner', params.get('owner'))
+        params['license'] = self._handle_license(params.get('license'))
+        params['created'] = self._handle_date('created', params.get('created'))
+        return params
 
     def __call__(self):
-        site = self._create_site()
-        self.context.addSite(site)
-        self.request.response.status = 201
+        try:
+            site = self.createObjectWithExternal()
+            self.context.addSite(site)
+            self.request.response.status = 201
+        except InvalidItemType:
+            raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid site type.")
         return {}
 
 
@@ -173,7 +142,7 @@ class SiteCreationView(SiteBaseView):
              request_method='POST',
              permission=ACT_CREATE,
              name="request_trial_site")
-class RequestTrialSiteView(SiteBaseView):
+class RequestTrialSiteView(SiteBaseView, ObjectCreateUpdateViewMixin):
 
     @Lazy
     def _client(self):
@@ -204,22 +173,27 @@ class RequestTrialSiteView(SiteBaseView):
                                  "No customer found with email: {}.".format(value))
         return customer
 
+    def readInput(self):
+        params = super(RequestTrialSiteView, self).readInput()
+        kwargs = self._generate_kwargs_for_site(params, allowed=('client_name', 'owner', 'dns_names'))
+
+        _now = datetime.datetime.utcnow()
+        kwargs.update({'status': SITE_STATUS_PENDING,
+                       'created': _now,
+                       'license': TrialLicense(start_date=_now,
+                                               end_date=_now + datetime.timedelta(days=90))})
+        # When requesting user is not owner,
+        # set the requesting_email as the requesting user.
+        if kwargs['owner'].email != self.request.authenticated_userid:
+            kwargs['requesting_email'] = self.request.authenticated_userid
+        return kwargs
+
     def __call__(self):
         try:
-            _now = datetime.datetime.utcnow()
-            kwargs = self._generate_kwargs_for_site(allowed=('client_name', 'owner', 'dns_names'))
-            kwargs.update({'status': SITE_STATUS_PENDING,
-                           'created': _now,
-                           'license': TrialLicense(start_date=_now,
-                                                   end_date=_now + datetime.timedelta(days=90))})
-            # When requesting user is not owner,
-            # set the requesting_email as the requesting user.
-            if kwargs['owner'].email != self.request.authenticated_userid:
-                kwargs['requesting_email'] = self.request.authenticated_userid
-
-            site = PersistentSite(**kwargs)
+            site = PersistentSite()
+            site = self.updateObjectWithExternal(site, self.readInput())
             self.context.addSite(site)
-
+            self.request.response.status = 201
             # send email, etc.
             notify(SiteCreatedEvent(site))
 
@@ -229,34 +203,21 @@ class RequestTrialSiteView(SiteBaseView):
 
             self.request.response.status = 201
             return {'redirect_url': self.request.route_url('admin', traverse=('sites', site.__name__, '@@details'))}
-        except ValidationError as err:
-            raise_json_error(hexc.HTTPUnprocessableEntity, err)
+        except InvalidItemType:
+            raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid site type.")
 
 
 @view_config(renderer='json',
              context=ILMSSite,
              request_method='PUT',
              permission=ACT_UPDATE)
-class SiteUpdateView(SiteBaseView):
+class SiteUpdateView(SiteBaseView, ObjectCreateUpdateViewMixin):
 
-    def _execute_call(self, _callable, *args, **kwargs):
-        try:
-            return _callable(*args, **kwargs)
-        except RequiredMissing as e:
-            raise_json_error(hexc.HTTPUnprocessableEntity,"Missing required field: {}".format(e))
-        except ValidationError as e:
-            raise_json_error(hexc.HTTPUnprocessableEntity, str(type(e).__name__))
-
-    def _update_site(self, site):
-        kwargs = self._generate_kwargs_for_site(allowed=('status', 'dns_names'))
-        if kwargs:
-            for attr_name, attr_val in kwargs.items():
-                if getattr(site, attr_name) != attr_val:
-                    setattr(site, attr_name, attr_val)
-        return site
+    def readInput(self):
+        return self._generate_kwargs_for_site(allowed=('status', 'dns_names'))
 
     def __call__(self):
-        self._execute_call(self._update_site, self.context)
+        self.updateObjectWithExternal(self.context)
         return {}
 
 
@@ -266,22 +227,7 @@ class SiteUpdateView(SiteBaseView):
              permission=ACT_EDIT_SITE_ENVIRONMENT,
              name="environment")
 class SiteEnvironmentPutView(BaseFieldPutView):
-
-    def _allowed_attr_names(self, field_value):
-        return ('pod_id', 'host') if IDedicatedEnvironment.providedBy(field_value) else ('name',)
-
-    def _incoming_field_value(self, params):
-        type_ = self._get_body_value('type', params)
-        if type_ not in ('shared', 'dedicated'):
-            raise_json_error(hexc.HTTPUnprocessableEntity,
-                             "Unknown environment type.")
-
-        if type_ == 'shared':
-            return SharedEnvironment(name=self._get_body_value('name', params, required=True))
-        else:
-            return DedicatedEnvironment(pod_id=self._get_body_value('pod_id', params, required=True),
-                                        host=self._get_body_value('host', params, required=True))
-
+    pass
 
 @view_config(renderer='json',
              context=ILMSSite,
@@ -290,9 +236,6 @@ class SiteEnvironmentPutView(BaseFieldPutView):
              name="license")
 class SiteLicensePutView(BaseFieldPutView):
 
-    def _allowed_attr_names(self, field_value):
-        return ('start_date', 'end_date')
-
     def _handle_date(self, name, value):
         try:
             return parseDate(value) if value is not None else None
@@ -300,19 +243,11 @@ class SiteLicensePutView(BaseFieldPutView):
             raise_json_error(hexc.HTTPUnprocessableEntity,
                              "Invalid date format for {}.".format(name))
 
-    def _incoming_field_value(self, params):
-        type_ = self._get_body_value('type', params)
-        if type_ not in ('trial', 'enterprise'):
-            raise_json_error(hexc.HTTPUnprocessableEntity,
-                             "Unknown license type.")
-
-        kwargs = {'start_date': self._handle_date('start_date', self._get_body_value('start_date', params, required=True)),
-                  'end_date': self._handle_date('end_date', self._get_body_value('end_date', params, required=True))}
-
-        if type_ == 'trial':
-            return TrialLicense(**kwargs)
-        else:
-            return EnterpriseLicense(**kwargs)
+    def readInput(self):
+        external = super(BaseFieldPutView, self).readInput()
+        external['start_date'] = self._handle_date('start_date', self._get_body_value('start_date', external, required=True))
+        external['end_date'] = self._handle_date('end_date', self._get_body_value('end_date', external, required=True))
+        return external
 
 
 @view_config(renderer='json',

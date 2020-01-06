@@ -7,8 +7,6 @@ from zope import interface
 
 from zope.container.contained import Contained
 
-from zope.container.folder import Folder
-
 from nti.property.property import LazyOnClass
 
 from nti.schema.fieldproperty import createFieldProperties
@@ -22,6 +20,8 @@ from nti.app.environments.models.interfaces import ICustomer
 from nti.app.environments.models.interfaces import ICustomersContainer
 from nti.app.environments.models.interfaces import IHubspotContact
 
+from nti.app.environments.models.base import BaseFolder
+
 
 @interface.implementer(IHubspotContact)
 class HubspotContact(SchemaConfigured, Persistent, Contained):
@@ -32,7 +32,7 @@ class HubspotContact(SchemaConfigured, Persistent, Contained):
 
 
 @interface.implementer(ICustomersContainer)
-class CustomersFolder(Folder):
+class CustomersFolder(BaseFolder):
 
     @LazyOnClass
     def __acl__(self):

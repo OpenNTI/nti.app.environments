@@ -94,7 +94,10 @@ function onEnvironmentChange () {
 function saveEnvironmentView(me, url)  {
     var form = $(me).closest('.form-group')[0];
     var _type = $($(form).find('.site_environment_type')[0]).val();
-    var data = {'type': _type};
+    var data = {'MimeType': getEnvMimeType(_type)};
+    if(!_type) {
+        return;
+    }
     if(_type==='shared') {
         data['name'] = $($(form).find('.site_environment_name')[0]).val().trim();
     } else {
@@ -134,8 +137,11 @@ function saveLicenseView(me, url) {
     var _type = $($(form).find('.site_license_type')[0]).val();
     var start_date = $($(form).find('.site_license_start_date')[0]).val();
     var end_date = $($(form).find('.site_license_end_date')[0]).val();
+    if(!_type) {
+        return;
+    }
     var data = {
-        'type': _type,
+        'MimeType': getLicenseMimeType(_type),
         'start_date': start_date,
         'end_date': end_date
     };

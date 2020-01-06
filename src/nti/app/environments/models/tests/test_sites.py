@@ -13,6 +13,8 @@ from hamcrest import has_properties
 from hamcrest import assert_that
 from hamcrest import starts_with
 
+from zope.container.interfaces import InvalidItemType
+
 from zope.schema import getValidationErrors
 from zope.schema._bootstrapinterfaces import RequiredMissing
 from zope.schema._bootstrapinterfaces import ConstraintNotSatisfied
@@ -155,11 +157,11 @@ class TestSites(BaseTest):
                                           'dns_names': (),
                                           'status': 'UNKNOWN'}))
         errors = getValidationErrors(ILMSSite, inst)
-        assert_that(errors, has_length(3))
+        assert_that(errors, has_length(2))
 
         inst = PersistentSite(status='PENDING')
         errors = getValidationErrors(ILMSSite, inst)
-        assert_that(errors, has_length(3))
+        assert_that(errors, has_length(2))
 
         inst = PersistentSite(owner=PersistentCustomer(email='103@gmail.com', created=datetime.datetime.utcnow()))
         assert_that(inst.owner, is_(None))
@@ -251,6 +253,8 @@ class TestSites(BaseTest):
         site = PersistentSite()
         assert_that(calling(folder.addSite).with_args(site, siteId='abc'), raises(KeyError))
         assert_that(folder, has_length(2))
+
+        assert_that(calling(folder.addSite).with_args(SharedEnvironment(name="test")), raises(InvalidItemType))
 
     def test_generate_site_id(self):
         _id = _generate_site_id()

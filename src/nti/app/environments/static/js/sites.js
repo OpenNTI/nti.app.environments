@@ -1,37 +1,37 @@
 "use strict";
 
-function getValue(id) {
-    var val = document.getElementById(id).value.trim();
-    return val ? val : null;
-}
 
 function saveItem (me, url) {
     var site_id = getValue("site_id");
     var owner = getValue("site_owner");
-    var environment = {
-            "type": getValue("site_environment_type"),
+    var env_mimetype = getEnvMimeType(getValue("site_environment_type"));
+    var environment = env_mimetype ? {
+            "MimeType": env_mimetype,
             "name": getValue("site_environment_name"),
             "pod_id": getValue("site_environment_pod_id"),
             "host": getValue("site_environment_host")
-        };
-    var license = {
-        "type": getValue("site_license"),
+        } : null;
+
+    var lic_mimetype = getLicenseMimeType(getValue("site_license"));
+    var license = lic_mimetype? {
+        "MimeType": lic_mimetype,
         "start_date": getValue("site_license_start_date"),
         "end_date": getValue("site_license_end_date")
-    };
+    } : null;
     var status = getValue("site_status");
     var created = getValue("site_created");
     var dns_names = getValue("site_dns_names");
     dns_names = dns_names ? dns_names.split('\n') : null;
 
     var data = {
-        "site_id": site_id,
+        "id": site_id,
         "owner": owner,
         "environment": environment,
         "license": license,
         "dns_names": dns_names,
         "status": status,
-        "created": created
+        "created": created,
+        "MimeType": "application/vnd.nextthought.app.environments.site"
     };
     data = JSON.stringify(data);
 

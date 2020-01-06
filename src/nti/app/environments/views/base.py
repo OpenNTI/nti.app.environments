@@ -3,7 +3,15 @@ from pyramid import httpexceptions as hexc
 
 from zope.cachedescriptors.property import Lazy
 
+from zope.interface import Invalid
+
+from zope.interface.interfaces import ComponentLookupError
+
 from zope.schema._bootstrapinterfaces import ValidationError
+
+from nti.externalization import new_from_external_object
+from nti.externalization import update_from_external_object
+
 
 from nti.app.environments.auth import ACT_READ
 
@@ -69,33 +77,46 @@ class BaseTemplateView(BaseView):
             self.is_sites_visible = self.request.has_permission(ACT_READ, get_sites_folder(self._onboarding_root, request))
 
 
-class BaseFieldPutView(BaseView):
+class ObjectCreateUpdateViewMixin(object):
 
-    def _allowed_attr_names(self, field_value):
-        return ()
+    def readInput(self):
+        try:
+            return self.request.json_body
+        except ValueError:
+            raise_json_error(hexc.HTTPBadRequest, "Invalid json body.")
 
-    def _incoming_field_value(self, params):
-        raise NotImplementedError
+    def _createOrUpdateObjectWithExternal(self, contained=None, external=None):
+        try:
+            external = self.readInput() if external is None else external
+            return new_from_external_object(external) if contained is None \
+                                else update_from_external_object(contained, external)
+        except ValidationError as err:
+            raise_json_error(hexc.HTTPUnprocessableEntity, err)
+        except ComponentLookupError as err:
+            raise_json_error(hexc.HTTPUnprocessableEntity, str(err))
+        except Invalid as err:
+            raise_json_error(hexc.HTTPUnprocessableEntity, str(err))
 
-    def _update_field(self, obj, incoming, attr_names=()):
-        for attr_name in attr_names:
-            if getattr(obj, attr_name) != getattr(incoming, attr_name):
-                setattr(obj, attr_name, getattr(incoming, attr_name))
+    def createObjectWithExternal(self, external=None):
+        return self._createOrUpdateObjectWithExternal(external=external)
 
-    def _update_obj(self, context, field_name, field_value, incoming):
-        if type(field_value) != type(incoming):
-            setattr(context, field_name, incoming)
-        else:
-            self._update_field(field_value,
-                               incoming,
-                               attr_names=self._allowed_attr_names(field_value))
+    def updateObjectWithExternal(self, contained, external=None):
+        return self._createOrUpdateObjectWithExternal(contained, external)
+
+
+class BaseFieldPutView(BaseView, ObjectCreateUpdateViewMixin):
 
     def __call__(self):
         try:
+            external = self.readInput()
             field_name = self.request.view_name
-            obj = getattr(self.context, field_name)
-            incoming = self._incoming_field_value(self.body_params)
-            self._update_obj(self.context, field_name, obj, incoming)
+            field_value = getattr(self.context, field_name)
+            new_field_value = self.createObjectWithExternal(external)
+
+            if type(field_value) != type(new_field_value):
+                self.updateObjectWithExternal(self.context, {field_name: new_field_value})
+            else:
+                self.updateObjectWithExternal(field_value, external)
             return {}
         except ValidationError as err:
             raise_json_error(hexc.HTTPUnprocessableEntity,
