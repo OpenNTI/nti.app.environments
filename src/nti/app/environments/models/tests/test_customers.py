@@ -2,6 +2,7 @@ import datetime
 
 from hamcrest import assert_that
 from hamcrest import has_properties
+from hamcrest import has_entries
 from hamcrest import has_length
 from hamcrest import has_items
 from hamcrest import not_none
@@ -9,6 +10,9 @@ from hamcrest import is_
 
 from zope.schema._bootstrapinterfaces import RequiredMissing
 from zope.schema import getValidationErrors
+
+from nti.externalization import to_external_object
+from nti.externalization import update_from_external_object
 
 from nti.app.environments.tests import BaseTest
 
@@ -33,6 +37,15 @@ class TestCustomers(BaseTest):
         assert_that(inst, has_properties({'contact_vid': 'xxx'}))
         errors = getValidationErrors(IHubspotContact, inst)
         assert_that(errors, has_length(0))
+
+        result = to_external_object(inst)
+        assert_that(result, has_entries({'Class': 'HubspotContact',
+                                         'MimeType': 'application/vnd.nextthought.app.environments.hubspotcontact',
+                                         'contact_vid': 'xxx'}))
+
+        inst = update_from_external_object(inst, {'contact_vid': 'yyy'})
+        assert_that(inst, has_properties({'contact_vid': 'yyy'}))
+
 
     def testPersistentCustomer(self):
         inst = PersistentCustomer()
@@ -64,6 +77,14 @@ class TestCustomers(BaseTest):
                                           'last_verified': not_none()}))
         errors = getValidationErrors(ICustomer, inst)
         assert_that(errors, has_length(0))
+
+        result = to_external_object(inst)
+        assert_that(result, has_entries({'Class': 'PersistentCustomer',
+                                         'MimeType': 'application/vnd.nextthought.app.environments.customer',
+                                         'name': 'test last'}))
+
+        inst = update_from_external_object(inst, {'name': 'okc'})
+        assert_that(inst, has_properties({'name': 'okc'}))
 
     def testCustomersFolder(self):
         folder = CustomersFolder()

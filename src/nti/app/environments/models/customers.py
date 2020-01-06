@@ -28,6 +28,8 @@ class HubspotContact(SchemaConfigured, Persistent, Contained):
 
     createFieldProperties(IHubspotContact)
 
+    mimeType = mime_type = 'application/vnd.nextthought.app.environments.hubspotcontact'
+
 
 @interface.implementer(ICustomersContainer)
 class CustomersFolder(Folder):
@@ -49,3 +51,5 @@ class CustomersFolder(Folder):
 class PersistentCustomer(SchemaConfigured, Persistent, Contained):
 
     createFieldProperties(ICustomer)
+
+    mimeType = mime_type = 'application/vnd.nextthought.app.environments.customer'

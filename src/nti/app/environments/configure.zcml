@@ -30,6 +30,7 @@
              for="nti.app.environments.models.customers.PersistentCustomer"
              provides="nti.wref.interfaces.IWeakRef" />
 
+	<include package=".models" file="configure.zcml" />
     <include package=".views" file="configure.zcml" />
     <include package=".securitypolicy" file="configure.zcml" />
 
