@@ -120,3 +120,37 @@ button {
 a {
     text-decoration: none;
 }
+
+
+/** form container */
+.form-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin: auto;
+    width: 600px;
+}
+
+.form-container .row-group {
+    margin-bottom: 16px;
+}
+.form-container .row-group label {
+    display: block;
+    margin-bottom: 8px;
+}
+.form-container .row-group input {
+    line-height: 16px;
+    font-size: 16px;
+    padding: 6px 12px;
+    width: 100%;
+}
+
+.btnSave {
+    font-size: 16px;
+    line-height: 32px;
+    width: 80px;
+    border-radius: 4px;
+    color: #fff;
+    background-color: #4CAF50;
+    border-color: #4CAF50;
+}

@@ -56,6 +56,9 @@ def google_oauth1(context, request):
     state = hashlib.sha256(os.urandom(1024)).hexdigest()
     request.session['google.state'] = state
 
+    if request.params.get('success'):
+        request.session['google.success'] = request.params.get('success')
+
     params = {
         "state" : state,
         "response_type" : "code",
@@ -129,7 +132,8 @@ def google_oauth2(context, request):
                 raise hexc.HTTPUnprocessableEntity('Invalid domain')
 
         headers = remember(request, email)
-        return hexc.HTTPFound(location='/', headers=headers)
+        success = request.session.get('google.success') or '/'
+        return hexc.HTTPFound(location=success, headers=headers)
 
     except Exception as e:
         logger.exception('Failed to login with google')
@@ -141,13 +145,15 @@ def google_oauth2(context, request):
              name=LOGIN_VIEW)
 def login(context, request):
     if request.authenticated_userid:
-        return hexc.HTTPFound(location='/', headers=request.response.headers)
-    return {'rel_logon': urllib_parse.urljoin(request.application_url, LOGON_GOOGLE_VIEW)}
+        return hexc.HTTPFound(location=request.params.get('success') or '/', headers=request.response.headers)
+    return {'rel_logon': urllib_parse.urljoin(request.application_url, LOGON_GOOGLE_VIEW),
+            'success': request.params.get('success')}
 
 
 @view_config(request_method='GET',
              name=LOGOUT_VIEW)
 def logout(context, request):
+    request.session.invalidate()
     headers = forget(request)
     url = urllib_parse.urljoin(request.application_url, LOGIN_VIEW)
     return hexc.HTTPFound(location=url,

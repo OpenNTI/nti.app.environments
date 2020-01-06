@@ -265,7 +265,7 @@ class ILMSSite(IContained):
 
     environment = Object(IEnvironment,
                          title=u'The environment this site is running out of',
-                         required=True)
+                         required=False)
 
     created = DateTime(title=u'The datetime this site was created at',
                        required=True)
@@ -273,6 +273,20 @@ class ILMSSite(IContained):
     status = Choice(title=u'The style of the highlight',
                     values=SITE_STATUS_OPTIONS,
                     default=SITE_STATUS_PENDING)
+
+    client_name = ValidTextLine(title="The Client Display Name",
+                                max_length=40,
+                                required=False)
+
+    requesting_email = ValidTextLine(title=u'The email of requesting user.',
+                                     description=u'The email address of user who requested a trial site, used when the requesting user is not the owner.',
+                                     required=False,
+                                     constraint=checkEmailAddress)
+
+    @interface.invariant
+    def environment_invariant(self):
+        if self.status != SITE_STATUS_PENDING and self.environment is None:
+            raise interface.Invalid("If site status is not pending, environment must be given.")
 
 
 class ILMSSitesContainer(IContainer):
@@ -289,3 +303,10 @@ class ILMSSitesContainer(IContainer):
         """
         Remove site with given id.
         """
+
+
+class ILMSSiteCreatedEvent(interface.Interface):
+
+    site = Object(ILMSSite,
+                  title="The site object created.",
+                  required=True)

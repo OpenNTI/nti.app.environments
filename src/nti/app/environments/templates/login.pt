@@ -12,6 +12,7 @@
 
          form {
              border: 3px solid #f1f1f1;
+             padding: 16px;
          }
 
          h2 {
@@ -32,7 +33,7 @@
              background-color: #4CAF50;
              color: white;
              padding: 14px 20px;
-             margin: 8px 0;
+             margin: 8px 0px;
              border: none;
              cursor: pointer;
              width: 100%;
@@ -50,9 +51,6 @@
              width: 400px;
              height: 400px;
          }
-         .form-container {
-             padding: 16px;
-         }
 
         </style>
     </head>
@@ -63,12 +61,11 @@
             <img class="logo" src="${request.static_url('nti.app.environments:static/logo.png')}"/>
             <h2>Sign in to Site Manager</h2>
             <form action="${rel_logon}" method="get">
-                <div class="form-container">
+
                     <button type="submit">Sign in with Google</button>
-                </div>
+
             </form>
         </div>
 
     </body>
-
 </html>

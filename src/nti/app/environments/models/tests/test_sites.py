@@ -107,16 +107,20 @@ class TestSites(BaseTest):
     @mock.patch("nti.app.environments.models.wref.get_customers_folder")
     def testPersistentSite(self, mock_customers):
         mock_customers.return_value = folder = CustomersFolder()
-        inst = PersistentSite()
+        inst = PersistentSite(status='UNKNOWN')
         assert_that(inst, has_properties({'id': None,
                                           'environment': None,
                                           'license': None,
                                           'owner': None,
                                           'created': None,
                                           'dns_names': (),
-                                          'status': 'PENDING'}))
+                                          'status': 'UNKNOWN'}))
         errors = getValidationErrors(ILMSSite, inst)
-        assert_that(errors, has_length(4))
+        assert_that(errors, has_length(3))
+
+        inst = PersistentSite(status='PENDING')
+        errors = getValidationErrors(ILMSSite, inst)
+        assert_that(errors, has_length(3))
 
         inst = PersistentSite(owner=PersistentCustomer(email='103@gmail.com', created=datetime.datetime.utcnow()))
         assert_that(inst.owner, is_(None))
@@ -138,6 +142,27 @@ class TestSites(BaseTest):
                                           'status': 'ACTIVE'}))
         errors = getValidationErrors(ILMSSite, inst)
         assert_that(errors, has_length(0))
+
+        inst = PersistentSite(id='xxxxid2',
+                              owner=owner,
+                              environment=None,
+                              license=TrialLicense(start_date=datetime.datetime.utcnow(), end_date=datetime.datetime.utcnow()),
+                              created=datetime.datetime.utcnow(),
+                              dns_names=['t.nt.com'],
+                              status='UNKNOWN')
+        errors = getValidationErrors(ILMSSite, inst)
+        assert_that(errors, has_length(1))
+
+        inst = PersistentSite(id='xxxxid2',
+                              owner=owner,
+                              environment=None,
+                              license=TrialLicense(start_date=datetime.datetime.utcnow(), end_date=datetime.datetime.utcnow()),
+                              created=datetime.datetime.utcnow(),
+                              dns_names=['t.nt.com'],
+                              status='PENDING')
+        errors = getValidationErrors(ILMSSite, inst)
+        assert_that(errors, has_length(0))
+
 
     @mock.patch("nti.app.environments.models.wref.get_customers_folder")
     def testSitesFolder(self, mock_customers):

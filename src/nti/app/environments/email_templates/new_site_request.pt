@@ -1,0 +1,52 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:metal="http://xml.zope.org/namespaces/metal" xmlns:tal="http://xml.zope.org/namespaces/tal" xmlns:i18n="http://xml.zope.org/namespaces/i18n" i18n:domain="nti.app.environments" i18n:source="en">
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<title>
+			Confirm your email address
+		</title>
+		<style>
+			.main {
+				max-width: 100%;
+				margin: 0 auto;
+				font-size: 17px;
+			}
+			a {
+				text-decoration: none;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="main">
+			<img src="https://d2ixlfeu83tci.cloudfront.net/images/email_logo.png" width="177" height="25" style="margin:15px 0 0 0"/>
+			<p>
+				${requesting_user} has requested a new site be created.
+			</p>
+			<p i18n:translate="">
+				Site ID: ${site_id}
+			</p>
+			<p i18n:translate="">
+				Client: ${client}
+			</p>
+			<p i18n:translate="">
+				Email: ${email}
+			</p>
+			<p i18n:translate="">
+				URL: ${url}
+			</p>
+            <p>
+                For site detail, please visit <a href="#" tal:attributes="href site_detail_link">here</a>.
+            </p>
+			<p>
+				<span i18n:translate="">
+					This email contains private information for you - please don't forward it.
+					Questions about setting up your new NextThought site? Email us at
+					<a i18n:name="support_email" href="mailto:support@nextthought.com" tal:content="support_email|default" tal:attributes="href string:mailto:${support_email|default}">
+						support@nextthought.com
+					</a>
+					.
+				</span>
+			</p>
+		</div>
+	</body>
+</html>
