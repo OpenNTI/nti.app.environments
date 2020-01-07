@@ -2,6 +2,7 @@ import datetime
 
 from unittest import mock
 from hamcrest import is_
+from hamcrest import not_none
 from hamcrest import assert_that
 from hamcrest import has_entries
 from hamcrest import instance_of
@@ -104,7 +105,6 @@ class TestAdminViews(BaseAppTest):
             site = sites.addSite(PersistentSite(license=TrialLicense(start_date=datetime.datetime(2019, 12, 12, 0, 0, 0),
                                                                      end_date=datetime.datetime(2019, 12, 13, 0, 0, 0)),
                                                 environment=SharedEnvironment(name='test'),
-                                                created=datetime.datetime(2019, 12, 11, 0, 0, 0),
                                                 status='ACTIVE',
                                                 dns_names=['x', 'y'],
                                                 owner=customer), siteId=siteId)
@@ -119,16 +119,17 @@ class TestAdminViews(BaseAppTest):
             view = SiteDetailView(site, self.request)
             result = view()
             assert_that(result, has_entries({'sites_list_link': 'http://example.com/admin/sites/@@list',
-                                             'site': {'created': '2019-12-10T18:00:00',
+                                             'site': has_entries({'created': not_none(),
                                                  'owner': {'owner': customer, 'detail_url': 'http://example.com/admin/customers/123@gmail.com/@@details'},
                                                  'site_id': siteId,
                                                  'status': 'ACTIVE',
                                                  'dns_names': ['x', 'y'],
-                                                 'license': {'type': 'trial', 'start_date': '2019-12-11T18:00:00', 'end_date': '2019-12-12T18:00:00',
+                                                 'license': {'type': 'trial', 'start_date': '2019-12-11 18:00:00', 'end_date': '2019-12-12 18:00:00',
                                                              'edit_link': None},
                                                  'environment': {'type': 'shared', 'name': 'test'},
                                                  'environment_edit_link': None,
                                                  'requesting_email': None,
                                                  'client_name': None,
-                                                 'site_edit_link': None
-                                             }}))
+                                                 'site_edit_link': None,
+                                                 'lastModified': not_none()
+                                             })}))

@@ -153,15 +153,16 @@ class TestSites(BaseTest):
                                           'environment': None,
                                           'license': None,
                                           'owner': None,
-                                          'created': None,
+                                          'createdTime': not_none(),
+                                          'lastModified': not_none(),
                                           'dns_names': (),
                                           'status': 'UNKNOWN'}))
         errors = getValidationErrors(ILMSSite, inst)
-        assert_that(errors, has_length(2))
+        assert_that(errors, has_length(1))
 
         inst = PersistentSite(status='PENDING')
         errors = getValidationErrors(ILMSSite, inst)
-        assert_that(errors, has_length(2))
+        assert_that(errors, has_length(1))
 
         inst = PersistentSite(owner=PersistentCustomer(email='103@gmail.com', created=datetime.datetime.utcnow()))
         assert_that(inst.owner, is_(None))
@@ -171,14 +172,13 @@ class TestSites(BaseTest):
                               owner=owner,
                               environment=SharedEnvironment(name='alpha'),
                               license=TrialLicense(start_date=datetime.datetime.utcnow(), end_date=datetime.datetime.utcnow()),
-                              created=datetime.datetime.utcnow(),
                               dns_names=['t.nt.com'],
                               status='ACTIVE')
         assert_that(inst, has_properties({'id': 'xxxxid',
                                           'environment': not_none(),
                                           'license': not_none(),
                                           'owner': not_none(),
-                                          'created': not_none(),
+                                          'createdTime': not_none(),
                                           'dns_names': ['t.nt.com'],
                                           'status': 'ACTIVE'}))
         errors = getValidationErrors(ILMSSite, inst)
@@ -188,7 +188,6 @@ class TestSites(BaseTest):
                               owner=owner,
                               environment=None,
                               license=TrialLicense(start_date=datetime.datetime.utcnow(), end_date=datetime.datetime.utcnow()),
-                              created=datetime.datetime.utcnow(),
                               dns_names=['t.nt.com'],
                               status='UNKNOWN')
         errors = getValidationErrors(ILMSSite, inst)
@@ -198,7 +197,6 @@ class TestSites(BaseTest):
                               owner=owner,
                               environment=None,
                               license=TrialLicense(start_date=datetime.datetime(2019,1,2,0,0,0), end_date=datetime.datetime(2019,1,3,0,0,0)),
-                              created=datetime.datetime(2019,1,1,0,0,0),
                               dns_names=['t.nt.com'],
                               status='PENDING')
         errors = getValidationErrors(ILMSSite, inst)
@@ -216,7 +214,8 @@ class TestSites(BaseTest):
                                          'license': has_entries({'start_date': '2019-01-02T00:00:00Z',
                                                                  'end_date': '2019-01-03T00:00:00Z',
                                                                  'MimeType': 'application/vnd.nextthought.app.environments.triallicense'}),
-                                         'created': '2019-01-01T00:00:00Z'}))
+                                         'CreatedTime': not_none(),
+                                         'Last Modified': not_none()}))
 
         inst = update_from_external_object(inst, {'dns_names': []})
         assert_that(inst, has_properties({'dns_names': []}))
@@ -229,7 +228,6 @@ class TestSites(BaseTest):
                               owner=PersistentCustomer(email='103@gmail.com', created=datetime.datetime.utcnow()),
                               environment=SharedEnvironment(name='alpha'),
                               license=TrialLicense(start_date=datetime.datetime.utcnow(), end_date=datetime.datetime.utcnow()),
-                              created=datetime.datetime.utcnow(),
                               dns_names=['t.nt.com'],
                               status='ACTIVE')
         folder.addSite(site, siteId='okc')

@@ -1,5 +1,3 @@
-from persistent import Persistent
-
 from pyramid.security import Allow
 from pyramid.security import ALL_PERMISSIONS
 
@@ -8,6 +6,10 @@ from zope import interface
 from zope.container.contained import Contained
 
 from nti.property.property import LazyOnClass
+
+from nti.containers.containers import CaseInsensitiveCheckingLastModifiedBTreeContainer
+
+from nti.dublincore.datastructures import PersistentCreatedModDateTrackingObject
 
 from nti.schema.fieldproperty import createFieldProperties
 from nti.schema.schema import SchemaConfigured
@@ -20,19 +22,21 @@ from nti.app.environments.models.interfaces import ICustomer
 from nti.app.environments.models.interfaces import ICustomersContainer
 from nti.app.environments.models.interfaces import IHubspotContact
 
-from nti.app.environments.models.base import BaseFolder
-
 
 @interface.implementer(IHubspotContact)
-class HubspotContact(SchemaConfigured, Persistent, Contained):
+class HubspotContact(SchemaConfigured, PersistentCreatedModDateTrackingObject, Contained):
 
     createFieldProperties(IHubspotContact)
 
     mimeType = mime_type = 'application/vnd.nextthought.app.environments.hubspotcontact'
 
+    def __init__(self, *args, **kwargs):
+        SchemaConfigured.__init__(self, *args, **kwargs)
+        PersistentCreatedModDateTrackingObject.__init__(self)
+
 
 @interface.implementer(ICustomersContainer)
-class CustomersFolder(BaseFolder):
+class CustomersFolder(CaseInsensitiveCheckingLastModifiedBTreeContainer):
 
     @LazyOnClass
     def __acl__(self):
@@ -48,8 +52,12 @@ class CustomersFolder(BaseFolder):
 
 
 @interface.implementer(ICustomer)
-class PersistentCustomer(SchemaConfigured, Persistent, Contained):
+class PersistentCustomer(SchemaConfigured, PersistentCreatedModDateTrackingObject, Contained):
 
     createFieldProperties(ICustomer)
 
     mimeType = mime_type = 'application/vnd.nextthought.app.environments.customer'
+
+    def __init__(self, *args, **kwargs):
+        SchemaConfigured.__init__(self, *args, **kwargs)
+        PersistentCreatedModDateTrackingObject.__init__(self)

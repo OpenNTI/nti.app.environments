@@ -10,8 +10,8 @@
                 <div class="nav-item dropdown">
                     <a href="javascript:void(0)" class="dropbtn">Dashboard</a>
                     <div class="dropdown-content">
-                        <a href="/admin/dashboards/@@trialsites">Trial Sites</a>
-                        <a href="/admin/dashboards/@@renewals">Sites Renewals</a>
+                        <a href="/admin/dashboards/@@trialsites?table-sortOn=table-site_age-2&table-sortOrder=descending">Trial Sites</a>
+                        <a href="/admin/dashboards/@@renewals?table-sortOn=table-site_days_to_renew-3&table-sortOrder=ascending">Sites Renewals</a>
                     </div>
                 </div>
             </metal:block>

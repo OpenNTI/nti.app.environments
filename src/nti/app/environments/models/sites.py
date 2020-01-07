@@ -1,13 +1,15 @@
 import uuid
 
-from persistent import Persistent
-
 from pyramid.security import Allow
 from pyramid.security import ALL_PERMISSIONS
 
 from zope import interface
 
 from zope.container.contained import Contained
+
+from nti.containers.containers import CaseInsensitiveCheckingLastModifiedBTreeContainer
+
+from nti.dublincore.datastructures import PersistentCreatedModDateTrackingObject
 
 from nti.property.property import alias
 from nti.property.property import LazyOnClass
@@ -29,51 +31,69 @@ from nti.app.environments.models.interfaces import IDedicatedEnvironment
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ILMSSitesContainer
 
-from nti.app.environments.models.base import BaseFolder
-
 from nti.app.environments.utils import find_iface
 
 
 @interface.implementer(ISharedEnvironment)
-class SharedEnvironment(SchemaConfigured, Persistent, Contained):
+class SharedEnvironment(SchemaConfigured, PersistentCreatedModDateTrackingObject, Contained):
 
     createFieldProperties(ISharedEnvironment)
 
     mimeType = mime_type = 'application/vnd.nextthought.app.environments.sharedenvironment'
 
+    def __init__(self, *args, **kwargs):
+        SchemaConfigured.__init__(self, *args, **kwargs)
+        PersistentCreatedModDateTrackingObject.__init__(self)
+
 
 @interface.implementer(IDedicatedEnvironment)
-class DedicatedEnvironment(SchemaConfigured, Persistent, Contained):
+class DedicatedEnvironment(SchemaConfigured, PersistentCreatedModDateTrackingObject, Contained):
 
     createFieldProperties(IDedicatedEnvironment)
 
     mimeType = mime_type = 'application/vnd.nextthought.app.environments.dedicatedenvironment'
 
+    def __init__(self, *args, **kwargs):
+        SchemaConfigured.__init__(self, *args, **kwargs)
+        PersistentCreatedModDateTrackingObject.__init__(self)
+
 
 @interface.implementer(ITrialLicense)
-class TrialLicense(SchemaConfigured, Persistent, Contained):
+class TrialLicense(SchemaConfigured, PersistentCreatedModDateTrackingObject, Contained):
 
     createFieldProperties(ITrialLicense)
 
     mimeType = mime_type = 'application/vnd.nextthought.app.environments.triallicense'
 
+    def __init__(self, *args, **kwargs):
+        SchemaConfigured.__init__(self, *args, **kwargs)
+        PersistentCreatedModDateTrackingObject.__init__(self)
+
 
 @interface.implementer(IEnterpriseLicense)
-class EnterpriseLicense(SchemaConfigured, Persistent, Contained):
+class EnterpriseLicense(SchemaConfigured, PersistentCreatedModDateTrackingObject, Contained):
 
     createFieldProperties(IEnterpriseLicense)
 
     mimeType = mime_type = 'application/vnd.nextthought.app.environments.enterpriselicense'
 
+    def __init__(self, *args, **kwargs):
+        SchemaConfigured.__init__(self, *args, **kwargs)
+        PersistentCreatedModDateTrackingObject.__init__(self)
+
 
 @interface.implementer(ILMSSite)
-class PersistentSite(SchemaConfigured, Persistent, Contained):
+class PersistentSite(SchemaConfigured, PersistentCreatedModDateTrackingObject, Contained):
 
     createFieldProperties(ILMSSite)
 
     mimeType = mime_type = 'application/vnd.nextthought.app.environments.site'
 
     id = alias('__name__')
+
+    def __init__(self, *args, **kwargs):
+        SchemaConfigured.__init__(self, *args, **kwargs)
+        PersistentCreatedModDateTrackingObject.__init__(self)
 
     def _get_owner(self):
         owner = self._owner_ref() if self._owner_ref else None
@@ -88,7 +108,7 @@ class PersistentSite(SchemaConfigured, Persistent, Contained):
 
 
 @interface.implementer(ILMSSitesContainer)
-class SitesFolder(BaseFolder):
+class SitesFolder(CaseInsensitiveCheckingLastModifiedBTreeContainer):
 
     @LazyOnClass
     def __acl__(self):

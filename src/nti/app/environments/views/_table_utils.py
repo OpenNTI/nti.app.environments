@@ -127,18 +127,25 @@ class BaseDateColumn(column.GetAttrColumn):
         return self.getValue(item)
 
 
-class CreatedColumn(BaseDateColumn):
-
-    weight = 4
-    header = 'Created'
-    attrName = 'created'
-
-
 class LastVerifiedColumn(BaseDateColumn):
 
-    weight = 5
+    weight = 4
     header = 'LastVerified'
     attrName = 'last_verified'
+
+
+class CreatedColumn(BaseDateColumn):
+
+    weight = 5
+    header = 'Created Time'
+    attrName = 'createdTime'
+
+
+class LastModifiedColumn(BaseDateColumn):
+
+    weight = 6
+    header = 'Last Modified'
+    attrName = 'lastModified'
 
 
 class DeleteColumn(column.Column):
@@ -198,7 +205,7 @@ class BaseSitesTable(BaseTable, _FilterMixin):
     def _raw_values(self):
         if self._raw_filter:
             return [x for x in self.context.values() if self._raw_filter(x)]
-        return self.context.values()
+        return [x for x in self.context.values()]
 
     def _predicate(self, item, term):
         if term in item.id.lower():
@@ -272,6 +279,11 @@ class SiteStatusColumn(column.GetAttrColumn):
 class SiteCreatedColumn(CreatedColumn):
 
     weight = 4
+
+
+class SiteLastModifiedColumn(LastModifiedColumn):
+
+    weight = 5
 
 
 class SiteDeleteColumn(DeleteColumn):

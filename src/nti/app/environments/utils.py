@@ -1,4 +1,7 @@
+import calendar
+import datetime
 import pytz
+
 from dateutil import parser
 
 
@@ -13,18 +16,20 @@ def find_iface(resource, iface):
     return None
 
 
-def convertToUTC(dt, local_tz='US/Central'):
+def convertToUTC(dt, local_tz='US/Central', toTimeStamp=False):
     local_date = pytz.timezone(local_tz).localize(dt)
-    return local_date.astimezone(pytz.utc).replace(tzinfo=None)
+    dt = local_date.astimezone(pytz.utc).replace(tzinfo=None)
+    return calendar.timegm(dt.utctimetuple()) if toTimeStamp else dt
 
 
-def parseDate(strDate, local_tz='US/Central', safe=False, convert=True, ignoretz=True):
+def parseDate(strDate, local_tz='US/Central', safe=False, convert=True, ignoretz=True, toTimeStamp=False):
     """
     Parse local datetime and convert it to utc.
     """
     try:
         date = parser.parse(strDate, ignoretz=ignoretz)
-        return convertToUTC(date, local_tz) if convert else date
+        date = convertToUTC(date, local_tz) if convert else date
+        return calendar.timegm(date.utctimetuple()) if toTimeStamp else date
     except ValueError as e:
         if safe:
             return None
@@ -35,7 +40,10 @@ def formatDate(dt, _format='%Y-%m-%dT%H:%M:%SZ', default=''):
     return dt.strftime(_format) if dt else default
 
 
-def formatDateToLocal(dt, _format='%Y-%m-%dT%H:%M:%S', default='', local_tz='US/Central'):
+def formatDateToLocal(dt, _format='%Y-%m-%d %H:%M:%S', default='', local_tz='US/Central'):
+    if isinstance(dt, (float, int)):
+        dt = datetime.datetime.utcfromtimestamp(dt)
+
     if dt and local_tz:
         utc_date = pytz.utc.localize( dt )
         dt = utc_date.astimezone(pytz.timezone(local_tz))

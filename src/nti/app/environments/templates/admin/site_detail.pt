@@ -21,6 +21,7 @@
                     <p>Site Name: <span tal:content="python: site.brand_name|nothing"></span></p>
                     <p>Status: <span class="site_status" tal:content="site.status"></span></p>
                     <p>Created: <span tal:content="site.created"></span></p>
+                    <p>Last Modified: <span tal:content="site.lastModified"></span></p>
                     <metal:block tal:omit-tag="" tal:condition="site.requesting_email">
                         <p>Requesting Email: <span tal:content="site.requesting_email"></span></p>
                     </metal:block>
@@ -83,6 +84,7 @@
                         <p>PodId (ContainerId): <span class="site_environment_pod_id" tal:content="site.environment.pod_id"></span></p>
                         <p>Host: <span class="site_environment_host" tal:content="site.environment.host"></span></p>
                     </metal:block>
+                    <p>Last Modified: <span tal:content="site.environment.lastModified"></span></p>
                 </metal:block>
                 <metal:block tal:omit-tag="" tal:condition="site.environment_edit_link|nothing">
                     <a href="javascript:showEnvironmentEditView();">Edit</a>
@@ -133,6 +135,7 @@
                 <p>Type: <span class="site_license_type" tal:content="site.license.type"></span></p>
                 <p>Start Date: <span class="site_license_start_date" tal:content="site.license.start_date"></span></p>
                 <p>End Date: <span class="site_license_end_date" tal:content="site.license.end_date"></span></p>
+                <p>Last Modified: <span tal:content="site.license.lastModified"/></p>
                 <metal:block tal:omit-tag="" tal:condition="site.license.edit_link|nothing">
                     <a href="javascript:showLicenseEditView();">Edit</a>
                 </metal:block>

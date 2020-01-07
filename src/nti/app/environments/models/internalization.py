@@ -28,11 +28,6 @@ class SiteInternalizer(InterfaceObjectIO):
             self._ext_self.id = parsed['id']
             updated = True
 
-        if 'created' in parsed:
-            parsed['created'] = _parse_date(parsed.get('created'))
-            self._ext_self.created = parsed['created']
-            updated = True
-
         result = super(SiteInternalizer, self).updateFromExternalObject(parsed, *args, **kwargs)
         return updated or result
 
