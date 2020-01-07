@@ -14,6 +14,7 @@ from nti.externalization import update_from_external_object
 
 
 from nti.app.environments.auth import ACT_READ
+from nti.app.environments.auth import is_admin_or_account_manager
 
 from nti.app.environments.models.customers import HubspotContact
 from nti.app.environments.models.customers import PersistentCustomer
@@ -62,6 +63,7 @@ class BaseView(object):
 class BaseTemplateView(BaseView):
 
     logged_in = None
+    is_dashboard_visible = None
     is_customers_visible = None
     is_sites_visible = None
 
@@ -75,6 +77,7 @@ class BaseTemplateView(BaseView):
             self.logged_in = True
             self.is_customers_visible = self.request.has_permission(ACT_READ, get_customers_folder(self._onboarding_root, request))
             self.is_sites_visible = self.request.has_permission(ACT_READ, get_sites_folder(self._onboarding_root, request))
+            self.is_dashboard_visible = is_admin_or_account_manager(self.request.authenticated_userid)
 
 
 class ObjectCreateUpdateViewMixin(object):
