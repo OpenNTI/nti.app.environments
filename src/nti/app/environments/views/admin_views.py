@@ -5,6 +5,7 @@ from nti.app.environments.api.siteinfo import nt_client
 from nti.app.environments.api.hubspotclient import get_hubspot_profile_url
 
 from nti.app.environments.auth import ACT_READ
+from nti.app.environments.auth import ACT_UPDATE
 from nti.app.environments.auth import ACT_DELETE
 from nti.app.environments.auth import ACT_CREATE
 from nti.app.environments.auth import ACT_EDIT_SITE_LICENSE
@@ -146,6 +147,7 @@ class SiteDetailView(BaseTemplateView):
         extra_info = self._site_extra_info() or {}
         return {'sites_list_link': self.request.route_url('admin', traverse=('sites', '@@list')),
                 'env_shared_options': SHARED_ENV_NAMES,
+                'site_status_options': SITE_STATUS_OPTIONS,
                 'site': {'created': formatDateToLocal(self.context.created),
                          'owner': self._format_owner(self.context.owner),
                          'site_id': self.context.id,
@@ -156,6 +158,7 @@ class SiteDetailView(BaseTemplateView):
                          'environment_edit_link': request.resource_url(self.context, '@@environment') if request.has_permission(ACT_EDIT_SITE_ENVIRONMENT, self.context) else None,
                          'requesting_email': self.context.requesting_email,
                          'client_name': self.context.client_name,
+                         'site_edit_link': request.resource_url(self.context) if request.has_permission(ACT_UPDATE, self.context) else None,
                          **extra_info}}
 
 

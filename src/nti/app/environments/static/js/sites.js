@@ -21,7 +21,7 @@ function saveItem (me, url) {
     var status = getValue("site_status");
     var created = getValue("site_created");
     var dns_names = getValue("site_dns_names");
-    dns_names = dns_names ? dns_names.split('\n') : null;
+    dns_names = dns_names ? dns_names.split(',') : null;
 
     var data = {
         "id": site_id,

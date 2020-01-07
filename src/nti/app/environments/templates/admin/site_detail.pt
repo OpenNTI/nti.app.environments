@@ -16,17 +16,49 @@
             </div>
             <div class="site-item site-info">
                 <h3>Site Info</h3>
-                <p>Site ID: <span tal:content="python: site.site_id|nothing"></span></p>
-                <p>Site Name: <span tal:content="python: site.brand_name|nothing"></span></p>
-                <p>Status: <span tal:content="site.status"></span></p>
-                <p>Created: <span tal:content="site.created"></span></p>
-                <metal:block tal:omit-tag="" tal:condition="site.requesting_email">
-                    <p>Requesting Email: <span tal:content="site.requesting_email"></span></p>
-                </metal:block>
-                <metal:block tal:omit-tag="" tal:condition="site.client_name">
-                    <p>Client Name: <span tal:content="site.client_name"></span></p>
-                </metal:block>
-                <p>DNS Names: <span tal:repeat="dns_name site.dns_names"><a href="https://${dns_name}" target="_blank">${dns_name}</a></span></p>
+                <div id="view_site_info">
+                    <p>Site ID: <span tal:content="python: site.site_id|nothing"></span></p>
+                    <p>Site Name: <span tal:content="python: site.brand_name|nothing"></span></p>
+                    <p>Status: <span class="site_status" tal:content="site.status"></span></p>
+                    <p>Created: <span tal:content="site.created"></span></p>
+                    <metal:block tal:omit-tag="" tal:condition="site.requesting_email">
+                        <p>Requesting Email: <span tal:content="site.requesting_email"></span></p>
+                    </metal:block>
+                    <metal:block tal:omit-tag="" tal:condition="site.client_name">
+                        <p>Client Name: <span tal:content="site.client_name"></span></p>
+                    </metal:block>
+                    <p class="site_dns_names" site_dns_names="${','.join(site.dns_names)}">
+                        DNS Names: <span tal:repeat="dns_name site.dns_names">
+                        <a href="https://${dns_name}" target="_blank">${dns_name}</a></span>
+                    </p>
+                    <metal:block tal:omit-tag="" tal:condition="site.site_edit_link|nothing">
+                        <a href="javascript:showSiteEditView();">Edit</a>
+                    </metal:block>
+                </div>
+                <div id="edit_site_info" style="display:none;">
+                    <div class="form-group">
+                        <div class="form-group-item name_group_item">
+                            <label>Status</label>
+                            <select class="site_status">
+                                <metal:block tal:omit-tag="" tal:repeat="option site_status_options">
+                                    <option value="${option}">${option}</option>
+                                </metal:block>
+                            </select>
+                        </div>
+                        <div class="form-group-item">
+                            <label>DNS Names</label>
+                            <input type="text" class="site_dns_names" />
+                        </div>
+                        <div class="form-group-item">
+                            <div class="success success-edit-site-info" style="display:none;"></div>
+                            <div class="error error-edit-site-info" style="display:none;"></div>
+                        </div>
+                        <div class="form-group-item">
+                            <button type="button" class="btnCustom" onclick="saveSiteEditView(this, '${site.site_edit_link}');">Save</button>
+                            <button type="button" class="btnCustom" onclick="cancelSiteEditView();">Cancel</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 

@@ -67,6 +67,7 @@ function showEnvironmentEditView() {
 function cancelEnvironmentEditView() {
     $('#view_environment').css('display', 'block');
     $('#edit_environment').css('display', 'none');
+    clearMessages('.success-edit-environment', '.error-edit-environment');
 }
 
 function onEnvironmentChange () {
@@ -130,6 +131,7 @@ function showLicenseEditView() {
 function cancelLicenseEditView() {
     $('#view_license').css('display', 'block');
     $('#edit_license').css('display', 'none');
+    clearMessages('.success-edit-license', '.error-edit-license');
 }
 
 function saveLicenseView(me, url) {
@@ -147,4 +149,39 @@ function saveLicenseView(me, url) {
     };
     data = JSON.stringify(data);
     doUpdate(url, data, '.success-edit-license', '.error-edit-license')
+}
+
+// site info
+function showSiteEditView() {
+    var view = $('#view_site_info');
+    view.css('display', 'none');
+
+    var edit = $('#edit_site_info');
+    edit.css('display', 'block');
+
+    var status = $(view.find('.site_status')[0]).text();
+    var dns_names = $(view.find('.site_dns_names')[0]).attr('site_dns_names');
+    dns_names = dns_names ? dns_names : '';
+
+    $(edit.find('.site_status')[0]).val(status);
+    $(edit.find('.site_dns_names')[0]).val(dns_names);
+}
+
+function cancelSiteEditView() {
+    $('#view_site_info').css('display', 'block');
+    $('#edit_site_info').css('display', 'none');
+    clearMessages('.success-edit-site-info', '.error-edit-site-info');
+}
+
+function saveSiteEditView(me, url) {
+    var form = $(me).closest('.form-group')[0];
+    var status = $($(form).find('.site_status')[0]).val();
+    var dns_names = $($(form).find('.site_dns_names')[0]).val().trim();
+    dns_names = dns_names ? $.map(dns_names.split(","), $.trim) : null;
+    var data = {
+        'status': status,
+        'dns_names': dns_names
+    };
+    data = JSON.stringify(data);
+    doUpdate(url, data, '.success-edit-site-info', '.error-edit-site-info')
 }
