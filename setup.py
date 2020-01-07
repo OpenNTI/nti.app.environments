@@ -44,6 +44,7 @@ requires = [
     'nti.i18n',
     'z3c.schema',
     'z3c.table',
+    'zope.app.appsetup',
     'zope.annotation',
     'zope.generations',
     'zope.i18n',

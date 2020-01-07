@@ -23,7 +23,6 @@ class _EnvironmentSchemaManager(SchemaManager):
     """
 
     def __init__(self):
-        from IPython.core.debugger import Tracer; Tracer()()
         super(_EnvironmentSchemaManager, self).__init__(
             generation=generation,
             minimum_generation=generation,
@@ -31,9 +30,8 @@ class _EnvironmentSchemaManager(SchemaManager):
 
 
 def install_root_folders(context):
-    raise ValueError('Install Me')
-
-
+    logger.info('Installing root folders via schema manager')
+    pass
 
 def evolve(context):
     install_root_folders(context)
