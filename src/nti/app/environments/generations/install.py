@@ -31,11 +31,9 @@ class _EnvironmentSchemaManager(SchemaManager):
 
 
 def install_root_folders(context):
-    from IPython.core.debugger import Tracer; Tracer()()
     raise ValueError('Install Me')
 
 
 
 def evolve(context):
-    from IPython.core.debugger import Tracer; Tracer()()
     install_root_folders(context)
