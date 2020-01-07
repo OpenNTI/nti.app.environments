@@ -104,7 +104,7 @@ def main(global_config, **settings):
     # It also makes it a SiteManager. Do we want/need that?
     # The alternative is to not register that subscriber and instead notify
     # IDatabaseOpenedWithRoot ourselves, then we let zope.generations install the
-    # root folder as appropriate
+    # root folder as appropriate. Of course then we don't have a root which is a lie...
     for db in dbs:
         database(db)
     
