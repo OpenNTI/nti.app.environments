@@ -53,7 +53,7 @@ class TestSiteCreationView(BaseAppTest):
         self.testapp.post_json(url, params=params, status=403, extra_environ=self._make_environ(username='user001'))
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
         result = result.json_body
-        assert_that(result, {})
+        assert_that(result, has_entries({'message': 'No customer found with email: test@gmail.com.'}))
 
         with ensure_free_txn():
             sites = self._root().get('sites')

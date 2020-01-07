@@ -26,7 +26,7 @@ from nti.app.environments.views.base import BaseTemplateView
 from nti.app.environments.views._table_utils import CustomersTable
 from nti.app.environments.views._table_utils import SitesTable
 from nti.app.environments.views._table_utils import make_specific_table
-from nti.app.environments.views.utils import formatDateToLocal
+from nti.app.environments.utils import formatDateToLocal
 from nti.app.environments.utils import find_iface
 from nti.app.environments.models.utils import get_sites_folder
 

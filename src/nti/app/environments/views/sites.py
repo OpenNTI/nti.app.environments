@@ -30,11 +30,11 @@ from nti.app.environments.models.sites import TrialLicense
 from nti.app.environments.models.sites import EnterpriseLicense
 
 from nti.app.environments.utils import find_iface
-from nti.app.environments.views.base import BaseView
+from nti.app.environments.utils import convertToUTC
+from nti.app.environments.utils import parseDate
+from nti.app.environments.utils import formatDate
+
 from nti.app.environments.views.utils import raise_json_error
-from nti.app.environments.views.utils import parseDate
-from nti.app.environments.views.utils import convertToUTC
-from nti.app.environments.views.utils import formatDate
 
 from nti.app.environments.auth import ACT_READ
 from nti.app.environments.auth import ACT_CREATE
@@ -45,6 +45,7 @@ from nti.app.environments.auth import ACT_EDIT_SITE_ENVIRONMENT
 
 from nti.app.environments.api.hubspotclient import get_hubspot_client
 
+from .base import BaseView
 from .base import BaseFieldPutView
 from .base import ObjectCreateUpdateViewMixin
 from .base import createCustomer
@@ -57,53 +58,40 @@ logger = __import__('logging').getLogger(__name__)
 
 class SiteBaseView(BaseView):
 
-    def _get_value(self, field, params=None, expected_type=None):
-        if params is None:
-            params = self.body_params
-        val = params.get(field)
-        if expected_type is not None and not isinstance(val, (expected_type, None)):
-            raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid {}".format(field), field)
-        return val.strip() if isinstance(val, str) else val
+    @Lazy
+    def _customers(self):
+        root = find_iface(self.context, IOnboardingRoot)
+        folder = get_customers_folder(root)
+        return folder
 
-    def _handle(self, name, value=None):
-        if not value:
-            raise_json_error(hexc.HTTPUnprocessableEntity, "Missing field: {}.".format(name))
-        return value
+    @Lazy
+    def _client(self):
+        return get_hubspot_client()
 
-    def _handle_owner(self, name, value=None):
+    def _handle_owner(self, value, created=False):
+        """
+        Create a new customer if customer is not found and created is True.
+        """
         if not value:
             raise_json_error(hexc.HTTPUnprocessableEntity, "Missing field: email.")
 
-        root = find_iface(self.context, IOnboardingRoot)
-        folder = get_customers_folder(root)
+        folder = self._customers
         customer = folder.getCustomer(value)
+        if customer is None and created is True:
+            contact = self._client.fetch_contact_by_email(value)
+            if contact:
+                customer = createCustomer(folder,
+                                          email=value,
+                                          name=contact['name'],
+                                          hs_contact_vid=contact['canonical-vid'])
+            else:
+                customer = getOrCreateCustomer(folder, value)
+
         if customer is None:
-            raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid email.")
+            raise_json_error(hexc.HTTPUnprocessableEntity,
+                             "No customer found with email: {}.".format(value))
+
         return customer
-
-    def _handle_date(self, name, value=None):
-        try:
-            return parseDate(value) if value else None
-        except:
-            raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid date format for {}".format(name))
-
-    def _generate_kwargs_for_site(self, params=None, allowed = ()):
-        params = self.body_params if params is None else params
-        kwargs = {}
-        site_id = self._get_value('site_id', params)
-        if site_id:
-            kwargs['id'] = site_id
-        for attr_name, _handle in (('client_name', None),
-                                   ('owner', self._handle_owner),
-                                   ('status', self._handle),
-                                   ('created', self._handle_date),
-                                   ('dns_names', self._handle)):
-            if attr_name in params and (not allowed or attr_name in allowed):
-                attr_val = params[attr_name]
-                if isinstance(attr_val, str):
-                    attr_val = attr_val.strip()
-                kwargs[attr_name] = _handle(attr_name, attr_val) if _handle else attr_val
-        return kwargs
 
 
 @view_config(renderer='json',
@@ -112,19 +100,11 @@ class SiteBaseView(BaseView):
              permission=ACT_CREATE)
 class SiteCreationView(SiteBaseView, ObjectCreateUpdateViewMixin):
 
-    def _handle_license(self, value):
-        if isinstance(value, dict):
-            value['start_date'] = self._handle_date('start_date', value.get('start_date'))
-            value['end_date'] = self._handle_date('end_date', value.get('end_date'))
-        return value
-
     def readInput(self):
         params = super(SiteCreationView, self).readInput()
         if params.get('id') is None:
             params.pop('id', None)
-        params['owner'] = self._handle_owner('owner', params.get('owner'))
-        params['license'] = self._handle_license(params.get('license'))
-        params['created'] = self._handle_date('created', params.get('created'))
+        params['owner'] = self._handle_owner(params.get('owner'))
         return params
 
     def __call__(self):
@@ -144,38 +124,15 @@ class SiteCreationView(SiteBaseView, ObjectCreateUpdateViewMixin):
              name="request_trial_site")
 class RequestTrialSiteView(SiteBaseView, ObjectCreateUpdateViewMixin):
 
-    @Lazy
-    def _client(self):
-        return get_hubspot_client()
-
-    def _handle_owner(self, name, value=None):
-        """
-        Create a new customer if it's found via hubspot.
-        """
-        if not value:
-            raise_json_error(hexc.HTTPUnprocessableEntity, "Missing required field: email.")
-
-        root = find_iface(self.context, IOnboardingRoot)
-        folder = get_customers_folder(root)
-        customer = folder.getCustomer(value)
-        if customer is None:
-            contact = self._client.fetch_contact_by_email(value)
-            if contact:
-                customer = createCustomer(folder,
-                                          email=value,
-                                          name=contact['name'],
-                                          hs_contact_vid=contact['canonical-vid'])
-            else:
-                customer = getOrCreateCustomer(folder, value)
-
-            if customer is None:
-                raise_json_error(hexc.HTTPUnprocessableEntity,
-                                 "No customer found with email: {}.".format(value))
-        return customer
-
     def readInput(self):
         params = super(RequestTrialSiteView, self).readInput()
-        kwargs = self._generate_kwargs_for_site(params, allowed=('client_name', 'owner', 'dns_names'))
+
+        kwargs = {}
+        for attr_name in ('client_name', 'owner', 'dns_names'):
+            if attr_name in params:
+                kwargs[attr_name] = params[attr_name]
+
+        kwargs['owner'] = self._handle_owner(kwargs.get('owner'), created=True)
 
         _now = datetime.datetime.utcnow()
         kwargs.update({'status': SITE_STATUS_PENDING,
@@ -213,8 +170,15 @@ class RequestTrialSiteView(SiteBaseView, ObjectCreateUpdateViewMixin):
              permission=ACT_UPDATE)
 class SiteUpdateView(SiteBaseView, ObjectCreateUpdateViewMixin):
 
+    _allowed_fields = ('status', 'dns_names', 'created', 'client_name')
+
     def readInput(self):
-        return self._generate_kwargs_for_site(allowed=('status', 'dns_names'))
+        incoming = super(SiteUpdateView, self).readInput()
+        res = {}
+        for field in self._allowed_fields:
+            if field in incoming:
+                res[field] = incoming[field]
+        return res
 
     def __call__(self):
         self.updateObjectWithExternal(self.context)
@@ -228,6 +192,7 @@ class SiteUpdateView(SiteBaseView, ObjectCreateUpdateViewMixin):
              name="environment")
 class SiteEnvironmentPutView(BaseFieldPutView):
     pass
+
 
 @view_config(renderer='json',
              context=ILMSSite,
@@ -278,16 +243,6 @@ class SitesUploadCSVView(SiteBaseView):
     _default_license_end_date = convertToUTC(datetime.datetime(2029, 12, 31, 0, 0, 0))
     _default_environment_host = 'host3.4pp'
 
-    @Lazy
-    def _customers(self):
-        root = find_iface(self.context, IOnboardingRoot)
-        folder = get_customers_folder(root)
-        return folder
-
-    @Lazy
-    def _client(self):
-        return get_hubspot_client()
-
     def _process_license(self, dic):
         licenseType = dic['License Type'].strip()
         start_date = parseDate(dic['LicenseStartDate'].strip()) if dic.get('LicenseStartDate') else self._default_license_start_date
@@ -325,19 +280,7 @@ class SitesUploadCSVView(SiteBaseView):
 
     def _process_owner(self, dic, created=True):
         email = dic['Hubspot Contact'].strip() or self._default_owner_email
-        customer = self._customers.getCustomer(email)
-        if customer is None:
-            if created is False:
-                raise ValueError("No customer found for email: {}.".format(email))
-            contact = self._client.fetch_contact_by_email(email)
-            if contact:
-                customer = createCustomer(self._customers,
-                                          email=email,
-                                          name=contact['name'],
-                                          hs_contact_vid=contact['canonical-vid'])
-            else:
-                customer = getOrCreateCustomer(self._customers, email)
-        return customer
+        return self._handle_owner(email, created=created)
 
     def _process_row(self, row, createdCustomer=True):
         try:

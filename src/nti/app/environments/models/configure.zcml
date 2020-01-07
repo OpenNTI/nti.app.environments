@@ -37,4 +37,12 @@
              for=".interfaces.ILMSSite"
              provides="nti.externalization.interfaces.IInternalObjectUpdater"/>
 
+    <adapter factory=".internalization.TrialLicenseInternalizer"
+             for=".interfaces.ITrialLicense"
+             provides="nti.externalization.interfaces.IInternalObjectUpdater"/>
+
+    <adapter factory=".internalization.EnterpriseLicenseInternalizer"
+             for=".interfaces.IEnterpriseLicense"
+             provides="nti.externalization.interfaces.IInternalObjectUpdater"/>
+
 </configure>
