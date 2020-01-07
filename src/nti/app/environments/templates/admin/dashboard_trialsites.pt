@@ -1,0 +1,60 @@
+<metal:block metal:use-macro="load: ../macros/layout_admin.pt">
+    <title metal:fill-slot="title">
+        Dashboard Trial Sites
+    </title>
+	<metal:block metal:fill-slot="css">
+        <link href="/static/css/table.css" rel="stylesheet">
+    </metal:block>
+
+    <metal:block metal:fill-slot="content">
+        <h1>Trial Sites</h1>
+
+        <div class="toolbar">
+            <input type="text" id='search' name="search" placeHolder="Search" class="search-input" onkeypress="return search(event);"/>
+        </div>
+
+		<table tal:condition="python: len(table.context)" tal:replace="structure python: table.render()" />
+		<div tal:condition="python: not len(table.context)">
+			No sites.
+		</div>
+	    <div class="table-pagination" tal:define="table table" >
+            <div class="pagination-detail" tal:condition="python: len(table._raw_values)">
+                Total: ${len(table._raw_values)}.
+            </div>
+            <div class="pagination" tal:condition="python: len(table.context) > table.batchSize">
+                <span tal:replace="structure python: table.renderBatch()"/>
+            </div>
+	    </div>
+    </metal:block><!-- end of content -->
+    <metal:block metal:fill-slot="script">
+        <script src="/static/js/sites.js"></script>
+        <script>
+            // When the user clicks anywhere outside of the modal, close it
+            window.onclick = function(event) {
+                var ids = ["deletingModal", "newModal"];
+                for(var i=0; i<ids.length; i++) {
+                    var modal = document.getElementById(ids[i]);
+                    if (event.target == modal) {
+                        modal.style.display = "none";
+                    }
+                }
+            }
+
+            function search(e) {
+                // When a enter key pressed, query the server.
+                if (e.which == 13 || e.keyCode == 13) {
+                    var search = $('#search').val().trim();
+                    var url = updateUrlParameter('search', search);
+                    window.location.href = url;
+                }
+            }
+
+            $( document ).ready(function() {
+                var email = getUrlParameter('search');
+                if(email){
+                    $('#search').val(email);
+                }
+            });
+        </script>
+    </metal:block>
+</metal:block>

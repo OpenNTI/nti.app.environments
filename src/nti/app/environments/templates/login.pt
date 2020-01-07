@@ -61,8 +61,10 @@
             <img class="logo" src="${request.static_url('nti.app.environments:static/logo.png')}"/>
             <h2>Sign in to Site Manager</h2>
             <form action="${rel_logon}" method="get">
-
-                    <button type="submit">Sign in with Google</button>
+                <metal:block tal:omit-tag="" tal:condition="success">
+                    <input type="text" name="success" value="${success}" style="display:none;"/>
+                </metal:block>
+                <button type="submit">Sign in with Google</button>
 
             </form>
         </div>

@@ -111,6 +111,59 @@
              for="* * * ._table_utils.SiteCreatedColumn"
 			 provides="z3c.table.interfaces.IColumnHeader"/>
 
+	<!-- Dashboard TrialSites table -->
+	<adapter factory="._table_utils.SiteURLColumn"
+			 for="* * ._table_utils.DashboardTrialSitesTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="site" />
+
+	<adapter factory="._table_utils.SiteCreatedColumn"
+			 for="* * ._table_utils.DashboardTrialSitesTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="created" />
+
+	<adapter factory="._table_utils.SiteAgeColumn"
+			 for="* * ._table_utils.DashboardTrialSitesTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="site_age" />
+
+	<adapter factory="._table_utils.SiteColumnHeader"
+			 for="* * * ._table_utils.SiteAgeColumn"
+			 provides="z3c.table.interfaces.IColumnHeader"/>
+
+	<!-- Dashboard Sites Renewal table -->
+	<adapter factory="._table_utils.SiteURLColumn"
+			 for="* * ._table_utils.DashboardRenewalsTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="site" />
+
+	<adapter factory="._table_utils.SiteURLAliasColumn"
+			 for="* * ._table_utils.DashboardRenewalsTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="site_alias" />
+
+	<adapter factory="._table_utils.SiteRenewalDateColumn"
+			 for="* * ._table_utils.DashboardRenewalsTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="site_renewal_date" />
+
+	<adapter factory="._table_utils.SiteDaysToRenewColumn"
+			 for="* * ._table_utils.DashboardRenewalsTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="site_days_to_renew" />
+
+	<adapter factory="._table_utils.SiteColumnHeader"
+			 for="* * * ._table_utils.SiteURLAliasColumn"
+			 provides="z3c.table.interfaces.IColumnHeader"/>
+
+	<adapter factory="._table_utils.SiteColumnHeader"
+			 for="* * * ._table_utils.SiteRenewalDateColumn"
+			 provides="z3c.table.interfaces.IColumnHeader"/>
+
+	<adapter factory="._table_utils.SiteColumnHeader"
+			 for="* * * ._table_utils.SiteDaysToRenewColumn"
+			 provides="z3c.table.interfaces.IColumnHeader"/>
+
 	<!-- default batch provider -->
 	<adapter factory="._table_utils.DefaultTableBatchProvider"
 			 for="* * ._table_utils.BaseTable"

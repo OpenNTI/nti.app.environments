@@ -1,3 +1,5 @@
+import datetime
+
 from zope import interface
 from zope import component
 
@@ -19,6 +21,7 @@ from z3c.table.interfaces import IBatchProvider
 from nti.app.environments.auth import ACT_DELETE
 
 from nti.app.environments.models.interfaces import ITrialLicense
+from nti.app.environments.models.interfaces import SITE_STATUS_ACTIVE
 
 from nti.app.environments.utils import formatDateToLocal
 
@@ -185,16 +188,16 @@ class ValuesForCustomersTable(value.ValuesForContainer, _FilterMixin):
                          else [x for x in self.context.values() if self._predicate(x, email.lower())]
 
 
-class SitesTable(BaseTable, _FilterMixin):
+# Sites table
 
-    def __init__(self, context, request, **kwargs):
-        super(SitesTable, self).__init__(context, request)
-        self._email = kwargs.get('email')
+class BaseSitesTable(BaseTable, _FilterMixin):
+
+    _raw_filter = None
 
     @Lazy
     def _raw_values(self):
-        if self._email:
-            return [x for x in self.context.values() if x.owner and x.owner.email == self._email]
+        if self._raw_filter:
+            return [x for x in self.context.values() if self._raw_filter(x)]
         return self.context.values()
 
     def _predicate(self, item, term):
@@ -210,6 +213,18 @@ class SitesTable(BaseTable, _FilterMixin):
         params = self.request.params
         term = self._get_filter('search', params)
         return self._raw_values if not term else [x for x in self._raw_values if self._predicate(x, term.lower())]
+
+
+class SitesTable(BaseSitesTable):
+
+    def __init__(self, context, request, **kwargs):
+        super(SitesTable, self).__init__(context, request)
+        self._email = kwargs.get('email')
+
+    @Lazy
+    def _raw_filter(self):
+        if self._email:
+            return lambda x: x.owner and x.owner.email == self._email
 
 
 class SiteColumnHeader(header.SortingColumnHeader):
@@ -262,3 +277,63 @@ class SiteCreatedColumn(CreatedColumn):
 class SiteDeleteColumn(DeleteColumn):
 
     weight = 6
+
+
+class DashboardTrialSitesTable(BaseSitesTable):
+
+    def __init__(self, context, request):
+        super(DashboardTrialSitesTable, self).__init__(context, request)
+        self._current_time = datetime.datetime.utcnow()
+
+    @Lazy
+    def _raw_filter(self):
+        return lambda x: ITrialLicense.providedBy(x.license) and x.status == SITE_STATUS_ACTIVE
+
+
+class SiteAgeColumn(column.Column):
+
+    weight = 6
+    header = 'Site Age (days)'
+
+    def renderCell(self, item):
+        return (self.table._current_time - item.created).days
+
+
+class DashboardRenewalsTable(BaseSitesTable):
+
+    def __init__(self, context, request):
+        super(DashboardRenewalsTable, self).__init__(context, request)
+        self._current_time = datetime.datetime.utcnow()
+
+    @Lazy
+    def _raw_filter(self):
+        return lambda x: x.status == SITE_STATUS_ACTIVE
+
+
+class SiteURLAliasColumn(SiteURLColumn):
+
+    weight = 1
+    header = 'Site Alias'
+
+    def getValue(self, obj):
+        names = getattr(obj, self.attrName)
+        return names[1] if len(names) > 1 else ''
+
+
+class SiteRenewalDateColumn(column.Column):
+
+    weight = 3
+    header = 'License Renewal Date'
+
+    def renderCell(self, item):
+        value = item.license.end_date
+        return formatDateToLocal(value)
+
+
+class SiteDaysToRenewColumn(column.Column):
+
+    weight = 4
+    header = 'Days to Renewal'
+
+    def renderCell(self, item):
+        return (item.license.end_date - self.table._current_time).days

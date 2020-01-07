@@ -23,13 +23,19 @@ from nti.app.environments.models.interfaces import ILMSSitesContainer
 from nti.app.environments.models.interfaces import SITE_STATUS_OPTIONS
 from nti.app.environments.models.interfaces import SHARED_ENV_NAMES
 
+from nti.app.environments.models.utils import get_sites_folder
+
+from nti.app.environments.resources import DashboardsResource
+
+from nti.app.environments.utils import formatDateToLocal
+from nti.app.environments.utils import find_iface
+
 from nti.app.environments.views.base import BaseTemplateView
 from nti.app.environments.views._table_utils import CustomersTable
 from nti.app.environments.views._table_utils import SitesTable
+from nti.app.environments.views._table_utils import DashboardTrialSitesTable
+from nti.app.environments.views._table_utils import DashboardRenewalsTable
 from nti.app.environments.views._table_utils import make_specific_table
-from nti.app.environments.utils import formatDateToLocal
-from nti.app.environments.utils import find_iface
-from nti.app.environments.models.utils import get_sites_folder
 
 
 class _TableMixin(object):
@@ -174,3 +180,33 @@ class SiteRequestView(BaseTemplateView):
         return {
             'trial_site_request_url': self.request.resource_url(self.context, '@@request_trial_site') if self.request.has_permission(ACT_CREATE, self.context) else None
         }
+
+
+@view_config(route_name='admin',
+             renderer='../templates/admin/dashboard_trialsites.pt',
+             request_method='GET',
+             context=DashboardsResource,
+             permission=ACT_READ,
+             name='trialsites')
+class DashboardTrialSitesView(BaseTemplateView):
+
+    def __call__(self):
+        table = make_specific_table(DashboardTrialSitesTable,
+                                    get_sites_folder(request=self.request),
+                                    self.request)
+        return {'table': table}
+
+
+@view_config(route_name='admin',
+             renderer='../templates/admin/dashboard_renewals.pt',
+             request_method='GET',
+             context=DashboardsResource,
+             permission=ACT_READ,
+             name='renewals')
+class DashboardRenewalsView(BaseTemplateView):
+
+    def __call__(self):
+        table = make_specific_table(DashboardRenewalsTable,
+                                    get_sites_folder(request=self.request),
+                                    self.request)
+        return {'table': table}

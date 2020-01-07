@@ -1,17 +1,38 @@
 <div class="nav" metal:define-macro="nav">
-    <div class="nav-item"><a href="/"><img src="${request.static_url('nti.app.environments:static/logo.png')}"/></a></div>
+    <div class="nav-brand">
+        <a href="/">
+            <img src="${request.static_url('nti.app.environments:static/logo.png')}"/>
+        </a>
+    </div>
     <div style="float:right">
         <metal:block tal:omit-tag="" tal:condition="view.logged_in">
+            <metal:block tal:omit-tag="" tal:condition="view.is_dashboard_visible">
+                <div class="nav-item dropdown">
+                    <a href="javascript:void(0)" class="dropbtn">Dashboard</a>
+                    <div class="dropdown-content">
+                        <a href="/admin/dashboards/@@trialsites">Trial Sites</a>
+                        <a href="/admin/dashboards/@@renewals">Sites Renewals</a>
+                    </div>
+                </div>
+            </metal:block>
             <metal:block tal:omit-tag="" tal:condition="view.is_customers_visible">
-                <div class="nav-item"><a href="/admin/customers/@@list">Customers</a></div>
+                <div class="nav-item">
+                    <a href="/admin/customers/@@list">Customers</a>
+                </div>
             </metal:block>
             <metal:block tal:omit-tag="" tal:condition="view.is_sites_visible">
-                <div class="nav-item"><a href="/admin/sites/@@list">Sites</a></div>
+                <div class="nav-item">
+                    <a href="/admin/sites/@@list">Sites</a>
+                </div>
             </metal:block>
-            <div class="nav-item"><a href="/logout">Sign out</a></div>
+            <div class="nav-item">
+                <a href="/logout">Sign out</a>
+            </div>
         </metal:block>
         <metal:block tal:omit-tag="" tal:condition="not:view.logged_in">
-            <div class="nav-item"><a href="/login">Sign in</a></div>
+            <div class="nav-item">
+                <a href="/login">Sign in</a>
+            </div>
         </metal:block>
     </div>
 </div>
