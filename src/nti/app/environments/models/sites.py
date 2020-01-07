@@ -9,8 +9,6 @@ from zope import interface
 
 from zope.container.contained import Contained
 
-from zope.container.folder import Folder
-
 from nti.property.property import alias
 from nti.property.property import LazyOnClass
 
@@ -31,6 +29,8 @@ from nti.app.environments.models.interfaces import IDedicatedEnvironment
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ILMSSitesContainer
 
+from nti.app.environments.models.base import BaseFolder
+
 from nti.app.environments.utils import find_iface
 
 
@@ -39,11 +39,15 @@ class SharedEnvironment(SchemaConfigured, Persistent, Contained):
 
     createFieldProperties(ISharedEnvironment)
 
+    mimeType = mime_type = 'application/vnd.nextthought.app.environments.sharedenvironment'
+
 
 @interface.implementer(IDedicatedEnvironment)
 class DedicatedEnvironment(SchemaConfigured, Persistent, Contained):
 
     createFieldProperties(IDedicatedEnvironment)
+
+    mimeType = mime_type = 'application/vnd.nextthought.app.environments.dedicatedenvironment'
 
 
 @interface.implementer(ITrialLicense)
@@ -51,17 +55,23 @@ class TrialLicense(SchemaConfigured, Persistent, Contained):
 
     createFieldProperties(ITrialLicense)
 
+    mimeType = mime_type = 'application/vnd.nextthought.app.environments.triallicense'
+
 
 @interface.implementer(IEnterpriseLicense)
 class EnterpriseLicense(SchemaConfigured, Persistent, Contained):
 
     createFieldProperties(IEnterpriseLicense)
 
+    mimeType = mime_type = 'application/vnd.nextthought.app.environments.enterpriselicense'
+
 
 @interface.implementer(ILMSSite)
 class PersistentSite(SchemaConfigured, Persistent, Contained):
 
     createFieldProperties(ILMSSite)
+
+    mimeType = mime_type = 'application/vnd.nextthought.app.environments.site'
 
     id = alias('__name__')
 
@@ -78,7 +88,7 @@ class PersistentSite(SchemaConfigured, Persistent, Contained):
 
 
 @interface.implementer(ILMSSitesContainer)
-class SitesFolder(Folder):
+class SitesFolder(BaseFolder):
 
     @LazyOnClass
     def __acl__(self):

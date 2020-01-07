@@ -20,7 +20,7 @@ from nti.app.environments.auth import ACT_DELETE
 
 from nti.app.environments.models.interfaces import ITrialLicense
 
-from nti.app.environments.views.utils import formatDateToLocal
+from nti.app.environments.utils import formatDateToLocal
 
 
 @interface.implementer(IAbsoluteURL)

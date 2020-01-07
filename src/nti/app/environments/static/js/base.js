@@ -77,3 +77,29 @@ function updateUrlParameter(name, value, url) {
     }
     return prefix;
 }
+
+
+function getValue(id) {
+    var val = document.getElementById(id).value.trim();
+    return val ? val : null;
+}
+
+
+function getEnvMimeType(_type) {
+    if (_type==="shared") {
+        return "application/vnd.nextthought.app.environments.sharedenvironment";
+    } else if (_type === "dedicated") {
+        return "application/vnd.nextthought.app.environments.dedicatedenvironment";
+    }
+    return null
+}
+
+
+function getLicenseMimeType(_type) {
+    if (_type==="trial") {
+        return "application/vnd.nextthought.app.environments.triallicense";
+    } else if (_type === "enterprise") {
+        return "application/vnd.nextthought.app.environments.enterpriselicense";
+    }
+    return null
+}

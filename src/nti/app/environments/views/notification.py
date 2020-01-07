@@ -8,6 +8,8 @@ from pyramid_mailer.message import Attachment
 
 from nti.app.environments.settings import NEW_SITE_REQUEST_NOTIFICATION_EMAIL
 
+from nti.externalization import to_external_object
+
 from nti.mailer.interfaces import ITemplatedMailer
 
 
@@ -63,14 +65,8 @@ class SiteCreatedEmailNotifier(BaseEmailNotifier):
         return template_args
 
     def _attachments(self):
-        # TODO: use nti.externalization.
-        data = {
-            'id': self.site.id,
-            'client_name': self.site.client_name,
-            'email': self.site.owner.email,
-            'dns_names': self.site.dns_names,
-            'site_detail_link': self.request.route_url('admin', traverse=('sites', self.site.__name__, '@@details'))
-        }
+        data = to_external_object(self.site)
+        data['site_detail_link'] = self.request.route_url('admin', traverse=('sites', self.site.__name__, '@@details'))
         attachment = Attachment(filename='NewSiteRequest_{}.json'.format(self.site.id),
                                 content_type="application/json",
                                 data=json.dumps(data))

@@ -27,6 +27,7 @@ requires = [
     'pyramid-zcml',
     'zope.interface',
     'zope.component',
+    'nti.externalization',
     'nti.property',
     'nti.schema',
     'nti.transactions==3.1.0',

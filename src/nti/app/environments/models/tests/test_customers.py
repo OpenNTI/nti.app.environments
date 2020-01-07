@@ -2,13 +2,21 @@ import datetime
 
 from hamcrest import assert_that
 from hamcrest import has_properties
+from hamcrest import has_entries
 from hamcrest import has_length
 from hamcrest import has_items
 from hamcrest import not_none
+from hamcrest import calling
+from hamcrest import raises
 from hamcrest import is_
+
+from zope.container.interfaces import InvalidItemType
 
 from zope.schema._bootstrapinterfaces import RequiredMissing
 from zope.schema import getValidationErrors
+
+from nti.externalization import to_external_object
+from nti.externalization import update_from_external_object
 
 from nti.app.environments.tests import BaseTest
 
@@ -33,6 +41,15 @@ class TestCustomers(BaseTest):
         assert_that(inst, has_properties({'contact_vid': 'xxx'}))
         errors = getValidationErrors(IHubspotContact, inst)
         assert_that(errors, has_length(0))
+
+        result = to_external_object(inst)
+        assert_that(result, has_entries({'Class': 'HubspotContact',
+                                         'MimeType': 'application/vnd.nextthought.app.environments.hubspotcontact',
+                                         'contact_vid': 'xxx'}))
+
+        inst = update_from_external_object(inst, {'contact_vid': 'yyy'})
+        assert_that(inst, has_properties({'contact_vid': 'yyy'}))
+
 
     def testPersistentCustomer(self):
         inst = PersistentCustomer()
@@ -65,6 +82,14 @@ class TestCustomers(BaseTest):
         errors = getValidationErrors(ICustomer, inst)
         assert_that(errors, has_length(0))
 
+        result = to_external_object(inst)
+        assert_that(result, has_entries({'Class': 'PersistentCustomer',
+                                         'MimeType': 'application/vnd.nextthought.app.environments.customer',
+                                         'name': 'test last'}))
+
+        inst = update_from_external_object(inst, {'name': 'okc'})
+        assert_that(inst, has_properties({'name': 'okc'}))
+
     def testCustomersFolder(self):
         folder = CustomersFolder()
         inst = PersistentCustomer(email='xxx@gmail.com')
@@ -75,3 +100,5 @@ class TestCustomers(BaseTest):
 
         assert_that(folder.getCustomer('yyy@gmail.com'), is_(None))
         assert_that(folder.getCustomer('xxx@gmail.com'), is_(inst))
+
+        assert_that(calling(folder.__setitem__).with_args("okc", HubspotContact(contact_vid='xxx')), raises(InvalidItemType))

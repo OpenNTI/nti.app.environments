@@ -248,7 +248,7 @@ class ILMSSite(IContained):
 
     id = ValidTextLine(title="The identifier of this site.",
                        max_length=40,
-                       required=True)
+                       required=False)
 
     owner = Object(ICustomer,
                    title=u'The customer that owns this site',

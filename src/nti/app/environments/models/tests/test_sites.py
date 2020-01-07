@@ -7,14 +7,20 @@ from hamcrest import raises
 from hamcrest import calling
 from hamcrest import not_none
 from hamcrest import has_items
+from hamcrest import has_entries
 from hamcrest import has_length
 from hamcrest import has_properties
 from hamcrest import assert_that
 from hamcrest import starts_with
 
+from zope.container.interfaces import InvalidItemType
+
 from zope.schema import getValidationErrors
 from zope.schema._bootstrapinterfaces import RequiredMissing
 from zope.schema._bootstrapinterfaces import ConstraintNotSatisfied
+
+from nti.externalization import to_external_object
+from nti.externalization import update_from_external_object
 
 from nti.app.environments.models.sites import SharedEnvironment
 from nti.app.environments.models.sites import DedicatedEnvironment
@@ -51,6 +57,14 @@ class TestSites(BaseTest):
         errors = getValidationErrors(ISharedEnvironment, inst)
         assert_that(errors, has_length(0))
 
+        result = to_external_object(inst)
+        assert_that(result, has_entries({'Class': 'SharedEnvironment',
+                                         'MimeType': 'application/vnd.nextthought.app.environments.sharedenvironment',
+                                         'name': 'alpha'}))
+
+        inst = update_from_external_object(inst, {'name': 'test'})
+        assert_that(inst, has_properties({'name': 'test'}))
+
         assert_that(calling(SharedEnvironment).with_args(name='xxx'), raises(ConstraintNotSatisfied))
 
     def testDedicatedEnvironment(self):
@@ -67,6 +81,15 @@ class TestSites(BaseTest):
                                           'host': 'sdsdfs'}))
         errors = getValidationErrors(IDedicatedEnvironment, inst)
         assert_that(errors, has_length(0))
+
+        result = to_external_object(inst)
+        assert_that(result, has_entries({'Class': 'DedicatedEnvironment',
+                                         'MimeType': 'application/vnd.nextthought.app.environments.dedicatedenvironment',
+                                         'pod_id': '123456',
+                                         'host': 'sdsdfs'}))
+
+        inst = update_from_external_object(inst, {'pod_id': '12', 'host': '34'})
+        assert_that(inst, has_properties({'pod_id': '12', 'host': '34'}))
 
     def testTrialLicense(self):
         inst = TrialLicense()
@@ -86,6 +109,15 @@ class TestSites(BaseTest):
         errors = getValidationErrors(ITrialLicense, inst)
         assert_that(errors, has_length(0))
 
+        result = to_external_object(inst)
+        assert_that(result, has_entries({'Class': 'TrialLicense',
+                                         'MimeType': 'application/vnd.nextthought.app.environments.triallicense',
+                                         'start_date': '2019-12-11T00:00:00Z',
+                                         'end_date': '2019-12-12T00:00:00Z'}))
+
+        inst = update_from_external_object(inst, {'start_date': datetime.datetime(2019, 12, 13, 0, 0, 0), 'end_date': datetime.datetime(2019, 12, 14, 0, 0, 0)})
+        assert_that(inst, has_properties({'start_date': datetime.datetime(2019, 12, 13, 0, 0, 0), 'end_date': datetime.datetime(2019, 12, 14, 0, 0, 0)}))
+
     def testEnterpriseLicense(self):
         inst = EnterpriseLicense()
         assert_that(inst, has_properties({'start_date': None,
@@ -104,6 +136,15 @@ class TestSites(BaseTest):
         errors = getValidationErrors(IEnterpriseLicense, inst)
         assert_that(errors, has_length(0))
 
+        result = to_external_object(inst)
+        assert_that(result, has_entries({'Class': 'EnterpriseLicense',
+                                         'MimeType': 'application/vnd.nextthought.app.environments.enterpriselicense',
+                                         'start_date': '2019-12-11T00:00:00Z',
+                                         'end_date': '2019-12-12T00:00:00Z'}))
+
+        inst = update_from_external_object(inst, {'start_date': datetime.datetime(2019, 12, 13, 0, 0, 0), 'end_date': datetime.datetime(2019, 12, 14, 0, 0, 0)})
+        assert_that(inst, has_properties({'start_date': datetime.datetime(2019, 12, 13, 0, 0, 0), 'end_date': datetime.datetime(2019, 12, 14, 0, 0, 0)}))
+
     @mock.patch("nti.app.environments.models.wref.get_customers_folder")
     def testPersistentSite(self, mock_customers):
         mock_customers.return_value = folder = CustomersFolder()
@@ -116,11 +157,11 @@ class TestSites(BaseTest):
                                           'dns_names': (),
                                           'status': 'UNKNOWN'}))
         errors = getValidationErrors(ILMSSite, inst)
-        assert_that(errors, has_length(3))
+        assert_that(errors, has_length(2))
 
         inst = PersistentSite(status='PENDING')
         errors = getValidationErrors(ILMSSite, inst)
-        assert_that(errors, has_length(3))
+        assert_that(errors, has_length(2))
 
         inst = PersistentSite(owner=PersistentCustomer(email='103@gmail.com', created=datetime.datetime.utcnow()))
         assert_that(inst.owner, is_(None))
@@ -156,13 +197,29 @@ class TestSites(BaseTest):
         inst = PersistentSite(id='xxxxid2',
                               owner=owner,
                               environment=None,
-                              license=TrialLicense(start_date=datetime.datetime.utcnow(), end_date=datetime.datetime.utcnow()),
-                              created=datetime.datetime.utcnow(),
+                              license=TrialLicense(start_date=datetime.datetime(2019,1,2,0,0,0), end_date=datetime.datetime(2019,1,3,0,0,0)),
+                              created=datetime.datetime(2019,1,1,0,0,0),
                               dns_names=['t.nt.com'],
                               status='PENDING')
         errors = getValidationErrors(ILMSSite, inst)
         assert_that(errors, has_length(0))
 
+        result = to_external_object(inst)
+        assert_that(result, has_entries({'Class': 'PersistentSite',
+                                         'MimeType': 'application/vnd.nextthought.app.environments.site',
+                                         'id': 'xxxxid2',
+                                         'status': 'PENDING',
+                                         'dns_names': ['t.nt.com'],
+                                         'environment': None,
+                                         'owner': has_entries({'email': '103@gmail.com',
+                                                               'MimeType': 'application/vnd.nextthought.app.environments.customer'}),
+                                         'license': has_entries({'start_date': '2019-01-02T00:00:00Z',
+                                                                 'end_date': '2019-01-03T00:00:00Z',
+                                                                 'MimeType': 'application/vnd.nextthought.app.environments.triallicense'}),
+                                         'created': '2019-01-01T00:00:00Z'}))
+
+        inst = update_from_external_object(inst, {'dns_names': []})
+        assert_that(inst, has_properties({'dns_names': []}))
 
     @mock.patch("nti.app.environments.models.wref.get_customers_folder")
     def testSitesFolder(self, mock_customers):
@@ -196,6 +253,8 @@ class TestSites(BaseTest):
         site = PersistentSite()
         assert_that(calling(folder.addSite).with_args(site, siteId='abc'), raises(KeyError))
         assert_that(folder, has_length(2))
+
+        assert_that(calling(folder.addSite).with_args(SharedEnvironment(name="test")), raises(InvalidItemType))
 
     def test_generate_site_id(self):
         _id = _generate_site_id()

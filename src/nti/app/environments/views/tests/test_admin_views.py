@@ -129,5 +129,6 @@ class TestAdminViews(BaseAppTest):
                                                  'environment': {'type': 'shared', 'name': 'test'},
                                                  'environment_edit_link': None,
                                                  'requesting_email': None,
-                                                 'client_name': None
+                                                 'client_name': None,
+                                                 'site_edit_link': None
                                              }}))
