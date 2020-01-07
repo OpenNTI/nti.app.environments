@@ -12,6 +12,14 @@
 
 	<include package="nti.containers" />
 
+	<include package="zope.generations" />
+	<include package="zope.generations" file="subscriber.zcml" />
+
+	<!-- Database creation and migration -->
+	<utility factory=".generations.install._EnvironmentSchemaManager"
+			 name="nti.app.environments"
+			 provides="zope.generations.interfaces.IInstallableSchemaManager" />
+
 	<include package="nti.mailer" />
 
 	<include package="nti.i18n" />

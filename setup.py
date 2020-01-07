@@ -45,6 +45,7 @@ requires = [
     'z3c.schema',
     'z3c.table',
     'zope.annotation',
+    'zope.generations',
     'zope.i18n',
     'zope.i18nmessageid',
     'zope.principalregistry',
