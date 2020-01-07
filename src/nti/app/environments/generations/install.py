@@ -10,7 +10,17 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
+from zope.app.publication.zopepublication import ZopePublication
+
 from zope.generations.generations import SchemaManager
+
+from ..models import OnboardingRoot
+from ..models import ROOT_KEY
+from ..models import CUSTOMERS
+from ..models import SITES
+
+from ..models.customers import CustomersFolder
+from ..models.sites import SitesFolder
 
 generation = 0
 
@@ -29,9 +39,36 @@ class _EnvironmentSchemaManager(SchemaManager):
             package_name='nti.app.environments.generations')
 
 
+def _install_customers(onboarding_root):
+    if CUSTOMERS not in onboarding_root:
+        customers = CustomersFolder()
+        customers.__name__ = CUSTOMERS
+        onboarding_root[CUSTOMERS] = customers
+    return onboarding_root[CUSTOMERS]
+
+
+def _install_sites(onboarding_root):
+    if SITES not in onboarding_root:
+        sites = SitesFolder()
+        sites.__name__ = SITES
+        onboarding_root[SITES] = sites
+    return onboarding_root[SITES]
+
+
+def _install_root(zodb_root, key=ROOT_KEY):
+    root = OnboardingRoot()
+
+    _install_customers(root)
+    _install_sites(root)
+
+    zodb_root[key] = root
+    return root
+
+
 def install_root_folders(context):
     logger.info('Installing root folders via schema manager')
-    pass
+    root_folder = context.connection.root()[ZopePublication.root_name]
+    _install_root(root_folder)
 
 def evolve(context):
     install_root_folders(context)
