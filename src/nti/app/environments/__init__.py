@@ -71,7 +71,9 @@ def main(global_config, **settings):
     # We've let pyramid_zodbconn open the databases and set them in the registry
     # https://github.com/Pylons/pyramid_zodbconn/blob/68419e05a19acfc611e1dd81f79acc2a88d6e81d/pyramid_zodbconn/__init__.py#L190
     #
-    # Another approach is to use our own zodb_conn_tween like we do for other apps.
+    # Another approach is to use our own zodb_conn_tween like we do for other apps. One noticible difference
+    # is that tween is able to put the transaction in explicit mode before a connection is open. I don't see
+    # a hook in zodbconn that would let us do that. That may not matter for this use case.
 
     # We still need to do some setup to make sure things have a chance to react
     # to dbs being opened. For example things like zope.generations rely on IDatabaseOpenedWithRoot being fired.
