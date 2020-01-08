@@ -107,7 +107,9 @@ class TestSiteCreationView(BaseAppTest):
 class TestSitePutView(BaseAppTest):
 
     @with_test_app()
-    def testSiteLicensePutView(self):
+    @mock.patch('nti.app.environments.models.utils.get_onboarding_root')
+    def testSiteLicensePutView(self, mock_get_onboarding_root):
+        mock_get_onboarding_root.return_value = self._root()
         siteId = 'Sxxx'
         with ensure_free_txn():
             customers = self._root().get('customers')
@@ -181,9 +183,11 @@ class TestSitePutView(BaseAppTest):
         assert_that(result.json_body, has_entries({"message": "Missing required field: end_date."}))
 
     @with_test_app()
-    def testSiteEnvironmentPutView(self):
+    @mock.patch('nti.app.environments.models.utils.get_onboarding_root')
+    def testSiteEnvironmentPutView(self, mock_get_onboarding_root):
         siteId = 'Sxxx'
         with ensure_free_txn():
+            mock_get_onboarding_root.return_value = self._root()
             customers = self._root().get('customers')
             customer = customers.addCustomer(PersistentCustomer(email='123@gmail.com',
                                                                 name="testname"))
