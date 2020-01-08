@@ -9,3 +9,6 @@ class IOTPGenerator(interface.Interface):
         """
         Returns an appropriate passphrase or one time challenge
         """
+
+class IOnboardingServer(interface.Interface):
+    pass

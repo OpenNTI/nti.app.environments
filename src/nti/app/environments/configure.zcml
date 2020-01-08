@@ -43,4 +43,8 @@
       for="zope.processlifetime.IDatabaseOpened"
       />
 
+    <adapter factory=".appserver.root_folder"
+	     for="pyramid.interfaces.IRequest"
+	     provides=".models.interfaces.IOnboardingRoot"/>
+
 </configure>
