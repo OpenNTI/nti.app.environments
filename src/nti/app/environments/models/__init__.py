@@ -4,7 +4,7 @@ from zope.container.folder import Folder
 
 from .interfaces import IOnboardingRoot
 
-ROOT_KEY = 'onboarding_root'
+ROOT_KEY = 'onboarding'
 CUSTOMERS = 'customers'
 SITES = 'sites'
 

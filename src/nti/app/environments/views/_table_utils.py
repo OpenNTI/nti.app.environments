@@ -85,7 +85,7 @@ class EmailColumn(column.LinkColumn):
     header = 'Email'
 
     def getLinkURL(self, item):
-        return self.request.route_url('admin', traverse=('customers', item.__name__, '@@details'))
+        return self.request.resource_url(item, '@@details')
 
     def getLinkContent(self, item):
         return item.email
@@ -253,7 +253,7 @@ class SiteURLColumn(column.LinkColumn):
         return self.getValue(item)
 
     def getLinkURL(self, item):
-        return self.request.route_url('admin', traverse=('sites', item.__name__, '@@details'))
+        return self.request.resource_url(item, '@@details')
 
     def getLinkContent(self, item):
         return self.getValue(item)

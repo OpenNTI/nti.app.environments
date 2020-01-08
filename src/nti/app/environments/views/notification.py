@@ -60,13 +60,13 @@ class SiteCreatedEmailNotifier(BaseEmailNotifier):
             'client': self.site.client_name,
             'email': self.site.owner.email,
             'url': self.site.dns_names[0],
-            'site_detail_link': self.request.route_url('admin', traverse=('sites', self.site.__name__, '@@details'))
+            'site_detail_link': self.request.resource_url(self.site, '@@details')
         }
         return template_args
 
     def _attachments(self):
         data = to_external_object(self.site)
-        data['site_detail_link'] = self.request.route_url('admin', traverse=('sites', self.site.__name__, '@@details'))
+        data['site_detail_link'] = self.request.resource_url(self.site, '@@details')
         attachment = Attachment(filename='NewSiteRequest_{}.json'.format(self.site.id),
                                 content_type="application/json",
                                 data=json.dumps(data))

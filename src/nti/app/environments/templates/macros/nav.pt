@@ -10,19 +10,19 @@
                 <div class="nav-item dropdown">
                     <a href="javascript:void(0)" class="dropbtn">Dashboard</a>
                     <div class="dropdown-content">
-                        <a href="/admin/dashboards/@@trialsites?table-sortOn=table-site_age-2&table-sortOrder=descending">Trial Sites</a>
-                        <a href="/admin/dashboards/@@renewals?table-sortOn=table-site_days_to_renew-3&table-sortOrder=ascending">Sites Renewals</a>
+                        <a href="/onboarding/dashboards/@@trialsites?table-sortOn=table-site_age-2&table-sortOrder=descending">Trial Sites</a>
+                        <a href="/onboarding/dashboards/@@renewals?table-sortOn=table-site_days_to_renew-3&table-sortOrder=ascending">Sites Renewals</a>
                     </div>
                 </div>
             </metal:block>
             <metal:block tal:omit-tag="" tal:condition="view.is_customers_visible">
                 <div class="nav-item">
-                    <a href="/admin/customers/@@list">Customers</a>
+                    <a href="/onboarding/customers/@@list">Customers</a>
                 </div>
             </metal:block>
             <metal:block tal:omit-tag="" tal:condition="view.is_sites_visible">
                 <div class="nav-item">
-                    <a href="/admin/sites/@@list">Sites</a>
+                    <a href="/onboarding/sites/@@list">Sites</a>
                 </div>
             </metal:block>
             <div class="nav-item">
