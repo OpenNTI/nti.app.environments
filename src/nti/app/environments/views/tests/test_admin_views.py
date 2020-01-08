@@ -25,6 +25,7 @@ from nti.app.environments.views.tests import with_test_app
 from nti.app.environments.views.tests import ensure_free_txn
 from nti.app.environments.views._table_utils import SitesTable
 from nti.app.environments.views._table_utils import CustomersTable
+from hamcrest.library.collection.isdict_containingentries import has_entries
 
 
 class TestAdminViews(BaseAppTest):
@@ -124,9 +125,9 @@ class TestAdminViews(BaseAppTest):
                                                  'site_id': siteId,
                                                  'status': 'ACTIVE',
                                                  'dns_names': ['x', 'y'],
-                                                 'license': {'type': 'trial', 'start_date': '2019-12-11 18:00:00', 'end_date': '2019-12-12 18:00:00',
-                                                             'edit_link': None},
-                                                 'environment': {'type': 'shared', 'name': 'test'},
+                                                 'license': has_entries({'type': 'trial', 'start_date': '2019-12-11 18:00:00', 'end_date': '2019-12-12 18:00:00',
+                                                             'edit_link': None}),
+                                                 'environment': has_entries({'type': 'shared', 'name': 'test'}),
                                                  'environment_edit_link': None,
                                                  'requesting_email': None,
                                                  'client_name': None,
