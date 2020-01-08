@@ -159,7 +159,6 @@ class ICustomer(IContained):
     A representation of a customer.
     """
 
-
     email = ValidTextLine(title=u'Email',
                           description=u'The email address for this user',
                           required=True,
@@ -174,9 +173,6 @@ class ICustomer(IContained):
                              title=u'The hubspot contact for this customer',
                              required=False,
                              default=None)
-
-    created = DateTime(title=u'The datetime this customer was created at',
-                       required=True)
 
     last_verified = DateTime(title=u'The datetime this customer was verified via email',
                         required=False)
@@ -266,9 +262,6 @@ class ILMSSite(IContained):
     environment = Object(IEnvironment,
                          title=u'The environment this site is running out of',
                          required=False)
-
-    created = DateTime(title=u'The datetime this site was created at',
-                       required=True)
 
     status = Choice(title=u'The style of the highlight',
                     values=SITE_STATUS_OPTIONS,

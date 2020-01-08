@@ -32,7 +32,7 @@ from nti.app.environments.models.sites import EnterpriseLicense
 from nti.app.environments.utils import find_iface
 from nti.app.environments.utils import convertToUTC
 from nti.app.environments.utils import parseDate
-from nti.app.environments.utils import formatDate
+from nti.app.environments.utils import formatDateToLocal
 
 from nti.app.environments.views.utils import raise_json_error
 
@@ -136,7 +136,6 @@ class RequestTrialSiteView(SiteBaseView, ObjectCreateUpdateViewMixin):
 
         _now = datetime.datetime.utcnow()
         kwargs.update({'status': SITE_STATUS_PENDING,
-                       'created': _now,
                        'license': TrialLicense(start_date=_now,
                                                end_date=_now + datetime.timedelta(days=90))})
         # When requesting user is not owner,
@@ -170,7 +169,7 @@ class RequestTrialSiteView(SiteBaseView, ObjectCreateUpdateViewMixin):
              permission=ACT_UPDATE)
 class SiteUpdateView(SiteBaseView, ObjectCreateUpdateViewMixin):
 
-    _allowed_fields = ('status', 'dns_names', 'created', 'client_name')
+    _allowed_fields = ('status', 'dns_names', 'client_name')
 
     def readInput(self):
         incoming = super(SiteUpdateView, self).readInput()
@@ -230,14 +229,14 @@ def deleteSiteView(context, request):
              request_method='POST',
              permission=ACT_CREATE,
              name="upload_sites")
-class SitesUploadCSVView(SiteBaseView):
+class SitesUploadCSVView(SiteBaseView, ObjectCreateUpdateViewMixin):
     """
     Create sites with csv file.
     @param delimiter, csv delimiter, default to comma.
     @param sites, filename
     """
     _default_owner_email = 'tony.tarleton@nextthought.com'
-    _default_site_created = convertToUTC(datetime.datetime(2011, 4, 1, 0, 0, 0))
+    _default_site_created = convertToUTC(datetime.datetime(2011, 4, 1, 0, 0, 0), toTimeStamp=True)
     _default_site_status = SITE_STATUS_UNKNOWN
     _default_license_start_date = convertToUTC(datetime.datetime(2011, 4, 1, 0, 0, 0))
     _default_license_end_date = convertToUTC(datetime.datetime(2029, 12, 31, 0, 0, 0))
@@ -289,14 +288,17 @@ class SitesUploadCSVView(SiteBaseView):
             kwargs['license'] = self._process_license(row)
             kwargs['environment'] = self._process_environment(row)
             kwargs['dns_names'] = self._process_dns(row)
-            kwargs['created'] = parseDate(row['Site Created Date']) if row['Site Created Date'] else self._default_site_created
             kwargs['status'] = row['Status'] or self._default_site_status
+
+            createdTime = parseDate(row['Site Created Date'], toTimeStamp=True) if row['Site Created Date'] else self._default_site_created
 
             try:
                 # Use pod_id as the site id if it's dedicated environment,
                 # this may conflicts, for now just raise error.
                 siteId = kwargs['environment'].pod_id if isinstance(kwargs['environment'], DedicatedEnvironment) else None
-                site = PersistentSite(**kwargs)
+                site = PersistentSite()
+                site.createdTime = createdTime
+                site = self.updateObjectWithExternal(site, kwargs)
                 self.context.addSite(site, siteId=siteId)
             except KeyError as e:
                 raise ValueError("Existing site id: {}.".format(siteId))
@@ -348,7 +350,7 @@ class SiteCSVExportView(CSVBaseView):
     def header(self, params):
         return ['Site', 'Owner', 'License', 'License Start Date', 'License End Date',
                 'Environment', 'Host Machine',
-                'Status', 'DNS Names', 'Created',]
+                'Status', 'DNS Names', 'Created Time', 'Last Modified']
 
     def filename(self):
         return 'sites.csv'
@@ -366,10 +368,11 @@ class SiteCSVExportView(CSVBaseView):
         return {'Site': record.id,
                 'Owner': record.owner.email,
                 'License': 'trial' if ITrialLicense.providedBy(record.license) else 'enterprise',
-                'License Start Date': formatDate(record.license.start_date),
-                'License End Date': formatDate(record.license.end_date),
+                'License Start Date': formatDateToLocal(record.license.start_date),
+                'License End Date': formatDateToLocal(record.license.end_date),
                 'Environment': self._format_env(record.environment),
                 'Host Machine': record.environment.host if IDedicatedEnvironment.providedBy(record.environment) else '',
                 'Status': record.status,
                 'DNS Names': ','.join(record.dns_names),
-                'Created': formatDate(record.created)}
+                'Created Time': formatDateToLocal(record.created),
+                'Last Modified': formatDateToLocal(record.lastModified)}

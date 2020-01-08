@@ -1,4 +1,3 @@
-import datetime
 from pyramid import httpexceptions as hexc
 
 from zope.cachedescriptors.property import Lazy
@@ -120,6 +119,7 @@ class BaseFieldPutView(BaseView, ObjectCreateUpdateViewMixin):
                 self.updateObjectWithExternal(self.context, {field_name: new_field_value})
             else:
                 self.updateObjectWithExternal(field_value, external)
+                self.context.updateLastModIfGreater(field_value.lastModified)
             return {}
         except ValidationError as err:
             raise_json_error(hexc.HTTPUnprocessableEntity,
@@ -133,7 +133,6 @@ def getOrCreateCustomer(container, email):
         customer = PersistentCustomer()
         customer.email = email
         customer.__name__ = email
-        customer.created = datetime.datetime.utcnow()
         container[customer.__name__] = customer
     return customer
 

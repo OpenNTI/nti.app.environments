@@ -10,6 +10,8 @@
 
 	<include package="zope.container" />
 
+	<include package="nti.containers" />
+
 	<include package="nti.mailer" />
 
 	<include package="nti.i18n" />

@@ -19,7 +19,6 @@ function saveItem (me, url) {
         "end_date": getValue("site_license_end_date")
     } : null;
     var status = getValue("site_status");
-    var created = getValue("site_created");
     var dns_names = getValue("site_dns_names");
     dns_names = dns_names ? dns_names.split(',') : null;
 
@@ -30,7 +29,6 @@ function saveItem (me, url) {
         "license": license,
         "dns_names": dns_names,
         "status": status,
-        "created": created,
         "MimeType": "application/vnd.nextthought.app.environments.site"
     };
     data = JSON.stringify(data);

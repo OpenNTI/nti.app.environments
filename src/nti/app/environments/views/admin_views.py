@@ -132,16 +132,19 @@ class SiteDetailView(BaseTemplateView):
         return {'type': self._license_type(lic),
                 'start_date': formatDateToLocal(lic.start_date),
                 'end_date': formatDateToLocal(lic.end_date),
-                'edit_link': edit_link}
+                'edit_link': edit_link,
+                'lastModified': formatDateToLocal(lic.lastModified)}
 
     def _format_env(self, env=None):
         if ISharedEnvironment.providedBy(env):
             return {'type': 'shared',
-                    'name': env.name}
+                    'name': env.name,
+                    'lastModified': formatDateToLocal(env.lastModified)}
         elif IDedicatedEnvironment.providedBy(env):
             return {'type': 'dedicated',
                     'pod_id': env.pod_id,
-                    'host': env.host}
+                    'host': env.host,
+                    'lastModified': formatDateToLocal(env.lastModified)}
         raise ValueError('Unknown environment type.')
 
     def _format_owner(self, owner=None):
@@ -165,6 +168,7 @@ class SiteDetailView(BaseTemplateView):
                          'requesting_email': self.context.requesting_email,
                          'client_name': self.context.client_name,
                          'site_edit_link': request.resource_url(self.context) if request.has_permission(ACT_UPDATE, self.context) else None,
+                         'lastModified': formatDateToLocal(self.context.lastModified),
                          **extra_info}}
 
 

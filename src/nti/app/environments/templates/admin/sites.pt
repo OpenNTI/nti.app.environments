@@ -124,12 +124,6 @@
                             </select>
                         </div>
                         <div class="input-row">
-                            <label class="input-col-1">Created</label>
-                            <div class="input-col-3">
-                                <input type="text" name="created" id="site_created" placeHolder="2019-12-05T00:00:00"/>
-                            </div>
-                        </div>
-                        <div class="input-row">
                             <label class="input-col-1">DNS Names</label>
                             <textarea class="input-col-3" rows="2" name="dns_names" id="site_dns_names"></textarea>
                         </div>

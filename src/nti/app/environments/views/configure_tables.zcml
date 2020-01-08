@@ -28,6 +28,11 @@
 			 provides="z3c.table.interfaces.IColumn"
 			 name="created" />
 
+	<adapter factory="._table_utils.LastModifiedColumn"
+			 for="* * ._table_utils.CustomersTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="lastModified" />
+
 	<adapter factory="._table_utils.HubSpotColumn"
 			 for="* * ._table_utils.CustomersTable"
 			 provides="z3c.table.interfaces.IColumn"
@@ -53,6 +58,10 @@
 
 	<adapter factory="._table_utils.CustomerColumnHeader"
              for="* * * ._table_utils.CreatedColumn"
+			 provides="z3c.table.interfaces.IColumnHeader"/>
+
+	<adapter factory="._table_utils.CustomerColumnHeader"
+             for="* * * ._table_utils.LastModifiedColumn"
 			 provides="z3c.table.interfaces.IColumnHeader"/>
 
 	<adapter factory="._table_utils.CustomerColumnHeader"
@@ -90,6 +99,11 @@
 			 provides="z3c.table.interfaces.IColumn"
 			 name="created" />
 
+	<adapter factory="._table_utils.SiteLastModifiedColumn"
+			 for="* * ._table_utils.SitesTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="lastModified" />
+
 	<adapter factory="._table_utils.SiteDeleteColumn"
 			 for="* * ._table_utils.SitesTable"
 			 provides="z3c.table.interfaces.IColumn"
@@ -109,6 +123,10 @@
 
 	<adapter factory="._table_utils.SiteColumnHeader"
              for="* * * ._table_utils.SiteCreatedColumn"
+			 provides="z3c.table.interfaces.IColumnHeader"/>
+
+	<adapter factory="._table_utils.SiteColumnHeader"
+             for="* * * ._table_utils.SiteLastModifiedColumn"
 			 provides="z3c.table.interfaces.IColumnHeader"/>
 
 	<!-- Dashboard TrialSites table -->

@@ -45,7 +45,9 @@ class TestCustomers(BaseTest):
         result = to_external_object(inst)
         assert_that(result, has_entries({'Class': 'HubspotContact',
                                          'MimeType': 'application/vnd.nextthought.app.environments.hubspotcontact',
-                                         'contact_vid': 'xxx'}))
+                                         'contact_vid': 'xxx',
+                                         'Last Modified': not_none(),
+                                         'CreatedTime': not_none()}))
 
         inst = update_from_external_object(inst, {'contact_vid': 'yyy'})
         assert_that(inst, has_properties({'contact_vid': 'yyy'}))
@@ -55,18 +57,18 @@ class TestCustomers(BaseTest):
         inst = PersistentCustomer()
         assert_that(inst, has_properties({'email': None,
                                           'name': None,
-                                          'created': None,
+                                          'created': not_none(),
+                                          'createdTime': not_none(),
                                           'hubspot_contact': None,
                                           'last_verified': None}))
         errors = getValidationErrors(ICustomer, inst)
-        assert_that(errors, has_length(2))
-        assert_that(errors, has_items(('email', RequiredMissing('email')),
-                                      ('created', RequiredMissing('created'))))
+        assert_that(errors, has_length(1))
+        assert_that(errors, has_items(('email', RequiredMissing('email'))))
 
         inst = PersistentCustomer(email='xxx@gmail.com',
                                   created=datetime.datetime.utcnow())
         assert_that(inst, has_properties({'email': 'xxx@gmail.com',
-                                          'created': not_none(),
+                                          'createdTime': not_none(),
                                           'name': None,
                                           'hubspot_contact': None,
                                           'last_verified': None}))
@@ -85,7 +87,9 @@ class TestCustomers(BaseTest):
         result = to_external_object(inst)
         assert_that(result, has_entries({'Class': 'PersistentCustomer',
                                          'MimeType': 'application/vnd.nextthought.app.environments.customer',
-                                         'name': 'test last'}))
+                                         'name': 'test last',
+                                         'Last Modified': not_none(),
+                                         'CreatedTime': not_none()}))
 
         inst = update_from_external_object(inst, {'name': 'okc'})
         assert_that(inst, has_properties({'name': 'okc'}))
