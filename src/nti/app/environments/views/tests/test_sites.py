@@ -47,7 +47,7 @@ class TestSiteCreationView(BaseAppTest):
     @with_test_app()
     @mock.patch('nti.app.environments.models.wref.get_customers_folder')
     def test_site(self, mock_customers):
-        url = '/sites'
+        url = '/onboarding/sites'
         params = self._params()
         self.testapp.post_json(url, params=params, status=302, extra_environ=self._make_environ(username=None))
         self.testapp.post_json(url, params=params, status=403, extra_environ=self._make_environ(username='user001'))
@@ -74,7 +74,7 @@ class TestSiteCreationView(BaseAppTest):
         assert_that(site.created.strftime('%y-%m-%d %H:%M:%S'), '2019-11-26 06:00:00')
 
         # edit
-        site_url = '/sites/%s' % (site.__name__,)
+        site_url = '/onboarding/sites/%s' % (site.__name__,)
         params = {
             'status': 'ACTIVE',
             'dns_names': ['s@next.com']
@@ -124,7 +124,7 @@ class TestSitePutView(BaseAppTest):
                                                 owner=customer), siteId=siteId)
             assert_that(ITrialLicense.providedBy(site.license), is_(True))
 
-        url = '/sites/{}/@@license'.format(siteId)
+        url = '/onboarding/sites/{}/@@license'.format(siteId)
         params = {'MimeType': 'application/vnd.nextthought.app.environments.triallicense',
                   'start_date': '2019-12-30',
                   'end_date': '2029-12-30'}
@@ -198,7 +198,7 @@ class TestSitePutView(BaseAppTest):
                                                 owner=customer), siteId=siteId)
             assert_that(ITrialLicense.providedBy(site.license), is_(True))
 
-        url = '/sites/{}/@@environment'.format(siteId)
+        url = '/onboarding/sites/{}/@@environment'.format(siteId)
         params = {'MimeType': 'application/vnd.nextthought.app.environments.sharedenvironment',
                   'name': 'prod'}
         self.testapp.put_json(url, params=params, status=302, extra_environ=self._make_environ(username=None))

@@ -32,7 +32,7 @@ class TestAdminViews(BaseAppTest):
 
     @with_test_app()
     def testCustomersListView(self):
-        url = '/admin/customers/@@list'
+        url = '/onboarding/customers/@@list'
         params = {}
         self.testapp.get(url, params=params, status=302, extra_environ=self._make_environ(username=None))
         self.testapp.get(url, params=params, status=403, extra_environ=self._make_environ(username='user001'))
@@ -55,7 +55,7 @@ class TestAdminViews(BaseAppTest):
                                                      name="testname",
                                                      hubspot_contact=HubspotContact(contact_vid='vid001')))
 
-        url = '/admin/customers/{}/@@details'.format(email)
+        url = '/onboarding/customers/{}/@@details'.format(email)
         params = {}
         self.testapp.get(url, params=params, status=302, extra_environ=self._make_environ(username=None))
         self.testapp.get(url, params=params, status=403, extra_environ=self._make_environ(username='user001'))
@@ -66,7 +66,7 @@ class TestAdminViews(BaseAppTest):
             customer = customers[email]
             view = CustomerDetailView(customer, self.request)
             result = view()
-            assert_that(result, has_entries({'customers_list_link': 'http://example.com/admin/customers/@@list',
+            assert_that(result, has_entries({'customers_list_link': 'http://example.com/onboarding/customers/@@list',
                                              'customer': has_entries({'email': email,
                                                           'name': 'testname',
                                                           'hubspot': has_entries({'contact_vid': 'vid001'})}),
@@ -74,7 +74,7 @@ class TestAdminViews(BaseAppTest):
 
     @with_test_app()
     def testSitesListView(self):
-        url = '/admin/sites/@@list'
+        url = '/onboarding/sites/@@list'
         params = {}
         self.testapp.get(url, params=params, status=302, extra_environ=self._make_environ(username=None))
         self.testapp.get(url, params=params, status=403, extra_environ=self._make_environ(username='user001'))
@@ -110,7 +110,7 @@ class TestAdminViews(BaseAppTest):
                                                 dns_names=['x', 'y'],
                                                 owner=customer), siteId=siteId)
 
-        url = '/admin/sites/{}/@@details'.format(siteId)
+        url = '/onboarding/sites/{}/@@details'.format(siteId)
         params = {}
         self.testapp.get(url, params=params, status=302, extra_environ=self._make_environ(username=None))
         self.testapp.get(url, params=params, status=403, extra_environ=self._make_environ(username='user001'))
@@ -119,9 +119,9 @@ class TestAdminViews(BaseAppTest):
         with ensure_free_txn():
             view = SiteDetailView(site, self.request)
             result = view()
-            assert_that(result, has_entries({'sites_list_link': 'http://example.com/admin/sites/@@list',
+            assert_that(result, has_entries({'sites_list_link': 'http://example.com/onboarding/sites/@@list',
                                              'site': has_entries({'created': not_none(),
-                                                 'owner': {'owner': customer, 'detail_url': 'http://example.com/admin/customers/123@gmail.com/@@details'},
+                                                 'owner': {'owner': customer, 'detail_url': 'http://example.com/onboarding/customers/123@gmail.com/@@details'},
                                                  'site_id': siteId,
                                                  'status': 'ACTIVE',
                                                  'dns_names': ['x', 'y'],
