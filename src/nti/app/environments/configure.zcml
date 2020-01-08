@@ -15,6 +15,11 @@
 	<include package="zope.generations" />
 	<include package="zope.generations" file="subscriber.zcml" />
 
+	<include package="zope.traversing" />
+
+	<!-- Include zope.app.appsetup package for database lifecycle events -->
+	<include package="zope.app.appsetup" />
+
 	<!-- Database creation and migration -->
 	<utility factory=".generations.install._EnvironmentSchemaManager"
 			 name="nti.app.environments"
@@ -33,18 +38,14 @@
 	    provides=".interfaces.IOTPGenerator"/>
 
 	<include package=".models" file="configure.zcml" />
-    <include package=".views" file="configure.zcml" />
-    <include package=".securitypolicy" file="configure.zcml" />
+	
+	<include package=".views" file="configure.zcml" />
+	
+	<include package=".securitypolicy" file="configure.zcml" />
+	
 
-    <!-- Note we register a single subscriber from zope.app.appsetup.
-	 We care not about the security policy or session related subscribers -->
-    <subscriber
-      handler="zope.app.appsetup.bootstrap.bootStrapSubscriber"
-      for="zope.processlifetime.IDatabaseOpened"
-      />
-
-    <adapter factory=".appserver.root_folder"
-	     for="pyramid.interfaces.IRequest"
-	     provides=".models.interfaces.IOnboardingRoot"/>
+	<adapter factory=".appserver.root_folder"
+		 for="pyramid.interfaces.IRequest"
+		 provides=".models.interfaces.IOnboardingRoot"/>
 
 </configure>
