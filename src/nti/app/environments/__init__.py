@@ -26,7 +26,7 @@ from .settings import init_app_settings
 MessageFactory = zope_i18nmessageid.MessageFactory('nti.app.environments')
 
 def root_factory(request):
-    return IOnboardingRoot(request)
+    return IOnboardingRoot(request).__parent__
 
 def main(global_config, **settings):
     """ This function returns a Pyramid WSGI application.

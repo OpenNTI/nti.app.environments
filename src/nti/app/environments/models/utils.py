@@ -5,11 +5,12 @@ from pyramid.threadlocal import get_current_request
 
 from nti.app.environments.models import CUSTOMERS
 from nti.app.environments.models import SITES
+from nti.app.environments.models import IOnboardingRoot
 
 
 def get_onboarding_root(request=None):
     request = request or get_current_request()
-    return component.getUtility(IRootFactory)(request)
+    return IOnboardingRoot(request)
 
 
 def _get_root_child(key, onboarding_root=None, request=None):

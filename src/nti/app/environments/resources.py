@@ -12,6 +12,8 @@ from nti.app.environments.auth import ADMIN_ROLE
 from nti.app.environments.auth import ACCOUNT_MANAGEMENT_ROLE
 from nti.app.environments.auth import ACT_READ
 
+from .models.interfaces import IOnboardingRoot
+
 
 class AdminResource(object):
     """
@@ -24,7 +26,7 @@ class AdminResource(object):
 
     @Lazy
     def root(self):
-        return component.getUtility(IRootFactory)(self.request)
+        return IOnboardingRoot(self.request)
 
     def __getitem__(self, name):
         res = self.root.get(name)
