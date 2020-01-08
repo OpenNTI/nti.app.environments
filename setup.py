@@ -10,6 +10,8 @@ with open(os.path.join(here, 'CHANGES.txt')) as f:
 
 requires = [
     'gunicorn[gevent]',
+    'Babel==2.7.0',
+    'lingua==4.14',
     'python-dateutil',
     'plaster_pastedeploy',
     'pyramid',
@@ -22,6 +24,7 @@ requires = [
     'transaction',
     'ZODB',
     'nti.mailer @ git+ssh://git@github.com/NextThought/nti.mailer@queens',
+    'nti.utils @ git+ssh://git@github.com/NextThought/nti.utils@zoe-zebra',
     'pyramid-chameleon',
     'pyramid-mako',
     'pyramid-zcml',

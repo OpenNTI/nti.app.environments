@@ -1,4 +1,6 @@
-<metal:block metal:use-macro="load: ../macros/layout_admin.pt">
+<metal:block metal:use-macro="load: ../macros/layout_admin.pt"
+             xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+             i18n:domain="nti.app.environments">
     <title metal:fill-slot="title">
         Sites
     </title>
@@ -16,7 +18,6 @@
 
     <metal:block metal:fill-slot="content">
         <h1>Sites</h1>
-
         <div class="toolbar">
             <input type="text" id='search' name="search" placeHolder="Search" class="search-input" onkeypress="return search(event);"/>
             <div style="float: right;">
