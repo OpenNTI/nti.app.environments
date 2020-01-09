@@ -46,8 +46,7 @@ class _TableMixin(object):
         return False
 
 
-@view_config(route_name='admin',
-             renderer='../templates/admin/customers.pt',
+@view_config(renderer='../templates/admin/customers.pt',
              request_method='GET',
              context=ICustomersContainer,
              permission=ACT_READ,
@@ -61,8 +60,7 @@ class CustomersListView(BaseTemplateView, _TableMixin):
                 'is_deletion_allowed': self._is_deletion_allowed(table)}
 
 
-@view_config(route_name='admin',
-             renderer='../templates/admin/customer_detail.pt',
+@view_config(renderer='../templates/admin/customer_detail.pt',
              request_method='GET',
              context=ICustomer,
              permission=ACT_READ,
@@ -80,7 +78,7 @@ class CustomerDetailView(BaseTemplateView, _TableMixin):
     def __call__(self):
         sites = self._get_sites_folder()
         table = make_specific_table(SitesTable, sites, self.request, email=self.context.email)
-        return {'customers_list_link': self.request.route_url('admin', traverse=('customers', '@@list')),
+        return {'customers_list_link': self.request.resource_url(self.context.__parent__, '@@list'),
                 'customer': {'email': self.context.email,
                              'name': self.context.name,
                              'hubspot': self._format_hubspot(self.context.hubspot_contact) if self.context.hubspot_contact else None},
@@ -88,7 +86,7 @@ class CustomerDetailView(BaseTemplateView, _TableMixin):
                 'is_deletion_allowed': self._is_deletion_allowed(table)}
 
 
-@view_config(route_name='admin',
+@view_config(
              renderer='../templates/admin/sites.pt',
              request_method='GET',
              context=ILMSSitesContainer,
@@ -102,14 +100,13 @@ class SitesListView(BaseTemplateView, _TableMixin):
                 'creation_url': self.request.resource_url(self.context) if self.request.has_permission(ACT_CREATE, self.context) else None,
                 'sites_upload_url': self.request.resource_url(self.context, '@@upload_sites') if self.request.has_permission(ACT_CREATE, self.context) else None,
                 'sites_export_url': self.request.resource_url(self.context, '@@export_sites'),
-                'trial_site_request_url': self.request.route_url('admin', traverse=('sites', '@@request_trial_site')) if self.request.has_permission(ACT_CREATE, self.context) else None,
+                'trial_site_request_url': self.request.resource_url(self.context, '@@request_trial_site') if self.request.has_permission(ACT_CREATE, self.context) else None,
                 'site_status_options': SITE_STATUS_OPTIONS,
                 'env_shared_options': SHARED_ENV_NAMES,
                 'is_deletion_allowed': self._is_deletion_allowed(table)}
 
 
-@view_config(route_name='admin',
-             renderer='../templates/admin/site_detail.pt',
+@view_config(renderer='../templates/admin/site_detail.pt',
              request_method='GET',
              context=ILMSSite,
              permission=ACT_READ,
@@ -149,12 +146,12 @@ class SiteDetailView(BaseTemplateView):
 
     def _format_owner(self, owner=None):
         return {'owner': owner,
-                'detail_url': self.request.route_url('admin', traverse=('customers', self.context.owner.__name__, '@@details')) if owner else None}
+                'detail_url': self.request.resource_url(owner, '@@details') if owner else None}
 
     def __call__(self):
         request = self.request
         extra_info = self._site_extra_info() or {}
-        return {'sites_list_link': self.request.route_url('admin', traverse=('sites', '@@list')),
+        return {'sites_list_link': self.request.resource_url(self.context.__parent__, '@@list'),
                 'env_shared_options': SHARED_ENV_NAMES,
                 'site_status_options': SITE_STATUS_OPTIONS,
                 'site': {'created': formatDateToLocal(self.context.created),
@@ -172,8 +169,7 @@ class SiteDetailView(BaseTemplateView):
                          **extra_info}}
 
 
-@view_config(route_name='admin',
-             renderer='../templates/admin/request_site.pt',
+@view_config(renderer='../templates/admin/request_site.pt',
              request_method='GET',
              context=ILMSSitesContainer,
              permission=ACT_READ,
@@ -186,7 +182,7 @@ class SiteRequestView(BaseTemplateView):
         }
 
 
-@view_config(route_name='admin',
+@view_config(route_name='dashboards',
              renderer='../templates/admin/dashboard_trialsites.pt',
              request_method='GET',
              context=DashboardsResource,
@@ -201,7 +197,7 @@ class DashboardTrialSitesView(BaseTemplateView):
         return {'table': table}
 
 
-@view_config(route_name='admin',
+@view_config(route_name='dashboards',
              renderer='../templates/admin/dashboard_renewals.pt',
              request_method='GET',
              context=DashboardsResource,

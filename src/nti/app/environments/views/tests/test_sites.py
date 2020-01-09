@@ -47,7 +47,7 @@ class TestSiteCreationView(BaseAppTest):
     @with_test_app()
     @mock.patch('nti.app.environments.models.wref.get_customers_folder')
     def test_site(self, mock_customers):
-        url = '/sites'
+        url = '/onboarding/sites'
         params = self._params()
         self.testapp.post_json(url, params=params, status=302, extra_environ=self._make_environ(username=None))
         self.testapp.post_json(url, params=params, status=403, extra_environ=self._make_environ(username='user001'))
@@ -74,7 +74,7 @@ class TestSiteCreationView(BaseAppTest):
         assert_that(site.created.strftime('%y-%m-%d %H:%M:%S'), '2019-11-26 06:00:00')
 
         # edit
-        site_url = '/sites/%s' % (site.__name__,)
+        site_url = '/onboarding/sites/%s' % (site.__name__,)
         params = {
             'status': 'ACTIVE',
             'dns_names': ['s@next.com']
@@ -107,7 +107,9 @@ class TestSiteCreationView(BaseAppTest):
 class TestSitePutView(BaseAppTest):
 
     @with_test_app()
-    def testSiteLicensePutView(self):
+    @mock.patch('nti.app.environments.models.utils.get_onboarding_root')
+    def testSiteLicensePutView(self, mock_get_onboarding_root):
+        mock_get_onboarding_root.return_value = self._root()
         siteId = 'Sxxx'
         with ensure_free_txn():
             customers = self._root().get('customers')
@@ -124,7 +126,7 @@ class TestSitePutView(BaseAppTest):
                                                 owner=customer), siteId=siteId)
             assert_that(ITrialLicense.providedBy(site.license), is_(True))
 
-        url = '/sites/{}/@@license'.format(siteId)
+        url = '/onboarding/sites/{}/@@license'.format(siteId)
         params = {'MimeType': 'application/vnd.nextthought.app.environments.triallicense',
                   'start_date': '2019-12-30',
                   'end_date': '2029-12-30'}
@@ -181,9 +183,11 @@ class TestSitePutView(BaseAppTest):
         assert_that(result.json_body, has_entries({"message": "Missing required field: end_date."}))
 
     @with_test_app()
-    def testSiteEnvironmentPutView(self):
+    @mock.patch('nti.app.environments.models.utils.get_onboarding_root')
+    def testSiteEnvironmentPutView(self, mock_get_onboarding_root):
         siteId = 'Sxxx'
         with ensure_free_txn():
+            mock_get_onboarding_root.return_value = self._root()
             customers = self._root().get('customers')
             customer = customers.addCustomer(PersistentCustomer(email='123@gmail.com',
                                                                 name="testname"))
@@ -198,7 +202,7 @@ class TestSitePutView(BaseAppTest):
                                                 owner=customer), siteId=siteId)
             assert_that(ITrialLicense.providedBy(site.license), is_(True))
 
-        url = '/sites/{}/@@environment'.format(siteId)
+        url = '/onboarding/sites/{}/@@environment'.format(siteId)
         params = {'MimeType': 'application/vnd.nextthought.app.environments.sharedenvironment',
                   'name': 'prod'}
         self.testapp.put_json(url, params=params, status=302, extra_environ=self._make_environ(username=None))

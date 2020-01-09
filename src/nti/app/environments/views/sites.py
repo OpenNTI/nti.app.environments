@@ -158,7 +158,7 @@ class RequestTrialSiteView(SiteBaseView, ObjectCreateUpdateViewMixin):
                         site.id)
 
             self.request.response.status = 201
-            return {'redirect_url': self.request.route_url('admin', traverse=('sites', site.__name__, '@@details'))}
+            return {'redirect_url': self.request.resource_url(site, '@@details')}
         except InvalidItemType:
             raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid site type.")
 

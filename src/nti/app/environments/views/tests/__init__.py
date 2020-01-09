@@ -16,6 +16,8 @@ from webtest import TestApp
 from nti.app.environments import main
 from nti.app.environments import root_factory
 
+from nti.app.environments.models.interfaces import IOnboardingRoot
+
 
 class BaseAppTest(unittest.TestCase):
 
@@ -43,7 +45,7 @@ class BaseAppTest(unittest.TestCase):
         return result
 
     def _root(self, request=None):
-        return component.getUtility(IRootFactory)(request or self.request)
+        return IOnboardingRoot(request or self.request)
 
 
 class DummyCookieHelper(object):

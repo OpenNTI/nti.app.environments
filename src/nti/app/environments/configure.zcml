@@ -12,6 +12,19 @@
 
 	<include package="nti.containers" />
 
+	<include package="zope.generations" />
+	<include package="zope.generations" file="subscriber.zcml" />
+
+	<include package="zope.traversing" />
+
+	<!-- Include zope.app.appsetup package for database lifecycle events -->
+	<include package="zope.app.appsetup" />
+
+	<!-- Database creation and migration -->
+	<utility factory=".generations.install._EnvironmentSchemaManager"
+			 name="nti.app.environments"
+			 provides="zope.generations.interfaces.IInstallableSchemaManager" />
+
 	<include package="nti.mailer" />
 
 	<include package="nti.i18n" />
@@ -25,7 +38,14 @@
 	    provides=".interfaces.IOTPGenerator"/>
 
 	<include package=".models" file="configure.zcml" />
-    <include package=".views" file="configure.zcml" />
-    <include package=".securitypolicy" file="configure.zcml" />
+	
+	<include package=".views" file="configure.zcml" />
+	
+	<include package=".securitypolicy" file="configure.zcml" />
+	
+
+	<adapter factory=".appserver.root_folder"
+		 for="pyramid.interfaces.IRequest"
+		 provides=".models.interfaces.IOnboardingRoot"/>
 
 </configure>
