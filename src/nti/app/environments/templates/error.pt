@@ -29,22 +29,6 @@
              overflow: hidden;
          }
 
-         button {
-             background-color: #4CAF50;
-             color: white;
-             padding: 14px 20px;
-             margin: 8px 0px;
-             border: none;
-             cursor: pointer;
-             width: 100%;
-             font-size: 14px;
-             font-weight: 800;
-         }
-
-         button:hover {
-             opacity: 0.8;
-         }
-
          .container {
              margin: auto;
              padding-top: 100px;
