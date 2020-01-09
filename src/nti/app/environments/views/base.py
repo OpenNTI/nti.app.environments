@@ -13,6 +13,9 @@ from nti.externalization import update_from_external_object
 
 
 from nti.app.environments.auth import ACT_READ
+from nti.app.environments.auth import ADMIN_ROLE
+from nti.app.environments.auth import ACCOUNT_MANAGEMENT_ROLE
+from nti.app.environments.auth import is_admin
 from nti.app.environments.auth import is_admin_or_account_manager
 
 from nti.app.environments.models.customers import HubspotContact
@@ -65,6 +68,9 @@ class BaseTemplateView(BaseView):
     is_dashboard_visible = None
     is_customers_visible = None
     is_sites_visible = None
+    is_roles_visible = None
+    role_names = ((ADMIN_ROLE, 'Admin'),
+                  (ACCOUNT_MANAGEMENT_ROLE, 'Account Management'))
 
     @Lazy
     def _onboarding_root(self):
@@ -76,8 +82,8 @@ class BaseTemplateView(BaseView):
             self.logged_in = True
             self.is_customers_visible = self.request.has_permission(ACT_READ, get_customers_folder(self._onboarding_root, request))
             self.is_sites_visible = self.request.has_permission(ACT_READ, get_sites_folder(self._onboarding_root, request))
-            self.is_dashboard_visible = is_admin_or_account_manager(self.request.authenticated_userid)
-
+            self.is_dashboard_visible = is_admin_or_account_manager(self.request.authenticated_userid, request)
+            self.is_roles_visible = is_admin(self.request.authenticated_userid, request)
 
 class ObjectCreateUpdateViewMixin(object):
 

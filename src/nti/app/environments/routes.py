@@ -3,3 +3,6 @@ def includeme(config):
 
     config.add_route('dashboards','/onboarding/dashboards/*traverse',
                      factory='nti.app.environments.resources.DashboardsResource')
+
+    config.add_route('roles','/onboarding/roles/*traverse',
+                     factory='nti.app.environments.resources.RolesResource')

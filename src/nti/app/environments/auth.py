@@ -4,9 +4,10 @@ from pyramid.interfaces import IAuthenticationPolicy
 
 from pyramid.authentication import AuthTktAuthenticationPolicy as _AuthTktAuthenticationPolicy
 
-from zope.securitypolicy.interfaces import Allow
+from zope.securitypolicy.interfaces import Allow, IPrincipalRoleManager
 
 from zope.securitypolicy.principalrole import principalRoleManager
+from nti.app.environments.models.interfaces import IOnboardingRoot
 
 
 ACT_READ = 'zope.View'
@@ -21,21 +22,28 @@ ADMIN_ROLE = 'role:nti.roles.admin'
 ACCOUNT_MANAGEMENT_ROLE = 'role:nti.roles.account-management'
 
 
-def is_admin_or_account_manager(userid):
-    roles = principalRoleManager.getRolesForPrincipal(userid)
-    for role, access in roles or ():
-        if role in (ADMIN_ROLE, ACCOUNT_MANAGEMENT_ROLE) and access == Allow:
+def is_admin(userid, request):
+    roles = _registered_roles(userid, request)
+    for role in roles or ():
+        if role in (ADMIN_ROLE,):
             return True
     return False
 
 
-def _registered_roles(userid):
-    result = []
-    roles = principalRoleManager.getRolesForPrincipal(userid)
-    for role, access in roles or ():
-        if role in (ADMIN_ROLE, ACCOUNT_MANAGEMENT_ROLE) and access == Allow:
-            result.append(role)
-    return result
+def is_admin_or_account_manager(userid, request):
+    roles = _registered_roles(userid, request)
+    for role in roles or ():
+        if role in (ADMIN_ROLE, ACCOUNT_MANAGEMENT_ROLE):
+            return True
+    return False
+
+
+def _registered_roles(userid, request):
+    for mgr in (principalRoleManager, IPrincipalRoleManager(IOnboardingRoot(request))):
+        roles = mgr.getRolesForPrincipal(userid)
+        for role, access in roles or ():
+            if role in (ADMIN_ROLE, ACCOUNT_MANAGEMENT_ROLE) and access == Allow:
+                yield role
 
 
 @interface.implementer(IAuthenticationPolicy)
@@ -45,10 +53,6 @@ class AuthenticationPolicy(_AuthTktAuthenticationPolicy):
         result = _AuthTktAuthenticationPolicy.effective_principals(self, request)
         userid = self.unauthenticated_userid(request)
         if userid:
-            roles = _registered_roles(userid)
-            result.extend(roles)
-
-            # For now we grant all NextThought users account management role.
-            if userid.endswith('@nextthought.com'):
-                result.append(ACCOUNT_MANAGEMENT_ROLE)
+            roles = _registered_roles(userid, request)
+            result.extend([x for x in roles])
         return result

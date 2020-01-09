@@ -27,3 +27,15 @@ class DashboardsResource(object):
         return [(Allow, ADMIN_ROLE, ALL_PERMISSIONS),
                 (Allow, ACCOUNT_MANAGEMENT_ROLE, ACT_READ)]
 
+
+class RolesResource(object):
+
+    __name__ = 'roles'
+    __parent__ = None
+
+    def __init__(self, request):
+        self.__parent__ = IOnboardingRoot(request)
+
+    @LazyOnClass
+    def __acl__(self):
+        return [(Allow, ADMIN_ROLE, ALL_PERMISSIONS)]

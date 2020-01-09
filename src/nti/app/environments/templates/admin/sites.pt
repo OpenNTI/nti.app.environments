@@ -20,7 +20,9 @@
         <div class="toolbar">
             <input type="text" id='search' name="search" placeHolder="Search" class="search-input" onkeypress="return search(event);"/>
             <div style="float: right;">
-                <a href="${trial_site_request_url}" style="margin-left: 6px;">Request Trial Site</a>
+                <metal:block tal:omit-tag="" tal:condition="trial_site_request_url|nothing">
+                    <a href="${trial_site_request_url}" style="margin-left: 6px;">Request Trial Site</a>
+                </metal:block>
                 <metal:block tal:omit-tag="" tal:condition="creation_url|nothing">
                     <button type="button" onclick="document.getElementById('newModal').style.display = 'block';" style="margin-left: 6px;">Create New Site</button>
                 </metal:block>

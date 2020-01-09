@@ -1,0 +1,118 @@
+<metal:block metal:use-macro="load: ../macros/layout_admin.pt">
+    <title metal:fill-slot="title">
+        Role Management
+    </title>
+	<metal:block metal:fill-slot="css">
+        <link href="/static/css/modal.css" rel="stylesheet">
+        <link href="/static/css/table.css" rel="stylesheet">
+        <style>
+            <metal:block tal:omit-tag="" tal:condition="not:is_deletion_allowed|nothing">
+                .nti_delete {
+                    display: none;
+                }
+            </metal:block>
+        </style>
+    </metal:block>
+
+    <metal:block metal:fill-slot="content">
+        <h1>${role_display_name}</h1>
+        <div class="toolbar">
+            <input type="text" id='search' name="search" placeHolder="Search" class="search-input" onkeypress="return search(event);"/>
+            <div style="float: right;">
+                <metal:block tal:omit-tag="" tal:condition="creation_url|nothing">
+                    <button type="button" onclick="openNewModal();" style="margin-left: 6px;">Add User</button>
+                </metal:block>
+            </div>
+        </div>
+
+		<table tal:condition="python: len(table.context)" tal:replace="structure python: table.render()" />
+		<div tal:condition="python: not len(table.context)">
+			No users.
+		</div>
+
+	    <div class="table-pagination" tal:define="table table" >
+            <div class="pagination-detail" tal:condition="python: len(table.context)">
+                Total: ${len(table.context)}.
+            </div>
+            <div class="pagination" tal:condition="python: len(table.context) > table.batchSize">
+                <span tal:replace="structure python: table.renderBatch()"/>
+            </div>
+	    </div>
+
+        <div id="deletingModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Deleting?</h3>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to remove <strong><span class="deleting_email"></span></strong>?</p>
+                    <div class="success success-deletion" style="display:none;"></div>
+                    <div class="error error-deletion" style="display:none;"></div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class='btnOK' onclick="deleteItem(this);">Delete</button>
+                    <button class='btnNO' onclick="document.getElementById('deletingModal').style.display = 'none';">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="newModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Add User</h3>
+                </div>
+                <div class="modal-body">
+                    <div class="form">
+                        <div class="input-row">
+                            <label class="input-col-1">Email</label>
+                            <div class="input-col-3">
+                                <input type="text" id="role_email"/>
+                            </div>
+                        </div>
+                        <input type="text" id="role_name" value="${role_name}" style="display:none;"/>
+                    </div>
+                    <div class="success success-creation" style="display:none;"></div>
+                    <div class="error error-creation" style="display:none;"></div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class='btnSave' onclick="saveItem(this, '${creation_url}');">Save</button>
+                    <button type="button" class='btnNO' onclick="document.getElementById('newModal').style.display = 'none';">Cancel</button>
+                </div>
+            </div>
+        </div><!-- end of new modal -->
+
+        <metal:block metal:fill-slot="script">
+            <script src="/static/js/role.js"></script>
+            <script>
+                // When the user clicks anywhere outside of the modal, close it
+                window.onclick = function(event) {
+                    var ids = ["deletingModal", "newModal"];
+                    for(var i=0; i<ids.length; i++) {
+                        var modal = document.getElementById(ids[i]);
+                        if (event.target == modal) {
+                            modal.style.display = "none";
+                        }
+                    }
+                }
+
+                function search(e) {
+                    // When a enter key pressed, query the server.
+                    if (e.which == 13 || e.keyCode == 13) {
+                        var search = $('#search').val().trim();
+                        var url = updateUrlParameter('search', search);
+                        window.location.href = url;
+                    }
+                }
+
+                $( document ).ready(function() {
+                    var email = getUrlParameter('search');
+                    if(email){
+                        $('#search').val(email);
+                    }
+                });
+            </script>
+        </metal:block>
+    </metal:block><!-- end of content -->
+</metal:block>
