@@ -48,4 +48,7 @@
 		 for="pyramid.interfaces.IRequest"
 		 provides=".models.interfaces.IOnboardingRoot"/>
 
+	<adapter factory=".adapters._principal_role_manager"
+		 	 for=".models.interfaces.IOnboardingRoot"
+		 	 provides="zope.securitypolicy.interfaces.IPrincipalRoleManager"/>
 </configure>

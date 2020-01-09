@@ -7,6 +7,8 @@ from z3c.schema.email import isValidMailAddress
 from zope import component
 from zope import interface
 
+from zope.annotation.interfaces import IAttributeAnnotatable
+
 from zope.container.constraints import contains
 
 from zope.container.interfaces import IContainer
@@ -45,7 +47,7 @@ SITE_STATUS_OPTIONS = (SITE_STATUS_PENDING,
                        SITE_STATUS_UNKNOWN)
 
 
-class IOnboardingRoot(IContainer):
+class IOnboardingRoot(IContainer, IAttributeAnnotatable):
     """
     The root container for onboarding
     """

@@ -182,6 +182,21 @@
 			 for="* * * ._table_utils.SiteDaysToRenewColumn"
 			 provides="z3c.table.interfaces.IColumnHeader"/>
 
+	<!-- Role Principals table -->
+	<adapter factory="._table_utils.PrincipalColumn"
+			 for="* * ._table_utils.RolePrincipalsTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="principal" />
+
+	<adapter factory="._table_utils.PrincipalDeleteColumn"
+			 for="* * ._table_utils.RolePrincipalsTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="delete" />
+
+	<adapter factory="._table_utils.RolePricipalsColumnHeader"
+			 for="* * * ._table_utils.PrincipalColumn"
+			 provides="z3c.table.interfaces.IColumnHeader"/>
+
 	<!-- default batch provider -->
 	<adapter factory="._table_utils.DefaultTableBatchProvider"
 			 for="* * ._table_utils.BaseTable"

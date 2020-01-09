@@ -1,5 +1,12 @@
 from pyramid.view import view_config
 
+from pyramid import httpexceptions as hexc
+
+from zope.cachedescriptors.property import Lazy
+
+from zope.securitypolicy.interfaces import Allow as zopeAllow
+from zope.securitypolicy.interfaces import IPrincipalRoleManager
+
 from nti.app.environments.api.siteinfo import nt_client
 
 from nti.app.environments.api.hubspotclient import get_hubspot_profile_url
@@ -10,6 +17,8 @@ from nti.app.environments.auth import ACT_DELETE
 from nti.app.environments.auth import ACT_CREATE
 from nti.app.environments.auth import ACT_EDIT_SITE_LICENSE
 from nti.app.environments.auth import ACT_EDIT_SITE_ENVIRONMENT
+from nti.app.environments.auth import ADMIN_ROLE
+from nti.app.environments.auth import ACCOUNT_MANAGEMENT_ROLE
 
 from nti.app.environments.models.interfaces import ICustomer
 from nti.app.environments.models.interfaces import IEnterpriseLicense
@@ -22,20 +31,27 @@ from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ILMSSitesContainer
 from nti.app.environments.models.interfaces import SITE_STATUS_OPTIONS
 from nti.app.environments.models.interfaces import SHARED_ENV_NAMES
+from nti.app.environments.models.interfaces import checkEmailAddress
 
 from nti.app.environments.models.utils import get_sites_folder
 
 from nti.app.environments.resources import DashboardsResource
+from nti.app.environments.resources import RolesResource
 
 from nti.app.environments.utils import formatDateToLocal
 from nti.app.environments.utils import find_iface
 
 from nti.app.environments.views.base import BaseTemplateView
+from nti.app.environments.views.base import BaseView
+
 from nti.app.environments.views._table_utils import CustomersTable
+from nti.app.environments.views._table_utils import RolePrincipalsTable
 from nti.app.environments.views._table_utils import SitesTable
 from nti.app.environments.views._table_utils import DashboardTrialSitesTable
 from nti.app.environments.views._table_utils import DashboardRenewalsTable
 from nti.app.environments.views._table_utils import make_specific_table
+
+from nti.app.environments.views.utils import raise_json_error
 
 
 class _TableMixin(object):
@@ -210,3 +226,91 @@ class DashboardRenewalsView(BaseTemplateView):
                                     get_sites_folder(request=self.request),
                                     self.request)
         return {'table': table}
+
+
+class _RoleMixin(object):
+
+    _role_names_map = {
+        ADMIN_ROLE: 'Admin Role',
+        ACCOUNT_MANAGEMENT_ROLE: 'Account Management Role'
+    }
+
+    def _is_email_valid(self, email):
+        return checkEmailAddress(email)
+
+    @Lazy
+    def principal_role_manager(self):
+        onboarding = IOnboardingRoot(self.request)
+        return IPrincipalRoleManager(onboarding)
+
+
+@view_config(route_name='roles',
+             renderer='../templates/admin/role.pt',
+             request_method='GET',
+             permission=ACT_READ,
+             context=RolesResource)
+class RoleView(BaseTemplateView, _RoleMixin):
+
+    def _get_role_name(self, name):
+        if name not in self._role_names_map:
+            raise hexc.HTTPNotFound()
+        return self._role_names_map[name]
+
+    def __call__(self):
+        role_name = self.request.params.get('role_name')
+        role_display_name = self._get_role_name(role_name)
+        principals = self.principal_role_manager.getPrincipalsForRole(role_name)
+        principals = [x[0] for x in principals if x[1] == zopeAllow]
+        table = make_specific_table(RolePrincipalsTable,
+                                    principals,
+                                    self.request)
+        return {'table': table,
+                'creation_url': self.request.route_url('roles', traverse=('@@assign',)),
+                'role_name': role_name,
+                'role_display_name': role_display_name,
+                'is_deletion_allowed': self.request.has_permission(ACT_DELETE, self.context)}
+
+
+@view_config(route_name='roles',
+             renderer='json',
+             request_method='POST',
+             context=RolesResource,
+             permission=ACT_CREATE,
+             name="assign")
+class AssignRoleToPrincipalView(BaseView, _RoleMixin):
+
+    def __call__(self):
+        role_name = self.body_params.get('role_name')
+        if role_name not in self._role_names_map:
+            raise_json_error(hexc.HTTPBadRequest, 'Unknown role_name.')
+
+        email = self.body_params.get('email')
+        if not email:
+            raise_json_error(hexc.HTTPBadRequest, 'Email is required.')
+        if not self._is_email_valid(email):
+            raise_json_error(hexc.HTTPBadRequest, 'Invalid Email.')
+
+        self.principal_role_manager.assignRoleToPrincipal(role_name, email)
+        return {}
+
+
+@view_config(route_name='roles',
+             renderer='json',
+             request_method='DELETE',
+             context=RolesResource,
+             permission=ACT_DELETE,
+             name="remove")
+class RemoveRoleToPrincipalView(BaseView, _RoleMixin):
+
+    def __call__(self):
+        params = self.request.params
+        role_name = self._get_param('role_name', params)
+        if role_name not in self._role_names_map:
+            raise_json_error(hexc.HTTPBadRequest, 'Unknown role_name.')
+
+        email = self._get_param('email', params)
+        if not self._is_email_valid(email):
+            raise_json_error(hexc.HTTPBadRequest, 'Invalid Email.')
+
+        self.principal_role_manager.unsetRoleForPrincipal(role_name, email)
+        return {}

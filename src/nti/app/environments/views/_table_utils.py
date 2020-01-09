@@ -43,7 +43,7 @@ class TrivialTableAbsoluteURL(object):
 @interface.implementer(IBatchProvider)
 class DefaultTableBatchProvider(batch.BatchProvider):
 
-    _request_args = ['%(prefix)s-sortOn', '%(prefix)s-sortOrder', 'search']
+    _request_args = ['%(prefix)s-sortOn', '%(prefix)s-sortOrder', 'search', 'role_name']
 
 
 class BaseTable(table.Table):
@@ -178,8 +178,10 @@ class CustomerColumnHeader(header.SortingColumnHeader):
 class _FilterMixin(object):
 
     def _get_filter(self, name, params):
-        value = params.get(name) or ''
-        return value.strip()
+        value = params[name].strip() if params.get(name) else ''
+        if value:
+            value = value.lower()
+        return value
 
 
 class ValuesForCustomersTable(value.ValuesForContainer, _FilterMixin):
@@ -191,8 +193,7 @@ class ValuesForCustomersTable(value.ValuesForContainer, _FilterMixin):
     def values(self):
         params = self.request.params
         email = self._get_filter('search', params)
-        return self.context.values() if not email \
-                         else [x for x in self.context.values() if self._predicate(x, email.lower())]
+        return self.context.values() if not email else [x for x in self.context.values() if self._predicate(x, email)]
 
 
 # Sites table
@@ -219,7 +220,7 @@ class BaseSitesTable(BaseTable, _FilterMixin):
     def values(self):
         params = self.request.params
         term = self._get_filter('search', params)
-        return self._raw_values if not term else [x for x in self._raw_values if self._predicate(x, term.lower())]
+        return self._raw_values if not term else [x for x in self._raw_values if self._predicate(x, term)]
 
 
 class SitesTable(BaseSitesTable):
@@ -349,3 +350,42 @@ class SiteDaysToRenewColumn(column.Column):
 
     def renderCell(self, item):
         return (item.license.end_date - self.table._current_time).days
+
+
+class RolePrincipalsTable(BaseTable, _FilterMixin):
+
+    def _predicate(self, item, email):
+        return email in item.lower()
+
+    @property
+    def values(self):
+        params = self.request.params
+        email = self._get_filter('search', params)
+        return self.context if not email else [x for x in self.context if self._predicate(x, email)]
+
+
+class RolePricipalsColumnHeader(header.SortingColumnHeader):
+
+    _request_args = ['search', 'role_name']
+
+
+class PrincipalColumn(column.Column):
+
+    weight = 0
+    header = 'Email'
+
+    def renderCell(self, item):
+        return item or ''
+
+class PrincipalDeleteColumn(column.Column):
+
+    weight = 2
+    cssClasses = {'td': 'nti_delete',
+                  'th': 'nti_delete'}
+
+    def renderCell(self, item):
+        role_name = self.request.params['role_name'] or ''
+        template = """<button onclick="openDeletingModal('{url}', '{email}');">Delete</button>"""
+        return  template.format(url=self.request.route_url('roles', traverse=('@@remove',), _query=(('role_name', role_name),
+                                                                                                    ('email', item))),
+                                email=item)

@@ -15,6 +15,16 @@
                     </div>
                 </div>
             </metal:block>
+            <metal:block tal:omit-tag="" tal:condition="python: view.is_roles_visible and view.role_names">
+            <div class="nav-item dropdown">
+                <a href="javascript:void(0)" class="dropbtn">Roles</a>
+                <div class="dropdown-content">
+                    <metal:block tal:omit-tag="" tal:repeat="option view.role_names">
+                        <a href="/onboarding/roles/?role_name=${option[0]}">${option[1]}</a>
+                    </metal:block>
+                </div>
+            </div>
+            </metal:block>
             <metal:block tal:omit-tag="" tal:condition="view.is_customers_visible">
                 <div class="nav-item">
                     <a href="/onboarding/customers/@@list">Customers</a>
