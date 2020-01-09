@@ -1,6 +1,3 @@
-from zope import component
-
-from pyramid.interfaces import IRootFactory
 from pyramid.threadlocal import get_current_request
 
 from nti.app.environments.models import CUSTOMERS

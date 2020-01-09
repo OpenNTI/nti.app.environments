@@ -12,6 +12,8 @@ from zope.component import getGlobalSiteManager
 
 import zope.i18nmessageid as zope_i18nmessageid
 
+from nti.externalization.extension_points import set_external_identifiers
+
 from .appserver import OnboardingServer
 
 from .auth import AuthenticationPolicy
@@ -25,8 +27,18 @@ from .settings import init_app_settings
 # TODO what setup is missing here to make this work
 MessageFactory = zope_i18nmessageid.MessageFactory('nti.app.environments')
 
+# Override the hook in nti.ntiids,
+# such that no OID/NTIIDs returned for externalization.
+import nti.ntiids
+def set_hook():
+    hook = getattr(set_external_identifiers, 'sethook')
+    hook(lambda context, result: None)
+set_hook()
+
+
 def root_factory(request):
     return IOnboardingRoot(request).__parent__
+
 
 def main(global_config, **settings):
     """ This function returns a Pyramid WSGI application.
