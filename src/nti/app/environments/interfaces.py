@@ -1,5 +1,8 @@
 from zope import interface
 
+from zope.securitypolicy.interfaces import IPrincipalRoleManager
+
+
 class IOTPGenerator(interface.Interface):
     """
     An object capable of generating a secure one-time user passphrase
@@ -11,4 +14,8 @@ class IOTPGenerator(interface.Interface):
         """
 
 class IOnboardingServer(interface.Interface):
+    pass
+
+
+class IOnboardingRootPrincipalRoleManager(IPrincipalRoleManager):
     pass
