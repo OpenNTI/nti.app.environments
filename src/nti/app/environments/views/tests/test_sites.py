@@ -8,6 +8,8 @@ from hamcrest import instance_of
 from hamcrest import contains_string
 from hamcrest import is_
 
+from nti.externalization import to_external_object
+
 from nti.app.environments.views.customers import getOrCreateCustomer
 from nti.app.environments.views.tests import BaseAppTest
 from nti.app.environments.views.tests import with_test_app
@@ -103,6 +105,9 @@ class TestSiteCreationView(BaseAppTest):
                                                                'license': instance_of(EnterpriseLicense),
                                                                'status': 'PENDING',
                                                                'dns_names': ['t1.nextthought.com', 't2.nextthought.com']}))
+            external = to_external_object(site)
+            assert_that(external, has_entries({'id': 'S1id'}))
+
 
 class TestSitePutView(BaseAppTest):
 
