@@ -177,12 +177,33 @@ a {
     width: 100%;
 }
 
-.btnSave {
+.btn {
     font-size: 16px;
-    line-height: 32px;
-    width: 80px;
+    border: none;
+    outline: none !important;
     border-radius: 4px;
+    padding: 8px 12px;
+    min-width: 80px;
+}
+
+.btnSave {
     color: #fff;
     background-color: #4CAF50;
-    border-color: #4CAF50;
 }
+
+.btnOK {
+	color: #fff;
+    background-color: #dc3545;
+}
+
+.btnNO {
+	color: #fff;
+    background-color: #6c757d;
+}
+
+/* Add a right margin to each icon */
+.fa {
+    margin-left: -6px;
+    margin-right: 6px;
+}
+/** end spinner */

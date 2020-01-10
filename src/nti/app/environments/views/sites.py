@@ -112,9 +112,12 @@ class SiteCreationView(SiteBaseView, ObjectCreateUpdateViewMixin):
             site = self.createObjectWithExternal()
             self.context.addSite(site)
             self.request.response.status = 201
+            logger.info("%s created a new site, site id: %s.",
+                        self.request.authenticated_userid,
+                        site.id)
+            return {}
         except InvalidItemType:
             raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid site type.")
-        return {}
 
 
 @view_config(renderer='json',

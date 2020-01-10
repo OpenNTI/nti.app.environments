@@ -45,19 +45,24 @@ def _get_redirect_uri(request):
     return urllib_parse.urljoin(request.application_url, LOGON_GOOGLE_OAUTH2_VIEW)
 
 
+_DEFAULT_SUCCESS_URL = '/onboarding'
+
+def _success_url(request):
+    return request.params.get('success') or _DEFAULT_SUCCESS_URL
+
+
 @view_config(request_method='GET',
              name=LOGON_GOOGLE_VIEW)
 def google_oauth1(context, request):
+    success = _success_url(request)
     if request.authenticated_userid:
-        return hexc.HTTPFound(location='/', headers=request.response.headers)
+        return hexc.HTTPFound(location=success, headers=request.response.headers)
 
     # Google oauth2 reference
     # https://developers.google.com/identity/protocols/OpenIDConnect
     state = hashlib.sha256(os.urandom(1024)).hexdigest()
     request.session['google.state'] = state
-
-    if request.params.get('success'):
-        request.session['google.success'] = request.params.get('success')
+    request.session['google.success'] = success
 
     params = {
         "state" : state,
@@ -132,7 +137,7 @@ def google_oauth2(context, request):
                 raise hexc.HTTPUnprocessableEntity('Invalid domain')
 
         headers = remember(request, email)
-        success = request.session.get('google.success') or '/'
+        success = request.session.get('google.success') or _DEFAULT_SUCCESS_URL
         return hexc.HTTPFound(location=success, headers=headers)
 
     except Exception as e:
@@ -144,10 +149,11 @@ def google_oauth2(context, request):
              request_method='GET',
              name=LOGIN_VIEW)
 def login(context, request):
+    success = _success_url(request)
     if request.authenticated_userid:
-        return hexc.HTTPFound(location=request.params.get('success') or '/', headers=request.response.headers)
+        return hexc.HTTPFound(location=success, headers=request.response.headers)
     return {'rel_logon': urllib_parse.urljoin(request.application_url, LOGON_GOOGLE_VIEW),
-            'success': request.params.get('success')}
+            'success': success}
 
 
 @view_config(request_method='GET',

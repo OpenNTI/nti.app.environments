@@ -54,28 +54,6 @@
 .modal-footer .btnOK,
 .modal-footer .btnNO,
 .modal-footer .btnSave {
-	font-size: 16px;
-	line-height: 32px;
-	width: 80px;
-	border-radius: 4px;	
 	margin-left: 6px;
 	margin-right: 6px;
-}
-
-.modal-footer .btnNO {
-	color: #fff;
-    background-color: #6c757d;
-    border-color: #6c757d;
-}
-
-.modal-footer .btnOK {
-	color: #fff;
-    background-color: #dc3545;
-    border-color: #dc3545;
-}
-
-.modal-footer .btnSave {
-	color: #fff;
-    background-color: #4CAF50;
-    border-color: #4CAF50;
 }
