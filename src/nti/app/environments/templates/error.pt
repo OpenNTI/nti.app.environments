@@ -51,6 +51,9 @@
                 </p>
             </metal:block>
 	    <p>If you feel this is in error contact <a href="mailto:support@nextthought.com">support@nextthought.com</a></p>
+	    <p>
+		<a href="/onboarding">Go Home</a>
+	    </p>
         </div>
 
     </body>

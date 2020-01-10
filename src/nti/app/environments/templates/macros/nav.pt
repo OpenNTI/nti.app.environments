@@ -1,6 +1,6 @@
 <div class="nav" metal:define-macro="nav">
     <div class="nav-brand">
-        <a href="/">
+        <a href="/onboarding">
             <img src="${request.static_url('nti.app.environments:static/logo.png')}"/>
         </a>
     </div>
