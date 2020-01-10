@@ -27,3 +27,7 @@ Getting Started
 - Run your project.
 
     env/bin/pserve development.ini
+
+- Docker container:
+    $ build-docker-image.sh my.app
+    $ docker run my.app
