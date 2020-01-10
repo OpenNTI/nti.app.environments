@@ -22,8 +22,13 @@
                 <div class="error error-request-trial-site" style="display:none;"></div>
             </div>
             <div class="row-group">
-                <button type="button" class='btnSave' onclick="requestTrialSite(this, '${trial_site_request_url}');">
-                    Save
+                <button type="button" class='btn btnSave' onclick="requestTrialSite(this, '${trial_site_request_url}');">
+                    <div class="spinnerText" style="display:none;">
+                        <i class="fa fa-circle-o-notch fa-spin"></i>Saving
+                    </div>
+                    <div class="nonSpinnerText">
+                        Save
+                    </div>
                 </button>
             </div>
         </div>

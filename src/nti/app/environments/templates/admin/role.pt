@@ -51,8 +51,8 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button class='btnOK' onclick="deleteItem(this);">Delete</button>
-                    <button class='btnNO' onclick="document.getElementById('deletingModal').style.display = 'none';">Cancel</button>
+                    <button class='btn btnOK' onclick="deleteItem(this);">Delete</button>
+                    <button class='btn btnNO' onclick="document.getElementById('deletingModal').style.display = 'none';">Cancel</button>
                 </div>
             </div>
         </div>
@@ -77,8 +77,8 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class='btnSave' onclick="saveItem(this, '${creation_url}');">Save</button>
-                    <button type="button" class='btnNO' onclick="document.getElementById('newModal').style.display = 'none';">Cancel</button>
+                    <button type="button" class='btn btnSave' onclick="saveItem(this, '${creation_url}');">Save</button>
+                    <button type="button" class='btn btnNO' onclick="document.getElementById('newModal').style.display = 'none';">Cancel</button>
                 </div>
             </div>
         </div><!-- end of new modal -->

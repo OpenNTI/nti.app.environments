@@ -17,22 +17,13 @@ function requestTrialSite (me, url) {
     };
     data = JSON.stringify(data);
 
-    $.ajax({
-        url: url,
-        method: 'POST',
-        data: data,
-        success: function (result) {
-            if (result['redirect_url']) {
-                window.location.href = result['redirect_url'];
-            } else {
-                showSuccessMessage("Save successfully.", '.success-request-trial-site', '.error-request-trial-site', 500, function(){
-                    window.location.reload();
-                });
-            }
-        },
-        error: function (jqXHR, exception) {
-            var res = JSON.parse(jqXHR.responseText);
-            showErrorMessage(res['message'], '.success-request-trial-site', '.error-request-trial-site');
+    doAjaxRequest(me, url, data, 'POST', '.success-request-trial-site', '.error-request-trial-site', null, function(result){
+        if (result['redirect_url']) {
+            window.location.href = result['redirect_url'];
+        } else {
+            showSuccessMessage("Save successfully.", '.success-request-trial-site', '.error-request-trial-site', 500, function(){
+                window.location.reload();
+            });
         }
     });
 }

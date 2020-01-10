@@ -103,3 +103,81 @@ function getLicenseMimeType(_type) {
     }
     return null
 }
+
+
+/** do ajax request */
+function doAjaxRequest(me, url, data, method, success, error, modal, postHandler) {
+    // show spinner
+    $($(me).find('.nonSpinnerText')[0]).hide();
+    $($(me).find('.spinnerText')[0]).show();
+
+    $.ajax({
+        url: url,
+        method: method,
+        data: data,
+        success: function (result) {
+            if(postHandler) {
+                postHandler(result);
+            } else {
+                showSuccessMessage("Successfully.", success, error, 500, function () {
+                    if(modal) {
+                        $(modal).hide()
+                    }
+                    window.location.reload();
+                });
+            }
+        },
+        error: function (jqXHR, exception) {
+            // hide spinner
+            $($(me).find('.spinnerText')[0]).hide();
+            $($(me).find('.nonSpinnerText')[0]).show();
+
+            var res = JSON.parse(jqXHR.responseText);
+            showErrorMessage(res['message'], success, error);
+        }
+    });
+}
+
+function doCreationRequest(me, url, data, modal, postHandler) {
+    doAjaxRequest(me, url, data, 'POST', '.success-creation', '.error-creation', modal, postHandler);
+}
+
+function doUpdateRequest(me, url, data, modal, postHandler) {
+    doAjaxRequest(me, url, data, 'PUT', '.success-update', '.error-update', modal, postHandler);
+}
+
+function doDeletionRequest (me, url, data, modal, postHandler) {
+    doAjaxRequest(me, url, data, 'DELETE', '.success-deletion', '.error-deletion', modal, postHandler);
+}
+
+
+/** file upload request. */
+function doUploadFile(me, url, data, success, error, modal) {
+    // show spinner
+    $($(me).find('.nonSpinnerText')[0]).hide();
+    $($(me).find('.spinnerText')[0]).show();
+
+    $.ajax({
+        url: url,
+        type: 'post',
+        data: data,
+        dataType: 'json',
+        cache: false,
+        contentType: false,
+        processData: false,
+        success: function (result) {
+            showSuccessMessage("Successfully.", success, error, 500, function(){
+                if(modal) {
+                    $(modal).hide()
+                }
+                window.location.reload();
+            });
+        },
+        error: function (jqXHR, exception) {
+            $($(me).find('.spinnerText')[0]).hide();
+            $($(me).find('.nonSpinnerText')[0]).show();
+            var res = JSON.parse(jqXHR.responseText);
+            showErrorMessage(res['message'], success, error);
+        }
+    });
+}

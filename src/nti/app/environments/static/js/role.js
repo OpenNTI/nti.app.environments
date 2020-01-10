@@ -7,21 +7,7 @@ function saveItem (me, url) {
     };
     data = JSON.stringify(data);
 
-    $.ajax({
-        url: url,
-        method: 'POST',
-        data: data,
-        success: function (result) {
-            showSuccessMessage("Save successfully.", '.success-creation', '.error-creation', 500, function(){
-                document.getElementById('newModal').style.display = "none";
-                window.location.reload();
-            });
-        },
-        error: function (jqXHR, exception) {
-            var res = JSON.parse(jqXHR.responseText);
-            showErrorMessage(res['message'], '.success-creation', '.error-creation');
-        }
-    });
+    doCreationRequest(me, url, data, '#newModal');
 }
 
 
@@ -41,19 +27,5 @@ function openDeletingModal(url, email) {
 
 function deleteItem (me) {
     var url = $(me).attr('delete_url');
-    $.ajax({
-        url: url,
-        method: 'DELETE',
-        data: {},
-        success: function (result) {
-            showSuccessMessage("Deleted successfully.", '.success-deletion', '.error-deletion', 500, function(){
-                document.getElementById('deletingModal').style.display = "none";
-                window.location.reload();
-            });
-        },
-        error: function (jqXHR, exception) {
-            var res = JSON.parse(jqXHR.responseText);
-            showErrorMessage(res['message'], '.success-deletion', '.error-deletion');
-        }
-    });
+    doDeletionRequest(me, url, {}, '#deletingModal');
 }

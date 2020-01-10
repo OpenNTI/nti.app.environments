@@ -25,7 +25,6 @@ from nti.app.environments.views.tests import with_test_app
 from nti.app.environments.views.tests import ensure_free_txn
 from nti.app.environments.views._table_utils import SitesTable
 from nti.app.environments.views._table_utils import CustomersTable
-from hamcrest.library.collection.isdict_containingentries import has_entries
 
 
 class TestAdminViews(BaseAppTest):

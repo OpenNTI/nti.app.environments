@@ -32,42 +32,13 @@ function saveItem (me, url) {
         "MimeType": "application/vnd.nextthought.app.environments.site"
     };
     data = JSON.stringify(data);
-
-    $.ajax({
-        url: url,
-        method: 'POST',
-        data: data,
-        success: function (result) {
-            showSuccessMessage("Save successfully.", '.success-creation', '.error-creation', 500, function(){
-                document.getElementById('newModal').style.display = "none";
-                window.location.reload();
-            });
-        },
-        error: function (jqXHR, exception) {
-            var res = JSON.parse(jqXHR.responseText);
-            showErrorMessage(res['message'], '.success-creation', '.error-creation');
-        }
-    });
+    doCreationRequest(me, url, data, '#newModal');
 }
 
 
 function deleteItem (me) {
     var url = $(me).attr('delete_url');
-    $.ajax({
-        url: url,
-        method: 'DELETE',
-        data: {},
-        success: function (result) {
-            showSuccessMessage("Deleted successfully.", '.success-deletion', '.error-deletion', 500, function(){
-                document.getElementById('deletingModal').style.display = "none";
-                window.location.reload();
-            });
-        },
-        error: function (jqXHR, exception) {
-            var res = JSON.parse(jqXHR.responseText);
-            showErrorMessage(res['message'], '.success-deletion', '.error-deletion');
-        }
-    });
+    doDeletionRequest(me, url, {}, '#deletingModal');
 }
 
 
@@ -106,6 +77,7 @@ function openDeletingModal(url, email) {
     modal.getElementsByClassName('deleting_email')[0].innerHTML = email;
 }
 
+
 function openNewModal() {
     clearMessages('.success-creation', '.error-creation');
     document.getElementById('hubspot_email').value = '';
@@ -120,23 +92,6 @@ function uploadFile(me, url) {
         return;
     }
     data.append('sites', files[0], files[0].name);
-    $.ajax({
-        url: url,
-        type: 'post',
-        data: data,
-        dataType: 'json',
-        cache: false,
-        contentType: false,
-        processData: false,
-        success: function (result) {
-            showSuccessMessage("Upload successfully.", '.success-upload', '.error-upload', 500, function(){
-                document.getElementById('uploadModal').style.display = "none";
-                window.location.reload();
-            });
-        },
-        error: function (jqXHR, exception) {
-            var res = JSON.parse(jqXHR.responseText);
-            showErrorMessage(res['message'], '.success-upload', '.error-upload');
-        }
-    });
+
+    doUploadFile(me, url, data, '.success-upload', '.error-upload', '#uploadModal')
 }
