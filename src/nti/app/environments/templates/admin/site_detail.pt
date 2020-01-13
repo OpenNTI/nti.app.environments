@@ -106,6 +106,9 @@
                         <p>Host: <span class="site_environment_host" tal:content="site.environment.host"></span></p>
                     </metal:block>
                     <p>Last Modified: <span tal:content="site.environment.lastModified"></span></p>
+                    <metal:block tal:omit-tag="" tal:condition="site.environment.splunk_link|nothing">
+                        <a href="${site.environment.splunk_link}" target="_blank" style="margin-right: 16px;">Splunk</a>
+                    </metal:block>
                 </metal:block>
                 <metal:block tal:omit-tag="" tal:condition="site.environment_edit_link|nothing">
                     <a href="javascript:showEnvironmentEditView();">Edit</a>

@@ -432,7 +432,7 @@ class SiteCSVExportView(CSVBaseView):
     def header(self, params):
         return ['Site', 'Owner', 'License', 'License Start Date', 'License End Date',
                 'Environment', 'Host Machine',
-                'Status', 'DNS Names', 'Created Time', 'Last Modified']
+                'Status', 'DNS Names', 'Created Time', 'Last Modified', 'Parent Site']
 
     def filename(self):
         return 'sites.csv'
@@ -457,4 +457,5 @@ class SiteCSVExportView(CSVBaseView):
                 'Status': record.status,
                 'DNS Names': ','.join(record.dns_names),
                 'Created Time': formatDateToLocal(record.created),
-                'Last Modified': formatDateToLocal(record.lastModified)}
+                'Last Modified': formatDateToLocal(record.lastModified),
+                'Parent Site': record.parent_site.id if record.parent_site else ''}
