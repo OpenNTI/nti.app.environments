@@ -21,6 +21,8 @@ from nti.app.environments.auth import is_admin_or_account_manager
 from nti.app.environments.models.customers import HubspotContact
 from nti.app.environments.models.customers import PersistentCustomer
 
+from nti.app.environments.models.interfaces import InvalidSiteError
+
 from nti.app.environments.models.utils import get_onboarding_root
 from nti.app.environments.models.utils import get_customers_folder
 from nti.app.environments.models.utils import get_sites_folder
@@ -105,6 +107,8 @@ class ObjectCreateUpdateViewMixin(object):
         except ComponentLookupError as err:
             raise_json_error(hexc.HTTPUnprocessableEntity, str(err))
         except Invalid as err:
+            raise_json_error(hexc.HTTPUnprocessableEntity, str(err))
+        except InvalidSiteError as err:
             raise_json_error(hexc.HTTPUnprocessableEntity, str(err))
 
     def createObjectWithExternal(self, external=None):
