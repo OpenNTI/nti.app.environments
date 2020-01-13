@@ -19,4 +19,5 @@ class SiteExternalizer(InterfaceObjectIO):
         result = super(SiteExternalizer, self).toExternalObject(**kwargs)
         if 'id' not in result:
             result['id'] = context.id
+        result['parent_site'] = getattr(context.parent_site, 'id', None)
         return result

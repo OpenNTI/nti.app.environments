@@ -27,6 +27,8 @@ from nti.app.environments.models.utils import get_sites_folder
 
 from nti.app.environments.views.utils import raise_json_error
 
+logger = __import__('logging').getLogger(__name__)
+
 
 class BaseView(object):
 
@@ -126,6 +128,7 @@ class BaseFieldPutView(BaseView, ObjectCreateUpdateViewMixin):
             else:
                 self.updateObjectWithExternal(field_value, external)
                 self.context.updateLastModIfGreater(field_value.lastModified)
+            self._log(external)
             return {}
         except ValidationError as err:
             raise_json_error(hexc.HTTPUnprocessableEntity,

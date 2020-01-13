@@ -147,6 +147,13 @@ def checkUsername(username):
             raise UsernameContainsIllegalChar(username, _ALLOWED_USERNAME_CHARS)
     return True
 
+
+def check_unique(value):
+    if len(value) != len(set(value)):
+        raise interface.Invalid("Duplicated.")
+    return True
+
+
 class IHubspotContact(interface.Interface):
     """
     Represents a contact in the HubSpot system
@@ -255,7 +262,8 @@ class ILMSSite(IContained):
     dns_names = ListOrTuple(value_type=ValidTextLine(min_length=1),
                             title='DNS names this site is known to be accessible via',
                             required=True,
-                            default=tuple())
+                            default=tuple(),
+                            constraint=check_unique)
 
     license = Object(ISiteLicense,
                      title=u'The license governing access to this site',
@@ -273,10 +281,8 @@ class ILMSSite(IContained):
                                 max_length=40,
                                 required=False)
 
-    requesting_email = ValidTextLine(title=u'The email of requesting user.',
-                                     description=u'The email address of user who requested a trial site, used when the requesting user is not the owner.',
-                                     required=False,
-                                     constraint=checkEmailAddress)
+    parent_site = interface.Attribute("The parent site of this site")
+    parent_site.setTaggedValue('_ext_excluded_out', True)
 
     @interface.invariant
     def environment_invariant(self):

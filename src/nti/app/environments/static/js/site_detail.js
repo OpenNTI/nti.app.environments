@@ -185,3 +185,31 @@ function saveSiteEditView(me, url) {
     data = JSON.stringify(data);
     doUpdate(url, data, '.success-edit-site-info', '.error-edit-site-info')
 }
+
+// owner info
+function showOwnerEditView() {
+    var view = $('#view_owner_info');
+    view.css('display', 'none');
+
+    var edit = $('#edit_owner_info');
+    edit.css('display', 'block');
+
+    var email = $(view.find('.site_owner_email')[0]).text();
+    $(edit.find('.site_owner_email')[0]).val(email);
+}
+
+function cancelOwnerEditView() {
+    $('#view_owner_info').css('display', 'block');
+    $('#edit_owner_info').css('display', 'none');
+    clearMessages('.success-edit-owner-info', '.error-edit-owner-info');
+}
+
+function saveOwnerEditView(me, url) {
+    var form = $(me).closest('.form-group')[0];
+    var email = $($(form).find('.site_owner_email')[0]).val();
+    var data = {
+        'owner': email,
+    };
+    data = JSON.stringify(data);
+    doUpdate(url, data, '.success-edit-owner-info', '.error-edit-owner-info')
+}
