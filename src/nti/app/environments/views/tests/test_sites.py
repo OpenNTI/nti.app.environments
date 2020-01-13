@@ -1,4 +1,7 @@
 import datetime
+import tempfile
+import shutil
+import os
 
 from unittest import mock
 from hamcrest import assert_that
@@ -6,7 +9,13 @@ from hamcrest import has_length
 from hamcrest import has_properties
 from hamcrest import instance_of
 from hamcrest import contains_string
+from hamcrest import starts_with
 from hamcrest import is_
+
+from pyramid_mailer.interfaces import IMailer
+from pyramid_mailer import Mailer
+
+from zope import component
 
 from nti.externalization import to_external_object
 
@@ -265,3 +274,69 @@ class TestSitePutView(BaseAppTest):
                   'name': 3}
         result = self.testapp.put_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
         assert_that(result.json_body, has_entries({'message': 'Invalid name.'}))
+
+
+class TestRequestTrialSiteView(BaseAppTest):
+
+    @with_test_app()
+    @mock.patch('nti.app.environments.views.sites.get_hubspot_client')
+    def testRequestTrialSiteView(self, mock_client):
+        _client = mock.MagicMock()
+        _client.fetch_contact_by_email = lambda email: None
+        mock_client.return_value = _client
+        url = '/onboarding/sites/@@request_trial_site'
+        with ensure_free_txn():
+            dirpath = tempfile.mkdtemp()
+            os.mkdir(os.path.join(dirpath, 'new'))
+            os.mkdir(os.path.join(dirpath, 'cur'))
+            os.mkdir(os.path.join(dirpath, 'tmp'))
+            component.getGlobalSiteManager().registerUtility(Mailer(default_sender='no-reply.nextthought.com',
+                                                                    queue_path=dirpath), IMailer)
+            sites = self._root().get('sites')
+            assert_that(sites, has_length(0))
+
+            customers = self._root().get('customers')
+            customers.addCustomer(PersistentCustomer(email='123@gmail.com', name="testname"))
+            assert_that(customers, has_length(1))
+
+        params = {}
+        self.testapp.post_json(url, params=params, status=302, extra_environ=self._make_environ(username=None))
+        self.testapp.post_json(url, params=params, status=403, extra_environ=self._make_environ(username='user001'))
+        result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001')).json_body
+        assert_that(result, has_entries({'message': 'Missing email.'}))
+
+        params = {'owner': 'xyz'}
+        result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001')).json_body
+        assert_that(result, has_entries({'message': 'Invalid email.'}))
+
+        params = {'owner': '123@gmail.com'}
+        result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001')).json_body
+        assert_that(result, has_entries({'message': 'Please provide at least one site url.'}))
+
+        params = {'owner': '123@gmail.com', 'dns_names': []}
+        result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001')).json_body
+        assert_that(result['message'], starts_with('Please provide at least one site url.'))
+
+        params = {'owner': '123@gmail.com', 'dns_names': [None]}
+        result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001')).json_body
+        assert_that(result['message'], starts_with('Missing field: dns_names.'))
+
+        params = {'owner': '123@gmail.com', 'dns_names': ['xxx']}
+        result = self.testapp.post_json(url, params=params, status=201, extra_environ=self._make_environ(username='admin001')).json_body
+        assert_that(result['redirect_url'], starts_with('http://localhost/onboarding/sites/'))
+
+        params = {'owner': '1234@gmail.com', 'dns_names': ['xxx', 'yyy']}
+        result = self.testapp.post_json(url, params=params, status=201, extra_environ=self._make_environ(username='admin001')).json_body
+        assert_that(result['redirect_url'], starts_with('http://localhost/onboarding/sites/'))
+
+        _client.fetch_contact_by_email = lambda email: {'canonical-vid': '133','email': email, 'name': "OKC Test"}
+        params = {'owner': '12345@gmail.com', 'dns_names': ['xxx', 'yyy']}
+        result = self.testapp.post_json(url, params=params, status=201, extra_environ=self._make_environ(username='admin001')).json_body
+        assert_that(result['redirect_url'], starts_with('http://localhost/onboarding/sites/'))
+
+        with ensure_free_txn():
+            component.getGlobalSiteManager().unregisterUtility(Mailer(default_sender='no-reply.nextthought.com'), IMailer)
+            shutil.rmtree(dirpath)
+            assert_that(sites, has_length(3))
+            assert_that(customers, has_length(3))
+            assert_that(customers['12345@gmail.com'].hubspot_contact.contact_vid, '133')

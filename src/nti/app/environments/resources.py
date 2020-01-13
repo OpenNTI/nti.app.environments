@@ -1,10 +1,5 @@
-from pyramid.interfaces import IRootFactory
-
 from pyramid.security import Allow
 from pyramid.security import ALL_PERMISSIONS
-
-from zope import component
-from zope.cachedescriptors.property import Lazy
 
 from nti.property.property import LazyOnClass
 

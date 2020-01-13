@@ -75,7 +75,7 @@ class SiteBaseView(BaseView):
         Create a new customer if customer is not found and created is True.
         """
         if not value:
-            raise_json_error(hexc.HTTPUnprocessableEntity, "Missing field: email.")
+            raise_json_error(hexc.HTTPUnprocessableEntity, "Missing email.")
 
         if not checkEmailAddress(value):
             raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid email.")
@@ -143,6 +143,11 @@ class RequestTrialSiteView(SiteBaseView, ObjectCreateUpdateViewMixin):
 
         kwargs['owner'] = self._handle_owner(kwargs.get('owner'), created=True)
 
+        if not kwargs.get('dns_names') \
+            or (isinstance(kwargs.get('dns_names'), (list, tuple)) and len(kwargs['dns_names'])==0):
+            raise_json_error(hexc.HTTPUnprocessableEntity,
+                            'Please provide at least one site url.')
+
         _now = datetime.datetime.utcnow()
         kwargs.update({'status': SITE_STATUS_PENDING,
                        'license': TrialLicense(start_date=_now,
@@ -155,7 +160,6 @@ class RequestTrialSiteView(SiteBaseView, ObjectCreateUpdateViewMixin):
             site.creator = self.request.authenticated_userid
             site = self.updateObjectWithExternal(site, self.readInput())
             self.context.addSite(site)
-            self.request.response.status = 201
             # send email, etc.
             notify(SiteCreatedEvent(site))
 

@@ -17,7 +17,7 @@ def find_iface(resource, iface):
 
 
 def convertToUTC(dt, local_tz='US/Central', toTimeStamp=False):
-    local_date = pytz.timezone(local_tz).localize(dt)
+    local_date = pytz.timezone(local_tz).localize(dt) if dt.tzinfo is None else dt
     dt = local_date.astimezone(pytz.utc).replace(tzinfo=None)
     return calendar.timegm(dt.utctimetuple()) if toTimeStamp else dt
 
