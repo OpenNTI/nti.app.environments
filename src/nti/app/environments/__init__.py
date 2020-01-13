@@ -1,3 +1,5 @@
+import re
+
 import pyramid_zcml
 
 from pyramid.authorization import ACLAuthorizationPolicy
@@ -39,6 +41,8 @@ set_hook()
 def root_factory(request):
     return IOnboardingRoot(request).__parent__
 
+# https://docs.pylonsproject.org/projects/venusian/en/latest/index.html#ignore-scan-argument
+_ignore_tests_scan_callable = re.compile('tests$').search
 
 def main(global_config, **settings):
     """ This function returns a Pyramid WSGI application.
@@ -76,7 +80,7 @@ def main(global_config, **settings):
         session_factory = SignedCookieSessionFactory('foo')
         config.set_session_factory(session_factory)
 
-        config.scan()
+        config.scan(ignore=[_ignore_tests_scan_callable])
 
     # We've let pyramid_zodbconn open the databases and set them in the registry
     # https://github.com/Pylons/pyramid_zodbconn/blob/68419e05a19acfc611e1dd81f79acc2a88d6e81d/pyramid_zodbconn/__init__.py#L190
