@@ -17,6 +17,7 @@ from nti.app.environments.auth import ACT_DELETE
 from nti.app.environments.auth import ACT_CREATE
 from nti.app.environments.auth import ACT_EDIT_SITE_LICENSE
 from nti.app.environments.auth import ACT_EDIT_SITE_ENVIRONMENT
+from nti.app.environments.auth import ACT_REQUEST_TRIAL_SITE
 from nti.app.environments.auth import ADMIN_ROLE
 from nti.app.environments.auth import ACCOUNT_MANAGEMENT_ROLE
 
@@ -116,7 +117,7 @@ class SitesListView(BaseTemplateView, _TableMixin):
                 'creation_url': self.request.resource_url(self.context) if self.request.has_permission(ACT_CREATE, self.context) else None,
                 'sites_upload_url': self.request.resource_url(self.context, '@@upload_sites') if self.request.has_permission(ACT_CREATE, self.context) else None,
                 'sites_export_url': self.request.resource_url(self.context, '@@export_sites'),
-                'trial_site_request_url': self.request.resource_url(self.context, '@@request_trial_site') if self.request.has_permission(ACT_CREATE, self.context) else None,
+                'trial_site_request_url': self.request.resource_url(self.context, '@@request_trial_site') if self.request.has_permission(ACT_REQUEST_TRIAL_SITE, self.context) else None,
                 'site_status_options': SITE_STATUS_OPTIONS,
                 'env_shared_options': SHARED_ENV_NAMES,
                 'is_deletion_allowed': self._is_deletion_allowed(table)}
@@ -164,6 +165,11 @@ class SiteDetailView(BaseTemplateView):
         return {'owner': owner,
                 'detail_url': self.request.resource_url(owner, '@@details') if owner else None}
 
+    def _format_parent_site(self, parent):
+        return {'id': parent.id,
+                'dns_names': parent.dns_names,
+                'detail_url': self.request.resource_url(parent, '@@details')}
+
     def __call__(self):
         request = self.request
         extra_info = self._site_extra_info() or {}
@@ -182,19 +188,20 @@ class SiteDetailView(BaseTemplateView):
                          'client_name': self.context.client_name,
                          'site_edit_link': request.resource_url(self.context) if request.has_permission(ACT_UPDATE, self.context) else None,
                          'lastModified': formatDateToLocal(self.context.lastModified),
+                         'parent_site': self._format_parent_site(self.context.parent_site) if self.context.parent_site else None,
                          **extra_info}}
 
 
 @view_config(renderer='../templates/admin/request_site.pt',
              request_method='GET',
              context=ILMSSitesContainer,
-             permission=ACT_READ,
+             permission=ACT_REQUEST_TRIAL_SITE,
              name='request_trial_site')
 class SiteRequestView(BaseTemplateView):
 
     def __call__(self):
         return {
-            'trial_site_request_url': self.request.resource_url(self.context, '@@request_trial_site') if self.request.has_permission(ACT_CREATE, self.context) else None
+            'trial_site_request_url': self.request.resource_url(self.context, '@@request_trial_site')
         }
 
 

@@ -190,6 +190,40 @@
             </div> <!-- end edit license-->
         </div>
 
+        <div class="site-item">
+            <h3>Parent Site</h3>
+            <div id="view_parent_site">
+                <metal:block tal:omit-tag="" tal:condition="site.parent_site|nothing">
+                    <p>Site ID: <span class="site_parent_id" tal:content="site.parent_site.id"></span></p>
+                    <p>
+                        DNS Names: <span tal:repeat="dns_name site.parent_site.dns_names">
+                        <a href="https://${dns_name}" target="_blank">${dns_name}</a></span>
+                    </p>
+                    <a href="#" tal:attributes="href site.parent_site.detail_url" style="margin-right: 12px;">View details</a>
+                </metal:block>
+                <metal:block tal:omit-tag="" tal:condition="site.site_edit_link|nothing">
+                    <a href="javascript:showParentSiteEditView();">Edit</a>
+                </metal:block>
+            </div>
+            <div id="edit_parent_site" style="display:none;">
+                 <div class="form-group">
+                    <div class="form-group-item">
+                        <label>Parent Site ID</label>
+                        <input type="text" class="site_parent_id"/>
+                    </div>
+                    <div class="form-group-item">
+                        <div class="success success-edit-parent-site" style="display:none;"></div>
+                        <div class="error error-edit-parent-site" style="display:none;"></div>
+                    </div>
+                    <div class="form-group-item">
+                        <button type="button" class="btnCustom" onclick="saveParentSiteView(this, '${site.site_edit_link}');">Save</button>
+                        <button type="button" class="btnCustom" onclick="cancelParentSiteEditView();">Cancel</button>
+                    </div>
+                </div>
+            </div> <!-- end edit parent site-->
+        </div>
+
+
         <div class="site-footer">
             <button class="btnCustom" onclick="window.location='${sites_list_link}';">
                 Back To Sites

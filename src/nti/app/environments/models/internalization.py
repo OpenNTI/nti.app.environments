@@ -8,6 +8,9 @@ from nti.externalization.datastructures import InterfaceObjectIO
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import IEnterpriseLicense
+from nti.app.environments.models.interfaces import InvalidSiteError
+
+from nti.app.environments.models.utils import get_sites_folder
 
 from nti.app.environments.utils import parseDate
 
@@ -27,6 +30,15 @@ class SiteInternalizer(InterfaceObjectIO):
         if 'id' in parsed:
             self._ext_self.id = parsed['id']
             updated = True
+
+        if 'parent_site' in parsed:
+            if isinstance(parsed['parent_site'], str):
+                parent_site = get_sites_folder().get(parsed['parent_site'])
+                if parent_site is None:
+                    raise InvalidSiteError("No parent site found: %s" % parsed['parent_site'])
+                parsed['parent_site'] = parent_site
+
+            self._ext_self.parent_site = parsed['parent_site']
 
         result = super(SiteInternalizer, self).updateFromExternalObject(parsed, *args, **kwargs)
         return updated or result

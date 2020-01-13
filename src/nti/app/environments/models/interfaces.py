@@ -154,6 +154,10 @@ def check_unique(value):
     return True
 
 
+class InvalidSiteError(ValueError):
+    pass
+
+
 class IHubspotContact(interface.Interface):
     """
     Represents a contact in the HubSpot system

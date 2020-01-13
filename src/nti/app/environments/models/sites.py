@@ -22,6 +22,7 @@ from nti.wref.interfaces import IWeakRef
 from nti.app.environments.auth import ADMIN_ROLE
 from nti.app.environments.auth import ACCOUNT_MANAGEMENT_ROLE
 from nti.app.environments.auth import ACT_READ
+from nti.app.environments.auth import ACT_REQUEST_TRIAL_SITE
 
 from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import ICustomersContainer
@@ -131,7 +132,7 @@ class SitesFolder(CaseInsensitiveCheckingLastModifiedBTreeContainer):
     @LazyOnClass
     def __acl__(self):
         return [(Allow, ADMIN_ROLE, ALL_PERMISSIONS),
-                (Allow, ACCOUNT_MANAGEMENT_ROLE, ACT_READ)]
+                (Allow, ACCOUNT_MANAGEMENT_ROLE, (ACT_READ, ACT_REQUEST_TRIAL_SITE))]
 
     def addSite(self, site, siteId=None):
         siteId = site.__name__ or siteId or _generate_site_id()
