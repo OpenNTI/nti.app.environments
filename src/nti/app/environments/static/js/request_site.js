@@ -9,11 +9,12 @@ function requestTrialSite (me, url) {
     var client_name = getValue("site_trial_client"),
               owner = getValue("site_trial_email"),
           dns_names = getValue('site_trial_url');
+          dns_names = dns_names ? $.map(dns_names.split(","), $.trim) : null;
 
     var data = {
         "client_name": client_name,
         "owner": owner,
-        "dns_names": dns_names? [dns_names]: null,
+        "dns_names": dns_names,
     };
     data = JSON.stringify(data);
 
