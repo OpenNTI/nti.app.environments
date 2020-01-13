@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.0.0-experimental
 
 FROM python:3
-EXPOSE 8000
+EXPOSE 6543
 
 ENV PYTHONUNBUFFERED 1
 

@@ -30,4 +30,4 @@ Getting Started
 
 - Docker container:
     $ build-docker-image.sh my.app
-    $ docker run my.app
+    $ docker run -p {local port}:6543 my.app
