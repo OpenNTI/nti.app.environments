@@ -1,3 +1,5 @@
+import urllib.parse
+
 from pyramid.view import view_config
 
 from pyramid import httpexceptions as hexc
@@ -130,6 +132,13 @@ class SitesListView(BaseTemplateView, _TableMixin):
              name='details')
 class SiteDetailView(BaseTemplateView):
 
+    _shared_env_names = {
+        'prod': 'prod',
+        'hrpros': 'prod_hrpros',
+        'assoc': 'prod_assoc',
+        'alpha': 'alpha_v3'
+    }
+
     def _site_extra_info(self):
         hostname = self.context.dns_names[0] if self.context.dns_names else None
         return nt_client.fetch_site_info(hostname) if hostname else None
@@ -149,16 +158,27 @@ class SiteDetailView(BaseTemplateView):
                 'edit_link': edit_link,
                 'lastModified': formatDateToLocal(lic.lastModified)}
 
+    def _splunk_link(self, env):
+        tpl = 'https://splunk.nextthought.com/en-US/app/search/search?q={}'
+        if ISharedEnvironment.providedBy(env):
+            name = self._shared_env_names.get(env.name)
+            return tpl.format(urllib.parse.quote('search index="%s" earliest=-1d' % name, safe='')) if name else None
+        elif IDedicatedEnvironment.providedBy(env):
+            return tpl.format(urllib.parse.quote('search index="dedicated_environments" host="%s.nti" earliest=-1d' % self.context.id, safe=''))
+        return None
+
     def _format_env(self, env=None):
         if ISharedEnvironment.providedBy(env):
             return {'type': 'shared',
                     'name': env.name,
-                    'lastModified': formatDateToLocal(env.lastModified)}
+                    'lastModified': formatDateToLocal(env.lastModified),
+                    'splunk_link': self._splunk_link(env)}
         elif IDedicatedEnvironment.providedBy(env):
             return {'type': 'dedicated',
                     'pod_id': env.pod_id,
                     'host': env.host,
-                    'lastModified': formatDateToLocal(env.lastModified)}
+                    'lastModified': formatDateToLocal(env.lastModified),
+                    'splunk_link': self._splunk_link(env)}
         raise ValueError('Unknown environment type.')
 
     def _format_owner(self, owner=None):
