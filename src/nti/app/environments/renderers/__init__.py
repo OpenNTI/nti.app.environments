@@ -6,7 +6,11 @@ The following non general components have been stripped away:
 1. Removed adapters.py (and tests) containing display name adapters.
 
 2. Removed concrete implementations of
-   AbstractReliableLastModifiedCacheController in caching.py 
+   AbstractReliableLastModifiedCacheController in caching.py
+
+3. Removed .decorators.AbstractAuthenticatedRequestAwareDecorator 
+   and .decorators.AbstractTwoStateViewLinkDecorator. The former would ideally remain
+   if we can find a general substitute for get_remote_user
 
 """
 from __future__ import division
