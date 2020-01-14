@@ -14,6 +14,8 @@ from __future__ import absolute_import
 from abc import ABCMeta
 from abc import abstractmethod
 
+from nti.property.property import alias
+
 logger = __import__('logging').getLogger(__name__)
 
 

@@ -20,15 +20,11 @@ import pyramid.httpexceptions
 
 from pyramid.threadlocal import get_current_request
 
-from nti.app.environments.renderers.interfaces import IExternalCollection
 from nti.app.environments.renderers.interfaces import IUnModifiedInResponse
 from nti.app.environments.renderers.interfaces import IUncacheableInResponse
 from nti.app.environments.renderers.interfaces import IResponseCacheController
 from nti.app.environments.renderers.interfaces import IPrivateUncacheableInResponse
-from nti.app.environments.renderers.interfaces import IUserActivityExternalCollection
-from nti.app.environments.renderers.interfaces import IETagCachedUGDExternalCollection
 from nti.app.environments.renderers.interfaces import IPreRenderResponseCacheController
-from nti.app.environments.renderers.interfaces import ILongerCachedUGDExternalCollection
 
 from nti.traversal.traversal import find_interface
 
