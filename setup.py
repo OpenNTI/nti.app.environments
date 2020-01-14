@@ -21,11 +21,15 @@ requires = [
     'pyramid_zodbconn',
     'transaction',
     'ZODB',
+    'nti.app.pyramid_zope',
     'nti.containers @ git+ssh://git@github.com/NextThought/nti.containers',
     'nti.mailer @ git+ssh://git@github.com/NextThought/nti.mailer',
     'nti.base @ git+ssh://git@github.com/NextThought/nti.base',
     'nti.dublincore @ git+ssh://git@github.com/NextThought/nti.dublincore',
+    'nti.links @ git+ssh://git@github.com/NextThought/nti.links',
+    'nti.mimetype @  git+ssh://git@github.com/NextThought/nti.mimetype',
     'nti.ntiids @ git+ssh://git@github.com/NextThought/nti.ntiids',
+    'nti.traversal @ git+ssh://git@github.com/NextThought/nti.traversal',
     'pyramid-chameleon',
     'pyramid-mako',
     'pyramid-zcml',
@@ -52,7 +56,8 @@ requires = [
     'zope.principalregistry',
     'zope.securitypolicy',
     'pyramid_zope_request',
-    'hubspot3'
+    'hubspot3',
+    'z3c.rml'
 ]
 
 tests_require = [
@@ -61,6 +66,7 @@ tests_require = [
     'pytest-cov',
     'pyhamcrest',
     'zope.testing',
+    'zope.testrunner'
 ]
 
 docs_require = [
@@ -90,7 +96,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     extras_require={
-        'testing': tests_require,
+        'test': tests_require,
         'docs': docs_require
     },
     install_requires=requires,
