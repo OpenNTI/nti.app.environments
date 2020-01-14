@@ -25,10 +25,6 @@
 </stylesheet>
 
 <story>
-<img src="[nti.appserver]/templates/coppa_consent_header.png"
-	   width="3.5in"
-	   height="0.55in"
-	   align="left"/>
 <para style="h1" spaceBefore="12">
 Please keep a copy of this form for your records.
 </para>

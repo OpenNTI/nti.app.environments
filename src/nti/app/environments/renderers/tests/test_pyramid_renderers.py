@@ -10,6 +10,10 @@ __docformat__ = "restructuredtext en"
 from hamcrest import is_
 from hamcrest import assert_that
 
+import unittest
+
+from pyramid.testing import DummyRequest
+
 from ZODB.broken import Broken
 
 from pyramid.request import Request
@@ -18,14 +22,20 @@ from nti.app.environments.renderers.rest import find_content_type
 
 from nti.externalization.externalization import toExternalObject
 
-from nti.app.testing.layers import NewRequestLayerTest
+from . import RenderTestLayer
 
-class TestContentType(NewRequestLayerTest):
+
+class TestContentType(unittest.TestCase):
+
+	layer = RenderTestLayer
 	
 	mimeType= 'application/vnd.nextthought.testcontenttype'
-	
-	def beginRequest( self, request_factory=Request.blank, request_args=('/') ):
-		return super(TestContentType,self).beginRequest(request_factory, request_args)
+
+	def setUp(self):
+		self.request = DummyRequest()
+
+	def tearDown(self):
+		del self.request
 
 	def test_no_accept_no_param(self):
 
@@ -60,11 +70,13 @@ class TestContentType(NewRequestLayerTest):
 		assert_that( find_content_type( self.request, data=self ),
 					 is_( 'application/vnd.nextthought.testcontenttype+json' ) )
 
-class TestRender(NewRequestLayerTest):
+class TestRender(unittest.TestCase):
+
+	layer = RenderTestLayer
 
 	def test_broken(self):
 		assert_that( toExternalObject( Broken() ),
-					 is_( {"Class": "BrokenObject"} ) )
+					 is_( {'Class': 'BrokenObject'} ) )
 
 		assert_that( toExternalObject( [Broken()] ),
-					 is_( [{ "Class": "BrokenObject"}] ) )
+					 is_( [{'Class': 'BrokenObject'}] ) )

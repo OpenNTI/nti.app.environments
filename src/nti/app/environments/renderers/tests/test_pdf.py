@@ -7,18 +7,30 @@ __docformat__ = "restructuredtext en"
 # disable: accessing protected members, too many methods
 # pylint: disable=W0212,R0904
 
+import unittest
+
 from hamcrest import assert_that
 from hamcrest import starts_with
 from hamcrest import is_
 
+from pyramid.testing import DummyRequest
+
 from pyramid.renderers import render
 from pyramid.renderers import render_to_response
 
-from nti.app.testing.application_webtest import ApplicationLayerTest
+from . import RenderTestLayer
 
-class TestPDFRender(ApplicationLayerTest):
+class TestPDFRender(unittest.TestCase):
+
+	layer = RenderTestLayer
 	
 	no_cache = False
+
+	def setUp(self):
+		self.request = DummyRequest()
+
+	def tearDown(self):
+		del self.request
 
 	def test_render(self):
 		# Fix up the dummy request
@@ -30,7 +42,7 @@ class TestPDFRender(ApplicationLayerTest):
 						 {'username': 'foo@bar', 'realname': 'Snoop Dogg', 'email': 'foo@bar'},
 						 request=self.request )
 
-		assert_that( result, starts_with(b'%PDF-1.4'))
+		assert_that( result.decode('ISO-8859-1'), starts_with('%PDF-1.4'))
 		del self.request.cache_control # break cycle
 
 	def test_content_disposition(self):
