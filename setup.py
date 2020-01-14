@@ -66,7 +66,8 @@ tests_require = [
     'pytest-cov',
     'pyhamcrest',
     'zope.testing',
-    'zope.testrunner'
+    'zope.testrunner',
+    'nti.testing'
 ]
 
 docs_require = [
