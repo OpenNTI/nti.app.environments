@@ -22,17 +22,6 @@
 	<adapter factory=".caching.uncacheable_factory" />
 	<adapter factory=".caching.private_uncacheable_factory" />
 	
-	<adapter factory=".caching._UserCacheController" />
-	<adapter factory=".caching._EntityCacheController" />
-	<adapter factory=".caching._ModeledContentCacheController" />
-	<adapter factory=".caching._ExternalCollectionCacheController" />
-	<adapter factory=".caching._LongerCachedUGDExternalCollectionCacheController" />
-
-	<adapter factory=".caching._ZopeFileCacheController" />	
-	<adapter factory=".caching._TranscriptCacheController" />
-	<adapter factory=".caching._UserActivityViewCacheController" />
-	<adapter factory=".caching._ETagCachedUGDExternalCollectionCacheController" />
-
 	<adapter factory=".caching.UseTheRequestContextCacheController"
 			 for=".interfaces.IUseTheRequestContextUGDExternalCollection" />
 

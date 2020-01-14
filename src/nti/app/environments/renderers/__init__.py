@@ -5,6 +5,9 @@ The following non general components have been stripped away:
 
 1. Removed adapters.py (and tests) containing display name adapters.
 
+2. Removed concrete implementations of
+   AbstractReliableLastModifiedCacheController in caching.py 
+
 """
 from __future__ import division
 from __future__ import print_function
