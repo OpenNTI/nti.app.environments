@@ -317,16 +317,45 @@ class SitesUploadCSVView(SiteBaseView, ObjectCreateUpdateViewMixin):
         return DedicatedEnvironment(pod_id=_id,
                                     host=host)
 
+    def _get_or_update_dns_names(self, site=None):
+        # Make sure no identical dns_names happen when uploading.
+        try:
+            _names = self._existing_site_dns_names
+        except AttributeError:
+            _names = self._existing_site_dns_names = set()
+
+            for x in self.context.values():
+                for _dns in x.dns_names or ():
+                    if _dns in _names:
+                        raise_json_error(hexc.HTTPConflict,
+                                         "Existing identical dns_name in different sites: {}.".format(_dns))
+                    _names.add(_dns)
+
+        if site is not None:
+            for _dns in site.dns_names or ():
+                if _dns in _names:
+                    raise_json_error(hexc.HTTPConflict,
+                                     "Existing identical dns_name in existing sites: {}.".format(_dns))
+                _names.add(_dns)
+        return _names
+
     def _process_dns(self, dic):
         site_url = dic['nti_site'].strip()
-        extra_site_url = dic['nti_URL'].strip() or None
-        return [site_url, extra_site_url] if extra_site_url else [site_url]
+        extra_site_url = dic['nti_URL'].strip()
+        res = []
+        for x in (site_url, extra_site_url):
+            if x and x not in res:
+                if x in self._get_or_update_dns_names():
+                    raise_json_error(hexc.HTTPUnprocessableEntity,
+                                     'Existing dns_names: {}.'.format(x))
+                res.append(x)
+        return res
 
     def _process_owner(self, dic, created=True):
         email = dic['Hubspot Contact'].strip() or self._default_owner_email
         return self._handle_owner(email, created=created)
 
-    def _init_or_update_parent_sites_ids(self, site=None):
+    def _get_or_update_parent_sites_ids(self, site=None):
         try:
             _ids = self._parent_sites_ids
         except AttributeError:
@@ -357,7 +386,7 @@ class SitesUploadCSVView(SiteBaseView, ObjectCreateUpdateViewMixin):
         if not dns_name:
             return None
 
-        site_ids = self._init_or_update_parent_sites_ids()
+        site_ids = self._get_or_update_parent_sites_ids()
         site_id = site_ids.get(dns_name)
         site = self.context.get(site_id) if site_id else None
         if not site:
@@ -386,7 +415,8 @@ class SitesUploadCSVView(SiteBaseView, ObjectCreateUpdateViewMixin):
                 site.creator = remoteUser or self.request.authenticated_userid
                 site = self.updateObjectWithExternal(site, kwargs)
                 self.context.addSite(site, siteId=siteId)
-                self._init_or_update_parent_sites_ids(site)
+                self._get_or_update_dns_names(site)
+                self._get_or_update_parent_sites_ids(site)
             except KeyError as e:
                 raise ValueError("Existing site id: {}.".format(siteId))
         except KeyError as e:
