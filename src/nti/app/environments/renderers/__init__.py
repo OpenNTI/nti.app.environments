@@ -1,3 +1,11 @@
+"""
+This package is copied in it's entirety from nti.dataserver:nti.app.renderers.
+
+The following non general components have been stripped away:
+
+1. Removed adapters.py (and tests) containing display name adapters.
+
+"""
 from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
