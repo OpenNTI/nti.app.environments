@@ -82,7 +82,7 @@ def default_cache_controller(data, system):
 		# Body is a string here, but response.md5_etag wants bytes
 		charset = response.charset or response.default_body_encoding
 		if body is not None:
-			response.md5_etag(body.encode(charset), set_content_md5=True)
+			response.md5_etag(body.encode(charset) if isinstance(body, str) else body, set_content_md5=True)
 
 	# response.etag is a string
 	if	response.etag and request.accept_encoding \
