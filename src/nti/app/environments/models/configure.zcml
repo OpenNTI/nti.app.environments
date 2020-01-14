@@ -15,6 +15,10 @@
              for=".customers.PersistentCustomer"
              provides="nti.wref.interfaces.IWeakRef" />
 
+    <adapter factory=".adapters.ParentSiteResolver"
+             for=".interfaces.ILMSSite *"
+             provides="nti.externalization.interfaces.IExternalReferenceResolver"/>
+
     <include package="nti.externalization" file="meta.zcml" />
     <include package="nti.externalization" />
 

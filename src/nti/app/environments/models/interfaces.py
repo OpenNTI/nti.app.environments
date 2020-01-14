@@ -26,7 +26,7 @@ from nti.schema.field import Choice
 from nti.schema.field import ValidTextLine
 from nti.schema.field import DateTime
 from nti.schema.field import Object
-from nti.schema.field import ListOrTuple
+from nti.schema.field import UniqueIterable
 
 MessageFactory = zope_i18nmessageid.MessageFactory('nti.app.environments')
 _ = MessageFactory
@@ -148,12 +148,6 @@ def checkUsername(username):
     return True
 
 
-def check_unique(value):
-    if len(value) != len(set(value)):
-        raise interface.Invalid("Duplicated.")
-    return True
-
-
 class InvalidSiteError(ValueError):
     pass
 
@@ -263,11 +257,10 @@ class ILMSSite(IContained):
                    title=u'The customer that owns this site',
                    required=False)
 
-    dns_names = ListOrTuple(value_type=ValidTextLine(min_length=1),
-                            title='DNS names this site is known to be accessible via',
-                            required=True,
-                            default=tuple(),
-                            constraint=check_unique)
+    dns_names = UniqueIterable(value_type=ValidTextLine(min_length=1),
+                               title='DNS names this site is known to be accessible via',
+                               required=True,
+                               default=tuple())
 
     license = Object(ISiteLicense,
                      title=u'The license governing access to this site',
