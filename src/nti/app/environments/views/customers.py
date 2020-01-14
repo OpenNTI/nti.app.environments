@@ -15,6 +15,8 @@ from nti.app.environments.models.interfaces import ICustomersContainer
 
 from nti.app.environments.auth import ACT_CREATE
 from nti.app.environments.auth import ACT_DELETE
+from nti.app.environments.auth import ACT_READ
+
 from nti.app.environments.authentication import forget
 from nti.app.environments.authentication import remember
 from nti.app.environments.authentication import setup_challenge_for_customer
@@ -26,6 +28,15 @@ from .base import BaseView
 from .base import getOrCreateCustomer
 from .base import createCustomer
 from .utils import raise_json_error
+
+@view_config(renderer='rest',
+             request_method='GET',
+             context=ICustomersContainer,
+             permission=ACT_READ)
+class CustomersListView(BaseView):
+
+    def __call__(self):
+        return [customer for customer in self.context.values()]
 
 
 @view_config(context=ICustomersContainer,

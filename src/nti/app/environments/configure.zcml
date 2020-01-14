@@ -42,7 +42,8 @@
 	<include package=".views" file="configure.zcml" />
 	
 	<include package=".securitypolicy" file="configure.zcml" />
-	
+
+	<include package=".renderers" file="configure.zcml" />
 
 	<adapter factory=".appserver.root_folder"
 		 for="pyramid.interfaces.IRequest"

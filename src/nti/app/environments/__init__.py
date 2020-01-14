@@ -80,6 +80,8 @@ def main(global_config, **settings):
         session_factory = SignedCookieSessionFactory('foo')
         config.set_session_factory(session_factory)
 
+        config.add_renderer(name='rest', factory='nti.app.environments.renderers.renderers.DefaultRenderer')
+
         config.scan(ignore=[_ignore_tests_scan_callable])
 
     # We've let pyramid_zodbconn open the databases and set them in the registry
