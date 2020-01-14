@@ -21,7 +21,7 @@ from z3c.rml import rml2pdf
 
 from nti.app.pyramid_zope.z3c_zpt import ZPTTemplateRenderer
 
-from nti.app.renderers.renderers import AbstractCachingRenderer
+from nti.app.environments.renderers.renderers import AbstractCachingRenderer
 
 logger = __import__('logging').getLogger(__name__)
 

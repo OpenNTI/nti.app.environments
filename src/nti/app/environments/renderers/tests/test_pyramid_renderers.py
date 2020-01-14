@@ -14,7 +14,7 @@ from ZODB.broken import Broken
 
 from pyramid.request import Request
 
-from nti.app.renderers.rest import find_content_type
+from nti.app.environments.renderers.rest import find_content_type
 
 from nti.externalization.externalization import toExternalObject
 

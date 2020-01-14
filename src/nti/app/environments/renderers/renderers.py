@@ -16,11 +16,11 @@ from pyramid.httpexceptions import HTTPForbidden
 
 from pyramid.interfaces import IRendererFactory
 
-from nti.app.renderers import MessageFactory as _
+from nti.app.environments.renderers import MessageFactory as _
 
-from nti.app.renderers.interfaces import IResponseRenderer
-from nti.app.renderers.interfaces import IResponseCacheController
-from nti.app.renderers.interfaces import IPreRenderResponseCacheController
+from nti.app.environments.renderers.interfaces import IResponseRenderer
+from nti.app.environments.renderers.interfaces import IResponseCacheController
+from nti.app.environments.renderers.interfaces import IPreRenderResponseCacheController
 
 logger = __import__('logging').getLogger(__name__)
 

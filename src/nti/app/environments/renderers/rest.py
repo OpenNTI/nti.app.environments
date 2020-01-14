@@ -21,9 +21,9 @@ from zope.mimetype.interfaces import IContentTypeAware
 
 from perfmetrics import metric
 
-from nti.app.renderers.interfaces import INoHrefInResponse
-from nti.app.renderers.interfaces import IResponseRenderer
-from nti.app.renderers.interfaces import IExternalizationCatchComponentAction
+from nti.app.environments.renderers.interfaces import INoHrefInResponse
+from nti.app.environments.renderers.interfaces import IResponseRenderer
+from nti.app.environments.renderers.interfaces import IExternalizationCatchComponentAction
 
 # IShouldHaveTraversablePath is legacy. New systems shouldn't be relying on it
 try:
