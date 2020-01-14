@@ -12,6 +12,9 @@ The following non general components have been stripped away:
    and .decorators.AbstractTwoStateViewLinkDecorator. The former would ideally remain
    if we can find a general substitute for get_remote_user
 
+4. Remove dependency on who browser classification from renderers.AbstractCachingRenderer.
+   This removes the ability to write renderers that render to the browser.
+
 """
 from __future__ import division
 from __future__ import print_function

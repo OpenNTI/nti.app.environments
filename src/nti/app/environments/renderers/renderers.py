@@ -16,10 +16,6 @@ from pyramid.httpexceptions import HTTPForbidden
 
 from pyramid.interfaces import IRendererFactory
 
-from repoze.who.interfaces import IRequestClassifier
-
-from nti.app.authentication.who_classifiers import CLASS_BROWSER
-
 from nti.app.renderers import MessageFactory as _
 
 from nti.app.renderers.interfaces import IResponseRenderer
@@ -28,6 +24,7 @@ from nti.app.renderers.interfaces import IPreRenderResponseCacheController
 
 logger = __import__('logging').getLogger(__name__)
 
+CLASS_BROWSER = 'browser'
 
 @interface.provider(IRendererFactory)
 @interface.implementer(IResponseRenderer)
@@ -55,7 +52,8 @@ class AbstractCachingRenderer(object):
         except TypeError:
             pass
 
-        classification = IRequestClassifier(request)(request.environ)
+        # classification = IRequestClassifier(request)(request.environ)
+        classification = 'api'
         if classification == CLASS_BROWSER:
             body = self._render_to_browser(data, system)
         else:
