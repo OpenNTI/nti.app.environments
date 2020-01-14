@@ -12,6 +12,8 @@
 
 	<include package="nti.containers" />
 
+	<include package="nti.externalization" file="configure.zcml"/>
+
 	<include package="zope.generations" />
 	<include package="zope.generations" file="subscriber.zcml" />
 
@@ -52,4 +54,6 @@
 	<adapter factory=".adapters._principal_role_manager"
 		 	 for=".models.interfaces.IOnboardingRoot"
 		 	 provides=".interfaces.IOnboardingRootPrincipalRoleManager"/>
+
+	<adapter factory=".adapters.BrokenExternalObject" />
 </configure>
