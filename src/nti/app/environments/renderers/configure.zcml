@@ -19,9 +19,6 @@
 	<adapter factory=".caching.unmodified_factory" />
 	<adapter factory=".caching.uncacheable_factory" />
 	<adapter factory=".caching.private_uncacheable_factory" />
-	
-	<adapter factory=".caching.UseTheRequestContextCacheController"
-			 for=".interfaces.IUseTheRequestContextUGDExternalCollection" />
 
 	<utility zcml:condition="have testmode"
 			 component=".rest._throw_action" />
