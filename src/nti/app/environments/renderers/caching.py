@@ -79,13 +79,17 @@ def default_cache_controller(data, system):
 
 	if not response.etag:
 		body = system.get('nti.rendered')
+		# Body is a string here, but response.md5_etag wants bytes
+		charset = response.charset or response.default_body_encoding
 		if body is not None:
-			response.md5_etag(body, set_content_md5=True)
-	if 	response.etag and request.accept_encoding \
+			response.md5_etag(body.encode(charset), set_content_md5=True)
+
+	# response.etag is a string
+	if	response.etag and request.accept_encoding \
 		and 'gzip' in request.accept_encoding \
-		and not response.etag.endswith(b'./gz'):
+		and not response.etag.endswith('./gz'):
 		# The etag is supposed to vary between encodings
-		response.etag += b'./gz'
+		response.etag += './gz'
 
 	if not end_to_end_reload and response.status_int == 200:  # We will do caching
 		# If they give us both an etag and a last-modified, and the etag doesn't match,
