@@ -17,6 +17,8 @@ The following non general components have been stripped away:
 
 5. Drop enclosed content handling from .rest
 
+6. Update imports from nti.app.renderers to nti.app.environments.renderers
+
 """
 from __future__ import division
 from __future__ import print_function
