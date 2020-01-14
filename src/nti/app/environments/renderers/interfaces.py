@@ -70,55 +70,6 @@ class IUncacheableUnModifiedInResponse(IUncacheableInResponse, IUnModifiedInResp
     no Last-Modified date at all.
     """
 
-
-class IExternalCollection(interface.Interface):
-    """
-    Marker primarily for identifying that this is a collection of data
-    that has the last modified date of the greatest item in that data.
-    """
-
-
-class IUGDExternalCollection(IExternalCollection):
-    """
-    Marker primarily for identifying that this is a collection of data
-    that has the last modified date of the greatest item in that data.
-    """
-
-    __data_owner__ = interface.Attribute(
-        "The primary user whose data we are looking at, usually in the request path")
-
-
-class ILongerCachedUGDExternalCollection(IUGDExternalCollection):
-    """
-    Data that we expect to allow to be cached for slightly longer than otherwise.
-    """
-
-
-class IUserActivityExternalCollection(IUGDExternalCollection):
-    """
-    UGD representing user activity in aggregate.
-    """
-
-
-class IETagCachedUGDExternalCollection(ILongerCachedUGDExternalCollection):
-    """
-    Use this when the URL used to retrieve the collection
-    includes an "ETag" like token that changes when the data changes.
-    This must be a "strong validator", guaranteed to change.
-    """
-
-
-class IUseTheRequestContextUGDExternalCollection(IUGDExternalCollection):
-    """
-    Instead of using the return value from the view, use the context of the request.
-    This is useful when the view results are directly derived from the context,
-    and the context has more useful information than the result does. It allows
-    you to register an adapter for the context, and use that *before* calculating the
-    view. If you do have to calculate the view, you are assured that the ETag values
-    that the view results create are the same as the ones you checked against.
-    """
-
-
 class IExternalizationCatchComponentAction(interface.Interface):
     """
     To allow swizzling out the replacement during devmode and testing,
