@@ -11,6 +11,7 @@
 	<include package="zope.container" />
 
 	<include package="nti.containers" />
+	<include package="nti.traversal" />
 
 	<include package="nti.externalization" file="configure.zcml"/>
 
