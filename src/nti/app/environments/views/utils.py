@@ -6,6 +6,8 @@ from zope.schema._bootstrapinterfaces import SchemaNotProvided
 from zope.schema._bootstrapinterfaces import ValidationError
 from zope.schema._bootstrapinterfaces import WrongContainedType
 
+from zope.schema.interfaces import NotUnique
+
 
 def raise_json_error(factory, error, field=None):
     if isinstance(error, ValidationError):
@@ -22,6 +24,9 @@ def raise_json_error(factory, error, field=None):
 
         elif isinstance(error, RequiredMissing):
             message = 'Missing field: {}.'.format(error.args[0])
+
+        elif isinstance(error, NotUnique):
+            message = "Existing duplicated {} for {}.".format(error.args[1], error.args[2])
 
         else:
             message = error.args[0] if error.args else str(error)

@@ -6,10 +6,13 @@ import os
 from unittest import mock
 from hamcrest import assert_that
 from hamcrest import has_length
+from hamcrest import has_entries
 from hamcrest import has_properties
 from hamcrest import instance_of
 from hamcrest import contains_string
 from hamcrest import starts_with
+from hamcrest import calling
+from hamcrest import raises
 from hamcrest import is_
 
 from pyramid_mailer.interfaces import IMailer
@@ -17,17 +20,24 @@ from pyramid_mailer import Mailer
 
 from zope import component
 
+from zope.interface.exceptions import Invalid
+
 from nti.externalization import to_external_object
+from nti.externalization.internalization.updater import update_from_external_object
 
 from nti.app.environments.views.customers import getOrCreateCustomer
 from nti.app.environments.views.tests import BaseAppTest
 from nti.app.environments.views.tests import with_test_app
 from nti.app.environments.views.tests import ensure_free_txn
 from nti.app.environments.models.customers import PersistentCustomer
-from nti.app.environments.models.sites import TrialLicense, EnterpriseLicense, PersistentSite, SharedEnvironment
-from nti.app.environments.models.interfaces import IEnterpriseLicense,\
-    ITrialLicense, ISharedEnvironment, IDedicatedEnvironment
-from hamcrest.library.collection.isdict_containingentries import has_entries
+from nti.app.environments.models.sites import TrialLicense
+from nti.app.environments.models.sites import EnterpriseLicense
+from nti.app.environments.models.sites import PersistentSite
+from nti.app.environments.models.sites import SharedEnvironment
+from nti.app.environments.models.interfaces import IEnterpriseLicense
+from nti.app.environments.models.interfaces import ITrialLicense
+from nti.app.environments.models.interfaces import ISharedEnvironment
+from nti.app.environments.models.interfaces import IDedicatedEnvironment
 
 
 class TestSiteCreationView(BaseAppTest):
@@ -119,6 +129,82 @@ class TestSiteCreationView(BaseAppTest):
 
 
 class TestSitePutView(BaseAppTest):
+
+    @with_test_app()
+    @mock.patch('nti.app.environments.models.wref.get_customers_folder')
+    def testSitePutView(self, mock_customers):
+        with ensure_free_txn():
+            mock_customers.return_value = customers = self._root().get('customers')
+            customer = customers.addCustomer(PersistentCustomer(email='123@gmail.com', name="testname"))
+            sites = self._root().get('sites')
+            for site_id in ('Sxxx1', 'Sxxx2'):
+                sites.addSite(PersistentSite(license=TrialLicense(start_date=datetime.datetime(2019, 12, 12, 0, 0, 0),
+                                                                  end_date=datetime.datetime(2019, 12, 13, 0, 0, 0)),
+                                             status='PENDING',
+                                             dns_names=['x', 'y'],
+                                             owner=customer), siteId=site_id)
+            assert_that(sites, has_length(2))
+
+        url = '/onboarding/sites/Sxxx1'
+
+        # parent_site
+        params = { 'parent_site': 'Sxxx1' }
+        self.testapp.put_json(url, params=params, status=302, extra_environ=self._make_environ(username=None))
+        self.testapp.put_json(url, params=params, status=403, extra_environ=self._make_environ(username='user001'))
+        result = self.testapp.put_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
+        assert_that(result.json_body['message'], is_('parent site can not be self.'))
+
+        params = { 'parent_site': 'xxx'}
+        result = self.testapp.put_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
+        assert_that(result.json_body['message'], is_('No parent site found: xxx'))
+
+        params = { 'parent_site': 123}
+        result = self.testapp.put_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
+        assert_that(result.json_body['message'], is_('Invalid parent site type.'))
+
+        params = { 'parent_site': 'Sxxx2' }
+        self.testapp.put_json(url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
+        assert_that(sites['Sxxx1'].parent_site, is_(sites['Sxxx2']))
+
+        params = { 'parent_site': None }
+        self.testapp.put_json(url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
+        assert_that(sites['Sxxx1'].parent_site, is_(None))
+        with ensure_free_txn():
+            with mock.patch('nti.app.environments.models.utils.get_current_request') as mock_request:
+                mock_request.return_value = self.request
+                result = update_from_external_object(sites['Sxxx1'], {'parent_site': 'Sxxx2'})
+                assert_that(result.parent_site, sites['Sxxx2'])
+
+                result = update_from_external_object(sites['Sxxx1'], {'parent_site': sites['Sxxx2']})
+                assert_that(result.parent_site, sites['Sxxx2'])
+
+                assert_that(calling(update_from_external_object).with_args(sites['Sxxx1'], {'parent_site': 'Sxxx1'}),
+                            raises(Invalid, pattern="parent site can not be self."))
+
+                temp = PersistentSite(id='Sxxx2')
+                result = update_from_external_object(sites['Sxxx1'], {'parent_site': temp})
+                assert_that(result.parent_site, sites['Sxxx2'])
+
+        # dns_names
+        params = { 'dns_names': None }
+        result = self.testapp.put_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
+        assert_that(result.json_body, has_entries({"message": "Missing field: dns_names."}))
+
+        params = { 'dns_names': [] }
+        self.testapp.put_json(url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
+        assert_that(sites['Sxxx1'].dns_names, is_([]))
+
+        params = { 'dns_names': ['xxx'] }
+        self.testapp.put_json(url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
+        assert_that(sites['Sxxx1'].dns_names, is_(['xxx']))
+
+        params = { 'dns_names': ['yyy', 'xxx'] }
+        self.testapp.put_json(url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
+        assert_that(sites['Sxxx1'].dns_names, is_(['yyy', 'xxx']))
+
+        params = { 'dns_names': ['xxx', 'xxx'] }
+        result = self.testapp.put_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
+        assert_that(result.json_body, has_entries({'message': 'Existing duplicated xxx for dns_names.'}))
 
     @with_test_app()
     @mock.patch('nti.app.environments.models.utils.get_onboarding_root')
@@ -319,7 +405,7 @@ class TestRequestTrialSiteView(BaseAppTest):
 
         params = {'owner': '123@gmail.com', 'dns_names': [None]}
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001')).json_body
-        assert_that(result['message'], starts_with('Missing field: dns_names.'))
+        assert_that(result['message'], starts_with('Missing field: .'))
 
         params = {'owner': '123@gmail.com', 'dns_names': ['xxx']}
         result = self.testapp.post_json(url, params=params, status=201, extra_environ=self._make_environ(username='admin001')).json_body

@@ -239,7 +239,7 @@ class TestSites(BaseTest):
                               owner=owner,
                               environment=None,
                               license=TrialLicense(start_date=datetime.datetime(2019,1,2,0,0,0), end_date=datetime.datetime(2019,1,3,0,0,0)),
-                              dns_names=['t2.nt.com'],
+                              dns_names=set(['t2.nt.com']),
                               status='PENDING')
         assert_that(calling(setattr).with_args(child, 'parent_site', child), raises(interface.Invalid))
         assert_that(calling(setattr).with_args(child, 'parent_site', 33), raises(interface.Invalid))
@@ -252,7 +252,7 @@ class TestSites(BaseTest):
                               owner=PersistentCustomer(email='103@gmail.com', created=datetime.datetime.utcnow()),
                               environment=SharedEnvironment(name='alpha'),
                               license=TrialLicense(start_date=datetime.datetime.utcnow(), end_date=datetime.datetime.utcnow()),
-                              dns_names=['t.nt.com'],
+                              dns_names=set(['t.nt.com']),
                               status='ACTIVE')
         folder.addSite(site, siteId='okc')
         assert_that(site.__name__, 'xxxxid')
