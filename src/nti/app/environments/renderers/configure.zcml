@@ -9,8 +9,6 @@
 	<include package="zope.component" />
 	<include package="zope.security" />
 
-	<adapter factory=".rest.render_enclosure_factory" />
-
 	<adapter factory=".rest.render_externalizable_factory"
 			 provides=".interfaces.IResponseRenderer"
 			 for="*" />

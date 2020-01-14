@@ -25,9 +25,11 @@ from nti.app.renderers.interfaces import INoHrefInResponse
 from nti.app.renderers.interfaces import IResponseRenderer
 from nti.app.renderers.interfaces import IExternalizationCatchComponentAction
 
-from nti.dataserver.interfaces import IContent
-from nti.dataserver.interfaces import IEnclosedContent
-from nti.dataserver.interfaces import IShouldHaveTraversablePath
+# IShouldHaveTraversablePath is legacy. New systems shouldn't be relying on it
+try:
+    from nti.coremetadata.interfaces import IShouldHaveTraversablePath
+except ImportError:
+    IShouldHaveTraversablePath = interface.Interface
 
 from nti.externalization.externalization import toExternalObject
 from nti.externalization.externalization import catch_replace_action
@@ -218,24 +220,3 @@ def render_externalizable(data, system):
 @interface.implementer(IResponseRenderer)
 def render_externalizable_factory(unused):
     return render_externalizable
-
-
-@interface.implementer(IResponseRenderer)
-@component.adapter(IEnclosedContent)
-def render_enclosure_factory(data):
-    """
-    If the enclosure is pure binary data, not modeled content,
-    we want to simply output it without trying to introspect
-    or perform transformations.
-    """
-    if not IContent.providedBy(data.data):
-        return render_enclosure
-
-
-@interface.provider(IResponseRenderer)
-def render_enclosure(data, system):
-    request = system['request']
-    response = request.response
-    response.content_type = find_content_type(request, data)
-    response.last_modified = data.lastModified
-    return data.data

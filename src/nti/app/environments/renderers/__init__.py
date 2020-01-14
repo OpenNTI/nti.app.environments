@@ -15,6 +15,8 @@ The following non general components have been stripped away:
 4. Remove dependency on who browser classification from renderers.AbstractCachingRenderer.
    This removes the ability to write renderers that render to the browser.
 
+5. Drop enclosed content handling from .rest
+
 """
 from __future__ import division
 from __future__ import print_function
