@@ -16,8 +16,6 @@ from hashlib import md5
 from zope import component
 from zope import interface
 
-from zope.file import interfaces as zf_interfaces
-
 import pyramid.httpexceptions
 
 from pyramid.threadlocal import get_current_request
@@ -31,9 +29,6 @@ from nti.app.renderers.interfaces import IUserActivityExternalCollection
 from nti.app.renderers.interfaces import IETagCachedUGDExternalCollection
 from nti.app.renderers.interfaces import IPreRenderResponseCacheController
 from nti.app.renderers.interfaces import ILongerCachedUGDExternalCollection
-
-from nti.dataserver import flagging
-from nti.dataserver import interfaces as nti_interfaces
 
 from nti.traversal.traversal import find_interface
 
