@@ -31,6 +31,7 @@ from nti.app.environments.models.interfaces import ISharedEnvironment
 from nti.app.environments.models.interfaces import IDedicatedEnvironment
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ILMSSitesContainer
+from nti.app.environments.models.interfaces import ISiteUsage
 
 from nti.app.environments.utils import find_iface
 
@@ -146,3 +147,15 @@ class SitesFolder(CaseInsensitiveCheckingLastModifiedBTreeContainer):
 
 def _generate_site_id():
     return 'S' + uuid.uuid4().hex
+
+
+@interface.implementer(ISiteUsage)
+class SiteUsage(SchemaConfigured, PersistentCreatedModDateTrackingObject, Contained):
+
+    createFieldProperties(ISiteUsage)
+
+    mimeType = mime_type = 'application/vnd.nextthought.app.environments.siteusage'
+
+    def __init__(self, *args, **kwargs):
+        SchemaConfigured.__init__(self, *args, **kwargs)
+        PersistentCreatedModDateTrackingObject.__init__(self)

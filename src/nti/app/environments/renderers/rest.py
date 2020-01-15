@@ -29,7 +29,8 @@ from nti.app.environments.renderers.interfaces import IExternalizationCatchCompo
 try:
     from nti.coremetadata.interfaces import IShouldHaveTraversablePath
 except ImportError:
-    IShouldHaveTraversablePath = interface.Interface
+    class IShouldHaveTraversablePath(interface.Interface):
+        pass
 
 from nti.externalization.externalization import toExternalObject
 from nti.externalization.externalization import catch_replace_action

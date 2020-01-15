@@ -19,6 +19,10 @@
              for=".interfaces.ILMSSite *"
              provides="nti.externalization.interfaces.IExternalReferenceResolver"/>
 
+	<adapter factory=".adapters.site_usage_factory"
+			 for=".interfaces.ILMSSite"
+			 provides=".interfaces.ISiteUsage" />
+
     <include package="nti.externalization" file="meta.zcml" />
     <include package="nti.externalization" />
 
@@ -29,7 +33,8 @@
                          .interfaces.IDedicatedEnvironment
                          .interfaces.ITrialLicense
                          .interfaces.IEnterpriseLicense
-                         .interfaces.ILMSSite"
+                         .interfaces.ILMSSite
+                         .interfaces.ISiteUsage"
         modules=".customers
                  .sites" />
 

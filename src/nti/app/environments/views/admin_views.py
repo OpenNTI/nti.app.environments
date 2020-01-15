@@ -32,6 +32,7 @@ from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import ICustomersContainer
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ILMSSitesContainer
+from nti.app.environments.models.interfaces import ISiteUsage
 from nti.app.environments.models.interfaces import SITE_STATUS_OPTIONS
 from nti.app.environments.models.interfaces import SHARED_ENV_NAMES
 from nti.app.environments.models.interfaces import checkEmailAddress
@@ -209,6 +210,7 @@ class SiteDetailView(BaseTemplateView):
                          'site_edit_link': request.resource_url(self.context) if request.has_permission(ACT_UPDATE, self.context) else None,
                          'lastModified': formatDateToLocal(self.context.lastModified),
                          'parent_site': self._format_parent_site(self.context.parent_site) if self.context.parent_site else None,
+                         'usage': ISiteUsage(self.context),
                          **extra_info}}
 
 
