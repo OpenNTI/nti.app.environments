@@ -470,7 +470,7 @@ class TestSitesUploadCSVView(BaseAppTest):
         assert_that(view._get_or_update_dns_names(site), has_length(4))
 
         site = sites.addSite(PersistentSite(dns_names=['xyz.com'], **kwargs), siteId='Sxx3')
-        assert_that(calling(view._get_or_update_dns_names).with_args(site), raises(hexc.HTTPConflict, pattern="Existing identical dns_name in existing sites: xyz.com."))
+        assert_that(calling(view._get_or_update_dns_names).with_args(site), raises(hexc.HTTPConflict, pattern="Existing identical dns_name in different sites: xyz.com."))
         assert_that(view._existing_site_dns_names, has_length(4))
 
         del view._existing_site_dns_names
@@ -479,6 +479,78 @@ class TestSitesUploadCSVView(BaseAppTest):
         del sites['Sxx3']
         assert_that(view._get_or_update_dns_names(), has_length(4))
         assert_that(view._existing_site_dns_names, has_length(4))
+
+        view = SitesUploadCSVView(sites, self.request)
+        assert_that(view._get_or_update_dns_names(sites['Sxx2']), has_length(4))
+        assert_that(calling(view._get_or_update_dns_names).with_args(sites['Sxx2']), raises(hexc.HTTPConflict))
+
+    @with_test_app()
+    def test_process_dns(self):
+        sites = self._root().get('sites')
+        assert_that(sites, has_length(0))
+        view = SitesUploadCSVView(sites, self.request)
+        assert_that(view._process_dns({'nti_site': 'abc.com', 'nti_URL': 'xyz.com'}), is_(['abc.com', 'xyz.com']))
+        assert_that(view._process_dns({'nti_site': 'abc.com', 'nti_URL': ''}), is_(['abc.com']))
+        assert_that(view._process_dns({'nti_site': '', 'nti_URL': 'xyz.com'}), is_(['xyz.com']))
+        assert_that(view._process_dns({'nti_site': '', 'nti_URL': ''}), is_([]))
+        assert_that(view._existing_site_dns_names, has_length(0))
+
+        kwargs = {'license': TrialLicense(start_date=datetime.datetime(2019, 12, 12, 0, 0, 0), end_date=datetime.datetime(2019, 12, 13, 0, 0, 0)),
+                  'environment': SharedEnvironment(name='test'),
+                  'status': 'ACTIVE',}
+        sites.addSite(PersistentSite(dns_names=['abc.com', 'ddd.com'], **kwargs), siteId='Sxx1')
+        del view._existing_site_dns_names
+        assert_that(calling(view._process_dns).with_args({'nti_site':'abc.com','nti_URL':''}), raises(hexc.HTTPConflict))
+
+    @with_test_app()
+    def test_get_or_update_parent_sites_ids(self):
+        # Save <dns_name, site_id> mapping for sites who are not child sites.
+        sites = self._root().get('sites')
+        assert_that(sites, has_length(0))
+        view = SitesUploadCSVView(sites, self.request)
+        assert_that(view._get_or_update_parent_sites_ids(), has_length(0))
+        assert_that(view._parent_sites_ids, has_length(0))
+
+        kwargs = {'license': TrialLicense(start_date=datetime.datetime(2019, 12, 12, 0, 0, 0), end_date=datetime.datetime(2019, 12, 13, 0, 0, 0)),
+                  'environment': SharedEnvironment(name='test'),
+                  'status': 'ACTIVE',}
+        site = sites.addSite(PersistentSite(dns_names=['abc.com', 'xyz.com'], **kwargs), siteId='Sxx1')
+        assert_that(view._get_or_update_parent_sites_ids(site), has_length(2))
+
+        site = sites.addSite(PersistentSite(dns_names=['opq.com'], **kwargs), siteId='Sxx2')
+        assert_that(view._get_or_update_parent_sites_ids(site), has_length(3))
+
+        site = sites.addSite(PersistentSite(dns_names=['opq.com'], **kwargs), siteId='Sxx3')
+        assert_that(calling(view._get_or_update_parent_sites_ids).with_args(site=site), raises(hexc.HTTPConflict))
+
+        # child site shouldn't be added.
+        site = sites.addSite(PersistentSite(dns_names=['rst.com'], parent_site=sites['Sxx2'], **kwargs), siteId='Sxx4')
+        assert_that(view._get_or_update_parent_sites_ids(site), has_length(3))
+
+        # re-calculate
+        del sites['Sxx3']
+        del view._parent_sites_ids
+        assert_that(view._get_or_update_parent_sites_ids(), has_length(3))
+        assert_that(view._parent_sites_ids, has_length(3))
+
+        view = SitesUploadCSVView(sites, self.request)
+        assert_that(view._get_or_update_parent_sites_ids(site=sites['Sxx2']), has_length(3))
+        assert_that(view._parent_sites_ids, has_length(3))
+
+        assert_that(calling(view._get_or_update_parent_sites_ids).with_args(site=sites['Sxx2']), raises(hexc.HTTPConflict))
+
+    @with_test_app()
+    def test_process_parent_site(self):
+        sites = self._root().get('sites')
+        assert_that(sites, has_length(0))
+        view = SitesUploadCSVView(sites, self.request)
+        assert_that(calling(view._process_parent_site).with_args('abc.com'), raises(hexc.HTTPUnprocessableEntity))
+
+        kwargs = {'license': TrialLicense(start_date=datetime.datetime(2019, 12, 12), end_date=datetime.datetime(2019, 12, 13)),
+                  'environment': SharedEnvironment(name='test')}
+        site = sites.addSite(PersistentSite(dns_names=['abc.com'], **kwargs), siteId='Sxx2')
+        view = SitesUploadCSVView(sites, self.request)
+        assert_that(view._process_parent_site('abc.com'), is_(site))
 
     @with_test_app()
     @mock.patch('nti.app.environments.views.sites.get_hubspot_client')
@@ -496,13 +568,6 @@ class TestSitesUploadCSVView(BaseAppTest):
         assert_that(customers, has_length(0))
 
         view = SitesUploadCSVView(sites, self.request)
-
-        # dns_names
-        assert_that(view._process_dns({'nti_site': 'abc.com', 'nti_URL': 'xyz.com'}), is_(['abc.com', 'xyz.com']))
-        assert_that(view._process_dns({'nti_site': 'abc.com', 'nti_URL': ''}), is_(['abc.com']))
-        assert_that(view._process_dns({'nti_site': '', 'nti_URL': 'xyz.com'}), is_(['xyz.com']))
-        assert_that(view._process_dns({'nti_site': '', 'nti_URL': ''}), is_([]))
-
         # license
         result = view._process_license({'License Type': 'trial', 'LicenseStartDate': '', 'LicenseEndDate': ''})
         assert_that(ITrialLicense.providedBy(result), is_(True))
@@ -579,6 +644,7 @@ class TestSitesUploadCSVView(BaseAppTest):
                    'Status': '',
                    'Parent Site': '',
                    'Site Created Date': ''}
+        view = SitesUploadCSVView(sites, self.request)
         view._process_row(params)
         assert_that(sites, has_length(1))
         assert_that(sites['Sxxx1'], has_properties({'dns_names': is_(['abc.com', 'xyz.com']),
@@ -611,3 +677,35 @@ class TestSitesUploadCSVView(BaseAppTest):
                                                     }))
         assert_that(view._parent_sites_ids, has_length(2))
         assert_that(view._parent_sites_ids, has_entries({'abc.com': 'Sxxx1', 'xyz.com': 'Sxxx1',}))
+
+        params.update({'nti_site': 'abc1.com', 'nti_URL': '','Environment': 'dedicated: Sxxx3',})
+        assert_that(calling(view._process_row).with_args(params, remoteUser="testuser"),
+                    raises(hexc.HTTPConflict, pattern="Existing dns_names: abc1.com."))
+
+        params.update({'nti_site': 'abc2.com', 'nti_URL': '','Environment': 'dedicated: Sxxx3', 'Parent Site': 'xxx'})
+        assert_that(calling(view._process_row).with_args(params, remoteUser="testuser"),
+                    raises(hexc.HTTPUnprocessableEntity, pattern="Parent site not found: xxx."))
+
+        params.update({'nti_site': 'abc2.com', 'nti_URL': '','Environment': 'dedicated: Sxxx3', 'Parent Site': 'abc.com'})
+        view._process_row(params, remoteUser="testuser")
+        assert_that(sites, has_length(3))
+
+        params.update({'nti_site': 'abc3.com', 'nti_URL': '','Environment': 'dedicated: Sxxx4', 'Parent Site': ''})
+        view._process_row(params, remoteUser="testuser")
+        assert_that(sites, has_length(4))
+        assert_that(view._parent_sites_ids, has_length(3))
+        assert_that(view._existing_site_dns_names, has_length(6))
+
+    @with_test_app()
+    @mock.patch('nti.app.environments.views.sites.get_hubspot_client')
+    def testGet(self, mock_client):
+        mock_client.return_value = client = mock.MagicMock()
+        client.fetch_contact_by_email = lambda email: None
+        
+        sites = self._root().get('sites')
+        assert_that(sites, has_length(0))
+        self._upload_file(self.site_info)
+
+        assert_that(sites, has_length(4))
+        assert_that(sites['S79b714e55864457388118892dc6df51b'].dns_names, is_(['intelligentedu.nextthought.com']))
+

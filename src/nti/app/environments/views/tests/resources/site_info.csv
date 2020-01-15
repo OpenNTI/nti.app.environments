@@ -1,0 +1,5 @@
+nti_site,nti_URL,Hubspot Contact,Site Created Date,Site Age (days),Host Machine,Environment,Datacenter,Setup Method,Parent Site,Status,License Type,DemoAdmin Acct for Sales,LicenseStartDate,LicenseTerm,LicenseEndDate,DaysToLicenseEndDate,License Renewal Date,Days to Renewal,Instructions f. Sales,Removed DNS?,Removed Entire Site?,Notes
+intelligentedu.nextthought.com,,brian@intelligent.education,11/15/2019,59,app1.4pp,dedicated:S79b714e55864457388118892dc6df51b,4pp,automated,,ACTIVE,trial,,11/15/2019,1,2/13/2020,31,,,,,,
+aphasiaaccess.nextthought.com,,tvondeak@aphasiaaccess.org,11/12/2019,62,app1.4pp,dedicated:aphasia,4pp,automated,,ACTIVE,trial,,11/12/2019,1,2/10/2020,28,,,,,,
+ifsta.nextthought.com,,jsmola@osufpp.org,1/1/2018,742,,shared:assoc,hsc,manual,,ACTIVE,enterprise,,6/1/2019,1,5/31/2020,139,6/1/2020,140,,,,
+altontx.ifsta.online,,jsmola@osufpp.org,11/18/2019,56,,shared:assoc,hsc,automated,ifsta.nextthought.com,ACTIVE,enterprise,,11/18/2019,1,11/17/2020,309,,,,,,
