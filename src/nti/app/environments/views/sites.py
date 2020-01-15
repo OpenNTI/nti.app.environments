@@ -317,26 +317,24 @@ class SitesUploadCSVView(SiteBaseView, ObjectCreateUpdateViewMixin):
         return DedicatedEnvironment(pod_id=_id,
                                     host=host)
 
+    def _add_to_dns_names(self, site, names):
+        for x in site.dns_names or ():
+            if x in names:
+                raise_json_error(hexc.HTTPConflict,
+                                 "Existing identical dns_name in different sites: {}.".format(x))
+            names.add(x)
+
     def _get_or_update_dns_names(self, site=None):
         # Make sure no identical dns_names happen when uploading.
         try:
             _names = self._existing_site_dns_names
         except AttributeError:
             _names = self._existing_site_dns_names = set()
-
             for x in self.context.values():
-                for _dns in x.dns_names or ():
-                    if _dns in _names:
-                        raise_json_error(hexc.HTTPConflict,
-                                         "Existing identical dns_name in different sites: {}.".format(_dns))
-                    _names.add(_dns)
-
-        if site is not None:
-            for _dns in site.dns_names or ():
-                if _dns in _names:
-                    raise_json_error(hexc.HTTPConflict,
-                                     "Existing identical dns_name in existing sites: {}.".format(_dns))
-                _names.add(_dns)
+                self._add_to_dns_names(x, _names)
+        else:
+            if site is not None:
+                self._add_to_dns_names(site, _names)
         return _names
 
     def _process_dns(self, dic):
@@ -346,7 +344,7 @@ class SitesUploadCSVView(SiteBaseView, ObjectCreateUpdateViewMixin):
         for x in (site_url, extra_site_url):
             if x and x not in res:
                 if x in self._get_or_update_dns_names():
-                    raise_json_error(hexc.HTTPUnprocessableEntity,
+                    raise_json_error(hexc.HTTPConflict,
                                      'Existing dns_names: {}.'.format(x))
                 res.append(x)
         return res
@@ -354,6 +352,13 @@ class SitesUploadCSVView(SiteBaseView, ObjectCreateUpdateViewMixin):
     def _process_owner(self, dic, created=True):
         email = dic['Hubspot Contact'].strip() or self._default_owner_email
         return self._handle_owner(email, created=created)
+
+    def _add_to_parent_sites_ids(self, site, _ids):
+        for _dns in site.dns_names or ():
+            if _dns in _ids:
+                raise_json_error(hexc.HTTPConflict,
+                                 "Identical dns_name ({}) in different sites, ({} <-> {}).".format(_dns, _ids[_dns], site.id))
+            _ids[_dns] = site.id
 
     def _get_or_update_parent_sites_ids(self, site=None):
         try:
@@ -363,22 +368,13 @@ class SitesUploadCSVView(SiteBaseView, ObjectCreateUpdateViewMixin):
             for x in self.context.values():
                 if x.parent_site is not None:
                     continue
-
                 # Here we suppose all dns_names between different sites are totally unique.
-                for _dns in x.dns_names or ():
-                    if _dns in _ids:
-                        raise_json_error(hexc.HTTPUnprocessableEntity,
-                                         "Identical dns_name {} in different sites, (%s <> %s).".format(_dns,
-                                                                                                        _ids[_dns],
-                                                                                                        x.id))
-                    _ids[_dns] = x.id
-
-        # If a site has parent site,
-        # we think it should not be a parent site of another site for now.
-        if site is not None and site.parent_site is None:
-            for dns in site.dns_names or ():
-                _ids[dns] = site.id
-
+                self._add_to_parent_sites_ids(x, _ids)
+        else:
+            # If a site has parent site,
+            # we think it should not be a parent site of another site for now.
+            if site is not None and site.parent_site is None:
+                self._add_to_parent_sites_ids(site, _ids)
         return _ids
 
     def _process_parent_site(self, dns_name):
