@@ -37,10 +37,10 @@ class SiteInternalizer(InterfaceObjectIO):
 
         result = super(SiteInternalizer, self).updateFromExternalObject(parsed, *args, **kwargs)
 
-        # Make sure we store dns_names in a list.
+        # Make sure we store dns_names in a list, and lower case all dns_names.
         # IO, by default will store in a set.
         if dns_names is not None:
-            self._ext_self.dns_names = list(dns_names or ())
+            self._ext_self.dns_names = [x.lower() for x in dns_names]
 
         return updated or result
 
