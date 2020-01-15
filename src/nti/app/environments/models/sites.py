@@ -22,6 +22,7 @@ from nti.wref.interfaces import IWeakRef
 from nti.app.environments.auth import ADMIN_ROLE
 from nti.app.environments.auth import ACCOUNT_MANAGEMENT_ROLE
 from nti.app.environments.auth import ACT_READ
+from nti.app.environments.auth import ACT_REQUEST_TRIAL_SITE
 
 from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import ICustomersContainer
@@ -91,9 +92,10 @@ class PersistentSite(SchemaConfigured, PersistentCreatedModDateTrackingObject, C
 
     id = alias('__name__')
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, parent_site=None, *args, **kwargs):
         SchemaConfigured.__init__(self, *args, **kwargs)
         PersistentCreatedModDateTrackingObject.__init__(self)
+        self.parent_site = parent_site
 
     def _get_owner(self):
         owner = self._owner_ref() if self._owner_ref else None
@@ -106,6 +108,23 @@ class PersistentSite(SchemaConfigured, PersistentCreatedModDateTrackingObject, C
 
     owner = property(_get_owner, _set_owner)
 
+    def _get_parent_site(self):
+        parent = self._parent_ref() if self._parent_ref else None
+        if find_iface(parent, ILMSSitesContainer) is None:
+            return None
+        return parent
+
+    def _set_parent_site(self, parent):
+        if parent is not None:
+            if not ILMSSite.providedBy(parent):
+                raise interface.Invalid("Invalid parent site type.")
+            if parent is self:
+                raise interface.Invalid("parent site can not be self.")
+
+        self._parent_ref = IWeakRef(parent) if parent else None
+
+    parent_site = property(_get_parent_site, _set_parent_site)
+
 
 @interface.implementer(ILMSSitesContainer)
 class SitesFolder(CaseInsensitiveCheckingLastModifiedBTreeContainer):
@@ -113,7 +132,7 @@ class SitesFolder(CaseInsensitiveCheckingLastModifiedBTreeContainer):
     @LazyOnClass
     def __acl__(self):
         return [(Allow, ADMIN_ROLE, ALL_PERMISSIONS),
-                (Allow, ACCOUNT_MANAGEMENT_ROLE, ACT_READ)]
+                (Allow, ACCOUNT_MANAGEMENT_ROLE, (ACT_READ, ACT_REQUEST_TRIAL_SITE))]
 
     def addSite(self, site, siteId=None):
         siteId = site.__name__ or siteId or _generate_site_id()

@@ -185,3 +185,60 @@ function saveSiteEditView(me, url) {
     data = JSON.stringify(data);
     doUpdate(url, data, '.success-edit-site-info', '.error-edit-site-info')
 }
+
+// owner info
+function showOwnerEditView() {
+    var view = $('#view_owner_info');
+    view.css('display', 'none');
+
+    var edit = $('#edit_owner_info');
+    edit.css('display', 'block');
+
+    var email = $(view.find('.site_owner_email')[0]).text();
+    $(edit.find('.site_owner_email')[0]).val(email);
+}
+
+function cancelOwnerEditView() {
+    $('#view_owner_info').css('display', 'block');
+    $('#edit_owner_info').css('display', 'none');
+    clearMessages('.success-edit-owner-info', '.error-edit-owner-info');
+}
+
+function saveOwnerEditView(me, url) {
+    var form = $(me).closest('.form-group')[0];
+    var email = $($(form).find('.site_owner_email')[0]).val();
+    var data = {
+        'owner': email,
+    };
+    data = JSON.stringify(data);
+    doUpdate(url, data, '.success-edit-owner-info', '.error-edit-owner-info')
+}
+
+
+// parent site info
+function showParentSiteEditView() {
+    var view = $('#view_parent_site');
+    view.css('display', 'none');
+
+    var edit = $('#edit_parent_site');
+    edit.css('display', 'block');
+
+    var term = $(view.find('.site_parent_id')[0]).text();
+    $(edit.find('.site_parent_id')[0]).val(term);
+}
+
+function cancelParentSiteEditView() {
+    $('#view_parent_site').css('display', 'block');
+    $('#edit_parent_site').css('display', 'none');
+    clearMessages('.success-edit-parent-site', '.error-edit-parent-site');
+}
+
+function saveParentSiteView(me, url) {
+    var form = $(me).closest('.form-group')[0];
+    var parent_site = $($(form).find('.site_parent_id')[0]).val();
+    var data = {
+        'parent_site': parent_site ? parent_site : null,
+    };
+    data = JSON.stringify(data);
+    doUpdate(url, data, '.success-edit-parent-site', '.error-edit-parent-site')
+}

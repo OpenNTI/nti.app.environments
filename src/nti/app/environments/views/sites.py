@@ -20,6 +20,7 @@ from nti.app.environments.models.interfaces import ILMSSitesContainer
 from nti.app.environments.models.interfaces import IOnboardingRoot
 from nti.app.environments.models.interfaces import SITE_STATUS_UNKNOWN
 from nti.app.environments.models.interfaces import SITE_STATUS_PENDING
+from nti.app.environments.models.interfaces import checkEmailAddress
 
 from nti.app.environments.models.events import SiteCreatedEvent
 
@@ -42,6 +43,7 @@ from nti.app.environments.auth import ACT_DELETE
 from nti.app.environments.auth import ACT_UPDATE
 from nti.app.environments.auth import ACT_EDIT_SITE_LICENSE
 from nti.app.environments.auth import ACT_EDIT_SITE_ENVIRONMENT
+from nti.app.environments.auth import ACT_REQUEST_TRIAL_SITE
 
 from nti.app.environments.api.hubspotclient import get_hubspot_client
 
@@ -73,7 +75,10 @@ class SiteBaseView(BaseView):
         Create a new customer if customer is not found and created is True.
         """
         if not value:
-            raise_json_error(hexc.HTTPUnprocessableEntity, "Missing field: email.")
+            raise_json_error(hexc.HTTPUnprocessableEntity, "Missing email.")
+
+        if not checkEmailAddress(value):
+            raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid email.")
 
         folder = self._customers
         customer = folder.getCustomer(value)
@@ -110,6 +115,7 @@ class SiteCreationView(SiteBaseView, ObjectCreateUpdateViewMixin):
     def __call__(self):
         try:
             site = self.createObjectWithExternal()
+            site.creator = self.request.authenticated_userid
             self.context.addSite(site)
             self.request.response.status = 201
             logger.info("%s created a new site, site id: %s.",
@@ -123,7 +129,7 @@ class SiteCreationView(SiteBaseView, ObjectCreateUpdateViewMixin):
 @view_config(renderer='json',
              context=ILMSSitesContainer,
              request_method='POST',
-             permission=ACT_CREATE,
+             permission=ACT_REQUEST_TRIAL_SITE,
              name="request_trial_site")
 class RequestTrialSiteView(SiteBaseView, ObjectCreateUpdateViewMixin):
 
@@ -137,22 +143,23 @@ class RequestTrialSiteView(SiteBaseView, ObjectCreateUpdateViewMixin):
 
         kwargs['owner'] = self._handle_owner(kwargs.get('owner'), created=True)
 
+        if not kwargs.get('dns_names') \
+            or (isinstance(kwargs.get('dns_names'), (list, tuple)) and len(kwargs['dns_names'])==0):
+            raise_json_error(hexc.HTTPUnprocessableEntity,
+                            'Please provide at least one site url.')
+
         _now = datetime.datetime.utcnow()
         kwargs.update({'status': SITE_STATUS_PENDING,
                        'license': TrialLicense(start_date=_now,
                                                end_date=_now + datetime.timedelta(days=90))})
-        # When requesting user is not owner,
-        # set the requesting_email as the requesting user.
-        if kwargs['owner'].email != self.request.authenticated_userid:
-            kwargs['requesting_email'] = self.request.authenticated_userid
         return kwargs
 
     def __call__(self):
         try:
             site = PersistentSite()
+            site.creator = self.request.authenticated_userid
             site = self.updateObjectWithExternal(site, self.readInput())
             self.context.addSite(site)
-            self.request.response.status = 201
             # send email, etc.
             notify(SiteCreatedEvent(site))
 
@@ -172,7 +179,7 @@ class RequestTrialSiteView(SiteBaseView, ObjectCreateUpdateViewMixin):
              permission=ACT_UPDATE)
 class SiteUpdateView(SiteBaseView, ObjectCreateUpdateViewMixin):
 
-    _allowed_fields = ('status', 'dns_names', 'client_name')
+    _allowed_fields = ('status', 'dns_names', 'owner', 'parent_site')
 
     def readInput(self):
         incoming = super(SiteUpdateView, self).readInput()
@@ -180,11 +187,43 @@ class SiteUpdateView(SiteBaseView, ObjectCreateUpdateViewMixin):
         for field in self._allowed_fields:
             if field in incoming:
                 res[field] = incoming[field]
+
+        if 'owner' in res:
+            res['owner'] = self._handle_owner(res['owner'])
+
         return res
 
+    def _log(self, external):
+        msg = []
+        for k,v in external.items():
+            if k == 'owner':
+                msg.append('{}={}'.format(k, v.email))
+            elif k=='parent_site':
+                msg.append('{}={}'.format(k, getattr(v, 'id', v)))
+            else:
+                msg.append('{}={}'.format(k, v))
+        if msg:
+            logger.info("%s has updated site (%s) with (%s).",
+                        self.request.authenticated_userid,
+                        self.context.id,
+                        msg)
+
     def __call__(self):
-        self.updateObjectWithExternal(self.context)
+        external = self.readInput()
+        self.updateObjectWithExternal(self.context, external=external)
+        self._log(external)
         return {}
+
+
+class BaseSiteFieldPutView(BaseFieldPutView):
+
+    def _log(self, external):
+        msg = ",".join(["{}={}".format(k, v) for k,v in external.items() if k not in ('MimeType',)]) if external else ''
+        if msg:
+            logger.info("%s has updated site (%s) with (%s).",
+                        self.request.authenticated_userid,
+                        self.context.id,
+                        msg)
 
 
 @view_config(renderer='json',
@@ -192,7 +231,7 @@ class SiteUpdateView(SiteBaseView, ObjectCreateUpdateViewMixin):
              request_method='PUT',
              permission=ACT_EDIT_SITE_ENVIRONMENT,
              name="environment")
-class SiteEnvironmentPutView(BaseFieldPutView):
+class SiteEnvironmentPutView(BaseSiteFieldPutView):
     pass
 
 
@@ -201,7 +240,7 @@ class SiteEnvironmentPutView(BaseFieldPutView):
              request_method='PUT',
              permission=ACT_EDIT_SITE_LICENSE,
              name="license")
-class SiteLicensePutView(BaseFieldPutView):
+class SiteLicensePutView(BaseSiteFieldPutView):
 
     def _handle_date(self, name, value):
         try:
@@ -224,6 +263,9 @@ class SiteLicensePutView(BaseFieldPutView):
 def deleteSiteView(context, request):
     container = context.__parent__
     container.deleteSite(context)
+    logger.info("%s deleted site (%s).",
+                request.authenticated_userid,
+                context.id)
     return hexc.HTTPNoContent()
 
 
@@ -275,16 +317,80 @@ class SitesUploadCSVView(SiteBaseView, ObjectCreateUpdateViewMixin):
         return DedicatedEnvironment(pod_id=_id,
                                     host=host)
 
+    def _add_to_dns_names(self, site, names):
+        for x in site.dns_names or ():
+            if x in names:
+                raise_json_error(hexc.HTTPConflict,
+                                 "Existing identical dns_name in different sites: {}.".format(x))
+            names.add(x)
+
+    def _get_or_update_dns_names(self, site=None):
+        # Make sure no identical dns_names happen when uploading.
+        try:
+            _names = self._existing_site_dns_names
+        except AttributeError:
+            _names = self._existing_site_dns_names = set()
+            for x in self.context.values():
+                self._add_to_dns_names(x, _names)
+        else:
+            if site is not None:
+                self._add_to_dns_names(site, _names)
+        return _names
+
     def _process_dns(self, dic):
         site_url = dic['nti_site'].strip()
-        extra_site_url = dic['nti_URL'].strip() or None
-        return [site_url, extra_site_url] if extra_site_url else [site_url]
+        extra_site_url = dic['nti_URL'].strip()
+        res = []
+        for x in (site_url, extra_site_url):
+            if x and x not in res:
+                if x in self._get_or_update_dns_names():
+                    raise_json_error(hexc.HTTPConflict,
+                                     'Existing dns_names: {}.'.format(x))
+                res.append(x)
+        return res
 
     def _process_owner(self, dic, created=True):
         email = dic['Hubspot Contact'].strip() or self._default_owner_email
         return self._handle_owner(email, created=created)
 
-    def _process_row(self, row, createdCustomer=True):
+    def _add_to_parent_sites_ids(self, site, _ids):
+        for _dns in site.dns_names or ():
+            if _dns in _ids:
+                raise_json_error(hexc.HTTPConflict,
+                                 "Identical dns_name ({}) in different sites, ({} <-> {}).".format(_dns, _ids[_dns], site.id))
+            _ids[_dns] = site.id
+
+    def _get_or_update_parent_sites_ids(self, site=None):
+        try:
+            _ids = self._parent_sites_ids
+        except AttributeError:
+            _ids = self._parent_sites_ids = dict()
+            for x in self.context.values():
+                if x.parent_site is not None:
+                    continue
+                # Here we suppose all dns_names between different sites are totally unique.
+                self._add_to_parent_sites_ids(x, _ids)
+        else:
+            # If a site has parent site,
+            # we think it should not be a parent site of another site for now.
+            if site is not None and site.parent_site is None:
+                self._add_to_parent_sites_ids(site, _ids)
+        return _ids
+
+    def _process_parent_site(self, dns_name):
+        dns_name = dns_name.strip() if dns_name else None
+        if not dns_name:
+            return None
+
+        site_ids = self._get_or_update_parent_sites_ids()
+        site_id = site_ids.get(dns_name)
+        site = self.context.get(site_id) if site_id else None
+        if not site:
+            raise_json_error(hexc.HTTPUnprocessableEntity,
+                             "Parent site not found: {}.".format(dns_name))
+        return site
+
+    def _process_row(self, row, createdCustomer=True, remoteUser=None):
         try:
             kwargs = dict()
             kwargs['owner'] = self._process_owner(row, created=createdCustomer)
@@ -292,6 +398,7 @@ class SitesUploadCSVView(SiteBaseView, ObjectCreateUpdateViewMixin):
             kwargs['environment'] = self._process_environment(row)
             kwargs['dns_names'] = self._process_dns(row)
             kwargs['status'] = row['Status'] or self._default_site_status
+            kwargs['parent_site'] = self._process_parent_site(row['Parent Site'])
 
             createdTime = parseDate(row['Site Created Date'], toTimeStamp=True) if row['Site Created Date'] else self._default_site_created
 
@@ -301,8 +408,11 @@ class SitesUploadCSVView(SiteBaseView, ObjectCreateUpdateViewMixin):
                 siteId = kwargs['environment'].pod_id if isinstance(kwargs['environment'], DedicatedEnvironment) else None
                 site = PersistentSite()
                 site.createdTime = createdTime
+                site.creator = remoteUser or self.request.authenticated_userid
                 site = self.updateObjectWithExternal(site, kwargs)
                 self.context.addSite(site, siteId=siteId)
+                self._get_or_update_dns_names(site)
+                self._get_or_update_parent_sites_ids(site)
             except KeyError as e:
                 raise ValueError("Existing site id: {}.".format(siteId))
         except KeyError as e:
@@ -322,6 +432,8 @@ class SitesUploadCSVView(SiteBaseView, ObjectCreateUpdateViewMixin):
         if field is None or not field.file:
             raise_json_error(hexc.HTTPUnprocessableEntity, "Must provide a named file.")
 
+        remoteUser = self.request.authenticated_userid
+
         logger.info("Begin processing sites creation.")
         contents = field.value.decode('utf-8')
         contents = [x for x in contents.splitlines() if not self._is_empty(x)]
@@ -331,10 +443,7 @@ class SitesUploadCSVView(SiteBaseView, ObjectCreateUpdateViewMixin):
         skipped = 0
         for row in rows:
             logger.debug('Processing line %s', total+1)
-            if row['Parent Site']:
-                skipped += 1
-                continue
-            self._process_row(row, createdCustomer=createdCustomerIfNotExists)
+            self._process_row(row, createdCustomer=createdCustomerIfNotExists, remoteUser=remoteUser)
             total += 1
 
         result = dict()
@@ -353,7 +462,7 @@ class SiteCSVExportView(CSVBaseView):
     def header(self, params):
         return ['Site', 'Owner', 'License', 'License Start Date', 'License End Date',
                 'Environment', 'Host Machine',
-                'Status', 'DNS Names', 'Created Time', 'Last Modified']
+                'Status', 'DNS Names', 'Created Time', 'Last Modified', 'Parent Site']
 
     def filename(self):
         return 'sites.csv'
@@ -378,4 +487,5 @@ class SiteCSVExportView(CSVBaseView):
                 'Status': record.status,
                 'DNS Names': ','.join(record.dns_names),
                 'Created Time': formatDateToLocal(record.created),
-                'Last Modified': formatDateToLocal(record.lastModified)}
+                'Last Modified': formatDateToLocal(record.lastModified),
+                'Parent Site': record.parent_site.id if record.parent_site else ''}

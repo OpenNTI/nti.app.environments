@@ -8,7 +8,6 @@ from nti.externalization.datastructures import InterfaceObjectIO
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import IEnterpriseLicense
-
 from nti.app.environments.utils import parseDate
 
 
@@ -22,13 +21,27 @@ class SiteInternalizer(InterfaceObjectIO):
 
     _ext_iface_upper_bound = ILMSSite
 
+    __external_oids__ = ('parent_site',)
+
     def updateFromExternalObject(self, parsed, *args, **kwargs):
         updated = False
         if 'id' in parsed:
             self._ext_self.id = parsed['id']
             updated = True
 
+        if 'parent_site' in parsed:
+            self._ext_self.parent_site = parsed['parent_site']
+            updated = True
+
+        dns_names = parsed.get('dns_names')
+
         result = super(SiteInternalizer, self).updateFromExternalObject(parsed, *args, **kwargs)
+
+        # Make sure we store dns_names in a list.
+        # IO, by default will store in a set.
+        if dns_names is not None:
+            self._ext_self.dns_names = list(dns_names or ())
+
         return updated or result
 
 

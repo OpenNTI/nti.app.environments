@@ -13,6 +13,8 @@ from hamcrest import has_properties
 from hamcrest import assert_that
 from hamcrest import starts_with
 
+from zope import interface
+
 from zope.container.interfaces import InvalidItemType
 
 from zope.schema import getValidationErrors
@@ -220,6 +222,28 @@ class TestSites(BaseTest):
         inst = update_from_external_object(inst, {'dns_names': []})
         assert_that(inst, has_properties({'dns_names': []}))
 
+        # child site
+        inst.__parent__ = SitesFolder()
+        child = PersistentSite(id='xxxxid3',
+                              owner=owner,
+                              environment=None,
+                              license=TrialLicense(start_date=datetime.datetime(2019,1,2,0,0,0), end_date=datetime.datetime(2019,1,3,0,0,0)),
+                              dns_names=['t2.nt.com'],
+                              status='PENDING',
+                              parent_site=inst)
+        result = to_external_object(child)
+        assert_that(result['id'], is_('xxxxid3'))
+        assert_that(result['parent_site'], is_('xxxxid2'))
+
+        child = PersistentSite(id='xxxxid3',
+                              owner=owner,
+                              environment=None,
+                              license=TrialLicense(start_date=datetime.datetime(2019,1,2,0,0,0), end_date=datetime.datetime(2019,1,3,0,0,0)),
+                              dns_names=set(['t2.nt.com']),
+                              status='PENDING')
+        assert_that(calling(setattr).with_args(child, 'parent_site', child), raises(interface.Invalid))
+        assert_that(calling(setattr).with_args(child, 'parent_site', 33), raises(interface.Invalid))
+
     @mock.patch("nti.app.environments.models.wref.get_customers_folder")
     def testSitesFolder(self, mock_customers):
         mock_customers.return_value = CustomersFolder()
@@ -228,7 +252,7 @@ class TestSites(BaseTest):
                               owner=PersistentCustomer(email='103@gmail.com', created=datetime.datetime.utcnow()),
                               environment=SharedEnvironment(name='alpha'),
                               license=TrialLicense(start_date=datetime.datetime.utcnow(), end_date=datetime.datetime.utcnow()),
-                              dns_names=['t.nt.com'],
+                              dns_names=set(['t.nt.com']),
                               status='ACTIVE')
         folder.addSite(site, siteId='okc')
         assert_that(site.__name__, 'xxxxid')

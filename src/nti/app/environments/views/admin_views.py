@@ -1,3 +1,5 @@
+import urllib.parse
+
 from pyramid.view import view_config
 
 from pyramid import httpexceptions as hexc
@@ -17,6 +19,7 @@ from nti.app.environments.auth import ACT_DELETE
 from nti.app.environments.auth import ACT_CREATE
 from nti.app.environments.auth import ACT_EDIT_SITE_LICENSE
 from nti.app.environments.auth import ACT_EDIT_SITE_ENVIRONMENT
+from nti.app.environments.auth import ACT_REQUEST_TRIAL_SITE
 from nti.app.environments.auth import ADMIN_ROLE
 from nti.app.environments.auth import ACCOUNT_MANAGEMENT_ROLE
 
@@ -116,7 +119,7 @@ class SitesListView(BaseTemplateView, _TableMixin):
                 'creation_url': self.request.resource_url(self.context) if self.request.has_permission(ACT_CREATE, self.context) else None,
                 'sites_upload_url': self.request.resource_url(self.context, '@@upload_sites') if self.request.has_permission(ACT_CREATE, self.context) else None,
                 'sites_export_url': self.request.resource_url(self.context, '@@export_sites'),
-                'trial_site_request_url': self.request.resource_url(self.context, '@@request_trial_site') if self.request.has_permission(ACT_CREATE, self.context) else None,
+                'trial_site_request_url': self.request.resource_url(self.context, '@@request_trial_site') if self.request.has_permission(ACT_REQUEST_TRIAL_SITE, self.context) else None,
                 'site_status_options': SITE_STATUS_OPTIONS,
                 'env_shared_options': SHARED_ENV_NAMES,
                 'is_deletion_allowed': self._is_deletion_allowed(table)}
@@ -128,6 +131,13 @@ class SitesListView(BaseTemplateView, _TableMixin):
              permission=ACT_READ,
              name='details')
 class SiteDetailView(BaseTemplateView):
+
+    _shared_env_names = {
+        'prod': 'prod',
+        'hrpros': 'prod_hrpros',
+        'assoc': 'prod_assoc',
+        'alpha': 'alpha_v3'
+    }
 
     def _site_extra_info(self):
         hostname = self.context.dns_names[0] if self.context.dns_names else None
@@ -148,21 +158,37 @@ class SiteDetailView(BaseTemplateView):
                 'edit_link': edit_link,
                 'lastModified': formatDateToLocal(lic.lastModified)}
 
+    def _splunk_link(self, env):
+        tpl = 'https://splunk.nextthought.com/en-US/app/search/search?q={}'
+        if ISharedEnvironment.providedBy(env):
+            name = self._shared_env_names.get(env.name)
+            return tpl.format(urllib.parse.quote('search index="%s" earliest=-1d' % name, safe='')) if name else None
+        elif IDedicatedEnvironment.providedBy(env):
+            return tpl.format(urllib.parse.quote('search index="dedicated_environments" host="%s.nti" earliest=-1d' % self.context.id, safe=''))
+        return None
+
     def _format_env(self, env=None):
         if ISharedEnvironment.providedBy(env):
             return {'type': 'shared',
                     'name': env.name,
-                    'lastModified': formatDateToLocal(env.lastModified)}
+                    'lastModified': formatDateToLocal(env.lastModified),
+                    'splunk_link': self._splunk_link(env)}
         elif IDedicatedEnvironment.providedBy(env):
             return {'type': 'dedicated',
                     'pod_id': env.pod_id,
                     'host': env.host,
-                    'lastModified': formatDateToLocal(env.lastModified)}
+                    'lastModified': formatDateToLocal(env.lastModified),
+                    'splunk_link': self._splunk_link(env)}
         raise ValueError('Unknown environment type.')
 
     def _format_owner(self, owner=None):
         return {'owner': owner,
                 'detail_url': self.request.resource_url(owner, '@@details') if owner else None}
+
+    def _format_parent_site(self, parent):
+        return {'id': parent.id,
+                'dns_names': parent.dns_names,
+                'detail_url': self.request.resource_url(parent, '@@details')}
 
     def __call__(self):
         request = self.request
@@ -171,6 +197,7 @@ class SiteDetailView(BaseTemplateView):
                 'env_shared_options': SHARED_ENV_NAMES,
                 'site_status_options': SITE_STATUS_OPTIONS,
                 'site': {'created': formatDateToLocal(self.context.created),
+                         'creator': self.context.creator,
                          'owner': self._format_owner(self.context.owner),
                          'site_id': self.context.id,
                          'status': self.context.status,
@@ -178,23 +205,23 @@ class SiteDetailView(BaseTemplateView):
                          'license': self._format_license(self.context.license),
                          'environment': self._format_env(self.context.environment) if self.context.environment else None,
                          'environment_edit_link': request.resource_url(self.context, '@@environment') if request.has_permission(ACT_EDIT_SITE_ENVIRONMENT, self.context) else None,
-                         'requesting_email': self.context.requesting_email,
                          'client_name': self.context.client_name,
                          'site_edit_link': request.resource_url(self.context) if request.has_permission(ACT_UPDATE, self.context) else None,
                          'lastModified': formatDateToLocal(self.context.lastModified),
+                         'parent_site': self._format_parent_site(self.context.parent_site) if self.context.parent_site else None,
                          **extra_info}}
 
 
 @view_config(renderer='../templates/admin/request_site.pt',
              request_method='GET',
              context=ILMSSitesContainer,
-             permission=ACT_READ,
+             permission=ACT_REQUEST_TRIAL_SITE,
              name='request_trial_site')
 class SiteRequestView(BaseTemplateView):
 
     def __call__(self):
         return {
-            'trial_site_request_url': self.request.resource_url(self.context, '@@request_trial_site') if self.request.has_permission(ACT_CREATE, self.context) else None
+            'trial_site_request_url': self.request.resource_url(self.context, '@@request_trial_site')
         }
 
 

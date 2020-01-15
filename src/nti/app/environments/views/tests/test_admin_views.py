@@ -128,7 +128,7 @@ class TestAdminViews(BaseAppTest):
                                                              'edit_link': None}),
                                                  'environment': has_entries({'type': 'shared', 'name': 'test'}),
                                                  'environment_edit_link': None,
-                                                 'requesting_email': None,
+                                                 'creator': None,
                                                  'client_name': None,
                                                  'site_edit_link': None,
                                                  'lastModified': not_none()

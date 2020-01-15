@@ -20,7 +20,7 @@ function saveItem (me, url) {
     } : null;
     var status = getValue("site_status");
     var dns_names = getValue("site_dns_names");
-    dns_names = dns_names ? dns_names.split(',') : null;
+    dns_names = dns_names ? $.map(dns_names.split(","), $.trim) : null;
 
     var data = {
         "id": site_id,

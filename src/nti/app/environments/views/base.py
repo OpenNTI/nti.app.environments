@@ -21,11 +21,15 @@ from nti.app.environments.auth import is_admin_or_account_manager
 from nti.app.environments.models.customers import HubspotContact
 from nti.app.environments.models.customers import PersistentCustomer
 
+from nti.app.environments.models.interfaces import InvalidSiteError
+
 from nti.app.environments.models.utils import get_onboarding_root
 from nti.app.environments.models.utils import get_customers_folder
 from nti.app.environments.models.utils import get_sites_folder
 
 from nti.app.environments.views.utils import raise_json_error
+
+logger = __import__('logging').getLogger(__name__)
 
 
 class BaseView(object):
@@ -104,6 +108,8 @@ class ObjectCreateUpdateViewMixin(object):
             raise_json_error(hexc.HTTPUnprocessableEntity, str(err))
         except Invalid as err:
             raise_json_error(hexc.HTTPUnprocessableEntity, str(err))
+        except InvalidSiteError as err:
+            raise_json_error(hexc.HTTPUnprocessableEntity, str(err))
 
     def createObjectWithExternal(self, external=None):
         return self._createOrUpdateObjectWithExternal(external=external)
@@ -126,6 +132,7 @@ class BaseFieldPutView(BaseView, ObjectCreateUpdateViewMixin):
             else:
                 self.updateObjectWithExternal(field_value, external)
                 self.context.updateLastModIfGreater(field_value.lastModified)
+            self._log(external)
             return {}
         except ValidationError as err:
             raise_json_error(hexc.HTTPUnprocessableEntity,
