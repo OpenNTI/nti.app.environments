@@ -338,8 +338,8 @@ class SitesUploadCSVView(SiteBaseView, ObjectCreateUpdateViewMixin):
         return _names
 
     def _process_dns(self, dic):
-        site_url = dic['nti_site'].strip()
-        extra_site_url = dic['nti_URL'].strip()
+        site_url = dic['nti_site'].strip().lower()
+        extra_site_url = dic['nti_URL'].strip().lower()
         res = []
         for x in (site_url, extra_site_url):
             if x and x not in res:

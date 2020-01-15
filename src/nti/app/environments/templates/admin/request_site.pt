@@ -15,7 +15,7 @@
             </div>
             <div class="row-group">
                 <label>Trial Site's URL (example: newclient.nextthought.io) <span style="color:red;">*</span></label>
-                <input type="text" id="site_trial_url"/>
+                <input type="text" id="site_trial_url" class="lowercase"/>
             </div>
             <div class="row-group">
                 <div class="success success-request-trial-site" style="display:none;"></div>

@@ -207,3 +207,8 @@ a {
     margin-right: 6px;
 }
 /** end spinner */
+
+/* all host should be lowercase */
+.lowercase {
+    text-transform: lowercase;
+}

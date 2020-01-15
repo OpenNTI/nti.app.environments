@@ -105,7 +105,7 @@ class TestSiteCreationView(BaseAppTest):
         site_url = '/onboarding/sites/%s' % (site.__name__,)
         params = {
             'status': 'ACTIVE',
-            'dns_names': ['s@next.com']
+            'dns_names': ['s@Next.com']
         }
         result = self.testapp.put_json(site_url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
         assert_that(site, has_properties({'status': 'ACTIVE',
@@ -205,7 +205,7 @@ class TestSitePutView(BaseAppTest):
         self.testapp.put_json(url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
         assert_that(sites['Sxxx1'].dns_names, is_(['xxx']))
 
-        params = { 'dns_names': ['yyy', 'xxx'] }
+        params = { 'dns_names': ['YYY', 'XXX'] }
         self.testapp.put_json(url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
         assert_that(sites['Sxxx1'].dns_names, is_(['yyy', 'xxx']))
 
@@ -489,7 +489,7 @@ class TestSitesUploadCSVView(BaseAppTest):
         sites = self._root().get('sites')
         assert_that(sites, has_length(0))
         view = SitesUploadCSVView(sites, self.request)
-        assert_that(view._process_dns({'nti_site': 'abc.com', 'nti_URL': 'xyz.com'}), is_(['abc.com', 'xyz.com']))
+        assert_that(view._process_dns({'nti_site': 'ABC.com', 'nti_URL': 'XYZ.com'}), is_(['abc.com', 'xyz.com']))
         assert_that(view._process_dns({'nti_site': 'abc.com', 'nti_URL': ''}), is_(['abc.com']))
         assert_that(view._process_dns({'nti_site': '', 'nti_URL': 'xyz.com'}), is_(['xyz.com']))
         assert_that(view._process_dns({'nti_site': '', 'nti_URL': ''}), is_([]))
