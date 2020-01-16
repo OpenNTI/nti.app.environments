@@ -11,6 +11,8 @@ from zope.event import notify
 
 from zope.container.interfaces import InvalidItemType
 
+from nti.externalization.interfaces import LocatedExternalDict
+
 from nti.app.environments.models.utils import get_customers_folder
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ITrialLicense
@@ -521,4 +523,8 @@ class SiteUsagesBulkUpdateView(BaseView, ObjectCreateUpdateViewMixin):
         except ValueError as err:
             raise_json_error(hexc.HTTPUnprocessableEntity, str(err))
 
-        return {'total_updated': len(incoming)}
+        result = LocatedExternalDict()
+        result.__name__ = self.context.__name__
+        result.__parent__ = self.context.__parent__
+        result['total_updated'] = len(incoming)
+        return result

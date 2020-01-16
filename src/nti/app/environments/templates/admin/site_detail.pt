@@ -229,9 +229,13 @@
         <div class="site-item">
             <h3>Site Usage</h3>
             <metal:block tal:omit-tag="" tal:condition="site.usage|nothing">
-                <p>Total Users: <span tal:content="site.usage.user_count"></span></p>
-                <p>Admin Users: <span tal:content="site.usage.admin_count"></span></p>
-                <p>Monthly Acitve Users: <span tal:content="site.usage.monthly_active_users"></span></p>
+                <p>Total Users: <span tal:content="site.usage.usage.total_user_count"></span></p>
+                <p>Admin Users: <span tal:content="site.usage.usage.total_admin_count"></span></p>
+                <p>Monthly Acitve Users: <span tal:content="site.usage.usage.monthly_active_users"></span></p>
+                <p>Last Modified: <span tal:content="site.usage.lastModified"></span></p>
+            </metal:block>
+            <metal:block tal:omit-tag="" tal:condition="not:site.usage|nothing">
+                <p>No data.</p>
             </metal:block>
         </div>
 

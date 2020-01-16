@@ -741,25 +741,25 @@ class TestSiteUsagesBulkUpdateView(BaseAppTest):
                                              created=datetime.datetime(2019, 12, 11, 0, 0, 0),
                                              status='PENDING',
                                              dns_names=['x', 'y']), siteId=siteId)
-            assert_that(ISiteUsage(sites['Sxx']), has_properties({'user_count': 0, 'admin_count': 0, 'monthly_active_users': 0}))
+            assert_that(ISiteUsage(sites['Sxx']), has_properties({'total_user_count': None, 'total_admin_count': None, 'monthly_active_users': None}))
 
         params = {'site_id': 'Sxx'}
         result = self.testapp.post_json(url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
         assert_that(result.json_body, has_entries({'total_updated': 1}))
-        assert_that(ISiteUsage(sites['Sxx']), has_properties({'user_count': 0, 'admin_count': 0, 'monthly_active_users': 0}))
+        assert_that(ISiteUsage(sites['Sxx']), has_properties({'total_user_count': None, 'total_admin_count': None, 'monthly_active_users': None}))
 
-        params = {'site_id': 'Sxx', 'user_count': 10, 'admin_count': 8, 'monthly_active_users': 9}
+        params = {'site_id': 'Sxx', 'total_user_count': 10, 'total_admin_count': 8, 'monthly_active_users': 9}
         result = self.testapp.post_json(url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
         assert_that(result.json_body, has_entries({'total_updated': 1}))
-        assert_that(ISiteUsage(sites['Sxx']), has_properties({'user_count': 10, 'admin_count': 8, 'monthly_active_users': 9}))
+        assert_that(ISiteUsage(sites['Sxx']), has_properties({'total_user_count': 10, 'total_admin_count': 8, 'monthly_active_users': 9}))
 
-        params = [{'site_id': 'Sxx', 'user_count': 100, 'admin_count': 8, 'monthly_active_users': 9},
-                  {'site_id': 'Sxx1', 'user_count': 20, 'admin_count': 18, 'monthly_active_users': 19}]
+        params = [{'site_id': 'Sxx', 'total_user_count': 100, 'total_admin_count': 8, 'monthly_active_users': 9},
+                  {'site_id': 'Sxx1', 'total_user_count': 20, 'total_admin_count': 18, 'monthly_active_users': 19}]
         result = self.testapp.post_json(url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
         assert_that(result.json_body, has_entries({'total_updated': 2}))
-        assert_that(ISiteUsage(sites['Sxx']), has_properties({'user_count': 100, 'admin_count': 8, 'monthly_active_users': 9}))
-        assert_that(ISiteUsage(sites['Sxx1']), has_properties({'user_count': 20, 'admin_count': 18, 'monthly_active_users': 19}))
+        assert_that(ISiteUsage(sites['Sxx']), has_properties({'total_user_count': 100, 'total_admin_count': 8, 'monthly_active_users': 9}))
+        assert_that(ISiteUsage(sites['Sxx1']), has_properties({'total_user_count': 20, 'total_admin_count': 18, 'monthly_active_users': 19}))
 
-        params = [{'site_id': 'Sxx', 'user_count': 100, 'admin_count': 'ss'}]
+        params = [{'site_id': 'Sxx', 'total_user_count': 100, 'total_admin_count': 'ss'}]
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
         assert_that(result.json_body['message'], is_("invalid literal for int() with base 10: 'ss'"))

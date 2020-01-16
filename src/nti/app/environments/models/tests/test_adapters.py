@@ -1,5 +1,6 @@
 from hamcrest import is_
 from hamcrest import assert_that
+from hamcrest import has_properties
 
 from zope.annotation.interfaces import IAnnotations
 
@@ -22,3 +23,4 @@ class TestAdapters(BaseTest):
         assert_that(usage.__parent__, is_(site))
         assert_that('SiteUsage' in anno, is_(True))
         assert_that(anno['SiteUsage'], is_(usage))
+        assert_that(usage, has_properties({'total_user_count': None, 'total_admin_count': None, 'monthly_active_users': None}))

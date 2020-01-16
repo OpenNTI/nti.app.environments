@@ -1,5 +1,3 @@
-from ZODB.interfaces import IConnection
-
 from zope import component
 from zope import interface
 
@@ -46,7 +44,8 @@ def site_usage_factory(site, create=True):
             annotations[SITE_USAGE_ANNOTATION_KEY] = result
             result.__name__ = SITE_USAGE_ANNOTATION_KEY
             result.__parent__ = site
-            connection = IConnection(site, None)
-            if connection is not None:
-                connection.add(result)
     return result
+
+
+def get_site_usage(site):
+    return site_usage_factory(site, create=False)

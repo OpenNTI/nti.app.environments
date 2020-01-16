@@ -313,14 +313,11 @@ class ILMSSiteCreatedEvent(interface.Interface):
 
 class ISiteUsage(IContained):
 
-    admin_count = Int(title="The number of admin in a site",
-                      default=0,
-                      required=True)
+    total_admin_count = Int(title="The total number of admin in a site",
+                            required=False)
 
-    user_count = Int(title="The number of users in a site",
-                     default=0,
-                     required=True)
+    total_user_count = Int(title="The total number of users in a site",
+                           required=False)
 
     monthly_active_users = Int(title="The number of monthly active users",
-                               default=0,
-                               required=True)
+                               required=False)

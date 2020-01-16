@@ -23,6 +23,8 @@ from nti.app.environments.auth import ACT_REQUEST_TRIAL_SITE
 from nti.app.environments.auth import ADMIN_ROLE
 from nti.app.environments.auth import ACCOUNT_MANAGEMENT_ROLE
 
+from nti.app.environments.models.adapters import get_site_usage
+
 from nti.app.environments.models.interfaces import ICustomer
 from nti.app.environments.models.interfaces import IEnterpriseLicense
 from nti.app.environments.models.interfaces import ISharedEnvironment
@@ -32,7 +34,6 @@ from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import ICustomersContainer
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ILMSSitesContainer
-from nti.app.environments.models.interfaces import ISiteUsage
 from nti.app.environments.models.interfaces import SITE_STATUS_OPTIONS
 from nti.app.environments.models.interfaces import SHARED_ENV_NAMES
 from nti.app.environments.models.interfaces import checkEmailAddress
@@ -191,6 +192,13 @@ class SiteDetailView(BaseTemplateView):
                 'dns_names': parent.dns_names,
                 'detail_url': self.request.resource_url(parent, '@@details')}
 
+    def _format_usage(self, context):
+        usage = get_site_usage(context)
+        if usage is None:
+            return None
+        return {'usage': usage,
+                'lastModified': formatDateToLocal(usage.lastModified)}
+
     def __call__(self):
         request = self.request
         extra_info = self._site_extra_info() or {}
@@ -210,7 +218,7 @@ class SiteDetailView(BaseTemplateView):
                          'site_edit_link': request.resource_url(self.context) if request.has_permission(ACT_UPDATE, self.context) else None,
                          'lastModified': formatDateToLocal(self.context.lastModified),
                          'parent_site': self._format_parent_site(self.context.parent_site) if self.context.parent_site else None,
-                         'usage': ISiteUsage(self.context),
+                         'usage': self._format_usage(self.context),
                          **extra_info}}
 
 
