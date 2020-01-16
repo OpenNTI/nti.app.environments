@@ -11,6 +11,8 @@ from zope.event import notify
 
 from zope.container.interfaces import InvalidItemType
 
+from nti.externalization.interfaces import LocatedExternalDict
+
 from nti.app.environments.models.utils import get_customers_folder
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ITrialLicense
@@ -18,6 +20,7 @@ from nti.app.environments.models.interfaces import ISharedEnvironment
 from nti.app.environments.models.interfaces import IDedicatedEnvironment
 from nti.app.environments.models.interfaces import ILMSSitesContainer
 from nti.app.environments.models.interfaces import IOnboardingRoot
+from nti.app.environments.models.interfaces import ISiteUsage
 from nti.app.environments.models.interfaces import SITE_STATUS_UNKNOWN
 from nti.app.environments.models.interfaces import SITE_STATUS_PENDING
 from nti.app.environments.models.interfaces import checkEmailAddress
@@ -489,3 +492,39 @@ class SiteCSVExportView(CSVBaseView):
                 'Created Time': formatDateToLocal(record.created),
                 'Last Modified': formatDateToLocal(record.lastModified),
                 'Parent Site': record.parent_site.id if record.parent_site else ''}
+
+
+@view_config(renderer='rest',
+             context=ILMSSitesContainer,
+             request_method='POST',
+             permission=ACT_UPDATE,
+             name="usages")
+class SiteUsagesBulkUpdateView(BaseView, ObjectCreateUpdateViewMixin):
+
+    def __call__(self):
+        incoming = self.readInput()
+        if not isinstance(incoming, list):
+            incoming = [incoming]
+
+        try:
+            for item in incoming:
+                site_id = item.pop('site_id')
+                if not site_id or not isinstance(site_id, str):
+                    raise ValueError("site_id should be non-empty string: {}.".format(site_id))
+
+                site = self.context.get(site_id)
+                if site is None:
+                    raise ValueError("No site found: {}.".format(site_id))
+
+                usage = ISiteUsage(site)
+                self.updateObjectWithExternal(usage, item)
+        except KeyError:
+            raise_json_error(hexc.HTTPUnprocessableEntity, 'Invalid data format.')
+        except ValueError as err:
+            raise_json_error(hexc.HTTPUnprocessableEntity, str(err))
+
+        result = LocatedExternalDict()
+        result.__name__ = self.context.__name__
+        result.__parent__ = self.context.__parent__
+        result['total_updated'] = len(incoming)
+        return result

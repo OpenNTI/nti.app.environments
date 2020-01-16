@@ -12,6 +12,7 @@ from nti.app.environments.api.hubspotclient import get_hubspot_client
 
 from nti.app.environments.models.interfaces import ICustomer
 from nti.app.environments.models.interfaces import ICustomersContainer
+from nti.app.environments.models.interfaces import checkEmailAddress
 
 from nti.app.environments.auth import ACT_CREATE
 from nti.app.environments.auth import ACT_DELETE
@@ -194,6 +195,10 @@ class CustomerCreationView(BaseView):
     @view_config(name="hubspot")
     def with_hubspot(self):
         email = self._get_param('email')
+        if not checkEmailAddress(email):
+            raise_json_error(hexc.HTTPUnprocessableEntity,
+                             'Invalid email.')
+
         customer = self.context.getCustomer(email)
         if customer is not None:
             raise_json_error(hexc.HTTPConflict,

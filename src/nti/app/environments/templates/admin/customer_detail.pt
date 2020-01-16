@@ -30,6 +30,9 @@
 		</div>
 
 	    <div class="table-pagination" tal:define="table table" >
+            <div class="pagination-detail" tal:condition="python: len(table._raw_values)">
+                Total: ${len(table._raw_values)}.
+            </div>
             <div class="pagination" tal:condition="python: len(table.context) > table.batchSize">
                 <span tal:replace="structure python: table.renderBatch()"/>
             </div>
@@ -53,8 +56,8 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button class='btnOK' onclick="deleteItem(this);">Delete</button>
-                    <button class='btnNO' onclick="document.getElementById('deletingModal').style.display = 'none';">Cancel</button>
+                    <button class='btn btnOK' onclick="deleteItem(this);">Delete</button>
+                    <button class='btn btnNO' onclick="document.getElementById('deletingModal').style.display = 'none';">Cancel</button>
                 </div>
             </div>
         </div>

@@ -27,6 +27,7 @@ from nti.schema.field import ValidTextLine
 from nti.schema.field import DateTime
 from nti.schema.field import Object
 from nti.schema.field import UniqueIterable
+from nti.schema.field import Int
 
 MessageFactory = zope_i18nmessageid.MessageFactory('nti.app.environments')
 _ = MessageFactory
@@ -247,7 +248,7 @@ class ISharedEnvironment(IEnvironment):
                   required=True)
 
 
-class ILMSSite(IContained):
+class ILMSSite(IContained, IAttributeAnnotatable):
 
     id = ValidTextLine(title="The identifier of this site.",
                        max_length=40,
@@ -308,3 +309,15 @@ class ILMSSiteCreatedEvent(interface.Interface):
     site = Object(ILMSSite,
                   title="The site object created.",
                   required=True)
+
+
+class ISiteUsage(IContained):
+
+    total_admin_count = Int(title="The total number of admin in a site",
+                            required=False)
+
+    total_user_count = Int(title="The total number of users in a site",
+                           required=False)
+
+    monthly_active_users = Int(title="The number of monthly active users",
+                               required=False)

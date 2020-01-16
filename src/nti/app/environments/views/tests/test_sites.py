@@ -36,7 +36,7 @@ from nti.app.environments.models.sites import TrialLicense
 from nti.app.environments.models.sites import EnterpriseLicense
 from nti.app.environments.models.sites import PersistentSite
 from nti.app.environments.models.sites import SharedEnvironment
-from nti.app.environments.models.interfaces import ICustomer
+from nti.app.environments.models.interfaces import ICustomer, ISiteUsage
 from nti.app.environments.models.interfaces import IEnterpriseLicense
 from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import ISharedEnvironment
@@ -709,3 +709,57 @@ class TestSitesUploadCSVView(BaseAppTest):
         assert_that(sites, has_length(4))
         assert_that(sites['S79b714e55864457388118892dc6df51b'].dns_names, is_(['intelligentedu.nextthought.com']))
 
+
+class TestSiteUsagesBulkUpdateView(BaseAppTest):
+
+    @with_test_app()
+    def testSiteUsagesBulkUpdateView(self):
+        url = '/onboarding/sites/@@usages'
+        params = []
+        self.testapp.post_json(url, params=params, status=302, extra_environ=self._make_environ(username=None))
+        self.testapp.post_json(url, params=params, status=403, extra_environ=self._make_environ(username='user001'))
+        result = self.testapp.post_json(url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
+        assert_that(result.json_body, has_entries({'total_updated': 0}))
+
+        params = {}
+        result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
+        assert_that(result.json_body['message'], is_('Invalid data format.'))
+
+        params = {'site_id': ''}
+        result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
+        assert_that(result.json_body['message'], is_('site_id should be non-empty string: .'))
+
+        params = {'site_id': 'Sxx'}
+        result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
+        assert_that(result.json_body['message'], is_('No site found: Sxx.'))
+
+        with ensure_free_txn():
+            sites = self._root().get('sites')
+            for siteId in ('Sxx', 'Sxx1'):
+                sites.addSite(PersistentSite(license=TrialLicense(start_date=datetime.datetime(2019, 12, 12, 0, 0, 0),
+                                                                  end_date=datetime.datetime(2019, 12, 13, 0, 0, 0)),
+                                             created=datetime.datetime(2019, 12, 11, 0, 0, 0),
+                                             status='PENDING',
+                                             dns_names=['x', 'y']), siteId=siteId)
+            assert_that(ISiteUsage(sites['Sxx']), has_properties({'total_user_count': None, 'total_admin_count': None, 'monthly_active_users': None}))
+
+        params = {'site_id': 'Sxx'}
+        result = self.testapp.post_json(url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
+        assert_that(result.json_body, has_entries({'total_updated': 1}))
+        assert_that(ISiteUsage(sites['Sxx']), has_properties({'total_user_count': None, 'total_admin_count': None, 'monthly_active_users': None}))
+
+        params = {'site_id': 'Sxx', 'total_user_count': 10, 'total_admin_count': 8, 'monthly_active_users': 9}
+        result = self.testapp.post_json(url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
+        assert_that(result.json_body, has_entries({'total_updated': 1}))
+        assert_that(ISiteUsage(sites['Sxx']), has_properties({'total_user_count': 10, 'total_admin_count': 8, 'monthly_active_users': 9}))
+
+        params = [{'site_id': 'Sxx', 'total_user_count': 100, 'total_admin_count': 8, 'monthly_active_users': 9},
+                  {'site_id': 'Sxx1', 'total_user_count': 20, 'total_admin_count': 18, 'monthly_active_users': 19}]
+        result = self.testapp.post_json(url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
+        assert_that(result.json_body, has_entries({'total_updated': 2}))
+        assert_that(ISiteUsage(sites['Sxx']), has_properties({'total_user_count': 100, 'total_admin_count': 8, 'monthly_active_users': 9}))
+        assert_that(ISiteUsage(sites['Sxx1']), has_properties({'total_user_count': 20, 'total_admin_count': 18, 'monthly_active_users': 19}))
+
+        params = [{'site_id': 'Sxx', 'total_user_count': 100, 'total_admin_count': 'ss'}]
+        result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
+        assert_that(result.json_body['message'], is_("invalid literal for int() with base 10: 'ss'"))

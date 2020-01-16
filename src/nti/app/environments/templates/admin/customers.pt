@@ -37,6 +37,9 @@
 		</div>
 
 	    <div class="table-pagination" tal:define="table table" >
+            <div class="pagination-detail" tal:condition="python: len(table.context)">
+                Total: ${len(table.context)}.
+            </div>
             <div class="pagination" tal:condition="python: len(table.context) > table.batchSize">
                 <span tal:replace="structure python: table.renderBatch()"/>
             </div>
