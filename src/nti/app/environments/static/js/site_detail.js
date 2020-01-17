@@ -95,6 +95,7 @@ function onEnvironmentChange () {
     } else if (value === "dedicated") {
         $($(edit).find('.name_group_item')[0]).css('display', 'none');
         $($(edit).find('.pod_group_item')[0]).css('display', 'block');
+        $($(edit).find('.load_group_item')[0]).css('display', 'block');
         $($(edit).find('.host_group_item')[0]).css('display', 'block');
 
         $(edit.find('.site_environment_pod_id')[0]).css('display', 'inline-block');

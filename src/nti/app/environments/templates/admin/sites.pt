@@ -203,6 +203,8 @@
                         $('#search').val(email);
                     }
                 });
+
+                $('#site_environment_load_factor').on('input', positiveNumbersOnly);
             </script>
         </metal:block>
     </metal:block><!-- end of content -->

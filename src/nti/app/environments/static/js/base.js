@@ -79,6 +79,29 @@ function updateUrlParameter(name, value, url) {
 }
 
 
+function formatInput(input, newValue) {
+    var val = input.val();
+    if (val === "") {
+        return;
+    }
+    var originalLength = val.length;
+    var caret_pos = input.prop("selectionStart");
+
+    input.val(newValue);
+    var updatedLength = newValue.length;
+    caret_pos = updatedLength - originalLength + caret_pos;
+    input[0].setSelectionRange(caret_pos, caret_pos);
+}
+
+
+function positiveNumbersOnly (e) {
+    var me = e.target;
+    var newValue = me.value.replace(/\D/g,'');
+    newValue = newValue.replace(/^0+/, "");
+    formatInput($(me), newValue);
+}
+
+
 function getValue(id) {
     var val = document.getElementById(id).value.trim();
     return val ? val : null;

@@ -67,7 +67,7 @@
                         <div class="input-row">
                             <label class="input-col-1">Host</label>
                             <div class="input-col-3">
-                                <input type="text" id="host_name"/>
+                                <input type="text" id="host_name" class="lowercase"/>
                             </div>
                         </div>
                         <div class="input-row">
@@ -97,7 +97,7 @@
                         <div class="input-row">
                             <label class="input-col-1">Host</label>
                             <div class="input-col-3">
-                                <input type="text" id="host_name_edit"/>
+                                <input type="text" id="host_name_edit" class="lowercase"/>
                             </div>
                         </div>
                         <div class="input-row">
@@ -147,6 +147,9 @@
                     $('#search').val(search);
                 }
             });
+
+            $('#host_capacity').on('input', positiveNumbersOnly);
+            $('#host_capacity_edit').on('input', positiveNumbersOnly);
         </script>
     </metal:block>
 </metal:block>
