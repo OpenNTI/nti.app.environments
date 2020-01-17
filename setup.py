@@ -95,6 +95,9 @@ setup(
     package_dir={'': 'src'},
     namespace_packages=['nti'],
     include_package_data=True,
+    package_data={
+        '': ['*.ini','*.mako', '*.zcml'],
+    },
     zip_safe=False,
     extras_require={
         'test': tests_require,
