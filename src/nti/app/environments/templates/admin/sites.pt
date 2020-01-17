@@ -100,7 +100,10 @@
                                     <metal:block tal:omit-tag="" tal:repeat="option env_shared_options"><option value="${option}">${option}</option></metal:block>
                                 </select>
                                 <input type="text" name="environment_containerid" id="site_environment_pod_id" placeHolder="Pod Id" style="display:none;"/>
-                                <input type="text" name="site_environment_host" id="site_environment_host" placeHolder="Host" style="display:none; margin-top: 16px;"/>
+                                <select name="site_environment_host" id="site_environment_host" style="display:none; margin-top: 16px;">
+                                    <option value="">Select a host</option>
+                                    <metal:block tal:omit-tag="" tal:repeat="option hosts_options"><option value="${option[0]}">${option[1]}</option></metal:block>
+                                </select>
                             </div>
                         </div>
                         <div class="input-row">

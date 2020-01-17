@@ -39,6 +39,7 @@ from nti.app.environments.models.interfaces import SHARED_ENV_NAMES
 from nti.app.environments.models.interfaces import checkEmailAddress
 
 from nti.app.environments.models.utils import get_sites_folder
+from nti.app.environments.models.utils import get_hosts_folder
 
 from nti.app.environments.resources import DashboardsResource
 from nti.app.environments.resources import RolesResource
@@ -48,6 +49,7 @@ from nti.app.environments.utils import find_iface
 
 from nti.app.environments.views.base import BaseTemplateView
 from nti.app.environments.views.base import BaseView
+from nti.app.environments.views.base import TableViewMixin
 
 from nti.app.environments.views._table_utils import CustomersTable
 from nti.app.environments.views._table_utils import RolePrincipalsTable
@@ -59,12 +61,9 @@ from nti.app.environments.views._table_utils import make_specific_table
 from nti.app.environments.views.utils import raise_json_error
 
 
-class _TableMixin(object):
-
-    def _is_deletion_allowed(self, table):
-        if table._raw_values:
-            return any(bool(self.request.has_permission(ACT_DELETE, x)) for x in table._raw_values)
-        return False
+def _host_options(onboarding):
+    hosts = get_hosts_folder(onboarding)
+    return [(x.id, "{} ({}/{})".format(x.host_name, x.current_load or 0, x.capacity)) for x in hosts.values()]
 
 
 @view_config(renderer='../templates/admin/customers.pt',
@@ -72,7 +71,7 @@ class _TableMixin(object):
              context=ICustomersContainer,
              permission=ACT_READ,
              name='list')
-class CustomersListView(BaseTemplateView, _TableMixin):
+class CustomersListView(BaseTemplateView, TableViewMixin):
 
     def __call__(self):
         table = make_specific_table(CustomersTable, self.context, self.request)
@@ -86,7 +85,7 @@ class CustomersListView(BaseTemplateView, _TableMixin):
              context=ICustomer,
              permission=ACT_READ,
              name='details')
-class CustomerDetailView(BaseTemplateView, _TableMixin):
+class CustomerDetailView(BaseTemplateView, TableViewMixin):
 
     def _get_sites_folder(self):
         onboarding_root = find_iface(self.context, IOnboardingRoot)
@@ -113,7 +112,11 @@ class CustomerDetailView(BaseTemplateView, _TableMixin):
              context=ILMSSitesContainer,
              permission=ACT_READ,
              name='list')
-class SitesListView(BaseTemplateView, _TableMixin):
+class SitesListView(BaseTemplateView, TableViewMixin):
+
+    def _format_hosts(self):
+        hosts = get_hosts_folder(self._onboarding_root)
+        return [(x.host_id, "{} ({}/{})".format(x.host_id, x.current_load, x.capacity)) for x in hosts.values()]
 
     def __call__(self):
         table = make_specific_table(SitesTable, self.context, self.request)
@@ -124,7 +127,8 @@ class SitesListView(BaseTemplateView, _TableMixin):
                 'trial_site_request_url': self.request.resource_url(self.context, '@@request_trial_site') if self.request.has_permission(ACT_REQUEST_TRIAL_SITE, self.context) else None,
                 'site_status_options': SITE_STATUS_OPTIONS,
                 'env_shared_options': SHARED_ENV_NAMES,
-                'is_deletion_allowed': self._is_deletion_allowed(table)}
+                'is_deletion_allowed': self._is_deletion_allowed(table),
+                'hosts_options': _host_options(self._onboarding_root)}
 
 
 @view_config(renderer='../templates/admin/site_detail.pt',
@@ -205,6 +209,7 @@ class SiteDetailView(BaseTemplateView):
         return {'sites_list_link': self.request.resource_url(self.context.__parent__, '@@list'),
                 'env_shared_options': SHARED_ENV_NAMES,
                 'site_status_options': SITE_STATUS_OPTIONS,
+                'hosts_options': _host_options(self._onboarding_root),
                 'site': {'created': formatDateToLocal(self.context.created),
                          'creator': self.context.creator,
                          'owner': self._format_owner(self.context.owner),

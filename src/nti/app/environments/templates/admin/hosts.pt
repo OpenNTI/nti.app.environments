@@ -1,0 +1,152 @@
+<metal:block metal:use-macro="load: ../macros/layout_admin.pt">
+    <title metal:fill-slot="title">
+        Hosts
+    </title>
+	<metal:block metal:fill-slot="css">
+        <link href="/static/css/table.css" rel="stylesheet">
+        <link href="/static/css/modal.css" rel="stylesheet">
+        <style>
+            <metal:block tal:omit-tag="" tal:condition="not:is_deletion_allowed|nothing">
+                .nti_delete {
+                    display: none;
+                }
+            </metal:block>
+        </style>
+    </metal:block>
+
+    <metal:block metal:fill-slot="content">
+        <h1>Hosts</h1>
+
+        <div class="toolbar">
+            <input type="text" id='search' name="search" placeHolder="Search" class="search-input" onkeypress="return search(event);"/>
+            <div style="float: right;">
+                <metal:block tal:omit-tag="" tal:condition="creation_url|nothing">
+                    <button type="button" onclick="openNewModal();" style="margin-left: 6px;">Create New Host</button>
+                </metal:block>
+            </div>
+        </div>
+
+		<table tal:condition="python: len(table.context)" tal:replace="structure python: table.render()" />
+		<div tal:condition="python: not len(table.context)">
+			No hosts.
+		</div>
+	    <div class="table-pagination" tal:define="table table" >
+            <div class="pagination-detail" tal:condition="python: len(table.context)">
+                Total: ${len(table.context)}.
+            </div>
+            <div class="pagination" tal:condition="python: len(table.context) > table.batchSize">
+                <span tal:replace="structure python: table.renderBatch()"/>
+            </div>
+	    </div>
+
+        <div id="deletingModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Deleting?</h3>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete host <strong><span class="deleting_email"></span></strong>?</p>
+                    <div class="success success-deletion" style="display:none;"></div>
+                    <div class="error error-deletion" style="display:none;"></div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class='btn btnOK' onclick="deleteItem(this);">Delete</button>
+                    <button class='btn btnNO' onclick="document.getElementById('deletingModal').style.display = 'none';">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="newModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Add Host</h3>
+                </div>
+                <div class="modal-body">
+                    <div class="form">
+                        <div class="input-row">
+                            <label class="input-col-1">Host</label>
+                            <div class="input-col-3">
+                                <input type="text" id="host_name"/>
+                            </div>
+                        </div>
+                        <div class="input-row">
+                            <label class="input-col-1">Capacity</label>
+                            <div class="input-col-3">
+                                <input type="text" id="host_capacity"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="success success-creation" style="display:none;"></div>
+                    <div class="error error-creation" style="display:none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class='btn btnSave' onclick="saveItem(this, '${creation_url}');">Save</button>
+                    <button type="button" class='btn btnNO' onclick="document.getElementById('newModal').style.display = 'none';">Cancel</button>
+                </div>
+            </div>
+        </div><!-- end of new modal -->
+
+        <div id="editingModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Edit Host</h3>
+                </div>
+                <div class="modal-body">
+                    <div class="form">
+                        <div class="input-row">
+                            <label class="input-col-1">Host</label>
+                            <div class="input-col-3">
+                                <input type="text" id="host_name_edit"/>
+                            </div>
+                        </div>
+                        <div class="input-row">
+                            <label class="input-col-1">Capacity</label>
+                            <div class="input-col-3">
+                                <input type="text" id="host_capacity_edit"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="success success-update" style="display:none;"></div>
+                    <div class="error error-update" style="display:none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class='btn btnSave' onclick="editItem(this);">Save</button>
+                    <button type="button" class='btn btnNO' onclick="document.getElementById('editingModal').style.display = 'none';">Cancel</button>
+                </div>
+            </div>
+        </div><!-- end of new modal -->
+
+    </metal:block><!-- end of content -->
+    <metal:block metal:fill-slot="script">
+        <script src="/static/js/hosts.js"></script>
+        <script>
+            // When the user clicks anywhere outside of the modal, close it
+            window.onclick = function(event) {
+                var ids = ["deletingModal", "newModal"];
+                for(var i=0; i<ids.length; i++) {
+                    var modal = document.getElementById(ids[i]);
+                    if (event.target == modal) {
+                        modal.style.display = "none";
+                    }
+                }
+            }
+
+            function search(e) {
+                // When a enter key pressed, query the server.
+                if (e.which == 13 || e.keyCode == 13) {
+                    var search = $('#search').val().trim();
+                    var url = updateUrlParameter('search', search);
+                    window.location.href = url;
+                }
+            }
+
+            $( document ).ready(function() {
+                var search = getUrlParameter('search');
+                if(search){
+                    $('#search').val(search);
+                }
+            });
+        </script>
+    </metal:block>
+</metal:block>

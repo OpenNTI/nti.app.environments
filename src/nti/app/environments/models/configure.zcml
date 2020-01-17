@@ -19,6 +19,10 @@
              for=".interfaces.ILMSSite *"
              provides="nti.externalization.interfaces.IExternalReferenceResolver"/>
 
+    <adapter factory=".adapters.HostResolver"
+             for=".interfaces.IDedicatedEnvironment *"
+             provides="nti.externalization.interfaces.IExternalReferenceResolver"/>
+
 	<adapter factory=".adapters.site_usage_factory"
 			 for=".interfaces.ILMSSite"
 			 provides=".interfaces.ISiteUsage" />
@@ -34,12 +38,18 @@
                          .interfaces.ITrialLicense
                          .interfaces.IEnterpriseLicense
                          .interfaces.ILMSSite
-                         .interfaces.ISiteUsage"
+                         .interfaces.ISiteUsage
+                         .interfaces.IHost"
         modules=".customers
-                 .sites" />
+                 .sites
+                 .hosts" />
 
     <adapter factory=".externalization.SiteExternalizer"
              for=".interfaces.ILMSSite"
+             provides="nti.externalization.interfaces.IInternalObjectExternalizer"/>
+
+    <adapter factory=".externalization.HostExternalizer"
+             for=".interfaces.IHost"
              provides="nti.externalization.interfaces.IInternalObjectExternalizer"/>
 
     <adapter factory=".internalization.SiteInternalizer"
@@ -52,6 +62,10 @@
 
     <adapter factory=".internalization.EnterpriseLicenseInternalizer"
              for=".interfaces.IEnterpriseLicense"
+             provides="nti.externalization.interfaces.IInternalObjectUpdater"/>
+
+    <adapter factory=".internalization.DedicatedEnvironmentInternalizer"
+             for=".interfaces.IDedicatedEnvironment"
              provides="nti.externalization.interfaces.IInternalObjectUpdater"/>
 
 </configure>

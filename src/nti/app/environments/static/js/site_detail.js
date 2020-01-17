@@ -56,7 +56,7 @@ function showEnvironmentEditView() {
 
         var elem = $(edit).find('.site_environment_host')[0];
         $(elem).css('display', 'inline-block');
-        $(elem).val($(view.find('.site_environment_host')[0]).text());
+        $(elem).val($(view.find('.site_environment_host')[0]).attr("host_id"));
 
         var elem = $(edit).find('.site_environment_name')[0];
         $(elem).css('display', 'none');

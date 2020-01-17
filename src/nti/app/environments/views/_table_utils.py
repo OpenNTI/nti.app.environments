@@ -18,7 +18,7 @@ from z3c.table import batch
 from z3c.table.interfaces import ITable
 from z3c.table.interfaces import IBatchProvider
 
-from nti.app.environments.auth import ACT_DELETE
+from nti.app.environments.auth import ACT_DELETE, ACT_UPDATE
 
 from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import SITE_STATUS_ACTIVE
@@ -67,6 +67,10 @@ class BaseTable(table.Table):
             self.batchStart = len(self.rows) - self.getBatchSize()
             super(BaseTable, self).batchRows()
 
+    @Lazy
+    def _raw_values(self):
+        return self.context.values()
+
 
 def make_specific_table(tableClassName, container, request, **kwargs):
     the_table = tableClassName(container, IBrowserRequest(request), **kwargs)
@@ -77,6 +81,11 @@ def make_specific_table(tableClassName, container, request, **kwargs):
         the_table.update()
 
     return the_table
+
+
+class DefaultColumnHeader(header.SortingColumnHeader):
+
+    _request_args = ['search']
 
 
 class EmailColumn(column.LinkColumn):
@@ -155,8 +164,11 @@ class DeleteColumn(column.Column):
     cssClasses = {'td': 'nti_delete',
                   'th': 'nti_delete'}
 
+    def _has_permission(self, item):
+        return self.request.has_permission(ACT_DELETE, item)
+
     def renderCell(self, item):
-        if self.request.has_permission(ACT_DELETE, item):
+        if self._has_permission(item):
             template = """<button onclick="openDeletingModal('{url}', '{id}');">Delete</button>"""
             return  template.format(url=self.request.resource_url(item),
                                     id=item.__name__)
@@ -164,10 +176,7 @@ class DeleteColumn(column.Column):
 
 
 class CustomersTable(BaseTable):
-
-    @Lazy
-    def _raw_values(self):
-        return self.context.values()
+    pass
 
 
 class CustomerColumnHeader(header.SortingColumnHeader):
@@ -389,3 +398,76 @@ class PrincipalDeleteColumn(column.Column):
         return  template.format(url=self.request.route_url('roles', traverse=('@@remove',), _query=(('role_name', role_name),
                                                                                                     ('email', item))),
                                 email=item)
+
+
+class HostsTable(BaseTable, _FilterMixin):
+
+    def _predicate(self, item, term):
+        return term in item.host_id.lower()
+
+    @property
+    def values(self):
+        params = self.request.params
+        term = self._get_filter('search', params)
+        return self.context.values() if not term else [x for x in self.context.values() if self._predicate(x, term)]
+
+
+class HostNameColumn(column.GetAttrColumn):
+
+    weight = 0
+    header = 'Host'
+    attrName = 'host_name'
+
+    cssClasses = {'td': 'host'}
+
+
+class HostCapacityColumn(column.GetAttrColumn):
+
+    weight = 1
+    header = 'Capacity'
+    attrName = 'capacity'
+
+    cssClasses = {'td': 'capacity'}
+
+    def renderCell(self, item):
+        return getattr(item, self.attrName) or 0
+
+
+class HostCurrentLoadColumn(column.GetAttrColumn):
+
+    weight = 2
+    header = 'Current Load'
+    attrName = 'current_load'
+
+    def renderCell(self, item):
+        return getattr(item, self.attrName) or 0
+
+
+class HostCreatedColumn(CreatedColumn):
+
+    weight = 3
+
+
+class HostLastModifiedColumn(LastModifiedColumn):
+
+    weight = 4
+
+
+class HostDeleteColumn(DeleteColumn):
+
+    weight = 5
+
+    def _has_edit_permission(self, item):
+        return self.request.has_permission(ACT_UPDATE, item)
+
+    def _has_delete_permission(self, item):
+        return super(HostDeleteColumn, self)._has_permission(item) and item.current_load == 0
+
+    def renderCell(self, item):
+        content = ''
+        url=self.request.resource_url(item)
+        if self._has_edit_permission(item):
+            content += """<button onclick="openEditingModal(this,'{url}');">Edit</button>""".format(url=url)
+        if self._has_delete_permission(item):
+            content += """<button onclick="openDeletingModal('{url}', '{name}');" style="margin-left: 5px;">Delete</button>""".format(url=url,name=item.host_name)
+        return content

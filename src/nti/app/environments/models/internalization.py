@@ -8,6 +8,7 @@ from nti.externalization.datastructures import InterfaceObjectIO
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import IEnterpriseLicense
+from nti.app.environments.models.interfaces import IDedicatedEnvironment
 from nti.app.environments.utils import parseDate
 
 
@@ -68,3 +69,12 @@ class TrialLicenseInternalizer(_BaseLicenseInternalizer):
 class EnterpriseLicenseInternalizer(_BaseLicenseInternalizer):
 
     _ext_iface_upper_bound = IEnterpriseLicense
+
+
+@component.adapter(IDedicatedEnvironment)
+@interface.implementer(IInternalObjectUpdater)
+class DedicatedEnvironmentInternalizer(InterfaceObjectIO):
+
+    _ext_iface_upper_bound = IDedicatedEnvironment
+
+    __external_oids__ = ('host',)

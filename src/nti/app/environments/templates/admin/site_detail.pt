@@ -103,7 +103,7 @@
                     </metal:block>
                     <metal:block tal:omit-tag="" tal:condition="site.environment.type=='dedicated'">
                         <p>PodId (ContainerId): <span class="site_environment_pod_id" tal:content="site.environment.pod_id"></span></p>
-                        <p>Host: <span class="site_environment_host" tal:content="site.environment.host"></span></p>
+                        <p>Host: <span class="site_environment_host" tal:content="site.environment.host.host_name" host_id="${site.environment.host.id}"></span></p>
                     </metal:block>
                     <p>Last Modified: <span tal:content="site.environment.lastModified"></span></p>
                     <metal:block tal:omit-tag="" tal:condition="site.environment.splunk_link|nothing">
@@ -139,7 +139,10 @@
                     </div>
                     <div class="form-group-item host_group_item">
                         <label>Host</label>
-                        <input type="text" class="site_environment_host" placeHolder="Host" style="display:none;"/>
+                        <select class="site_environment_host" style="display:none;">
+                            <option value="">Select a host</option>
+                            <metal:block tal:omit-tag="" tal:repeat="option hosts_options"><option value="${option[0]}">${option[1]}</option></metal:block>
+                        </select>
                     </div>
                     <div class="form-group-item">
                         <div class="success success-edit-environment" style="display:none;"></div>

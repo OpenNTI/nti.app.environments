@@ -197,6 +197,57 @@
 			 for="* * * ._table_utils.PrincipalColumn"
 			 provides="z3c.table.interfaces.IColumnHeader"/>
 
+	<!-- Hosts table -->
+	<adapter factory="._table_utils.HostNameColumn"
+			 for="* * ._table_utils.HostsTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="host" />
+
+	<adapter factory="._table_utils.HostCapacityColumn"
+			 for="* * ._table_utils.HostsTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="capacity" />
+
+	<adapter factory="._table_utils.HostCurrentLoadColumn"
+			 for="* * ._table_utils.HostsTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="current_load" />
+
+	<adapter factory="._table_utils.HostCreatedColumn"
+			 for="* * ._table_utils.HostsTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="created" />
+
+	<adapter factory="._table_utils.HostLastModifiedColumn"
+			 for="* * ._table_utils.HostsTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="lastModified" />
+
+	<adapter factory="._table_utils.HostDeleteColumn"
+			 for="* * ._table_utils.HostsTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="delete" />
+
+	<adapter factory="._table_utils.DefaultColumnHeader"
+			 for="* * * ._table_utils.HostNameColumn"
+			 provides="z3c.table.interfaces.IColumnHeader"/>
+
+	<adapter factory="._table_utils.DefaultColumnHeader"
+			 for="* * * ._table_utils.HostCapacityColumn"
+			 provides="z3c.table.interfaces.IColumnHeader"/>
+
+	<adapter factory="._table_utils.DefaultColumnHeader"
+			 for="* * * ._table_utils.HostCurrentLoadColumn"
+			 provides="z3c.table.interfaces.IColumnHeader"/>
+
+	<adapter factory="._table_utils.DefaultColumnHeader"
+			 for="* * * ._table_utils.HostCreatedColumn"
+			 provides="z3c.table.interfaces.IColumnHeader"/>
+
+	<adapter factory="._table_utils.DefaultColumnHeader"
+			 for="* * * ._table_utils.HostLastModifiedColumn"
+			 provides="z3c.table.interfaces.IColumnHeader"/>
+
 	<!-- default batch provider -->
 	<adapter factory="._table_utils.DefaultTableBatchProvider"
 			 for="* * ._table_utils.BaseTable"

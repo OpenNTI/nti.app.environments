@@ -32,6 +32,7 @@ from nti.app.environments.views.tests import BaseAppTest
 from nti.app.environments.views.tests import with_test_app
 from nti.app.environments.views.tests import ensure_free_txn
 from nti.app.environments.models.customers import PersistentCustomer
+from nti.app.environments.models.hosts import PersistentHost
 from nti.app.environments.models.sites import TrialLicense
 from nti.app.environments.models.sites import EnterpriseLicense
 from nti.app.environments.models.sites import PersistentSite
@@ -120,14 +121,24 @@ class TestSiteCreationView(BaseAppTest):
         params = self._params(env_type='application/vnd.nextthought.app.environments.dedicatedenvironment',
                               license_type="application/vnd.nextthought.app.environments.enterpriselicense",
                               site_id='S1id')
+        result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
+        assert_that(result.json_body['message'], is_("No host found: okc.com"))
+        with ensure_free_txn():
+            hosts = self._root().get('hosts')
+            host = hosts.addHost(PersistentHost(host_name='okc.com', capacity=5))
+            assert_that(host.current_load, is_(0))
+
+        params['environment']['host'] = host.id
         self.testapp.post_json(url, params=params, status=201, extra_environ=self._make_environ(username='admin001'))
         with ensure_free_txn():
+            assert_that(host.current_load, is_(1))
             sites = self._root().get('sites')
             assert_that(sites, has_length(1))
             site = [x for x in sites.values()][0]
             assert_that(site, has_properties({'owner': has_properties({'email': 'test@gmail.com'}),
                                                                'id': 'S1id',
-                                                               'environment': has_properties({'pod_id': 'xxx', 'host': 'okc.com'}),
+                                                               'environment': has_properties({'pod_id': 'xxx',
+                                                                                              'host': has_properties({'host_name': 'okc.com'})}),
                                                                'license': instance_of(EnterpriseLicense),
                                                                'status': 'PENDING',
                                                                'dns_names': ['t1.nextthought.com', 't2.nextthought.com']}))
@@ -309,47 +320,40 @@ class TestSitePutView(BaseAppTest):
                                                 owner=customer), siteId=siteId)
             assert_that(ITrialLicense.providedBy(site.license), is_(True))
 
+            hosts = self._root().get('hosts')
+            host_okc2 = hosts.addHost(PersistentHost(host_name='okc2', capacity=5))
+            host_pod2 = hosts.addHost(PersistentHost(host_name='pod2', capacity=5))
+
         url = '/onboarding/sites/{}/@@environment'.format(siteId)
         params = {'MimeType': 'application/vnd.nextthought.app.environments.sharedenvironment',
                   'name': 'prod'}
         self.testapp.put_json(url, params=params, status=302, extra_environ=self._make_environ(username=None))
         self.testapp.put_json(url, params=params, status=403, extra_environ=self._make_environ(username='user001'))
         self.testapp.put_json(url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
+
         with ensure_free_txn():
             assert_that(ISharedEnvironment.providedBy(site.environment), is_(True))
             assert_that(site.environment.name, is_('prod'))
 
         params = {'MimeType': 'application/vnd.nextthought.app.environments.dedicatedenvironment',
                   'pod_id': 'okc',
-                  'host': 'okc2'}
-        self.testapp.put_json(url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
-        with ensure_free_txn():
-            assert_that(IDedicatedEnvironment.providedBy(site.environment), is_(True))
-            assert_that(site.environment, has_properties({'pod_id': 'okc',
-                                                          'host': 'okc2'}))
-
-        params = {'MimeType': 'application/vnd.nextthought.app.environments.dedicatedenvironment',
-                  'pod_id': 'pod',
-                  'host': 'pod2'}
-        self.testapp.put_json(url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
-        with ensure_free_txn():
-            assert_that(IDedicatedEnvironment.providedBy(site.environment), is_(True))
-            assert_that(site.environment, has_properties({'pod_id': 'pod',
-                                                          'host': 'pod2'}))
+                  'host': 'okc3'}
+        result = self.testapp.put_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
+        assert_that(result.json_body['message'], is_("No host found: okc3"))
 
         params = {'MimeType': 'dedicated2',
                   'pod_id': 'pod',
-                  'host': 'pod2'}
+                  'host': host_pod2.id}
         result = self.testapp.put_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
         assert_that(result.json_body, has_entries({'message': contains_string('No factory for object')}))
 
         params = {'pod_id': 'pod',
-                  'host': 'pod2'}
+                  'host': host_pod2.id}
         result = self.testapp.put_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
         assert_that(result.json_body, has_entries({'message': contains_string('No factory for object')}))
 
         params = {'MimeType': 'application/vnd.nextthought.app.environments.dedicatedenvironment',
-                  'host': 'pod2'}
+                  'host': host_pod2.id}
         result = self.testapp.put_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
         assert_that(result.json_body, has_entries({'message': 'Missing field: pod_id.'}))
 
@@ -593,17 +597,29 @@ class TestSitesUploadCSVView(BaseAppTest):
                                             'end_date': datetime.datetime(2020, 1, 15, 6, 0, 0)}))
 
         # environment
+        view = SitesUploadCSVView(sites, self.request)
         result = view._process_environment({'Environment': 'shared:prod'})
         assert_that(ISharedEnvironment.providedBy(result), is_(True))
         assert_that(result, has_properties({'name': 'prod'}))
 
+        view = SitesUploadCSVView(sites, self.request)
+        assert_that(calling(view._process_environment).with_args({'Environment': 'dedicated:Sxxx2', 'Host Machine': 'hh'}),
+                    raises(ValueError, pattern='Unknown host: hh.'))
+
+        hosts = self._root().get('hosts')
+        hosts.addHost(PersistentHost(host_name='hh', capacity=5))
+        hosts.addHost(PersistentHost(host_name='xx', capacity=5))
+        hosts.addHost(PersistentHost(host_name='host3.4pp', capacity=5))
+
+        view = SitesUploadCSVView(sites, self.request)
         result = view._process_environment({'Environment': 'dedicated:Sxxx2', 'Host Machine': 'hh'})
         assert_that(IDedicatedEnvironment.providedBy(result), is_(True))
-        assert_that(result, has_properties({'pod_id': 'Sxxx2', 'host': 'hh'}))
+        assert_that(result, has_properties({'pod_id': 'Sxxx2', 'host': has_properties({'host_name': 'hh'})}))
 
+        view = SitesUploadCSVView(sites, self.request)
         result = view._process_environment({'Environment': 'dedicated:Sxxx2', 'Host Machine': ''})
         assert_that(IDedicatedEnvironment.providedBy(result), is_(True))
-        assert_that(result, has_properties({'pod_id': 'Sxxx2', 'host': 'host3.4pp'}))
+        assert_that(result, has_properties({'pod_id': 'Sxxx2', 'host': has_properties({'host_name': 'host3.4pp'})}))
 
         assert_that(calling(view._process_environment).with_args({}), raises(KeyError, pattern="Environment"))
         assert_that(calling(view._process_environment).with_args({'Environment': 'dedicated:Sxxy'}), raises(KeyError, pattern="Host Machine"))
@@ -649,7 +665,7 @@ class TestSitesUploadCSVView(BaseAppTest):
         assert_that(sites, has_length(1))
         assert_that(sites['Sxxx1'], has_properties({'dns_names': is_(['abc.com', 'xyz.com']),
                                                     'license': has_properties({'start_date': datetime.datetime(2020,1,14,6,0,0), 'end_date': datetime.datetime(2020,1,15,6,0,0)}),
-                                                    'environment': has_properties({'pod_id': 'Sxxx1', 'host': 'xx'}),
+                                                    'environment': has_properties({'pod_id': 'Sxxx1', 'host': has_properties({'host_name':'xx'})}),
                                                     'owner': has_properties({'email': 'test@nt.com'}),
                                                     'status': 'UNKNOWN',
                                                     'parent_site': None,
@@ -668,7 +684,7 @@ class TestSitesUploadCSVView(BaseAppTest):
         assert_that(sites, has_length(2))
         assert_that(sites['Sxxx2'], has_properties({'dns_names': is_(['abc1.com', 'xyz1.com']),
                                                     'license': has_properties({'start_date': datetime.datetime(2020,1,14,6,0,0), 'end_date': datetime.datetime(2020,1,15,6,0,0)}),
-                                                    'environment': has_properties({'pod_id': 'Sxxx2', 'host': 'xx'}),
+                                                    'environment': has_properties({'pod_id': 'Sxxx2', 'host': has_properties({'host_name':'xx'})}),
                                                     'owner': has_properties({'email': 'test@nt.com'}),
                                                     'status': 'ACTIVE',
                                                     'parent_site': is_(sites['Sxxx1']),
@@ -704,10 +720,17 @@ class TestSitesUploadCSVView(BaseAppTest):
         
         sites = self._root().get('sites')
         assert_that(sites, has_length(0))
+        with ensure_free_txn():
+            hosts = self._root().get('hosts')
+            host1 = hosts.addHost(PersistentHost(host_name='host3.4pp', capacity=5))
+            host2 = hosts.addHost(PersistentHost(host_name='app1.4pp', capacity=5))
         self._upload_file(self.site_info)
 
         assert_that(sites, has_length(4))
         assert_that(sites['S79b714e55864457388118892dc6df51b'].dns_names, is_(['intelligentedu.nextthought.com']))
+
+        assert_that(host1.current_load, is_(0))
+        assert_that(host2.current_load, is_(2))
 
 
 class TestSiteUsagesBulkUpdateView(BaseAppTest):
