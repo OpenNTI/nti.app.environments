@@ -321,7 +321,7 @@ class TestSitePutView(BaseAppTest):
             assert_that(ITrialLicense.providedBy(site.license), is_(True))
 
             hosts = self._root().get('hosts')
-            host_okc2 = hosts.addHost(PersistentHost(host_name='okc2', capacity=5))
+            hosts.addHost(PersistentHost(host_name='okc2', capacity=5))
             host_pod2 = hosts.addHost(PersistentHost(host_name='pod2', capacity=5))
 
         url = '/onboarding/sites/{}/@@environment'.format(siteId)

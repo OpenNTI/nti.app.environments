@@ -56,7 +56,7 @@ class PersistentHost(SchemaConfigured, PersistentCreatedModDateTrackingObject, C
             if      site != exclusive_site \
                 and IDedicatedEnvironment.providedBy(site.environment) \
                 and site.environment.host == self:
-                _load += 1
+                _load += site.environment.load_factor
 
         self.set_current_load(_load)
         return _load

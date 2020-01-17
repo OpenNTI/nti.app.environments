@@ -32,6 +32,7 @@ function showEnvironmentEditView() {
     if (_type==='shared') {
         $($(edit).find('.name_group_item')[0]).css('display', 'block');
         $($(edit).find('.pod_group_item')[0]).css('display', 'none');
+        $($(edit).find('.load_group_item')[0]).css('display', 'none');
         $($(edit).find('.host_group_item')[0]).css('display', 'none');
 
         var elem = $(edit).find('.site_environment_name')[0];
@@ -42,17 +43,26 @@ function showEnvironmentEditView() {
         $(elem).css('display', 'none');
         $(elem).val('');
 
+        var elem = $(edit).find('.site_environment_load_factor')[0];
+        $(elem).css('display', 'none');
+        $(elem).val('');
+
         var elem = $(edit).find('.site_environment_host')[0];
         $(elem).css('display', 'none');
         $(elem).val('');
     } else {
         $($(edit).find('.name_group_item')[0]).css('display', 'none');
         $($(edit).find('.pod_group_item')[0]).css('display', 'block');
+        $($(edit).find('.load_group_item')[0]).css('display', 'block');
         $($(edit).find('.host_group_item')[0]).css('display', 'block');
 
         var elem = $(edit).find('.site_environment_pod_id')[0];
         $(elem).css('display', 'inline-block');
         $(elem).val($(view.find('.site_environment_pod_id')[0]).text());
+
+        var elem = $(edit).find('.site_environment_load_factor')[0];
+        $(elem).css('display', 'inline-block');
+        $(elem).val($(view.find('.site_environment_load_factor')[0]).text());
 
         var elem = $(edit).find('.site_environment_host')[0];
         $(elem).css('display', 'inline-block');
@@ -80,6 +90,7 @@ function onEnvironmentChange () {
 
         $(edit.find('.site_environment_name')[0]).css('display', 'inline-block');
         $(edit.find('.site_environment_pod_id')[0]).css('display', 'none');
+        $(edit.find('.site_environment_load_factor')[0]).css('display', 'none');
         $(edit.find('.site_environment_host')[0]).css('display', 'none');
     } else if (value === "dedicated") {
         $($(edit).find('.name_group_item')[0]).css('display', 'none');
@@ -88,6 +99,7 @@ function onEnvironmentChange () {
 
         $(edit.find('.site_environment_pod_id')[0]).css('display', 'inline-block');
         $(edit.find('.site_environment_host')[0]).css('display', 'inline-block');
+        $(edit.find('.site_environment_load_factor')[0]).css('display', 'inline-block');
         $(edit.find('.site_environment_name')[0]).css('display', 'none');
     }
 }
@@ -103,6 +115,7 @@ function saveEnvironmentView(me, url)  {
         data['name'] = $($(form).find('.site_environment_name')[0]).val().trim();
     } else {
         data['pod_id'] = $($(form).find('.site_environment_pod_id')[0]).val().trim();
+        data['load_factor'] = $($(form).find('.site_environment_load_factor')[0]).val().trim();
         data['host'] = $($(form).find('.site_environment_host')[0]).val().trim();
     }
 

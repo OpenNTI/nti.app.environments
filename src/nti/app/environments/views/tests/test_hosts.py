@@ -1,51 +1,9 @@
-import datetime
-import tempfile
-import shutil
-import os
-
-from unittest import mock
 from hamcrest import assert_that
-from hamcrest import has_length
 from hamcrest import has_entries
-from hamcrest import has_properties
-from hamcrest import instance_of
-from hamcrest import contains_string
-from hamcrest import starts_with
-from hamcrest import calling
-from hamcrest import raises
 from hamcrest import is_
 
-from pyramid_mailer.interfaces import IMailer
-from pyramid_mailer import Mailer
-from pyramid import httpexceptions as hexc
-
-from zope import component
-
-from zope.interface.exceptions import Invalid
-
-from nti.externalization import to_external_object
-from nti.externalization.internalization.updater import update_from_external_object
-
-from nti.app.environments.views.customers import getOrCreateCustomer
-from nti.app.environments.views.sites import SitesUploadCSVView
 from nti.app.environments.views.tests import BaseAppTest
 from nti.app.environments.views.tests import with_test_app
-from nti.app.environments.views.tests import ensure_free_txn
-from nti.app.environments.models.customers import PersistentCustomer
-from nti.app.environments.models.hosts import PersistentHost
-from nti.app.environments.models.sites import TrialLicense
-from nti.app.environments.models.sites import EnterpriseLicense
-from nti.app.environments.models.sites import PersistentSite
-from nti.app.environments.models.sites import SharedEnvironment
-from nti.app.environments.models.interfaces import ICustomer, ISiteUsage
-from nti.app.environments.models.interfaces import IEnterpriseLicense
-from nti.app.environments.models.interfaces import ITrialLicense
-from nti.app.environments.models.interfaces import ISharedEnvironment
-from nti.app.environments.models.interfaces import IDedicatedEnvironment
-
-
-def _absolute_path(filename):
-    return os.path.join(os.path.dirname(__file__), 'resources/'+filename)
 
 
 class TestHosts(BaseAppTest):

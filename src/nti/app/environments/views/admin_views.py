@@ -176,13 +176,12 @@ class SiteDetailView(BaseTemplateView):
     def _format_env(self, env=None):
         if ISharedEnvironment.providedBy(env):
             return {'type': 'shared',
-                    'name': env.name,
+                    'env': env,
                     'lastModified': formatDateToLocal(env.lastModified),
                     'splunk_link': self._splunk_link(env)}
         elif IDedicatedEnvironment.providedBy(env):
             return {'type': 'dedicated',
-                    'pod_id': env.pod_id,
-                    'host': env.host,
+                    'env': env,
                     'lastModified': formatDateToLocal(env.lastModified),
                     'splunk_link': self._splunk_link(env)}
         raise ValueError('Unknown environment type.')

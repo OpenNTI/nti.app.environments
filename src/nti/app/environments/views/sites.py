@@ -234,12 +234,14 @@ class SiteEnvironmentPutView(BaseSiteFieldPutView):
     def pre_handler(self, field_value, new_field_value):
         self.old_host = field_value.host if IDedicatedEnvironment.providedBy(field_value) else None
         self.new_host = new_field_value.host if IDedicatedEnvironment.providedBy(new_field_value) else None
+        self.old_load_factor = field_value.load_factor if IDedicatedEnvironment.providedBy(field_value) else None
+        self.new_load_factor = new_field_value.load_factor if IDedicatedEnvironment.providedBy(new_field_value) else None
 
     def post_handler(self):
-        if self.old_host == self.new_host:
+        if self.old_host == self.new_host and self.old_load_factor == self.new_load_factor:
             return
 
-        for host in (self.old_host, self.new_host):
+        for host in set((self.old_host, self.new_host)):
             if host is not None:
                 host.recompute_current_load()
 
@@ -346,8 +348,13 @@ class SitesUploadCSVView(SiteBaseView, ObjectCreateUpdateViewMixin):
         if host is None:
             raise ValueError("Unknown host: %s." % host_name)
 
+        try:
+            load_factor = int(dic.get('Load Factor') or 1)
+        except ValueError:
+            raise ValueError("Load Factor should be integer.")
         return DedicatedEnvironment(pod_id=_id,
-                                    host=host)
+                                    host=host,
+                                    load_factor=load_factor)
 
     def _add_to_dns_names(self, site, names):
         for x in site.dns_names or ():

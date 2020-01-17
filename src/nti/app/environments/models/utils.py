@@ -47,7 +47,8 @@ def recompute_host_loads_with_sites(sites=None):
             continue
 
         host = site.environment.host
-        data[host] = data[host] + 1 if host in data else 1
+        load_factor = site.environment.load_factor
+        data[host] = data[host] + load_factor if host in data else load_factor
 
     for host, current_load in data.items():
         host.set_current_load(current_load=current_load)

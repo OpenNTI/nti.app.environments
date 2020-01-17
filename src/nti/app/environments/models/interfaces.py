@@ -280,6 +280,10 @@ class IDedicatedEnvironment(IEnvironment):
                   title="The identifier of physical hardware that this environment is running on.",
                   required=True)
 
+    load_factor = Int(title="The load factor.",
+                      default=1,
+                      required=True)
+
 
 class ISharedEnvironment(IEnvironment):
     """
