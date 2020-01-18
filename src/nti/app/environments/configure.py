@@ -56,7 +56,7 @@ def configure(settings=None, registry=None):
         config.include('.routes')
         config.load_zcml('configure.zcml')
 
-        
+        config.include('.tasks')
         # security policies
         authn_policy = AuthenticationPolicy('foo',
                                             hashalg='sha512')

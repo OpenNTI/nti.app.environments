@@ -168,7 +168,6 @@ class RequestTrialSiteView(SiteBaseView, ObjectCreateUpdateViewMixin):
         except InvalidItemType:
             raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid site type.")
 
-
 @view_config(renderer='json',
              context=ILMSSite,
              request_method='PUT',
