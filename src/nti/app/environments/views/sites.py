@@ -18,6 +18,7 @@ from nti.app.environments.auth import ACT_REQUEST_TRIAL_SITE
 from nti.app.environments.auth import ACT_UPDATE
 from nti.app.environments.models.events import SiteCreatedEvent
 from nti.app.environments.models.events import SiteUpdatedEvent
+from nti.app.environments.models.hosts import PersistentHost
 from nti.app.environments.models.interfaces import IDedicatedEnvironment
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ILMSSitesContainer
@@ -47,8 +48,6 @@ from .base import ObjectCreateUpdateViewMixin
 from .base import createCustomer
 from .base import getOrCreateCustomer
 from .base_csv import CSVBaseView
-from nti.app.environments.models.hosts import PersistentHost
-
 
 logger = __import__('logging').getLogger(__name__)
 
