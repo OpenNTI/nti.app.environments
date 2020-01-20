@@ -136,15 +136,6 @@ body {
     height: 32px;
 }
 
-.form .btnCustom {
-    font-size: 16px;
-    line-height: 32px;
-    width: auto;
-    border-radius: 4px;
-    margin-left: 6px;
-    margin-right: 6px;
-}
-
 button {
     cursor: pointer;
 }
@@ -199,6 +190,14 @@ a {
 .btnNO {
 	color: #fff;
     background-color: #6c757d;
+}
+
+.btnCustom {
+    padding: 6px 6px;
+    border: 1px solid #ced4da;
+    font-size: 14px;
+    color: #000;
+    background-color: #fff;
 }
 
 /* Add a right margin to each icon */

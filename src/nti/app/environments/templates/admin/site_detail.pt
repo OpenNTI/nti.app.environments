@@ -55,8 +55,8 @@
                             <div class="error error-edit-site-info" style="display:none;"></div>
                         </div>
                         <div class="form-group-item">
-                            <button type="button" class="btnCustom" onclick="saveSiteEditView(this, '${site.site_edit_link}');">Save</button>
-                            <button type="button" class="btnCustom" onclick="cancelSiteEditView();">Cancel</button>
+                            <button type="button" class="btn btnCustom" onclick="saveSiteEditView(this, '${site.site_edit_link}');">Save</button>
+                            <button type="button" class="btn btnCustom" onclick="cancelSiteEditView();">Cancel</button>
                         </div>
                     </div>
                 </div>
@@ -86,8 +86,8 @@
                         <div class="error error-edit-owner-info" style="display:none;"></div>
                     </div>
                     <div class="form-group-item">
-                        <button type="button" class="btnCustom" onclick="saveOwnerEditView(this, '${site.site_edit_link}');">Save</button>
-                        <button type="button" class="btnCustom" onclick="cancelOwnerEditView();">Cancel</button>
+                        <button type="button" class="btn btnCustom" onclick="saveOwnerEditView(this, '${site.site_edit_link}');">Save</button>
+                        <button type="button" class="btn btnCustom" onclick="cancelOwnerEditView();">Cancel</button>
                     </div>
                 </div>
             </div>
@@ -154,8 +154,8 @@
                         <div class="error error-edit-environment" style="display:none;"></div>
                     </div>
                     <div class="form-group-item">
-                        <button type="button" class="btnCustom" onclick="saveEnvironmentView(this, '${site.environment_edit_link}');">Save</button>
-                        <button type="button" class="btnCustom" onclick="cancelEnvironmentEditView();">Cancel</button>
+                        <button type="button" class="btn btnCustom" onclick="saveEnvironmentView(this, '${site.environment_edit_link}');">Save</button>
+                        <button type="button" class="btn btnCustom" onclick="cancelEnvironmentEditView();">Cancel</button>
                     </div>
                 </div>
             </div>
@@ -194,8 +194,8 @@
                         <div class="error error-edit-license" style="display:none;"></div>
                     </div>
                     <div class="form-group-item">
-                        <button type="button" class="btnCustom" onclick="saveLicenseView(this, '${site.license.edit_link}');">Save</button>
-                        <button type="button" class="btnCustom" onclick="cancelLicenseEditView();">Cancel</button>
+                        <button type="button" class="btn btnCustom" onclick="saveLicenseView(this, '${site.license.edit_link}');">Save</button>
+                        <button type="button" class="btn btnCustom" onclick="cancelLicenseEditView();">Cancel</button>
                     </div>
                 </div><!-- end form group-->
             </div> <!-- end edit license-->
@@ -227,8 +227,8 @@
                         <div class="error error-edit-parent-site" style="display:none;"></div>
                     </div>
                     <div class="form-group-item">
-                        <button type="button" class="btnCustom" onclick="saveParentSiteView(this, '${site.site_edit_link}');">Save</button>
-                        <button type="button" class="btnCustom" onclick="cancelParentSiteEditView();">Cancel</button>
+                        <button type="button" class="btn btnCustom" onclick="saveParentSiteView(this, '${site.site_edit_link}');">Save</button>
+                        <button type="button" class="btn btnCustom" onclick="cancelParentSiteEditView();">Cancel</button>
                     </div>
                 </div>
             </div> <!-- end edit parent site-->
@@ -248,7 +248,7 @@
         </div>
 
         <div class="site-footer">
-            <button class="btnCustom" onclick="window.location='${sites_list_link}';">
+            <button class="btn btnCustom" onclick="window.location='${sites_list_link}';">
                 Back To Sites
             </button>
         </div>
