@@ -17,6 +17,7 @@ from nti.app.environments.auth import ACT_READ
 from nti.app.environments.auth import ACT_REQUEST_TRIAL_SITE
 from nti.app.environments.auth import ACT_UPDATE
 from nti.app.environments.models.events import SiteCreatedEvent
+from nti.app.environments.models.events import SiteUpdatedEvent
 from nti.app.environments.models.interfaces import IDedicatedEnvironment
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ILMSSitesContainer
@@ -34,8 +35,6 @@ from nti.app.environments.models.sites import SharedEnvironment
 from nti.app.environments.models.sites import TrialLicense
 from nti.app.environments.models.utils import get_customers_folder
 from nti.app.environments.models.utils import get_hosts_folder
-from nti.app.environments.models.utils import maybe_recompute_host_load_with_site
-from nti.app.environments.models.utils import recompute_host_loads_with_sites
 from nti.app.environments.utils import convertToUTC
 from nti.app.environments.utils import find_iface
 from nti.app.environments.utils import formatDateToLocal
@@ -111,7 +110,6 @@ class SiteCreationView(SiteBaseView, ObjectCreateUpdateViewMixin):
         try:
             site = self.createObjectWithExternal()
             self.context.addSite(site)
-            maybe_recompute_host_load_with_site(site)
             self.request.response.status = 201
             logger.info("%s created a new site, site id: %s.",
                         self.request.authenticated_userid,
@@ -231,19 +229,10 @@ class BaseSiteFieldPutView(BaseFieldPutView):
              name="environment")
 class SiteEnvironmentPutView(BaseSiteFieldPutView):
 
-    def pre_handler(self, field_value, new_field_value):
-        self.old_host = field_value.host if IDedicatedEnvironment.providedBy(field_value) else None
-        self.new_host = new_field_value.host if IDedicatedEnvironment.providedBy(new_field_value) else None
-        self.old_load_factor = field_value.load_factor if IDedicatedEnvironment.providedBy(field_value) else None
-        self.new_load_factor = new_field_value.load_factor if IDedicatedEnvironment.providedBy(new_field_value) else None
-
-    def post_handler(self):
-        if self.old_host == self.new_host and self.old_load_factor == self.new_load_factor:
-            return
-
-        for host in set((self.old_host, self.new_host)):
-            if host is not None:
-                host.recompute_current_load()
+    def post_handler(self, field_name, original_field_value, new_field_value):
+        notify(SiteUpdatedEvent(site=self.context,
+                                original_values = {field_name: original_field_value},
+                                external_values = {field_name: new_field_value}))
 
 
 @view_config(renderer='json',
@@ -274,7 +263,6 @@ class SiteLicensePutView(BaseSiteFieldPutView):
 def deleteSiteView(context, request):
     container = context.__parent__
     container.deleteSite(context)
-    maybe_recompute_host_load_with_site(context, exclusive=True)
     logger.info("%s deleted site (%s).",
                 request.authenticated_userid,
                 context.id)
@@ -303,6 +291,17 @@ class SitesUploadCSVView(SiteBaseView, ObjectCreateUpdateViewMixin):
     def _hosts_folder(self):
         return get_hosts_folder(request=self.request)
 
+    @Lazy
+    def _hosts_names(self):
+        hosts = dict()
+        for x in self._hosts_folder.values():
+                # This shouldn't happen in practice.
+                if x.host_name in hosts:
+                    raise_json_error(hexc.HTTPConflict,
+                                     "Existing identical host_name in different hosts: {}.".format(x.host_name))
+                hosts[x.host_name] = x
+        return hosts
+
     def _process_license(self, dic):
         licenseType = dic['License Type'].strip()
         start_date = parseDate(dic['LicenseStartDate'].strip()) if dic.get('LicenseStartDate') else self._default_license_start_date
@@ -318,20 +317,6 @@ class SitesUploadCSVView(SiteBaseView, ObjectCreateUpdateViewMixin):
                                      end_date=end_date)
         raise ValueError("Unknown license type: {}.".format(licenseType))
 
-
-    def _get_host_by_host_name(self, host_name):
-        try:
-            hosts = self._hosts_names
-        except AttributeError:
-            hosts = self._hosts_names = dict()
-            for x in self._hosts_folder.values():
-                # This shouldn't happen in practice.
-                if x.host_name in hosts:
-                    raise_json_error(hexc.HTTPConflict,
-                                     "Existing identical host_name in different hosts: {}.".format(x.host_name))
-                hosts[x.host_name] = x
-        return hosts.get(host_name)
-
     def _process_environment(self, dic):
         contents = dic['Environment'].split(':')
         if len(contents) != 2:
@@ -344,7 +329,7 @@ class SitesUploadCSVView(SiteBaseView, ObjectCreateUpdateViewMixin):
             return SharedEnvironment(name=_id)
 
         host_name = dic['Host Machine'].strip() or self._default_environment_host
-        host = self._get_host_by_host_name(host_name)
+        host = self._hosts_names.get(host_name)
         if host is None:
             raise ValueError("Unknown host: %s." % host_name)
 
@@ -483,9 +468,6 @@ class SitesUploadCSVView(SiteBaseView, ObjectCreateUpdateViewMixin):
             logger.debug('Processing line %s', total+1)
             self._process_row(row, createdCustomer=createdCustomerIfNotExists, remoteUser=remoteUser)
             total += 1
-
-        if total:
-            recompute_host_loads_with_sites(sites=self.context.values())
 
         result = dict()
         result['total_sites'] = total

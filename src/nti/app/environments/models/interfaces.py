@@ -215,7 +215,7 @@ class IHost(IContained):
                    min=1,
                    required=True)
 
-    current_load = Int(title="The number of sites that runs on this host machine.",
+    current_load = Int(title="The total sites load on this host machine.",
                        required=True)
     current_load.setTaggedValue('_ext_excluded_out', True)
 
@@ -355,6 +355,15 @@ class ILMSSiteCreatedEvent(interface.Interface):
     site = Object(ILMSSite,
                   title="The site object created.",
                   required=True)
+
+
+class ILMSSiteUpdatedEvent(interface.Interface):
+
+    site = interface.Attribute("The site object modified.")
+
+    original_values = interface.Attribute("A dictionary that storing the original values of attributes that are being changed.")
+
+    external_values = interface.Attribute("A dictionary that storing the external values.")
 
 
 class ISiteUsage(IContained):

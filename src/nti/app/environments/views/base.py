@@ -1,3 +1,5 @@
+import copy
+
 from pyramid import httpexceptions as hexc
 
 from zope.cachedescriptors.property import Lazy
@@ -134,10 +136,7 @@ class TableViewMixin(object):
 
 class BaseFieldPutView(BaseView, ObjectCreateUpdateViewMixin):
 
-    def pre_handler(self, field_value, new_field_value):
-        pass
-
-    def post_handler(self):
+    def post_handler(self, field_name, original_field_value, new_field_value):
         pass
 
     def __call__(self):
@@ -147,15 +146,16 @@ class BaseFieldPutView(BaseView, ObjectCreateUpdateViewMixin):
             field_value = getattr(self.context, field_name)
             new_field_value = self.createObjectWithExternal(external)
 
-            self.pre_handler(field_value, new_field_value)
-
             if type(field_value) != type(new_field_value):
+                original_field_value = field_value
                 self.updateObjectWithExternal(self.context, {field_name: new_field_value})
             else:
+                # Here failed to use copy.deepcopy, but copy.copy is enough.
+                original_field_value = copy.copy(field_value)
                 self.updateObjectWithExternal(field_value, external)
                 self.context.updateLastModIfGreater(field_value.lastModified)
 
-            self.post_handler()
+            self.post_handler(field_name, original_field_value, new_field_value)
             self._log(external)
             return {}
         except ValidationError as err:
