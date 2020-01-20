@@ -36,6 +36,8 @@
 
 	<include package="nti.wref"/>
 
+	<include package="nti.environments.management" />
+
 	<utility
 	    factory=".authentication.EmailChallengeOTPGenerator"
 	    provides=".interfaces.IOTPGenerator"/>

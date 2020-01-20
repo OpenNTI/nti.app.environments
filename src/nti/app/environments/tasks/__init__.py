@@ -2,7 +2,7 @@ from zope import interface
 
 from zope.component import getGlobalSiteManager
 
-from .interfaces import ICeleryApp
+from nti.environments.management.interfaces import ICeleryApp
 
 from nti.environments.management.celery import configure_celery
 

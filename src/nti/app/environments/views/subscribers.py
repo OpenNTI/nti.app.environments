@@ -12,12 +12,13 @@ from nti.app.environments.models.interfaces import IDedicatedEnvironment
 from nti.app.environments.models.interfaces import ILMSSiteCreatedEvent
 from nti.app.environments.models.interfaces import ILMSSiteUpdatedEvent
 
+from nti.environments.management.interfaces import ICeleryApp
+from nti.environments.management.interfaces import ISetupEnvironmentTask
+
 from nti.app.environments.interfaces import ITransactionRunner
 
 from nti.app.environments.models.interfaces import ILMSSiteCreatedEvent
 from nti.app.environments.models.interfaces import SITE_STATUS_PENDING
-
-from nti.app.environments.tasks.interfaces import ICeleryApp
 
 from nti.app.environments.views.notification import SiteCreatedEmailNotifier
 
@@ -111,7 +112,7 @@ def _maybe_setup_site(success, app, siteid, client_name, dns_name):
         return
     
     try:
-        result = app.tasks['init_env'].apply_async((siteid, client_name, dns_name))
+        result = ISetupEnvironmentTask(app)(siteid, client_name, dns_name)
         _store_task_results(siteid, result)
     except:
         logger.exception('Unable to queue site setup for %s' % siteid)
