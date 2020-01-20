@@ -61,7 +61,23 @@ def _update_host_load_on_site_environment_updated(event):
         if host:
             host.recompute_current_load()
 
+# TODO The mechanics of actually dispatching the setup task
+# and capturing the task for status and results fetching
+# needs to be encapulated and moved out of here.
+#
+# Note the care taken around when we dispatch the task, and how
+# we safely capture the result.
+
 def _store_task_results(siteid, result):
+    """
+    Given a siteid, which should be a pending site, and a celery
+    async result, associate the two. We spin up a greenlet that utilizes
+    a TransactionLoop to associate the result (taskid) with the pending site
+    in zodb.
+
+    If this fails (including retries) we are left with a pending site that isn't
+    linked to it's task. Again we will want to yell loudly and monitor for now.
+    """
 
     tx_runner = component.getUtility(ITransactionRunner)
     
@@ -75,6 +91,22 @@ def _store_task_results(siteid, result):
     gevent.spawn(_store)
 
 def _maybe_setup_site(success, app, siteid, client_name, dns_name):
+    """
+    On succesful commit dispatch a task to setup the site. Note this happens in an after
+    commit hook and we are outside of the transaction. We must be very careful that we
+    don't do anything here that we expect to happen transactionally. If this fails
+    we're left with a site in the pending state that will need to be retriggered. We catch
+    this by logging / monitoring for now. A failure here would mostly likely be a coding error
+    or an error connecting to the celery broker.
+
+    Unfortunately this isn't as simple as fire and forget. We need to transactionally capture
+    the resulting taskid so that we a) know if things were kicked off and b) can fetch
+    task status and results. After calling apply_async (i.e. the task is on the queue) we
+    kick off a greenlet to store the results.
+
+    We could use a strategy like repoze.sendmail to do this in a transactional way, using
+    atomic filesystem renames, but we don't believe that complexity is warranted right now.
+    """
     if not success:
         return
     
@@ -97,6 +129,7 @@ def _setup_newly_created_site(event):
     cname = site.client_name
     dns = site.dns_names[0]
 
+    # If the transaction was successful we setup the site.
     transaction.get().addAfterCommitHook(
             _maybe_setup_site, args=(app, sid, cname, dns), kws=None
     )   
