@@ -140,7 +140,7 @@
                     </div>
                     <div class="form-group-item load_group_item">
                         <label>Loader Factor</label>
-                        <input type="text" class="site_environment_load_factor" name="site_environment_load_factor" placeHolder="Load Factor (default 1)" style="display:none;"/>
+                        <input type="text" class="site_environment_load_factor" name="site_environment_load_factor" placeHolder="Load Factor" style="display:none;"/>
                     </div>
                     <div class="form-group-item host_group_item">
                         <label>Host</label>
@@ -252,12 +252,11 @@
                 Back To Sites
             </button>
         </div>
-
-        <metal:block metal:fill-slot="script">
-            <script src="/static/js/site_detail.js"></script>
-            <script>
-                $('input[name=site_environment_load_factor]').on('input', positiveNumbersOnly);
-            </script>
-        </metal:block>
+    </metal:block>
+    <metal:block metal:fill-slot="script">
+        <script src="/static/js/site_detail.js"></script>
+        <script>
+            $('input[name=site_environment_load_factor]').on('input', positiveNumbersOnly);
+        </script>
     </metal:block>
 </metal:block>

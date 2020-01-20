@@ -173,39 +173,38 @@
                 </div>
             </div>
         </div><!-- end of upload modal -->
-
-        <metal:block metal:fill-slot="script">
-            <script src="/static/js/sites.js"></script>
-            <script>
-                // When the user clicks anywhere outside of the modal, close it
-                window.onclick = function(event) {
-                    var ids = ["deletingModal", "newModal"];
-                    for(var i=0; i<ids.length; i++) {
-                        var modal = document.getElementById(ids[i]);
-                        if (event.target == modal) {
-                            modal.style.display = "none";
-                        }
-                    }
-                }
-
-                function search(e) {
-                    // When a enter key pressed, query the server.
-                    if (e.which == 13 || e.keyCode == 13) {
-                        var search = $('#search').val().trim();
-                        var url = updateUrlParameter('search', search);
-                        window.location.href = url;
-                    }
-                }
-
-                $( document ).ready(function() {
-                    var email = getUrlParameter('search');
-                    if(email){
-                        $('#search').val(email);
-                    }
-                });
-
-                $('#site_environment_load_factor').on('input', positiveNumbersOnly);
-            </script>
-        </metal:block>
     </metal:block><!-- end of content -->
+    <metal:block metal:fill-slot="script">
+        <script src="/static/js/sites.js"></script>
+        <script>
+            // When the user clicks anywhere outside of the modal, close it
+            window.onclick = function(event) {
+                var ids = ["deletingModal", "newModal"];
+                for(var i=0; i<ids.length; i++) {
+                    var modal = document.getElementById(ids[i]);
+                    if (event.target == modal) {
+                        modal.style.display = "none";
+                    }
+                }
+            }
+
+            function search(e) {
+                // When a enter key pressed, query the server.
+                if (e.which == 13 || e.keyCode == 13) {
+                    var search = $('#search').val().trim();
+                    var url = updateUrlParameter('search', search);
+                    window.location.href = url;
+                }
+            }
+
+            $( document ).ready(function() {
+                var email = getUrlParameter('search');
+                if(email){
+                    $('#search').val(email);
+                }
+            });
+
+            $('#site_environment_load_factor').on('input', positiveNumbersOnly);
+        </script>
+    </metal:block>
 </metal:block>

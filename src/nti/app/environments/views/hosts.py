@@ -12,12 +12,15 @@ from nti.app.environments.auth import ACT_DELETE
 from nti.app.environments.models.interfaces import IHost
 from nti.app.environments.models.interfaces import IHostsContainer
 
+from nti.app.environments.models.utils import get_sites_folder
+
 from nti.app.environments.views.base import BaseView
 from nti.app.environments.views.base import BaseTemplateView
 from nti.app.environments.views.base import TableViewMixin
 from nti.app.environments.views.base import ObjectCreateUpdateViewMixin
 from nti.app.environments.views.utils import raise_json_error
 from nti.app.environments.views._table_utils import make_specific_table
+from nti.app.environments.views._table_utils import SitesForHostTable
 from nti.app.environments.views._table_utils import HostsTable
 
 from nti.app.environments.utils import find_iface
@@ -52,6 +55,21 @@ class HostsListView(BaseTemplateView, TableViewMixin):
         return {'table': table,
                 'creation_url': self.request.resource_url(self.context) if self.request.has_permission(ACT_CREATE, self.context) else None,
                 'is_deletion_allowed': self._is_deletion_allowed(table)}
+
+
+@view_config(renderer='../templates/admin/host_detail.pt',
+             request_method='GET',
+             permission=ACT_READ,
+             context=IHost,
+             name="details")
+class HostDetailView(BaseTemplateView, TableViewMixin):
+
+    def __call__(self):
+        sites = get_sites_folder(self._onboarding_root)
+        table = make_specific_table(SitesForHostTable, sites, self.request, host=self.context)
+        return {'hosts_list_link': self.request.resource_url(self.context.__parent__, '@@list'),
+                'host': self.context,
+                'table': table}
 
 
 @view_config(renderer='rest',

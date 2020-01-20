@@ -1,0 +1,73 @@
+<metal:block metal:use-macro="load: ../macros/layout_admin.pt">
+    <title metal:fill-slot="title">
+        Host Detail
+    </title>
+	<metal:block metal:fill-slot="css">
+        <link href="/static/css/modal.css" rel="stylesheet">
+        <link href="/static/css/table.css" rel="stylesheet">
+        <style>
+            .host-info {
+                border: 1px solid #ced4da;
+                border-radius: 4px;
+                padding: 16px 16px;
+            }
+            <metal:block tal:omit-tag="" tal:condition="not:is_deletion_allowed|nothing">
+                .nti_delete {
+                    display: none;
+                }
+            </metal:block>
+        </style>
+    </metal:block>
+    <metal:block metal:fill-slot="content">
+        <h1 style="margin-top:16;">Host Info</h1>
+        <div class="host-info">
+            <p>Host Name: <span tal:content="host.host_name"></span></p>
+            <p>Capacity: <span tal:content="host.capacity"></span></p>
+            <p>Current Load: <span tal:content="host.current_load"></span></p>
+        </div>
+
+        <h1 style="margin-top: 32px;">Sites</h1>
+        <div class="toolbar">
+            <input type="text" id='search' name="search" placeHolder="Search" class="search-input" onkeypress="return search(event);"/>
+        </div>
+
+		<table tal:condition="python: len(table._raw_values)" tal:replace="structure python: table.render()" />
+		<div tal:condition="python: not len(table._raw_values)">
+			No sites.
+		</div>
+
+	    <div class="table-pagination" tal:define="table table" >
+            <div class="pagination-detail" tal:condition="python: len(table._raw_values)">
+                Total: ${len(table._raw_values)}.
+            </div>
+            <div class="pagination" tal:condition="python: len(table.context) > table.batchSize">
+                <span tal:replace="structure python: table.renderBatch()"/>
+            </div>
+	    </div>
+
+        <div class="margin-top: 16px;">
+            <button class="btn btnCustom" onclick="window.location='${hosts_list_link}';">
+                Back To Hosts
+            </button>
+        </div>
+    </metal:block>
+    <metal:block metal:fill-slot="script">
+        <script>
+            function search(e) {
+                // When a enter key pressed, query the server.
+                if (e.which == 13 || e.keyCode == 13) {
+                    var search = $('#search').val().trim();
+                    var url = updateUrlParameter('search', search);
+                    window.location.href = url;
+                }
+            }
+
+            $( document ).ready(function() {
+                var term = getUrlParameter('search');
+                if(term){
+                    $('#search').val(term);
+                }
+            });
+        </script>
+    </metal:block>
+</metal:block>

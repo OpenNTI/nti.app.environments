@@ -248,6 +248,17 @@
 			 for="* * * ._table_utils.HostLastModifiedColumn"
 			 provides="z3c.table.interfaces.IColumnHeader"/>
 
+	<!-- sites table hosted on host -->
+	<adapter factory="._table_utils.SiteHostLoadColumn"
+			 for="* * ._table_utils.SitesForHostTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="load_factor" />
+
+	<adapter factory="._table_utils.SiteColumnHeader"
+             for="* * * ._table_utils.SiteHostLoadColumn"
+			 provides="z3c.table.interfaces.IColumnHeader"/>
+
+
 	<!-- default batch provider -->
 	<adapter factory="._table_utils.DefaultTableBatchProvider"
 			 for="* * ._table_utils.BaseTable"

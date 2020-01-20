@@ -21,6 +21,7 @@ from z3c.table.interfaces import IBatchProvider
 from nti.app.environments.auth import ACT_DELETE, ACT_UPDATE
 
 from nti.app.environments.models.interfaces import ITrialLicense
+from nti.app.environments.models.interfaces import IDedicatedEnvironment
 from nti.app.environments.models.interfaces import SITE_STATUS_ACTIVE
 
 from nti.app.environments.utils import formatDateToLocal
@@ -288,17 +289,17 @@ class SiteStatusColumn(column.GetAttrColumn):
 
 class SiteCreatedColumn(CreatedColumn):
 
-    weight = 4
+    weight = 8
 
 
 class SiteLastModifiedColumn(LastModifiedColumn):
 
-    weight = 5
+    weight = 9
 
 
 class SiteDeleteColumn(DeleteColumn):
 
-    weight = 6
+    weight = 10
 
 
 class DashboardTrialSitesTable(BaseSitesTable):
@@ -412,13 +413,25 @@ class HostsTable(BaseTable, _FilterMixin):
         return self.context.values() if not term else [x for x in self.context.values() if self._predicate(x, term)]
 
 
-class HostNameColumn(column.GetAttrColumn):
+class HostNameColumn(column.LinkColumn):
 
     weight = 0
     header = 'Host'
     attrName = 'host_name'
 
     cssClasses = {'td': 'host'}
+
+    def getValue(self, obj):
+        return getattr(obj, self.attrName)
+
+    def getSortKey(self, item):
+        return self.getValue(item)
+
+    def getLinkURL(self, item):
+        return self.request.resource_url(item, '@@details')
+
+    def getLinkContent(self, item):
+        return self.getValue(item)
 
 
 class HostCapacityColumn(column.GetAttrColumn):
@@ -471,3 +484,27 @@ class HostDeleteColumn(DeleteColumn):
         if self._has_delete_permission(item):
             content += """<button onclick="openDeletingModal('{url}', '{name}');" style="margin-left: 5px;">Delete</button>""".format(url=url,name=item.host_name)
         return content
+
+
+# sites table running on host.
+
+
+class SitesForHostTable(SitesTable):
+
+    def __init__(self, context, request, **kwargs):
+        super(SitesForHostTable, self).__init__(context, request)
+        self._host = kwargs.get('host')
+
+    @Lazy
+    def _raw_filter(self):
+        if self._host:
+            return lambda x: IDedicatedEnvironment.providedBy(x.environment) and x.environment.host == self._host
+
+
+class SiteHostLoadColumn(column.GetAttrColumn):
+
+    weight = 8
+    header = 'Load'
+
+    def getValue(self, obj):
+        return obj.environment.load_factor
