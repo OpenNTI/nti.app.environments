@@ -602,19 +602,15 @@ class TestSitesUploadCSVView(BaseAppTest):
         assert_that(ISharedEnvironment.providedBy(result), is_(True))
         assert_that(result, has_properties({'name': 'prod'}))
 
-        view = SitesUploadCSVView(sites, self.request)
-        assert_that(calling(view._process_environment).with_args({'Environment': 'dedicated:Sxxx2', 'Host Machine': 'hh'}),
-                    raises(ValueError, pattern='Unknown host: hh.'))
-
         hosts = self._root().get('hosts')
-        hosts.addHost(PersistentHost(host_name='hh', capacity=5))
-        hosts.addHost(PersistentHost(host_name='xx', capacity=5))
-        hosts.addHost(PersistentHost(host_name='host3.4pp', capacity=5))
+        assert_that(hosts, has_length(0))
 
         view = SitesUploadCSVView(sites, self.request)
         result = view._process_environment({'Environment': 'dedicated:Sxxx2', 'Host Machine': 'hh'})
         assert_that(IDedicatedEnvironment.providedBy(result), is_(True))
         assert_that(result, has_properties({'pod_id': 'Sxxx2', 'host': has_properties({'host_name': 'hh'})}))
+        assert_that(hosts, has_length(1))
+        assert_that([x for x in hosts.values()][0], has_properties({'host_name': 'hh', 'capacity': 20}))
 
         view = SitesUploadCSVView(sites, self.request)
         result = view._process_environment({'Environment': 'dedicated:Sxxx2', 'Host Machine': ''})

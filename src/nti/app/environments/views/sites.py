@@ -47,6 +47,7 @@ from .base import ObjectCreateUpdateViewMixin
 from .base import createCustomer
 from .base import getOrCreateCustomer
 from .base_csv import CSVBaseView
+from nti.app.environments.models.hosts import PersistentHost
 
 
 logger = __import__('logging').getLogger(__name__)
@@ -291,16 +292,24 @@ class SitesUploadCSVView(SiteBaseView, ObjectCreateUpdateViewMixin):
     def _hosts_folder(self):
         return get_hosts_folder(request=self.request)
 
-    @Lazy
-    def _hosts_names(self):
-        hosts = dict()
-        for x in self._hosts_folder.values():
+    def _get_or_create_hosts(self, host_name):
+        try:
+            hosts = self._hosts_names
+        except AttributeError:
+            hosts = self._hosts_names = dict()
+            for x in self._hosts_folder.values():
                 # This shouldn't happen in practice.
                 if x.host_name in hosts:
                     raise_json_error(hexc.HTTPConflict,
                                      "Existing identical host_name in different hosts: {}.".format(x.host_name))
                 hosts[x.host_name] = x
-        return hosts
+
+        # Create one if it does not exist.
+        if host_name not in hosts:
+            logger.info("Host %s not found, creating it.", host_name)
+            hosts[host_name] = self._hosts_folder.addHost(PersistentHost(host_name=host_name,
+                                                                         capacity=20))
+        return hosts[host_name]
 
     def _process_license(self, dic):
         licenseType = dic['License Type'].strip()
@@ -329,10 +338,7 @@ class SitesUploadCSVView(SiteBaseView, ObjectCreateUpdateViewMixin):
             return SharedEnvironment(name=_id)
 
         host_name = dic['Host Machine'].strip() or self._default_environment_host
-        host = self._hosts_names.get(host_name)
-        if host is None:
-            raise ValueError("Unknown host: %s." % host_name)
-
+        host = self._get_or_create_hosts(host_name)
         try:
             load_factor = int(dic.get('Load Factor') or 1)
         except ValueError:
