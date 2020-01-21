@@ -30,6 +30,7 @@ requires = [
     'nti.mimetype @  git+ssh://git@github.com/NextThought/nti.mimetype',
     'nti.ntiids @ git+ssh://git@github.com/NextThought/nti.ntiids',
     'nti.traversal @ git+ssh://git@github.com/NextThought/nti.traversal',
+    'nti.environments.management @ git+ssh://git@github.com/NextThought/nti.environments.management',
     'pyramid-chameleon',
     'pyramid-mako',
     'pyramid-zcml',

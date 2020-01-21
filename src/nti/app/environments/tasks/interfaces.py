@@ -1,0 +1,1 @@
+from zope import interface

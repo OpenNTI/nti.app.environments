@@ -16,4 +16,6 @@
 	<subscriber handler=".subscribers._update_host_load_on_site_removed" />
 	<subscriber handler=".subscribers._update_host_load_on_site_environment_updated" />
 
+	<subscriber handler=".subscribers._setup_newly_created_site" />
+
 </configure>
