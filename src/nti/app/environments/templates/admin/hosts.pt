@@ -1,18 +1,11 @@
 <metal:block metal:use-macro="load: ../macros/layout_admin.pt">
     <title metal:fill-slot="title">
-        Customers
+        Hosts
     </title>
 	<metal:block metal:fill-slot="css">
-        <link href="/static/css/modal.css" rel="stylesheet">
         <link href="/static/css/table.css" rel="stylesheet">
+        <link href="/static/css/modal.css" rel="stylesheet">
         <style>
-            .search-input {
-                font-size: 16px;
-                margin-bottom: 16px;
-                padding: 8px 6px;
-                border: 1px solid #ced4da;
-                border-radius: 4px;
-            }
             <metal:block tal:omit-tag="" tal:condition="not:is_deletion_allowed|nothing">
                 .nti_delete {
                     display: none;
@@ -22,20 +15,21 @@
     </metal:block>
 
     <metal:block metal:fill-slot="content">
-        <h1>Customers</h1>
+        <h1>Hosts</h1>
 
         <div class="toolbar">
             <input type="text" id='search' name="search" placeHolder="Search" class="search-input" onkeypress="return search(event);"/>
-            <metal:block tal:omit-tag="" tal:condition="creation_url|nothing">
-                <button type="button" style="float: right;" onclick="openNewModal();">Add Via Hubspot</button>
-            </metal:block>
+            <div style="float: right;">
+                <metal:block tal:omit-tag="" tal:condition="creation_url|nothing">
+                    <button type="button" onclick="openNewModal();" style="margin-left: 6px;">Create New Host</button>
+                </metal:block>
+            </div>
         </div>
 
 		<table tal:condition="python: len(table.context)" tal:replace="structure python: table.render()" />
 		<div tal:condition="python: not len(table.context)">
-			No customers.
+			No hosts.
 		</div>
-
 	    <div class="table-pagination" tal:define="table table" >
             <div class="pagination-detail" tal:condition="python: len(table.context)">
                 Total: ${len(table.context)}.
@@ -51,14 +45,14 @@
                     <h3>Deleting?</h3>
                 </div>
                 <div class="modal-body">
-                    <p>Are you sure you want to delete customer <strong><span class="deleting_email"></span></strong>?</p>
+                    <p>Are you sure you want to delete host <strong><span class="deleting_email"></span></strong>?</p>
                     <div class="success success-deletion" style="display:none;"></div>
                     <div class="error error-deletion" style="display:none;"></div>
                 </div>
 
                 <div class="modal-footer">
                     <button class='btn btnOK' onclick="deleteItem(this);">Delete</button>
-                    <button class='btn btnNO' onclick="closeDeletingModal();">Cancel</button>
+                    <button class='btn btnNO' onclick="document.getElementById('deletingModal').style.display = 'none';">Cancel</button>
                 </div>
             </div>
         </div>
@@ -66,41 +60,70 @@
         <div id="newModal" class="modal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3>Add Via Hubspot</h3>
+                    <h3>Add Host</h3>
                 </div>
                 <div class="modal-body">
                     <div class="form">
                         <div class="input-row">
-                            <label class="input-col-1">Email</label>
+                            <label class="input-col-1">Host</label>
                             <div class="input-col-3">
-                                <input type="text" name="email" id="hubspot_email"/>
+                                <input type="text" id="host_name" class="lowercase"/>
+                            </div>
+                        </div>
+                        <div class="input-row">
+                            <label class="input-col-1">Capacity</label>
+                            <div class="input-col-3">
+                                <input type="text" id="host_capacity"/>
                             </div>
                         </div>
                     </div>
                     <div class="success success-creation" style="display:none;"></div>
                     <div class="error error-creation" style="display:none;"></div>
                 </div>
-
                 <div class="modal-footer">
-                    <button type="button" class='btn btnSave' onclick="saveItem(this, '${creation_url}');">
-                        <div class="spinnerText" style="display:none;">
-                            <i class="fa fa-circle-o-notch fa-spin"></i>Saving
-                        </div>
-                        <div class="nonSpinnerText">
-                            Save
-                        </div>
-                    </button>
+                    <button type="button" class='btn btnSave' onclick="saveItem(this, '${creation_url}');">Save</button>
                     <button type="button" class='btn btnNO' onclick="document.getElementById('newModal').style.display = 'none';">Cancel</button>
                 </div>
             </div>
-        </div>
-    </metal:block>
+        </div><!-- end of new modal -->
+
+        <div id="editingModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Edit Host</h3>
+                </div>
+                <div class="modal-body">
+                    <div class="form">
+                        <div class="input-row">
+                            <label class="input-col-1">Host</label>
+                            <div class="input-col-3">
+                                <input type="text" id="host_name_edit" class="lowercase"/>
+                            </div>
+                        </div>
+                        <div class="input-row">
+                            <label class="input-col-1">Capacity</label>
+                            <div class="input-col-3">
+                                <input type="text" id="host_capacity_edit"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="success success-update" style="display:none;"></div>
+                    <div class="error error-update" style="display:none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class='btn btnSave' onclick="editItem(this);">Save</button>
+                    <button type="button" class='btn btnNO' onclick="document.getElementById('editingModal').style.display = 'none';">Cancel</button>
+                </div>
+            </div>
+        </div><!-- end of new modal -->
+
+    </metal:block><!-- end of content -->
     <metal:block metal:fill-slot="script">
-        <script src="/static/js/customers.js"></script>
+        <script src="/static/js/hosts.js"></script>
         <script>
             // When the user clicks anywhere outside of the modal, close it
             window.onclick = function(event) {
-                var ids = ["deletingModal"];
+                var ids = ["deletingModal", "newModal"];
                 for(var i=0; i<ids.length; i++) {
                     var modal = document.getElementById(ids[i]);
                     if (event.target == modal) {
@@ -119,12 +142,14 @@
             }
 
             $( document ).ready(function() {
-                var email = getUrlParameter('search');
-                if(email){
-                    $('#search').val(email);
+                var search = getUrlParameter('search');
+                if(search){
+                    $('#search').val(search);
                 }
             });
 
+            $('#host_capacity').on('input', positiveNumbersOnly);
+            $('#host_capacity_edit').on('input', positiveNumbersOnly);
         </script>
     </metal:block>
 </metal:block>

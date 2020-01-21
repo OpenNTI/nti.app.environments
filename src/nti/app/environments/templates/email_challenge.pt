@@ -2,95 +2,61 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="/static/css/email_challenge.css" rel="stylesheet">
+<style>
+    input[type=text] {
+        width: 100%;
+        padding: 12px 20px;
+        margin: 10px 0;
+        display: inline-block;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+        font-size: 16px;
+    }
 
-    <style>
-        body {
-            margin: 0;
-        }
+    input[type=checkbox] {
+        padding: 0px 0px;
+        margin: 10px 0;
+        margin-right: 5px;
+        display: inline-block;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
 
-        .main {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            min-height: 600px;
-        }
+    .btnCustom {
+        width: 100%;
+        background-color: #4CAF50;
+        color: white;
+        padding: 14px 20px;
+        margin: 14px 0 10px 0;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+    }
 
-        .container {
-            border-radius: 5px;
-            background-color: #f2f2f2;
-            padding: 20px;
-            width: 400px;
-            min-width: 400px;
-        }
+    .btnCustom:hover,
+    .btnCustom:focus {
+        background-color: #45a049;
+    }
 
-        input[type=text] {
-            width: 100%;
-            padding: 12px 20px;
-            margin: 8px 0;
-            display: inline-block;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
+    .title {
+        margin: 0;
+        font-size: 40px;
+        line-height: 40px;
+        text-align: center;
+    }
 
-        input[type=checkbox] {
-            padding: 0px 0px;
-            margin: 8px 0;
-            margin-right: 5px;
-            display: inline-block;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-
-        .btnCustom {
-            width: 100%;
-            background-color: #4CAF50;
-            color: white;
-            padding: 14px 20px;
-            margin: 8px 0;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .btnCustom:hover,
-        .btnCustom:focus {
-            background-color: #45a049;
-        }
-
-        a {
-            text-decoration: none;
-        }
-
-        p {
-            text-align: center;
-        }
-
-        .title {
-            margin: 0;
-            font-size: 40px;
-            line-height: 40px;
-            text-align: center;
-        }
-
-        .subtitle {
-            margin-top: 10px;
-            font-size: 16px;
-            text-align: center;
-        }
-
-        .success {
-            color: green;
-        }
-
-        .error {
-            color: red;
-        }
-    </style>
+    .subtitle {
+        margin-top: 10px;
+        font-size: 16px;
+        text-align: center;
+    }
+</style>
 </head>
 
 <body>

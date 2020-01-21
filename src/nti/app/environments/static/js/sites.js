@@ -9,7 +9,8 @@ function saveItem (me, url) {
             "MimeType": env_mimetype,
             "name": getValue("site_environment_name"),
             "pod_id": getValue("site_environment_pod_id"),
-            "host": getValue("site_environment_host")
+            "host": getValue("site_environment_host"),
+            "load_factor": getValue("site_environment_load_factor")
         } : null;
 
     var lic_mimetype = getLicenseMimeType(getValue("site_license"));
@@ -49,10 +50,12 @@ function onEnvironmentChange () {
         document.getElementById("site_environment_name").style.display = "inline-block";
         document.getElementById("site_environment_pod_id").style.display = "none";
         document.getElementById("site_environment_host").style.display = "none";
+        document.getElementById("site_environment_load_factor").style.display = "none";
     } else if (value === "dedicated") {
         document.getElementById("site_environment_details").style.display = "flex";
         document.getElementById("site_environment_pod_id").style.display = "inline-block";
         document.getElementById("site_environment_host").style.display = "inline-block";
+        document.getElementById("site_environment_load_factor").style.display = "inline-block";
         document.getElementById("site_environment_name").style.display = "none";
     } else {
         document.getElementById("site_environment_details").style.display = "none";

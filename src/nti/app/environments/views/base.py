@@ -1,3 +1,5 @@
+import copy
+
 from pyramid import httpexceptions as hexc
 
 from zope.cachedescriptors.property import Lazy
@@ -13,6 +15,7 @@ from nti.externalization import update_from_external_object
 
 
 from nti.app.environments.auth import ACT_READ
+from nti.app.environments.auth import ACT_DELETE
 from nti.app.environments.auth import ADMIN_ROLE
 from nti.app.environments.auth import ACCOUNT_MANAGEMENT_ROLE
 from nti.app.environments.auth import is_admin
@@ -26,6 +29,7 @@ from nti.app.environments.models.interfaces import InvalidSiteError
 from nti.app.environments.models.utils import get_onboarding_root
 from nti.app.environments.models.utils import get_customers_folder
 from nti.app.environments.models.utils import get_sites_folder
+from nti.app.environments.models.utils import get_hosts_folder
 
 from nti.app.environments.views.utils import raise_json_error
 
@@ -73,6 +77,7 @@ class BaseTemplateView(BaseView):
     is_customers_visible = None
     is_sites_visible = None
     is_roles_visible = None
+    is_hosts_visible = None
     role_names = ((ADMIN_ROLE, 'Admin'),
                   (ACCOUNT_MANAGEMENT_ROLE, 'Account Management'))
 
@@ -88,6 +93,8 @@ class BaseTemplateView(BaseView):
             self.is_sites_visible = self.request.has_permission(ACT_READ, get_sites_folder(self._onboarding_root, request))
             self.is_dashboard_visible = is_admin_or_account_manager(self.request.authenticated_userid, request)
             self.is_roles_visible = is_admin(self.request.authenticated_userid, request)
+            self.is_hosts_visible = self.request.has_permission(ACT_READ, get_hosts_folder(self._onboarding_root, request))
+
 
 class ObjectCreateUpdateViewMixin(object):
 
@@ -111,14 +118,26 @@ class ObjectCreateUpdateViewMixin(object):
         except InvalidSiteError as err:
             raise_json_error(hexc.HTTPUnprocessableEntity, str(err))
 
-    def createObjectWithExternal(self, external=None):
-        return self._createOrUpdateObjectWithExternal(external=external)
+    def createObjectWithExternal(self, external=None, creator=True):
+        obj = self._createOrUpdateObjectWithExternal(external=external)
+        if creator and self.request.authenticated_userid:
+            obj.creator = self.request.authenticated_userid
+        return obj
 
     def updateObjectWithExternal(self, contained, external=None):
         return self._createOrUpdateObjectWithExternal(contained, external)
 
 
+class TableViewMixin(object):
+
+    def _is_deletion_allowed(self, table, permission=ACT_DELETE):
+        return any(bool(self.request.has_permission(permission, x)) for x in table._raw_values)
+
+
 class BaseFieldPutView(BaseView, ObjectCreateUpdateViewMixin):
+
+    def post_handler(self, field_name, original_field_value, new_field_value):
+        pass
 
     def __call__(self):
         try:
@@ -128,10 +147,15 @@ class BaseFieldPutView(BaseView, ObjectCreateUpdateViewMixin):
             new_field_value = self.createObjectWithExternal(external)
 
             if type(field_value) != type(new_field_value):
+                original_field_value = field_value
                 self.updateObjectWithExternal(self.context, {field_name: new_field_value})
             else:
+                # Here failed to use copy.deepcopy, but copy.copy is enough.
+                original_field_value = copy.copy(field_value)
                 self.updateObjectWithExternal(field_value, external)
                 self.context.updateLastModIfGreater(field_value.lastModified)
+
+            self.post_handler(field_name, original_field_value, new_field_value)
             self._log(external)
             return {}
         except ValidationError as err:

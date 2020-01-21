@@ -55,8 +55,8 @@
                             <div class="error error-edit-site-info" style="display:none;"></div>
                         </div>
                         <div class="form-group-item">
-                            <button type="button" class="btnCustom" onclick="saveSiteEditView(this, '${site.site_edit_link}');">Save</button>
-                            <button type="button" class="btnCustom" onclick="cancelSiteEditView();">Cancel</button>
+                            <button type="button" class="btn btnCustom" onclick="saveSiteEditView(this, '${site.site_edit_link}');">Save</button>
+                            <button type="button" class="btn btnCustom" onclick="cancelSiteEditView();">Cancel</button>
                         </div>
                     </div>
                 </div>
@@ -86,8 +86,8 @@
                         <div class="error error-edit-owner-info" style="display:none;"></div>
                     </div>
                     <div class="form-group-item">
-                        <button type="button" class="btnCustom" onclick="saveOwnerEditView(this, '${site.site_edit_link}');">Save</button>
-                        <button type="button" class="btnCustom" onclick="cancelOwnerEditView();">Cancel</button>
+                        <button type="button" class="btn btnCustom" onclick="saveOwnerEditView(this, '${site.site_edit_link}');">Save</button>
+                        <button type="button" class="btn btnCustom" onclick="cancelOwnerEditView();">Cancel</button>
                     </div>
                 </div>
             </div>
@@ -99,11 +99,12 @@
                 <metal:block tal:omit-tag="" tal:condition="site.environment">
                     <p>Type: <span class="site_environment_type" tal:content="site.environment.type"></span></p>
                     <metal:block tal:omit-tag="" tal:condition="site.environment.type=='shared'">
-                        <p>Name: <span class="site_environment_name" tal:content="site.environment.name"></span></p>
+                        <p>Name: <span class="site_environment_name" tal:content="site.environment.env.name"></span></p>
                     </metal:block>
                     <metal:block tal:omit-tag="" tal:condition="site.environment.type=='dedicated'">
-                        <p>PodId (ContainerId): <span class="site_environment_pod_id" tal:content="site.environment.pod_id"></span></p>
-                        <p>Host: <span class="site_environment_host" tal:content="site.environment.host"></span></p>
+                        <p>PodId (ContainerId): <span class="site_environment_pod_id" tal:content="site.environment.env.pod_id"></span></p>
+                        <p>Host: <span class="site_environment_host" tal:content="site.environment.env.host.host_name" host_id="${site.environment.env.host.id}"></span></p>
+                        <p>Load Factor: <span class="site_environment_load_factor" tal:content="site.environment.env.load_factor"></span></p>
                     </metal:block>
                     <p>Last Modified: <span tal:content="site.environment.lastModified"></span></p>
                     <metal:block tal:omit-tag="" tal:condition="site.environment.splunk_link|nothing">
@@ -137,17 +138,24 @@
                         <label>Pod Id</label>
                         <input type="text" class="site_environment_pod_id" placeHolder="Pod Id" style="display:none;"/>
                     </div>
+                    <div class="form-group-item load_group_item">
+                        <label>Loader Factor</label>
+                        <input type="text" class="site_environment_load_factor" name="site_environment_load_factor" placeHolder="Load Factor" style="display:none;"/>
+                    </div>
                     <div class="form-group-item host_group_item">
                         <label>Host</label>
-                        <input type="text" class="site_environment_host" placeHolder="Host" style="display:none;"/>
+                        <select class="site_environment_host" style="display:none;">
+                            <option value="">Select a host</option>
+                            <metal:block tal:omit-tag="" tal:repeat="option hosts_options"><option value="${option[0]}">${option[1]}</option></metal:block>
+                        </select>
                     </div>
                     <div class="form-group-item">
                         <div class="success success-edit-environment" style="display:none;"></div>
                         <div class="error error-edit-environment" style="display:none;"></div>
                     </div>
                     <div class="form-group-item">
-                        <button type="button" class="btnCustom" onclick="saveEnvironmentView(this, '${site.environment_edit_link}');">Save</button>
-                        <button type="button" class="btnCustom" onclick="cancelEnvironmentEditView();">Cancel</button>
+                        <button type="button" class="btn btnCustom" onclick="saveEnvironmentView(this, '${site.environment_edit_link}');">Save</button>
+                        <button type="button" class="btn btnCustom" onclick="cancelEnvironmentEditView();">Cancel</button>
                     </div>
                 </div>
             </div>
@@ -186,8 +194,8 @@
                         <div class="error error-edit-license" style="display:none;"></div>
                     </div>
                     <div class="form-group-item">
-                        <button type="button" class="btnCustom" onclick="saveLicenseView(this, '${site.license.edit_link}');">Save</button>
-                        <button type="button" class="btnCustom" onclick="cancelLicenseEditView();">Cancel</button>
+                        <button type="button" class="btn btnCustom" onclick="saveLicenseView(this, '${site.license.edit_link}');">Save</button>
+                        <button type="button" class="btn btnCustom" onclick="cancelLicenseEditView();">Cancel</button>
                     </div>
                 </div><!-- end form group-->
             </div> <!-- end edit license-->
@@ -219,8 +227,8 @@
                         <div class="error error-edit-parent-site" style="display:none;"></div>
                     </div>
                     <div class="form-group-item">
-                        <button type="button" class="btnCustom" onclick="saveParentSiteView(this, '${site.site_edit_link}');">Save</button>
-                        <button type="button" class="btnCustom" onclick="cancelParentSiteEditView();">Cancel</button>
+                        <button type="button" class="btn btnCustom" onclick="saveParentSiteView(this, '${site.site_edit_link}');">Save</button>
+                        <button type="button" class="btn btnCustom" onclick="cancelParentSiteEditView();">Cancel</button>
                     </div>
                 </div>
             </div> <!-- end edit parent site-->
@@ -240,13 +248,15 @@
         </div>
 
         <div class="site-footer">
-            <button class="btnCustom" onclick="window.location='${sites_list_link}';">
+            <button class="btn btnCustom" onclick="window.location='${sites_list_link}';">
                 Back To Sites
             </button>
         </div>
-
-        <metal:block metal:fill-slot="script">
-            <script src="/static/js/site_detail.js"></script>
-        </metal:block>
+    </metal:block>
+    <metal:block metal:fill-slot="script">
+        <script src="/static/js/site_detail.js"></script>
+        <script>
+            $('input[name=site_environment_load_factor]').on('input', positiveNumbersOnly);
+        </script>
     </metal:block>
 </metal:block>

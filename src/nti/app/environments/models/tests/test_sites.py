@@ -32,11 +32,14 @@ from nti.app.environments.models.sites import PersistentSite
 from nti.app.environments.models.sites import SitesFolder
 from nti.app.environments.models.sites import _generate_site_id
 
+from nti.app.environments.models.hosts import PersistentHost, HostsFolder
+
 from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import IEnterpriseLicense
 from nti.app.environments.models.interfaces import ISharedEnvironment
 from nti.app.environments.models.interfaces import IDedicatedEnvironment
 from nti.app.environments.models.interfaces import ILMSSite
+from nti.app.environments.models.interfaces import InvalidSiteError
 
 from nti.app.environments.models.customers import PersistentCustomer
 from nti.app.environments.models.customers import CustomersFolder
@@ -69,7 +72,10 @@ class TestSites(BaseTest):
 
         assert_that(calling(SharedEnvironment).with_args(name='xxx'), raises(ConstraintNotSatisfied))
 
-    def testDedicatedEnvironment(self):
+    @mock.patch('nti.app.environments.models.adapters.get_hosts_folder')
+    def testDedicatedEnvironment(self, mock_hosts):
+        mock_hosts.return_value = hosts = HostsFolder()
+
         inst = DedicatedEnvironment()
         assert_that(inst, has_properties({'pod_id': None,
                                           'host': None}))
@@ -78,9 +84,9 @@ class TestSites(BaseTest):
         assert_that(errors, has_items(('pod_id', RequiredMissing('pod_id')),
                                       ('host', RequiredMissing('host'))))
 
-        inst = DedicatedEnvironment(pod_id='123456', host='sdsdfs')
+        inst = DedicatedEnvironment(pod_id='123456', host=PersistentHost(host_name='host.app', capacity=100))
         assert_that(inst, has_properties({'pod_id': '123456',
-                                          'host': 'sdsdfs'}))
+                                          'host': has_properties({'host_name': 'host.app', 'capacity': 100})}))
         errors = getValidationErrors(IDedicatedEnvironment, inst)
         assert_that(errors, has_length(0))
 
@@ -88,10 +94,12 @@ class TestSites(BaseTest):
         assert_that(result, has_entries({'Class': 'DedicatedEnvironment',
                                          'MimeType': 'application/vnd.nextthought.app.environments.dedicatedenvironment',
                                          'pod_id': '123456',
-                                         'host': 'sdsdfs'}))
+                                         'host': has_entries({'host_name': 'host.app', 'capacity': 100})}))
 
-        inst = update_from_external_object(inst, {'pod_id': '12', 'host': '34'})
-        assert_that(inst, has_properties({'pod_id': '12', 'host': '34'}))
+        assert_that(calling(update_from_external_object).with_args(inst, {'pod_id': '12', 'host': '34'}), raises(InvalidSiteError, pattern="No host found: 34"))
+        host = hosts.addHost(PersistentHost(host_name='34', capacity=2))
+        inst = update_from_external_object(inst, {'pod_id': '12', 'host': host.id})
+        assert_that(inst, has_properties({'pod_id': '12', 'host': has_properties({'id': host.id, 'capacity': 2, 'host_name': '34'})}))
 
     def testTrialLicense(self):
         inst = TrialLicense()

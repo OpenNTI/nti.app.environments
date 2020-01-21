@@ -12,6 +12,7 @@ from nti.app.environments.models.interfaces import InvalidSiteError
 from nti.app.environments.models.sites import SiteUsage
 
 from nti.app.environments.models.utils import get_sites_folder
+from nti.app.environments.models.utils import get_hosts_folder
 
 SITE_USAGE_ANNOTATION_KEY = 'SiteUsage'
 
@@ -29,6 +30,21 @@ class ParentSiteResolver(object):
             if parent_site is None:
                 raise InvalidSiteError("No parent site found: %s" % parent_site_id)
         return parent_site
+
+
+@interface.implementer(IExternalReferenceResolver)
+class HostResolver(object):
+
+    def __init__(self, updating, to_resolve):
+        pass
+
+    def resolve(self, host):
+        host_id = getattr(host, 'id', host)
+        if isinstance(host_id, str):
+            host = get_hosts_folder().get(host_id)
+            if host is None:
+                raise InvalidSiteError("No host found: %s" % host_id)
+        return host
 
 
 @component.adapter(ILMSSite)

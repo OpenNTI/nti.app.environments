@@ -39,7 +39,7 @@
 	    </div>
 
         <div class="margin-top: 16px;">
-            <button class="btnCustom" onclick="window.location='${customers_list_link}';">
+            <button class="btn btnCustom" onclick="window.location='${customers_list_link}';">
                 Back To Customers
             </button>
         </div>

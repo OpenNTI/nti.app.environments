@@ -201,6 +201,45 @@ class ICustomersContainer(IContainer):
         """
 
 
+class IHost(IContained):
+
+    id = ValidTextLine(title="The id of this host",
+                       min_length=1,
+                       required=False)
+
+    host_name = ValidTextLine(title="The identifier of physical hardware",
+                              min_length=1,
+                              required=True)
+
+    capacity = Int(title="The total number of sites this host machine supports.",
+                   min=1,
+                   required=True)
+
+    current_load = Int(title="The total sites load on this host machine.",
+                       required=True)
+    current_load.setTaggedValue('_ext_excluded_out', True)
+
+
+class IHostsContainer(IContainer):
+
+    contains(IHost)
+
+    def addHost(host):
+        """
+        Add a Host into this container.
+        """
+
+    def getHost(host_id):
+        """
+        Return a host by given host_id.
+        """
+
+    def deleteHost(host):
+        """
+        Remove a given host.
+        """
+
+
 class ISiteLicense(interface.Interface):
     """
     The license governing this site.
@@ -217,15 +256,18 @@ class ITrialLicense(ISiteLicense):
     A temporary trial license used for evaluation.
     """
 
+
 class IEnterpriseLicense(ISiteLicense):
     """
     An enterprise level license.
     """
 
+
 class IEnvironment(interface.Interface):
     """
     Identifies an environment
     """
+
 
 class IDedicatedEnvironment(IEnvironment):
     """
@@ -234,9 +276,13 @@ class IDedicatedEnvironment(IEnvironment):
     pod_id = ValidTextLine(title="The container id for this environment.",
                            required=True)
 
-    host = ValidTextLine(title="The identifier of physical hardware that this environment is running on.",
-                         min_length=1,
-                         required=True)
+    host = Object(IHost,
+                  title="The identifier of physical hardware that this environment is running on.",
+                  required=True)
+
+    load_factor = Int(title="The load factor.",
+                      default=1,
+                      required=True)
 
 
 class ISharedEnvironment(IEnvironment):
@@ -309,6 +355,15 @@ class ILMSSiteCreatedEvent(interface.Interface):
     site = Object(ILMSSite,
                   title="The site object created.",
                   required=True)
+
+
+class ILMSSiteUpdatedEvent(interface.Interface):
+
+    site = interface.Attribute("The site object modified.")
+
+    original_values = interface.Attribute("A dictionary that storing the original values of attributes that are being changed.")
+
+    external_values = interface.Attribute("A dictionary that storing the external values.")
 
 
 class ISiteUsage(IContained):

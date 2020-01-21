@@ -2,6 +2,7 @@ from pyramid.threadlocal import get_current_request
 
 from nti.app.environments.models import CUSTOMERS
 from nti.app.environments.models import SITES
+from nti.app.environments.models import HOSTS
 from nti.app.environments.models import IOnboardingRoot
 
 
@@ -22,3 +23,7 @@ def get_customers_folder(onboarding_root=None, request=None):
 
 def get_sites_folder(onboarding_root=None, request=None):
     return _get_root_child(SITES, onboarding_root=onboarding_root, request=request)
+
+
+def get_hosts_folder(onboarding_root=None, request=None):
+    return _get_root_child(HOSTS, onboarding_root=onboarding_root, request=request)

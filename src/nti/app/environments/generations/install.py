@@ -18,9 +18,11 @@ from ..models import OnboardingRoot
 from ..models import ROOT_KEY
 from ..models import CUSTOMERS
 from ..models import SITES
+from ..models import HOSTS
 
 from ..models.customers import CustomersFolder
 from ..models.sites import SitesFolder
+from ..models.hosts import HostsFolder
 
 generation = 0
 
@@ -55,11 +57,20 @@ def _install_sites(onboarding_root):
     return onboarding_root[SITES]
 
 
+def _install_hosts(onboarding_root):
+    if HOSTS not in onboarding_root:
+        hosts = HostsFolder()
+        hosts.__name__ = HOSTS
+        onboarding_root[HOSTS] = hosts
+    return onboarding_root[HOSTS]
+
+
 def _install_root(zodb_root, key=ROOT_KEY):
     root = OnboardingRoot()
 
     _install_customers(root)
     _install_sites(root)
+    _install_hosts(root)
 
     zodb_root[key] = root
     return root

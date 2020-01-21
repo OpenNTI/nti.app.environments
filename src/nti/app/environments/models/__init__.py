@@ -7,6 +7,7 @@ from .interfaces import IOnboardingRoot
 ROOT_KEY = 'onboarding'
 CUSTOMERS = 'customers'
 SITES = 'sites'
+HOSTS = 'hosts'
 
 @interface.implementer(IOnboardingRoot)
 class OnboardingRoot(Folder):

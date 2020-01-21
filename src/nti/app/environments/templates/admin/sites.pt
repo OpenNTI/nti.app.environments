@@ -100,7 +100,11 @@
                                     <metal:block tal:omit-tag="" tal:repeat="option env_shared_options"><option value="${option}">${option}</option></metal:block>
                                 </select>
                                 <input type="text" name="environment_containerid" id="site_environment_pod_id" placeHolder="Pod Id" style="display:none;"/>
-                                <input type="text" name="site_environment_host" id="site_environment_host" placeHolder="Host" style="display:none; margin-top: 16px;"/>
+                                <input type="text" name="site_environment_load_factor" id="site_environment_load_factor" placeHolder="Load factor (default 1)" style="display:none; margin-top: 16px;"/>
+                                <select name="site_environment_host" id="site_environment_host" style="display:none; margin-top: 16px;">
+                                    <option value="">Select a host</option>
+                                    <metal:block tal:omit-tag="" tal:repeat="option hosts_options"><option value="${option[0]}">${option[1]}</option></metal:block>
+                                </select>
                             </div>
                         </div>
                         <div class="input-row">
@@ -169,37 +173,38 @@
                 </div>
             </div>
         </div><!-- end of upload modal -->
-
-        <metal:block metal:fill-slot="script">
-            <script src="/static/js/sites.js"></script>
-            <script>
-                // When the user clicks anywhere outside of the modal, close it
-                window.onclick = function(event) {
-                    var ids = ["deletingModal", "newModal"];
-                    for(var i=0; i<ids.length; i++) {
-                        var modal = document.getElementById(ids[i]);
-                        if (event.target == modal) {
-                            modal.style.display = "none";
-                        }
-                    }
-                }
-
-                function search(e) {
-                    // When a enter key pressed, query the server.
-                    if (e.which == 13 || e.keyCode == 13) {
-                        var search = $('#search').val().trim();
-                        var url = updateUrlParameter('search', search);
-                        window.location.href = url;
-                    }
-                }
-
-                $( document ).ready(function() {
-                    var email = getUrlParameter('search');
-                    if(email){
-                        $('#search').val(email);
-                    }
-                });
-            </script>
-        </metal:block>
     </metal:block><!-- end of content -->
+    <metal:block metal:fill-slot="script">
+        <script src="/static/js/sites.js"></script>
+        <script>
+            // When the user clicks anywhere outside of the modal, close it
+            window.onclick = function(event) {
+                var ids = ["deletingModal", "newModal"];
+                for(var i=0; i<ids.length; i++) {
+                    var modal = document.getElementById(ids[i]);
+                    if (event.target == modal) {
+                        modal.style.display = "none";
+                    }
+                }
+            }
+
+            function search(e) {
+                // When a enter key pressed, query the server.
+                if (e.which == 13 || e.keyCode == 13) {
+                    var search = $('#search').val().trim();
+                    var url = updateUrlParameter('search', search);
+                    window.location.href = url;
+                }
+            }
+
+            $( document ).ready(function() {
+                var email = getUrlParameter('search');
+                if(email){
+                    $('#search').val(email);
+                }
+            });
+
+            $('#site_environment_load_factor').on('input', positiveNumbersOnly);
+        </script>
+    </metal:block>
 </metal:block>
