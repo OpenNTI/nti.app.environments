@@ -58,7 +58,7 @@ class BaseView(object):
             raise_json_error(hexc.HTTPBadRequest, "Invalid json body.")
         return body
 
-    def _get_body_value(self, field, params, expected_type=None, required=False):
+    def _get_value(self, field, params=None, expected_type=None, required=False):
         if params is None:
             params = self.body_params
         val = params.get(field)

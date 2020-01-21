@@ -14,7 +14,7 @@ from pyramid.interfaces import IRootFactory
 from webtest import TestApp
 
 from nti.app.environments import main
-from nti.app.environments import root_factory
+from nti.app.environments.configure import root_factory
 
 from nti.app.environments.models.interfaces import IOnboardingRoot
 
@@ -33,7 +33,9 @@ class BaseAppTest(unittest.TestCase):
             'google_client_secret': 'yyy',
             'hubspot_api_key': 'zzz',
             'hubspot_portal_id': 'kkk',
-            'new_site_request_notification_email': 'test@example.com'
+            'new_site_request_notification_email': 'test@example.com',
+            'celery.broker_url': 'memory',
+            'celery.backend_url': 'memory'
         }
 
     def tearDown(self):
