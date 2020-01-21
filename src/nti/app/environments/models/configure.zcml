@@ -39,7 +39,10 @@
                          .interfaces.IEnterpriseLicense
                          .interfaces.ILMSSite
                          .interfaces.ISiteUsage
-                         .interfaces.IHost"
+                         .interfaces.IHost
+                         .interfaces.ISetupStatePending
+                         .interfaces.ISetupStateSuccess
+                         .interfaces.ISetupStateFailure"
         modules=".customers
                  .sites
                  .hosts" />
@@ -66,6 +69,10 @@
 
     <adapter factory=".internalization.DedicatedEnvironmentInternalizer"
              for=".interfaces.IDedicatedEnvironment"
+             provides="nti.externalization.interfaces.IInternalObjectUpdater"/>
+
+    <adapter factory=".internalization.SetupStateSuccessInternalizer"
+             for=".interfaces.ISetupStateSuccess"
              provides="nti.externalization.interfaces.IInternalObjectUpdater"/>
 
 </configure>

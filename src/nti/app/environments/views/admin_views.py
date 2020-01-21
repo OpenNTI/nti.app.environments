@@ -34,6 +34,9 @@ from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import ICustomersContainer
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ILMSSitesContainer
+from nti.app.environments.models.interfaces import ISetupStatePending
+from nti.app.environments.models.interfaces import ISetupStateSuccess
+from nti.app.environments.models.interfaces import ISetupStateFailure
 from nti.app.environments.models.interfaces import SITE_STATUS_OPTIONS
 from nti.app.environments.models.interfaces import SHARED_ENV_NAMES
 from nti.app.environments.models.interfaces import checkEmailAddress
@@ -202,6 +205,20 @@ class SiteDetailView(BaseTemplateView):
         return {'usage': usage,
                 'lastModified': formatDateToLocal(usage.lastModified)}
 
+    def _format_setup_state(self, state):
+        res = {}
+        for iface, status in ((ISetupStatePending, 'pending'),
+                              (ISetupStateSuccess, 'success'),
+                              (ISetupStateFailure, 'failure')):
+            if iface.providedBy(state):
+                res['status'] = status
+        if res:
+            res['setup_state'] = state
+            return res
+
+        raise_json_error(hexc.HTTPUnprocessableEntity,
+                         "Unknown setup_state: {}.".format(state))
+
     def __call__(self):
         request = self.request
         extra_info = self._site_extra_info() or {}
@@ -223,6 +240,7 @@ class SiteDetailView(BaseTemplateView):
                          'lastModified': formatDateToLocal(self.context.lastModified),
                          'parent_site': self._format_parent_site(self.context.parent_site) if self.context.parent_site else None,
                          'usage': self._format_usage(self.context),
+                         'setup_state': self._format_setup_state(self.context.setup_state) if self.context.setup_state else None,
                          **extra_info}}
 
 

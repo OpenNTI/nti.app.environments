@@ -294,6 +294,33 @@ class ISharedEnvironment(IEnvironment):
                   required=True)
 
 
+class ISetupState(IContained):
+    """
+    Identifies a site setup state.
+    """
+
+
+class ISetupStatePending(ISetupState):
+
+    task_id = ValidTextLine(title="The task id.",
+                            required=True)
+
+
+class ISetupStateSuccess(ISetupState):
+
+    urls = UniqueIterable(value_type=ValidTextLine(min_length=1),
+                          title='The links returned when site is set up successfully.',
+                          min_length=1,
+                          max_length=2,
+                          required=True)
+
+
+class ISetupStateFailure(ISetupState):
+
+    reason = ValidTextLine(title="The reason why it failed to set up the site.",
+                           required=True)
+
+
 class ILMSSite(IContained, IAttributeAnnotatable):
 
     id = ValidTextLine(title="The identifier of this site.",
@@ -327,6 +354,11 @@ class ILMSSite(IContained, IAttributeAnnotatable):
 
     parent_site = interface.Attribute("The parent site of this site")
     parent_site.setTaggedValue('_ext_excluded_out', True)
+
+    setup_state = Object(ISetupState,
+                         title="The site setup state",
+                         required=False)
+    setup_state.setTaggedValue('_ext_excluded_out', True)
 
     @interface.invariant
     def environment_invariant(self):
