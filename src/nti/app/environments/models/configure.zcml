@@ -71,8 +71,4 @@
              for=".interfaces.IDedicatedEnvironment"
              provides="nti.externalization.interfaces.IInternalObjectUpdater"/>
 
-    <adapter factory=".internalization.SetupStateSuccessInternalizer"
-             for=".interfaces.ISetupStateSuccess"
-             provides="nti.externalization.interfaces.IInternalObjectUpdater"/>
-
 </configure>

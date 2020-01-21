@@ -16,6 +16,7 @@ from hamcrest import starts_with
 from zope import interface
 
 from zope.container.interfaces import InvalidItemType
+from zope.interface.interfaces import ComponentLookupError
 
 from zope.schema import getValidationErrors
 from zope.schema._bootstrapinterfaces import RequiredMissing
@@ -297,24 +298,24 @@ class TestSites(BaseTest):
         result = toExternalObject(state)
         assert_that(result, has_entries({'MimeType': 'application/vnd.nextthought.app.environments.setupstatepending',
                                          'task_id': 'abc'}))
-        inst = new_from_external_object(result)
-        assert_that(inst, has_properties({'task_id': 'abc'}))
+        assert_that(calling(new_from_external_object).with_args(result),
+                    raises(ComponentLookupError, pattern="No factory for object"))
 
     def testSetupStateSuccess(self):
         state = SetupStateSuccess(urls=['abc', 'efg'])
         result = toExternalObject(state)
         assert_that(result, has_entries({'MimeType': 'application/vnd.nextthought.app.environments.setupstatesuccess',
                                          'urls': ['abc', 'efg']}))
-        inst = new_from_external_object(result)
-        assert_that(inst, has_properties({'urls': ['abc', 'efg']}))
+        assert_that(calling(new_from_external_object).with_args(result),
+                    raises(ComponentLookupError, pattern="No factory for object"))
 
     def testSetupStateFailure(self):
         state = SetupStateFailure(reason="error")
         result = toExternalObject(state)
         assert_that(result, has_entries({'MimeType': 'application/vnd.nextthought.app.environments.setupstatefailure',
                                          'reason': 'error'}))
-        inst = new_from_external_object(result)
-        assert_that(inst, has_properties({'reason': 'error'}))
+        assert_that(calling(new_from_external_object).with_args(result),
+                    raises(ComponentLookupError, pattern="No factory for object"))
 
     def test_generate_site_id(self):
         _id = _generate_site_id()

@@ -9,7 +9,6 @@ from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import IEnterpriseLicense
 from nti.app.environments.models.interfaces import IDedicatedEnvironment
-from nti.app.environments.models.interfaces import ISetupStateSuccess
 from nti.app.environments.utils import parseDate
 
 
@@ -79,22 +78,3 @@ class DedicatedEnvironmentInternalizer(InterfaceObjectIO):
     _ext_iface_upper_bound = IDedicatedEnvironment
 
     __external_oids__ = ('host',)
-
-
-@component.adapter(ISetupStateSuccess)
-@interface.implementer(IInternalObjectUpdater)
-class SetupStateSuccessInternalizer(InterfaceObjectIO):
-
-    _ext_iface_upper_bound = ISetupStateSuccess
-
-    def updateFromExternalObject(self, parsed, *args, **kwargs):
-        urls = parsed.get('urls')
-        result = super(SetupStateSuccessInternalizer, self).updateFromExternalObject(parsed, *args, **kwargs)
-
-        # Make sure we store urls in a list, and lower case all dns_names.
-        # IO, by default will store in a set.
-        if urls is not None:
-            self._ext_self.urls = [x for x in urls]
-            result = True
-
-        return result

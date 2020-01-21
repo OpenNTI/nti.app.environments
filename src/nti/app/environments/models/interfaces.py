@@ -303,7 +303,7 @@ class ISetupState(IContained):
 class ISetupStatePending(ISetupState):
 
     task_id = ValidTextLine(title="The task id.",
-                            required=True)
+                            required=False)
 
 
 class ISetupStateSuccess(ISetupState):

@@ -94,6 +94,8 @@ class SetupStatePending(SchemaConfigured, PersistentCreatedModDateTrackingObject
 
     mimeType = mime_type = 'application/vnd.nextthought.app.environments.setupstatepending'
 
+    __external_can_create__ = False
+
     def __init__(self, *args, **kwargs):
         SchemaConfigured.__init__(self, *args, **kwargs)
         PersistentCreatedModDateTrackingObject.__init__(self)
@@ -106,6 +108,8 @@ class SetupStateSuccess(SchemaConfigured, PersistentCreatedModDateTrackingObject
 
     mimeType = mime_type = 'application/vnd.nextthought.app.environments.setupstatesuccess'
 
+    __external_can_create__ = False
+
     def __init__(self, *args, **kwargs):
         SchemaConfigured.__init__(self, *args, **kwargs)
         PersistentCreatedModDateTrackingObject.__init__(self)
@@ -117,6 +121,8 @@ class SetupStateFailure(SchemaConfigured, PersistentCreatedModDateTrackingObject
     createFieldProperties(ISetupStateFailure)
 
     mimeType = mime_type = 'application/vnd.nextthought.app.environments.setupstatefailure'
+
+    __external_can_create__ = False
 
     def __init__(self, *args, **kwargs):
         SchemaConfigured.__init__(self, *args, **kwargs)
