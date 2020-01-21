@@ -310,10 +310,9 @@ class TestSites(BaseTest):
                     raises(ComponentLookupError, pattern="No factory for object"))
 
     def testSetupStateFailure(self):
-        state = SetupStateFailure(reason="error")
+        state = SetupStateFailure()
         result = toExternalObject(state)
-        assert_that(result, has_entries({'MimeType': 'application/vnd.nextthought.app.environments.setupstatefailure',
-                                         'reason': 'error'}))
+        assert_that(result, has_entries({'MimeType': 'application/vnd.nextthought.app.environments.setupstatefailure'}))
         assert_that(calling(new_from_external_object).with_args(result),
                     raises(ComponentLookupError, pattern="No factory for object"))
 

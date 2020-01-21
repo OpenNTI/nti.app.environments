@@ -254,9 +254,6 @@
                 <metal:block tal:omit-tag="" tal:condition="python: site.setup_state.status=='pending'">
                     <p>Task ID: <span tal:content="site.setup_state.setup_state.task_id"></span></p>
                 </metal:block>
-                <metal:block tal:omit-tag="" tal:condition="python: site.setup_state.status=='failure'">
-                    <p>Reason: <span tal:content="site.setup_state.setup_state.reason"></span></p>
-                </metal:block>
                 <metal:block tal:omit-tag="" tal:condition="python: site.setup_state.status=='success'">
                     <p>
                         URLs: <span tal:repeat="url site.setup_state.setup_state.urls">

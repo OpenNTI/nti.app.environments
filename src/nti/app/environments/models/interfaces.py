@@ -316,9 +316,7 @@ class ISetupStateSuccess(ISetupState):
 
 
 class ISetupStateFailure(ISetupState):
-
-    reason = ValidTextLine(title="The reason why it failed to set up the site.",
-                           required=True)
+    pass
 
 
 class ILMSSite(IContained, IAttributeAnnotatable):
