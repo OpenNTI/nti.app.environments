@@ -211,3 +211,20 @@ a {
 .lowercase {
     text-transform: lowercase;
 }
+
+/* Trial site request form */
+
+.trial-site-request label.required::after {
+    color: red;
+    content: '*';
+    padding-left: 4px;
+    vertical-align: super;
+}
+
+.trial-site-request label {
+    font-size: 1.5em;
+}
+
+.trial-site-request span.example::before {
+    content: 'e.g. ';
+}
