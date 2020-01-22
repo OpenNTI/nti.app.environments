@@ -21,9 +21,6 @@ class SiteExternalizer(InterfaceObjectIO):
         if 'id' not in result:
             result['id'] = context.id
 
-        if 'setup_state' not in result:
-            result['setup_state'] = context.setup_state
-
         result['parent_site'] = getattr(context.parent_site, 'id', None)
         return result
 

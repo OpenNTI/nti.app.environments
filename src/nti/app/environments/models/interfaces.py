@@ -356,7 +356,6 @@ class ILMSSite(IContained, IAttributeAnnotatable):
     setup_state = Object(ISetupState,
                          title="The site setup state",
                          required=False)
-    setup_state.setTaggedValue('_ext_excluded_out', True)
 
     @interface.invariant
     def environment_invariant(self):

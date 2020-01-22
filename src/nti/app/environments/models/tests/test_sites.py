@@ -234,8 +234,13 @@ class TestSites(BaseTest):
                                          'Last Modified': not_none(),
                                          'setup_state': None}))
 
-        inst = update_from_external_object(inst, {'dns_names': []})
-        assert_that(inst, has_properties({'dns_names': []}))
+        inst = update_from_external_object(inst, {'dns_names': [],
+                                                  'setup_state': SetupStateFailure()})
+        assert_that(inst, has_properties({'dns_names': [],
+                                          'setup_state': None}))
+        inst.setup_state = SetupStateFailure()
+        result = to_external_object(inst)
+        assert_that(result['setup_state'], has_entries({'MimeType': 'application/vnd.nextthought.app.environments.setupstatefailure'}))
 
         # child site
         inst.__parent__ = SitesFolder()
