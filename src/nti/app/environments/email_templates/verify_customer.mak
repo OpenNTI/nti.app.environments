@@ -6,7 +6,7 @@ Thank you for signing up for NextThought. We're happy you're here!
 Enter the following code in the window where you began creating your new NextThought site:
 
 
-${code}
+${code_suffix}
 
 
 This email contains private information for you - please don't forward it.

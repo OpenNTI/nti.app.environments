@@ -1,3 +1,4 @@
+import os
 import functools
 import unittest
 import transaction
@@ -19,6 +20,10 @@ from nti.app.environments.configure import root_factory
 from nti.app.environments.models.interfaces import IOnboardingRoot
 
 
+def _absolute_path(filename):
+    return os.path.join(os.path.dirname(__file__), 'resources/'+filename)
+
+
 class BaseAppTest(unittest.TestCase):
 
     testapp = None
@@ -34,8 +39,7 @@ class BaseAppTest(unittest.TestCase):
             'hubspot_api_key': 'zzz',
             'hubspot_portal_id': 'kkk',
             'new_site_request_notification_email': 'test@example.com',
-            'celery.broker_url': 'memory',
-            'celery.backend_url': 'memory'
+            'nti.environments.management.config': _absolute_path('test_celery.ini')
         }
 
     def tearDown(self):
@@ -68,8 +72,8 @@ class DummyCookieHelper(object):
 def dummy_callback(userid='admin001', request=None):
     if userid == 'admin001':
         return ['role:nti.roles.admin']
-    elif userid=='user001':
-        return ['user001']
+    elif userid in ('user001', 'user001@example.com'):
+        return []
 
 
 def with_test_app(auth_cookie=True, callback=dummy_callback):

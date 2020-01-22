@@ -46,7 +46,7 @@
 			</p>
 			<div class="code">
 				<p>
-					${code}
+					${code_suffix}
 				</p>
 			</div>
 			<p>

@@ -13,9 +13,6 @@ from nti.app.environments.api.hubspotclient import get_hubspot_client
 from nti.app.environments.models.interfaces import ICustomer
 from nti.app.environments.models.interfaces import ICustomersContainer
 from nti.app.environments.models.interfaces import checkEmailAddress
-from nti.app.environments.models.interfaces import IOnboardingRoot
-
-from nti.app.environments.models.utils import get_customers_folder
 
 from nti.app.environments.auth import ACT_CREATE
 from nti.app.environments.auth import ACT_DELETE
@@ -36,43 +33,14 @@ from .base import createCustomer
 from .utils import raise_json_error
 
 
-@view_config(renderer='rest',
-             context=IOnboardingRoot,
-             request_method='GET',
-             name="session.ping")
-class SessinoPingView(BaseView):
-
-    def __call__(self):
-        result = LocatedExternalDict()
-        result.__name__ = self.context.__name__
-        result.__parent__ = self.context.__parent__
-
-        email = self.request.authenticated_userid
-        if email:
-            result['email'] = email
-            customers = get_customers_folder(self.context, request=self.request)
-            if email in customers:
-                result['customer'] = customers.get(email)
-        return result
-
-
-@view_config(renderer='rest',
-             request_method='GET',
-             context=ICustomersContainer,
-             permission=ACT_READ)
-class CustomersListView(BaseView):
-
-    def __call__(self):
-        return [customer for customer in self.context.values()]
-
-
-@view_config(context=ICustomersContainer,
-             renderer='json',
-             request_method='POST',
-             name="challenge_customer")
+@view_defaults(context=ICustomersContainer,
+               request_method='POST')
 class ChallengeView(BaseView):
 
-    def _do_call(self, params):
+    def _mailer(self):
+        return component.getUtility(ITemplatedMailer, name='default')
+
+    def _do_call(self, params, verify_url=False):
         name = self._get_value('name', params, required=True)
         email = self._get_value('email', params, required=True)
 
@@ -83,38 +51,42 @@ class ChallengeView(BaseView):
             customer = getOrCreateCustomer(self.context, email)
         except ConstraintNotSatisfied as e:
             raise_json_error(hexc.HTTPBadRequest,
-                             'Invalid {}'.format(e.field.__name__))
+                             'Invalid {}.'.format(e.field.__name__))
 
         # Setup the customer object to be challenged
         code = setup_challenge_for_customer(customer)
-        url = self.request.resource_url(self.context,
-                                        '@@verify_challenge',
-                                        query={'email': email,
-                                               'name': name,
-                                               'code': code})
-
         code_prefix = code[:6]
         code_suffix = "{} - {}".format(code[6:9], code[9:]).upper()
 
-        # Send the email challenging the user
         template_args = {
             'name': name,
-            'code': code_suffix,
-            'url': url
+            'email': email,
+            'code_suffix': code_suffix
         }
-        mailer = component.getUtility(ITemplatedMailer, name='default')
+
+        if verify_url is True:
+            url = self.request.resource_url(self.context,
+                                            '@@verify_challenge',
+                                            query={'email': email,
+                                                   'name': name,
+                                                   'code': code})
+            template_args['url'] = url
+
+        mailer = self._mailer()
         mailer.queue_simple_html_text_email("nti.app.environments:email_templates/verify_customer",
                                             subject="NextThought verification code: {}".format(code_suffix),
                                             recipients=[email],
                                             template_args=template_args,
                                             text_template_extension='.mak')
-        return {'code_prefix': code_prefix,
+        return {'name': name,
                 'email': email,
-                'name': name}
+                'code_prefix': code_prefix}
 
-    def __call__(self):
+    @view_config(renderer='json',
+                 name="challenge_customer")
+    def challenge_customer(self):
         request = self.request
-        result = self._do_call(request.params)
+        result = self._do_call(request.params, verify_url=True)
 
         # redirect to verify page.
         request.session.flash(result['name'], 'name')
@@ -123,14 +95,9 @@ class ChallengeView(BaseView):
         location = request.resource_url(self.context, '@@email_challenge_verify')
         return {'redirect_uri': location}
 
-
-@view_config(renderer='rest',
-             context=ICustomersContainer,
-             request_method='POST',
+    @view_config(renderer='rest',
              name="email_challenge")
-class EmailChallengePostView(ChallengeView):
-
-    def __call__(self):
+    def email_challenge(self):
         data = self._do_call(self.body_params)
 
         result = LocatedExternalDict()
@@ -166,7 +133,7 @@ class ChallengerVerification(BaseView):
         # This should exist
         if customer is None:
             raise_json_error(hexc.HTTPBadRequest,
-                             'Bad request')
+                             'Bad request.')
 
         # Validate code against the challenge
         # This should raise if invalid
@@ -234,6 +201,16 @@ class EmailChallengeVerifyView(BaseView):
                 'url': url}
 
 
+@view_config(renderer='rest',
+             request_method='GET',
+             context=ICustomersContainer,
+             permission=ACT_READ)
+class CustomersListView(BaseView):
+
+    def __call__(self):
+        return [customer for customer in self.context.values()]
+
+
 @view_config(renderer='json',
              context=ICustomer,
              request_method='DELETE',
@@ -264,12 +241,12 @@ class CustomerCreationView(BaseView):
         customer = self.context.getCustomer(email)
         if customer is not None:
             raise_json_error(hexc.HTTPConflict,
-                             "Existing customer: {}".format(email))
+                             "Existing customer: {}.".format(email))
 
         contact = self.client.fetch_contact_by_email(email)
         if not contact:
             raise_json_error(hexc.HTTPUnprocessableEntity,
-                             "No hubspot contact found: {}".format(email))
+                             "No hubspot contact found: {}.".format(email))
 
         customer = createCustomer(self.context,
                                   email=email,
