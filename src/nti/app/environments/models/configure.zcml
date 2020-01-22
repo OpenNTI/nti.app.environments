@@ -39,7 +39,10 @@
                          .interfaces.IEnterpriseLicense
                          .interfaces.ILMSSite
                          .interfaces.ISiteUsage
-                         .interfaces.IHost"
+                         .interfaces.IHost
+                         .interfaces.ISetupStatePending
+                         .interfaces.ISetupStateSuccess
+                         .interfaces.ISetupStateFailure"
         modules=".customers
                  .sites
                  .hosts" />

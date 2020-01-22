@@ -24,6 +24,11 @@ class SiteInternalizer(InterfaceObjectIO):
 
     __external_oids__ = ('parent_site',)
 
+    _excluded_in_ivars_ = frozenset(
+        getattr(InterfaceObjectIO,'_excluded_in_ivars_').union(
+            {'setup_state'})
+    )
+
     def updateFromExternalObject(self, parsed, *args, **kwargs):
         updated = False
         if 'id' in parsed:

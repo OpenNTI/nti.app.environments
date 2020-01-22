@@ -16,6 +16,7 @@ from hamcrest import starts_with
 from zope import interface
 
 from zope.container.interfaces import InvalidItemType
+from zope.interface.interfaces import ComponentLookupError
 
 from zope.schema import getValidationErrors
 from zope.schema._bootstrapinterfaces import RequiredMissing
@@ -29,6 +30,9 @@ from nti.app.environments.models.sites import DedicatedEnvironment
 from nti.app.environments.models.sites import TrialLicense
 from nti.app.environments.models.sites import EnterpriseLicense
 from nti.app.environments.models.sites import PersistentSite
+from nti.app.environments.models.sites import SetupStatePending
+from nti.app.environments.models.sites import SetupStateFailure
+from nti.app.environments.models.sites import SetupStateSuccess
 from nti.app.environments.models.sites import SitesFolder
 from nti.app.environments.models.sites import _generate_site_id
 
@@ -45,6 +49,8 @@ from nti.app.environments.models.customers import PersistentCustomer
 from nti.app.environments.models.customers import CustomersFolder
 
 from nti.app.environments.tests import BaseTest
+from nti.externalization.externalization import toExternalObject
+from nti.externalization.internalization import new_from_external_object
 
 
 class TestSites(BaseTest):
@@ -225,10 +231,16 @@ class TestSites(BaseTest):
                                                                  'end_date': '2019-01-03T00:00:00Z',
                                                                  'MimeType': 'application/vnd.nextthought.app.environments.triallicense'}),
                                          'CreatedTime': not_none(),
-                                         'Last Modified': not_none()}))
+                                         'Last Modified': not_none(),
+                                         'setup_state': None}))
 
-        inst = update_from_external_object(inst, {'dns_names': []})
-        assert_that(inst, has_properties({'dns_names': []}))
+        inst = update_from_external_object(inst, {'dns_names': [],
+                                                  'setup_state': SetupStateFailure()})
+        assert_that(inst, has_properties({'dns_names': [],
+                                          'setup_state': None}))
+        inst.setup_state = SetupStateFailure()
+        result = to_external_object(inst)
+        assert_that(result['setup_state'], has_entries({'MimeType': 'application/vnd.nextthought.app.environments.setupstatefailure'}))
 
         # child site
         inst.__parent__ = SitesFolder()
@@ -285,6 +297,29 @@ class TestSites(BaseTest):
         assert_that(folder, has_length(2))
 
         assert_that(calling(folder.addSite).with_args(SharedEnvironment(name="test")), raises(InvalidItemType))
+
+    def testSetupStatePending(self):
+        state = SetupStatePending(task_id="abc")
+        result = toExternalObject(state)
+        assert_that(result, has_entries({'MimeType': 'application/vnd.nextthought.app.environments.setupstatepending',
+                                         'task_id': 'abc'}))
+        assert_that(calling(new_from_external_object).with_args(result),
+                    raises(ComponentLookupError, pattern="No factory for object"))
+
+    def testSetupStateSuccess(self):
+        state = SetupStateSuccess(urls=['abc', 'efg'])
+        result = toExternalObject(state)
+        assert_that(result, has_entries({'MimeType': 'application/vnd.nextthought.app.environments.setupstatesuccess',
+                                         'urls': ['abc', 'efg']}))
+        assert_that(calling(new_from_external_object).with_args(result),
+                    raises(ComponentLookupError, pattern="No factory for object"))
+
+    def testSetupStateFailure(self):
+        state = SetupStateFailure()
+        result = toExternalObject(state)
+        assert_that(result, has_entries({'MimeType': 'application/vnd.nextthought.app.environments.setupstatefailure'}))
+        assert_that(calling(new_from_external_object).with_args(result),
+                    raises(ComponentLookupError, pattern="No factory for object"))
 
     def test_generate_site_id(self):
         _id = _generate_site_id()

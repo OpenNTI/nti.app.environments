@@ -32,6 +32,9 @@ from nti.app.environments.models.interfaces import IDedicatedEnvironment
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ILMSSitesContainer
 from nti.app.environments.models.interfaces import ISiteUsage
+from nti.app.environments.models.interfaces import ISetupStatePending
+from nti.app.environments.models.interfaces import ISetupStateSuccess
+from nti.app.environments.models.interfaces import ISetupStateFailure
 
 from nti.app.environments.utils import find_iface
 
@@ -78,6 +81,48 @@ class EnterpriseLicense(SchemaConfigured, PersistentCreatedModDateTrackingObject
     createFieldProperties(IEnterpriseLicense)
 
     mimeType = mime_type = 'application/vnd.nextthought.app.environments.enterpriselicense'
+
+    def __init__(self, *args, **kwargs):
+        SchemaConfigured.__init__(self, *args, **kwargs)
+        PersistentCreatedModDateTrackingObject.__init__(self)
+
+
+@interface.implementer(ISetupStatePending)
+class SetupStatePending(SchemaConfigured, PersistentCreatedModDateTrackingObject, Contained):
+
+    createFieldProperties(ISetupStatePending)
+
+    mimeType = mime_type = 'application/vnd.nextthought.app.environments.setupstatepending'
+
+    __external_can_create__ = False
+
+    def __init__(self, *args, **kwargs):
+        SchemaConfigured.__init__(self, *args, **kwargs)
+        PersistentCreatedModDateTrackingObject.__init__(self)
+
+
+@interface.implementer(ISetupStateSuccess)
+class SetupStateSuccess(SchemaConfigured, PersistentCreatedModDateTrackingObject, Contained):
+
+    createFieldProperties(ISetupStateSuccess)
+
+    mimeType = mime_type = 'application/vnd.nextthought.app.environments.setupstatesuccess'
+
+    __external_can_create__ = False
+
+    def __init__(self, *args, **kwargs):
+        SchemaConfigured.__init__(self, *args, **kwargs)
+        PersistentCreatedModDateTrackingObject.__init__(self)
+
+
+@interface.implementer(ISetupStateFailure)
+class SetupStateFailure(SchemaConfigured, PersistentCreatedModDateTrackingObject, Contained):
+
+    createFieldProperties(ISetupStateFailure)
+
+    mimeType = mime_type = 'application/vnd.nextthought.app.environments.setupstatefailure'
+
+    __external_can_create__ = False
 
     def __init__(self, *args, **kwargs):
         SchemaConfigured.__init__(self, *args, **kwargs)
