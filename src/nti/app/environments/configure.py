@@ -16,6 +16,8 @@ import zope.i18nmessageid as zope_i18nmessageid
 
 from nti.externalization.extension_points import set_external_identifiers
 
+from nti.environments.management.config import configure_settings
+
 from .appserver import OnboardingServer
 
 from .auth import AuthenticationPolicy
@@ -43,6 +45,9 @@ def configure(settings=None, registry=None):
         # initialize global constants
         init_app_settings(settings)
 
+        # initialize env mgmt settings
+        configure_settings(settings)
+
         config.include(pyramid_zcml)
         config.include('pyramid_retry')
         config.include('pyramid_zodbconn')
@@ -56,7 +61,9 @@ def configure(settings=None, registry=None):
         config.include('.routes')
         config.load_zcml('configure.zcml')
 
+        # Load celery
         config.include('.tasks')
+        
         # security policies
         authn_policy = AuthenticationPolicy('foo',
                                             hashalg='sha512')
