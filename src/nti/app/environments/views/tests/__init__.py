@@ -19,9 +19,8 @@ from nti.app.environments.configure import root_factory
 
 from nti.app.environments.models.interfaces import IOnboardingRoot
 
+from nti.environments.management import tests
 
-def _absolute_path(filename):
-    return os.path.join(os.path.dirname(__file__), 'resources/'+filename)
 
 
 class BaseAppTest(unittest.TestCase):
@@ -39,7 +38,7 @@ class BaseAppTest(unittest.TestCase):
             'hubspot_api_key': 'zzz',
             'hubspot_portal_id': 'kkk',
             'new_site_request_notification_email': 'test@example.com',
-            'nti.environments.management.config': _absolute_path('test_celery.ini')
+            'nti.environments.management.config': os.path.join(os.path.dirname(tests.__file__), 'test.ini')
         }
 
     def tearDown(self):
