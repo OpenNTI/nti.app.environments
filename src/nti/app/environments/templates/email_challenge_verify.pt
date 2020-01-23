@@ -30,6 +30,16 @@
 		margin-top: 32px;
 	}
 
+    .success,
+    .error {
+		font-size: 13px;
+		font-weight: 400;
+		line-height: 1.38463;
+		text-align: left;
+		margin-bottom: 32px;
+		margin-top: 32px;
+    }
+
     .code {
         display: flex;
         font-weight: 400;
@@ -106,8 +116,8 @@
                     <input type="text" id="code_prefix" value="${code_prefix}" />
                 </div>
 
-                <p class="success p2" style="display:none;"></p>
-                <p class="error p2" style="display:none;"></p>
+                <p class="success " style="display:none;"></p>
+                <p class="error" style="display:none;"></p>
                 <div class="spinnerText" style="display:none;">
                     <span class="spinner-border" role="status" aria-hidden="true" style="width:19px;height:19px; border-width:3px; margin-right:4px;"></span>Verifying...
                 </div>

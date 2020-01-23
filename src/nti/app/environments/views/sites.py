@@ -250,8 +250,8 @@ class SiteLicensePutView(BaseSiteFieldPutView):
 
     def readInput(self):
         external = super(BaseFieldPutView, self).readInput()
-        external['start_date'] = self._handle_date('start_date', self._get_body_value('start_date', external, required=True))
-        external['end_date'] = self._handle_date('end_date', self._get_body_value('end_date', external, required=True))
+        external['start_date'] = self._handle_date('start_date', self._get_value('start_date', external, required=True))
+        external['end_date'] = self._handle_date('end_date', self._get_value('end_date', external, required=True))
         return external
 
 

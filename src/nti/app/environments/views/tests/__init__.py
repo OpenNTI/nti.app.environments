@@ -1,3 +1,4 @@
+import os
 import functools
 import unittest
 import transaction
@@ -14,9 +15,12 @@ from pyramid.interfaces import IRootFactory
 from webtest import TestApp
 
 from nti.app.environments import main
-from nti.app.environments import root_factory
+from nti.app.environments.configure import root_factory
 
 from nti.app.environments.models.interfaces import IOnboardingRoot
+
+from nti.environments.management import tests
+
 
 
 class BaseAppTest(unittest.TestCase):
@@ -33,7 +37,8 @@ class BaseAppTest(unittest.TestCase):
             'google_client_secret': 'yyy',
             'hubspot_api_key': 'zzz',
             'hubspot_portal_id': 'kkk',
-            'new_site_request_notification_email': 'test@example.com'
+            'new_site_request_notification_email': 'test@example.com',
+            'nti.environments.management.config': os.path.join(os.path.dirname(tests.__file__), 'test.ini')
         }
 
     def tearDown(self):
@@ -66,8 +71,8 @@ class DummyCookieHelper(object):
 def dummy_callback(userid='admin001', request=None):
     if userid == 'admin001':
         return ['role:nti.roles.admin']
-    elif userid=='user001':
-        return ['user001']
+    elif userid in ('user001', 'user001@example.com'):
+        return []
 
 
 def with_test_app(auth_cookie=True, callback=dummy_callback):
