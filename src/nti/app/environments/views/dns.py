@@ -2,6 +2,8 @@ from pyramid.view import view_config
 
 from nti.externalization.interfaces import LocatedExternalDict
 
+from nti.environments.management.dns import is_dns_name_available
+
 from nti.app.environments.models.interfaces import IOnboardingRoot
 
 from nti.app.environments.models.utils import get_sites_folder
@@ -25,10 +27,8 @@ class CheckDNSNameAvailableView(BaseView):
         for site in sites_folder.values():
             if dns_name in site.dns_names or ():
                 return False
-        
-        # TODO check if DNS is reserved.
 
-        return True
+        return is_dns_name_available(dns_name)
 
     def __call__(self):
         params = self.request.params
