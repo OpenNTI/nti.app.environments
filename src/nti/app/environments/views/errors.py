@@ -27,6 +27,11 @@ def is_browser_request(request):
     # Simply checking if the request is coming from browser or not.
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return False
+
+    useragent = request.environ.get('HTTP_USER_AGENT', '').lower()
+    if 'httpie' in useragent:
+        return False
+
     return True
 
 
