@@ -26,8 +26,8 @@ class ErrorView(BaseTemplateView):
 def is_browser_request(request):
     # Simply checking if the request is coming from browser or not.
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return True
-    return False
+        return False
+    return True
 
 
 @forbidden_view_config(renderer='../templates/error.pt')
@@ -35,7 +35,7 @@ class ForbiddenView(ErrorView):
 
     def __call__(self):
         if not self.request.authenticated_userid:
-            if is_browser_request(self.request):
+            if not is_browser_request(self.request):
                 self.context.status_code = 401
                 return super(ForbiddenView, self).__call__()
 
