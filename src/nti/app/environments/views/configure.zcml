@@ -18,4 +18,19 @@
 
 	<subscriber handler=".subscribers._setup_newly_created_site" />
 
+	<!-- decorators -->
+	<subscriber factory=".decorators.CustomerSitesLinkDecorator"
+			for="nti.app.environments.models.interfaces.ICustomer pyramid.interfaces.IRequest"
+			provides="nti.externalization.interfaces.IExternalObjectDecorator" />
+
+	<!-- traversal -->
+	<adapter for="nti.app.environments.models.interfaces.ICustomer pyramid.interfaces.IRequest"
+			 factory="nti.traversal.traversal.DefaultAdapterTraversable"
+			 provides="zope.traversing.interfaces.ITraversable" />
+
+	<adapter name="sites"
+		 for="nti.app.environments.models.interfaces.ICustomer pyramid.interfaces.IRequest"
+		 factory=".traversal.CustomerSitesPathAdapter"
+		 provides="zope.traversing.interfaces.IPathAdapter"/>
+
 </configure>

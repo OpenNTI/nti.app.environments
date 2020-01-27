@@ -1,5 +1,3 @@
-import json
-
 from zope import component
 
 from pyramid.threadlocal import get_current_request
@@ -9,6 +7,7 @@ from pyramid_mailer.message import Attachment
 from nti.app.environments.settings import NEW_SITE_REQUEST_NOTIFICATION_EMAIL
 
 from nti.externalization import to_external_object
+from nti.externalization.interfaces import IExternalObjectRepresenter
 
 from nti.mailer.interfaces import ITemplatedMailer
 
@@ -65,9 +64,10 @@ class SiteCreatedEmailNotifier(BaseEmailNotifier):
         return template_args
 
     def _attachments(self):
-        data = to_external_object(self.site)
-        data['site_detail_link'] = self.request.resource_url(self.site, '@@details')
+        external = to_external_object(self.site)
+        external['site_detail_link'] = self.request.resource_url(self.site, '@@details')
+        data = component.getUtility(IExternalObjectRepresenter, name='json').dump(external)
         attachment = Attachment(filename='NewSiteRequest_{}.json'.format(self.site.id),
                                 content_type="application/json",
-                                data=json.dumps(data))
+                                data=data)
         return [attachment]

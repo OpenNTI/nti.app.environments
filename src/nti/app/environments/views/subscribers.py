@@ -17,7 +17,6 @@ from nti.environments.management.interfaces import ISetupEnvironmentTask
 
 from nti.app.environments.interfaces import ITransactionRunner
 
-from nti.app.environments.models.interfaces import ILMSSiteCreatedEvent
 from nti.app.environments.models.interfaces import SITE_STATUS_PENDING
 
 from nti.app.environments.views.notification import SiteCreatedEmailNotifier

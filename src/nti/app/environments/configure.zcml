@@ -36,6 +36,13 @@
 
 	<include package="nti.wref"/>
 
+	<include package="nti.links" />
+
+	<!--
+		Needed for tables based on z3c/ZPT, which use the Zope-based request
+	-->
+	<include package="nti.app.pyramid_zope" />
+
 	<include package="nti.environments.management" />
 
 	<utility

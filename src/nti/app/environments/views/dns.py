@@ -2,9 +2,9 @@ from pyramid import httpexceptions as hexc
 
 from pyramid.view import view_config
 
-from nti.externalization.interfaces import LocatedExternalDict
+from nti.externalization.interfaces import LocatedExternalDict\
 
-from nti.environments.management.dns import is_dns_name_available as _is_dns_name_available
+from nti.app.environments.auth import is_admin_or_account_manager
 
 from nti.app.environments.models.interfaces import IOnboardingRoot
 
@@ -12,19 +12,7 @@ from nti.app.environments.models.utils import get_sites_folder
 
 from nti.app.environments.views.base import BaseView
 from nti.app.environments.views.utils import raise_json_error
-from nti.app.environments.auth import is_admin_or_account_manager
-
-
-def is_dns_name_available(dns_name, sites_folder=None):
-    """
-    A domain is available if a) there are know sites that use the domain
-    and b) there isn't a dns reservation for it.
-    """
-    sites_folder = get_sites_folder() if sites_folder is None else sites_folder
-    for site in sites_folder.values():
-        if dns_name in site.dns_names or ():
-            return False
-    return _is_dns_name_available(dns_name)
+from nti.app.environments.views.utils import is_dns_name_available
 
 
 @view_config(renderer='rest',

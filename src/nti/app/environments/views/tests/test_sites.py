@@ -377,10 +377,12 @@ class TestRequestTrialSiteView(BaseAppTest):
 
     @with_test_app()
     @mock.patch('nti.app.environments.views.sites.get_hubspot_client')
-    def testRequestTrialSiteView(self, mock_client):
+    @mock.patch('nti.app.environments.views.sites.is_admin_or_account_manager')
+    def testRequestTrialSiteView(self, mock_admin, mock_client):
         _client = mock.MagicMock()
         _client.fetch_contact_by_email = lambda email: None
         mock_client.return_value = _client
+        mock_admin.return_value = True
         url = '/onboarding/sites/@@request_trial_site'
         with ensure_free_txn():
             dirpath = tempfile.mkdtemp()
@@ -416,18 +418,22 @@ class TestRequestTrialSiteView(BaseAppTest):
 
         params = {'owner': '123@gmail.com', 'dns_names': [None]}
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001')).json_body
-        assert_that(result['message'], starts_with('Missing field: .'))
+        assert_that(result['message'], is_('Invalid site url: None.'))
 
         params = {'owner': '123@gmail.com', 'dns_names': ['xxx']}
         result = self.testapp.post_json(url, params=params, status=201, extra_environ=self._make_environ(username='admin001')).json_body
         assert_that(result['redirect_url'], starts_with('http://localhost/onboarding/sites/'))
 
-        params = {'owner': '1234@gmail.com', 'dns_names': ['xxx', 'yyy']}
+        params = {'owner': '1234@gmail.com', 'dns_names': ['yyy', 'zzz']}
         result = self.testapp.post_json(url, params=params, status=201, extra_environ=self._make_environ(username='admin001')).json_body
         assert_that(result['redirect_url'], starts_with('http://localhost/onboarding/sites/'))
 
+        params = {'owner': '1234@gmail.com', 'dns_names': ['xxx']}
+        result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001')).json_body
+        assert_that(result['message'], is_('Site url is not available: xxx.'))
+
         _client.fetch_contact_by_email = lambda email: {'canonical-vid': '133','email': email, 'name': "OKC Test"}
-        params = {'owner': '12345@gmail.com', 'dns_names': ['xxx', 'yyy']}
+        params = {'owner': '12345@gmail.com', 'dns_names': ['ooo']}
         result = self.testapp.post_json(url, params=params, status=201, extra_environ=self._make_environ(username='admin001')).json_body
         assert_that(result['redirect_url'], starts_with('http://localhost/onboarding/sites/'))
 

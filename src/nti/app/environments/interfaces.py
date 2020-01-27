@@ -59,3 +59,11 @@ class ITransactionRunner(interface.Interface):
 
         :return: The value returned by the first successful invocation of `func`.
         """
+
+
+class ICollection(interface.Interface):
+    pass
+
+
+class ISitesCollection(ICollection):
+    pass

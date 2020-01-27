@@ -12,17 +12,11 @@ from pyramid.tweens import EXCVIEW
 
 from zope.component import getGlobalSiteManager
 
-import zope.i18nmessageid as zope_i18nmessageid
-
-from nti.externalization.extension_points import set_external_identifiers
+from nti.app.pyramid_zope.traversal import ZopeResourceTreeTraverser
 
 from nti.environments.management.config import configure_settings
 
-from .appserver import OnboardingServer
-
 from .auth import AuthenticationPolicy
-
-from .interfaces import IOnboardingServer
 
 from .models.interfaces import IOnboardingRoot
 
@@ -77,6 +71,8 @@ def configure(settings=None, registry=None):
 
         config.add_renderer(name='rest', factory='nti.app.environments.renderers.renderers.DefaultRenderer')
         config.add_renderer(name='.rml', factory="nti.app.environments.renderers.pdf.PDFRendererFactory")
+
+        config.add_traverser( ZopeResourceTreeTraverser )
 
         config.scan(ignore=[_ignore_tests_scan_callable, 'nti.app.environments.tasks'])
 
