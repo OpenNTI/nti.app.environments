@@ -1,60 +1,19 @@
-<!DOCTYPE html>
-<html>
-
-    <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link href="/static/css/base.css" rel="stylesheet">
-        <style>
-         body {
-             font-family: Arial, Helvetica, sans-serif;
-             background-color: #f9f9f9;
-         }
-
-         form {
-             border: 3px solid #f1f1f1;
-             padding: 16px;
-         }
-
-         h1, h2, p {
-             text-align: center;
-         }
-
-         img.logo {
-             display: block;
-             margin-left: auto;
-             margin-right: auto;
-             width: 80px;
-             border: 2px solid transparent;
-             border-radius: 50%;
-             overflow: hidden;
-         }
-
-         .container {
-             margin: auto;
-             padding-top: 100px;
-             width: 400px;
-             height: 400px;
-         }
-
-        </style>
-    </head>
-
-    <body>
-
-        <div class="container">
+<metal:block metal:use-macro="load: ./macros/layout.pt">
+    <title metal:fill-slot="title">
+        ${message}
+    </title>
+    <metal:block metal:fill-slot="content">
+        <div class="error-container">
             <img class="logo" src="${request.static_url('nti.app.environments:static/logo.png')}"/>
-            <h1>${message}</h1>
-	    <h2>Oops...</h2>
-	    <metal:block tal:omit-tag="" tal:condition="subtext">
-                <p>
+            <h1 class="align-center">${message}</h1>
+	        <h2 class="align-center">Oops...</h2>
+	        <metal:block tal:omit-tag="" tal:condition="subtext">
+                <p class="align-center">
                     ${subtext}
                 </p>
             </metal:block>
-	    <p>If you feel this is in error contact <a href="mailto:support@nextthought.com">support@nextthought.com</a></p>
-	    <p>
-		<a href="/onboarding">Go Home</a>
-	    </p>
+	        <p class="align-center">If you feel this is in error contact <a href="mailto:support@nextthought.com">support@nextthought.com</a></p>
+	        <p class="align-center"><a href="/onboarding">Go Home</a></p>
         </div>
-
-    </body>
-</html>
+    </metal:block>
+</metal:block>

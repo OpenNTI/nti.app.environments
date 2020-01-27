@@ -1,4 +1,4 @@
-<!DOCTYPE html metal:define-macro="layout_admin">
+<!DOCTYPE html metal:define-macro="layout">
 <html lang="{{request.locale_name}}">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,8 +8,6 @@
     <link href="/static/css/base.css" rel="stylesheet">
     <metal:slot metal:define-slot="css"></metal:slot>
 <body>
-    <div metal:use-macro="load: ./nav.pt"/>
-
     <!-- content -->
     <main class="content">
         <metal:slot metal:define-slot="content"></metal:slot>

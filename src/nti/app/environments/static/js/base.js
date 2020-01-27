@@ -128,6 +128,37 @@ function getLicenseMimeType(_type) {
 }
 
 
+function preErrorHandle(xhr, exception) {
+    var error = false;
+    if(xhr.status === 403) {
+        var content = $($.parseHTML(xhr.responseText.trim())).filter('main');
+        $('body').html($(content));
+        error = true;
+    } else if (xhr.status === 401) {
+        window.location.href = '/login';
+        error = true;
+    }
+    return error;
+}
+
+
+/**
+ *  Call this handler within the error method of ajax request.
+ * @param {*} xhr
+ * @param {*} exception
+ */
+function ajaxErrorHandler(xhr, exception, errorHandle, modal) {
+    if(xhr.status !== 403 && xhr.status !== 401) {
+        errorHandle();
+    } else {
+        if(modal) {
+            $(modal).hide();
+        }
+        preErrorHandle(xhr, exception);
+    }
+}
+
+
 /** do ajax request */
 function doAjaxRequest(me, url, data, method, success, error, modal, postHandler) {
     // show spinner
@@ -155,8 +186,10 @@ function doAjaxRequest(me, url, data, method, success, error, modal, postHandler
             $($(me).find('.spinnerText')[0]).hide();
             $($(me).find('.nonSpinnerText')[0]).show();
 
-            var res = JSON.parse(jqXHR.responseText);
-            showErrorMessage(res['message'], success, error);
+            ajaxErrorHandler(jqXHR, exception, function() {
+                var res = JSON.parse(jqXHR.responseText);
+                showErrorMessage(res['message'], success, error);
+            }, modal);
         }
     });
 }
@@ -199,8 +232,10 @@ function doUploadFile(me, url, data, success, error, modal) {
         error: function (jqXHR, exception) {
             $($(me).find('.spinnerText')[0]).hide();
             $($(me).find('.nonSpinnerText')[0]).show();
-            var res = JSON.parse(jqXHR.responseText);
-            showErrorMessage(res['message'], success, error);
+            ajaxErrorHandler(jqXHR, exception, function() {
+                var res = JSON.parse(jqXHR.responseText);
+                showErrorMessage(res['message'], success, error);
+            }, modal);
         }
     });
 }
