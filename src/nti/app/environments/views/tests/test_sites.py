@@ -870,3 +870,51 @@ class TestSiteUsagesBulkUpdateView(BaseAppTest):
         params = [{'site_id': 'Sxx', 'total_user_count': 100, 'total_admin_count': 'ss'}]
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
         assert_that(result.json_body['message'], is_("invalid literal for int() with base 10: 'ss'"))
+
+
+class TestSitesListForCustomerView(BaseAppTest):
+
+    @with_test_app()
+    def testSitesListForCustomerView(self):
+        with ensure_free_txn():
+            with mock.patch('nti.app.environments.models.utils.get_onboarding_root') as mock_get_onboarding_root:
+                mock_get_onboarding_root.return_value = self._root()
+                customers = self._root().get('customers')
+                customers.addCustomer(PersistentCustomer(email='user001@example.com', name="testname"))
+                customers.addCustomer(PersistentCustomer(email='user002@example.com', name="testname"))
+                sites = self._root().get('sites')
+                for email, siteId in (('user001@example.com', 'S001'),
+                                      ('user002@example.com', 'S002'),
+                                      ('user003@example.com', 'S003')):
+                    sites.addSite(PersistentSite(dns_names=['xx.nextthought.io'],
+                                                 owner = customers.getCustomer(email),
+                                                 license=TrialLicense(start_date=datetime.datetime(2020, 1, 28),
+                                                                      end_date=datetime.datetime(2020, 1, 9))), siteId=siteId)
+
+        url = '/onboarding/customers/user001@example.com/sites'
+        self.testapp.get(url, status=302, extra_environ=self._make_environ(username=None))
+        self.testapp.get(url, status=403, extra_environ=self._make_environ(username='user002@example.com'))
+
+        result = self.testapp.get(url, status=200, extra_environ=self._make_environ(username='user001@example.com'))
+        assert_that(result.json_body['Total'], is_(1))
+        result = self.testapp.get(url, status=200, extra_environ=self._make_environ(username='admin001'))
+        assert_that(result.json_body['Total'], is_(1))
+
+        # site url
+        url = '/onboarding/customers/user001@example.com/sites/S001'
+        self.testapp.get(url, status=302, extra_environ=self._make_environ(username=None))
+        self.testapp.get(url, status=403, extra_environ=self._make_environ(username='user002@example.com'))
+
+        result = self.testapp.get(url, status=200, extra_environ=self._make_environ(username='user001@example.com'))
+        assert_that(result.json_body, has_entries({'id': 'S001', 'owner': has_entries({'email': 'user001@example.com'})}))
+        result = self.testapp.get(url, status=200, extra_environ=self._make_environ(username='admin001'))
+        assert_that(result.json_body, has_entries({'id': 'S001', 'owner': has_entries({'email': 'user001@example.com'})}))
+
+        url = '/onboarding/sites/S001'
+        self.testapp.get(url, status=302, extra_environ=self._make_environ(username=None))
+        self.testapp.get(url, status=403, extra_environ=self._make_environ(username='user002@example.com'))
+
+        result = self.testapp.get(url, status=200, extra_environ=self._make_environ(username='user001@example.com'))
+        assert_that(result.json_body, has_entries({'id': 'S001', 'owner': has_entries({'email': 'user001@example.com'})}))
+        result = self.testapp.get(url, status=200, extra_environ=self._make_environ(username='admin001'))
+        assert_that(result.json_body, has_entries({'id': 'S001', 'owner': has_entries({'email': 'user001@example.com'})}))

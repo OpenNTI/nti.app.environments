@@ -6,6 +6,8 @@ from pyramid_mailer.message import Attachment
 
 from nti.app.environments.settings import NEW_SITE_REQUEST_NOTIFICATION_EMAIL
 
+from nti.app.environments.models.externalization import SITE_FIELDS_EXTERNAL_FOR_ADMIN_ONLY
+
 from nti.externalization import to_external_object
 from nti.externalization.interfaces import IExternalObjectRepresenter
 
@@ -66,6 +68,10 @@ class SiteCreatedEmailNotifier(BaseEmailNotifier):
     def _attachments(self):
         external = to_external_object(self.site)
         external['site_detail_link'] = self.request.resource_url(self.site, '@@details')
+        for attr_name in SITE_FIELDS_EXTERNAL_FOR_ADMIN_ONLY:
+            if attr_name not in external:
+                external[attr_name] = to_external_object(getattr(self.site, attr_name))
+
         data = component.getUtility(IExternalObjectRepresenter, name='json').dump(external)
         attachment = Attachment(filename='NewSiteRequest_{}.json'.format(self.site.id),
                                 content_type="application/json",
