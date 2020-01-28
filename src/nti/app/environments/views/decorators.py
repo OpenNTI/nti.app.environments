@@ -11,10 +11,11 @@ from nti.links import Link
 
 from nti.property.property import alias
 
-from nti.app.environments.models.interfaces import ICustomer
-from nti.app.environments.models.utils import get_sites_folder
+from nti.app.environments.auth import ACT_CREATE
 
-from nti.app.environments.auth import is_admin_or_account_manager
+from nti.app.environments.models.interfaces import ICustomer
+
+from nti.app.environments.views.traversal import SitesCollection
 
 
 class AbstractRequestAwareDecorator(object):
@@ -55,19 +56,13 @@ class AbstractRequestAwareDecorator(object):
 @interface.implementer(IExternalObjectDecorator)
 class CustomerSitesLinkDecorator(AbstractRequestAwareDecorator):
 
-    def _has_existing_sites(self, owner):
-        for site in get_sites_folder(request=self.request).values():
-            if site.owner == owner:
-                return True
-        return False
+    def _predicate(self, context, unused_result):
+        return context.email == self.request.authenticated_userid
 
     def _do_decorate_external(self, context, external):
         links = external.setdefault(StandardExternalFields.LINKS, [])
         link = Link(context, rel='sites', elements=('sites',))
         links.append(link)
 
-        if context.email != self.request.authenticated_userid:
-            return
-
-        if is_admin_or_account_manager(context.email, self.request) or not self._has_existing_sites(context):
+        if self.request.has_permission(SitesCollection(context, self.request), ACT_CREATE):
             external['can_create_new_site'] = True

@@ -27,7 +27,8 @@ from nti.externalization import to_external_object
 from nti.externalization.internalization.updater import update_from_external_object
 
 from nti.app.environments.views.customers import getOrCreateCustomer
-from nti.app.environments.views.sites import SitesUploadCSVView
+from nti.app.environments.views.sites import SitesUploadCSVView,\
+    RequestTrialSiteView
 from nti.app.environments.views.tests import BaseAppTest
 from nti.app.environments.views.tests import with_test_app
 from nti.app.environments.views.tests import ensure_free_txn
@@ -410,11 +411,11 @@ class TestRequestTrialSiteView(BaseAppTest):
 
         params = {'owner': '123@gmail.com'}
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001')).json_body
-        assert_that(result, has_entries({'message': 'Please provide at least one site url.'}))
+        assert_that(result, has_entries({'message': 'Please provide one site url.'}))
 
         params = {'owner': '123@gmail.com', 'dns_names': []}
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001')).json_body
-        assert_that(result['message'], starts_with('Please provide at least one site url.'))
+        assert_that(result['message'], starts_with('Please provide one site url.'))
 
         params = {'owner': '123@gmail.com', 'dns_names': [None]}
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001')).json_body
@@ -425,8 +426,8 @@ class TestRequestTrialSiteView(BaseAppTest):
         assert_that(result['redirect_url'], starts_with('http://localhost/onboarding/sites/'))
 
         params = {'owner': '1234@gmail.com', 'dns_names': ['yyy', 'zzz']}
-        result = self.testapp.post_json(url, params=params, status=201, extra_environ=self._make_environ(username='admin001')).json_body
-        assert_that(result['redirect_url'], starts_with('http://localhost/onboarding/sites/'))
+        result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001')).json_body
+        assert_that(result['message'], starts_with('Please provide one site url.'))
 
         params = {'owner': '1234@gmail.com', 'dns_names': ['xxx']}
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001')).json_body
@@ -440,9 +441,45 @@ class TestRequestTrialSiteView(BaseAppTest):
         with ensure_free_txn():
             component.getGlobalSiteManager().unregisterUtility(Mailer(default_sender='no-reply.nextthought.com'), IMailer)
             shutil.rmtree(dirpath)
-            assert_that(sites, has_length(3))
-            assert_that(customers, has_length(3))
+            assert_that(sites, has_length(2))
+            assert_that(customers, has_length(2))
             assert_that(customers['12345@gmail.com'].hubspot_contact.contact_vid, '133')
+
+    @with_test_app()
+    @mock.patch('nti.app.environments.views.sites.is_dns_name_available')
+    def test_handle_dns_names(self, mock_dns_name_available):
+        mock_dns_name_available.return_value = True
+        sites = self._root().get('sites')
+        view = RequestTrialSiteView(sites, self.request)
+        assert_that(calling(view._handle_dns_names).with_args({}, False),
+                    raises(hexc.HTTPUnprocessableEntity, pattern="Please provide one site url."))
+        assert_that(calling(view._handle_dns_names).with_args({'dns_names': ''}, False),
+                    raises(hexc.HTTPUnprocessableEntity, pattern="Please provide one site url."))
+        assert_that(calling(view._handle_dns_names).with_args({'dns_names': []}, False),
+                    raises(hexc.HTTPUnprocessableEntity, pattern="Please provide one site url."))
+        assert_that(calling(view._handle_dns_names).with_args({'dns_names': ['xx', 'yy']}, False),
+                    raises(hexc.HTTPUnprocessableEntity, pattern="Please provide one site url."))
+
+        params = {'dns_names': ['xx']}
+        assert_that(calling(view._handle_dns_names).with_args(params, False), raises(hexc.HTTPUnprocessableEntity, pattern="Invalid site url: xx."))
+        assert_that(view._handle_dns_names(params, True), is_(['xx']))
+
+        params = {'dns_names': [True]}
+        assert_that(calling(view._handle_dns_names).with_args(params, False), raises(hexc.HTTPUnprocessableEntity, pattern="Invalid site url: True."))
+        assert_that(calling(view._handle_dns_names).with_args(params, True), raises(hexc.HTTPUnprocessableEntity, pattern="Invalid site url: True."))
+
+        params = {'dns_names': [' XX.nextthought.IO ']}
+        assert_that(view._handle_dns_names(params, False), is_(['xx.nextthought.io']))
+        assert_that(view._handle_dns_names(params, True), is_(['xx.nextthought.io']))
+
+        mock_dns_name_available.return_value = False
+        assert_that(calling(view._handle_dns_names).with_args(params, False),
+                    raises(hexc.HTTPUnprocessableEntity, pattern="Site url is not available: xx.nextthought.io."))
+        assert_that(calling(view._handle_dns_names).with_args(params, True),
+                    raises(hexc.HTTPUnprocessableEntity, pattern="Site url is not available: xx.nextthought.io."))
+
+
+class TestCreateNewTrialSiteView(BaseAppTest):
 
     @with_test_app()
     @mock.patch('nti.app.environments.views.sites.get_hubspot_client')
@@ -472,7 +509,7 @@ class TestRequestTrialSiteView(BaseAppTest):
         self.testapp.post_json(url, params=params, status=403, extra_environ=self._make_environ(username='user002@example.com'))
 
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='user001@example.com')).json_body
-        assert_that(result, has_entries({'message': 'Please provide at least one site url.'}))
+        assert_that(result, has_entries({'message': 'Please provide one site url.'}))
 
         params = {'dns_names': ['xxx']}
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='user001@example.com')).json_body
@@ -482,8 +519,7 @@ class TestRequestTrialSiteView(BaseAppTest):
         self.testapp.post_json(url, params=params, status=201, extra_environ=self._make_environ(username='user001@example.com'))
 
         params = {'dns_names': ['yyy.nextthought.io']}
-        result = self.testapp.post_json(url, params=params, status=409, extra_environ=self._make_environ(username='user001@example.com')).json_body
-        assert_that(result, has_entries({'message': 'Sorry, you can only create one site.'}))
+        self.testapp.post_json(url, params=params, status=403, extra_environ=self._make_environ(username='user001@example.com'))
 
         with ensure_free_txn():
             component.getGlobalSiteManager().unregisterUtility(Mailer(default_sender='no-reply.nextthought.com'), IMailer)

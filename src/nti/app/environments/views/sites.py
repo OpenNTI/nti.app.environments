@@ -35,6 +35,7 @@ from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import SITE_STATUS_PENDING
 from nti.app.environments.models.interfaces import SITE_STATUS_UNKNOWN
 from nti.app.environments.models.interfaces import checkEmailAddress
+
 from nti.app.environments.models.sites import DedicatedEnvironment
 from nti.app.environments.models.sites import EnterpriseLicense
 from nti.app.environments.models.sites import PersistentSite
@@ -43,6 +44,8 @@ from nti.app.environments.models.sites import TrialLicense
 from nti.app.environments.models.utils import get_customers_folder
 from nti.app.environments.models.utils import get_sites_folder
 from nti.app.environments.models.utils import get_hosts_folder
+from nti.app.environments.models.utils import does_customer_have_sites
+
 from nti.app.environments.utils import convertToUTC
 from nti.app.environments.utils import find_iface
 from nti.app.environments.utils import formatDateToLocal
@@ -147,7 +150,14 @@ class RequestTrialSiteView(SiteBaseView, ObjectCreateUpdateViewMixin):
         return self.context
 
     def _get_owner(self, params):
-        return self._handle_owner(params.get('owner'), created=True)
+        owner = self._handle_owner(params.get('owner'), created=True)
+        return owner
+
+    def _check_for_owner(self, owner, is_admin_or_management):
+        # if owner is not admin or management, they can only create at most one site.
+        if not is_admin_or_management and does_customer_have_sites(owner):
+            raise_json_error(hexc.HTTPConflict,
+                            'Existing sites for owner: {}.'.format(owner.email))
 
     def readInput(self):
         params = super(RequestTrialSiteView, self).readInput()
@@ -155,20 +165,21 @@ class RequestTrialSiteView(SiteBaseView, ObjectCreateUpdateViewMixin):
         kwargs = {}
         kwargs['owner'] = self._get_owner(params)
 
-        is_owner_admin_or_management = is_admin_or_account_manager(kwargs['owner'].email, self.request)
+        is_admin_or_management = is_admin_or_account_manager(kwargs['owner'].email, self.request)
 
-        kwargs['dns_names'] = self._handle_dns_names(params, is_owner_admin_or_management)
-        kwargs['license'] = self._create_license(is_owner_admin_or_management)
+        self._check_for_owner(kwargs['owner'], is_admin_or_management)
+
+        kwargs['dns_names'] = self._handle_dns_names(params, is_admin_or_management)
+        kwargs['license'] = self._create_license(is_admin_or_management)
         kwargs['status'] = SITE_STATUS_PENDING
         return kwargs
 
     def _handle_dns_names(self, params, is_owner_admin_or_management):
         names = params.get('dns_names') or []
-        if not isinstance(names, list) or not names:
-            raise_json_error(hexc.HTTPUnprocessableEntity, 'Please provide at least one site url.')
+        if not isinstance(names, list) or not names or len(names) != 1:
+            raise_json_error(hexc.HTTPUnprocessableEntity, 'Please provide one site url.')
 
-        if len(names) != len(set(names)):
-            raise_json_error(hexc.HTTPUnprocessableEntity, 'Site url must be unique.')
+        names = [x.strip().lower() if isinstance(x, str) else x for x in names]
 
         for name in names:
             if not isinstance(name, str) \
@@ -627,22 +638,14 @@ class CreateNewTrialSiteView(RequestTrialSiteView):
     def _get_owner(self, unused_params=None):
         return self.context.__parent__
 
+    def _check_for_owner(self, owner, _):
+        pass
+
     @Lazy
     def sites_folder(self):
         return get_sites_folder(request=self.request)
 
-    def _has_existing_sites(self, owner):
-        for site in self.sites_folder.values():
-            if site.owner == owner:
-                return True
-        return False
-
     def __call__(self):
-        owner = self.context.__parent__
-        if not is_admin_or_account_manager(owner.email, self.request):
-            if self._has_existing_sites(owner):
-                raise_json_error(hexc.HTTPConflict, 'Sorry, you can only create one site.')
-
         site = self._create_site()
         self.request.response.status = 201
         return site
