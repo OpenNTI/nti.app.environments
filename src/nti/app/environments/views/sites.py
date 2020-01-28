@@ -141,32 +141,21 @@ class SiteCreationView(SiteBaseView, ObjectCreateUpdateViewMixin):
              permission=ACT_REQUEST_TRIAL_SITE,
              name="request_trial_site")
 class RequestTrialSiteView(SiteBaseView, ObjectCreateUpdateViewMixin):
-    """
-    Currently we only use this view in the admin page,
-    so we don't want to default the owner to requesting user.
-    """
-    _always_set_owner_to_requesting_user =False
 
     @Lazy
     def sites_folder(self):
         return self.context
 
+    def _get_owner(self, params):
+        return self._handle_owner(params.get('owner'), created=True)
+
     def readInput(self):
         params = super(RequestTrialSiteView, self).readInput()
 
         kwargs = {}
-        for attr_name in ('client_name', 'owner', 'dns_names'):
-            if attr_name in params:
-                kwargs[attr_name] = params[attr_name]
- 
-        if self._always_set_owner_to_requesting_user:
-            kwargs['owner'] = self.request.authenticated_userid
+        kwargs['owner'] = self._get_owner(params)
 
-        owner_username = kwargs.get('owner')
-
-        kwargs['owner'] = self._handle_owner(owner_username, created=True)
-
-        is_owner_admin_or_management = is_admin_or_account_manager(owner_username, self.request)
+        is_owner_admin_or_management = is_admin_or_account_manager(kwargs['owner'].email, self.request)
 
         kwargs['dns_names'] = self._handle_dns_names(params, is_owner_admin_or_management)
         kwargs['license'] = self._create_license(is_owner_admin_or_management)
@@ -187,7 +176,7 @@ class RequestTrialSiteView(SiteBaseView, ObjectCreateUpdateViewMixin):
                 raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid site url: {}.".format(name))
 
         for name in names:
-            if not is_dns_name_available(name, self.context):
+            if not is_dns_name_available(name, self.sites_folder):
                 raise_json_error(hexc.HTTPUnprocessableEntity, "Site url is not available: {}.".format(name))
 
         return names
@@ -635,7 +624,8 @@ class SitesListForCustomerView(BaseView):
              permission=ACT_CREATE)
 class CreateNewTrialSiteView(RequestTrialSiteView):
 
-    _always_set_owner_to_requesting_user = True
+    def _get_owner(self, unused_params=None):
+        return self.context.__parent__
 
     @Lazy
     def sites_folder(self):
@@ -648,9 +638,9 @@ class CreateNewTrialSiteView(RequestTrialSiteView):
         return False
 
     def __call__(self):
-        owner_username = self.context.__parent__.email
-        if not is_admin_or_account_manager(owner_username, self.request):
-            if self._has_existing_sites(self.context.__parent__):
+        owner = self.context.__parent__
+        if not is_admin_or_account_manager(owner.email, self.request):
+            if self._has_existing_sites(owner):
                 raise_json_error(hexc.HTTPConflict, 'Sorry, you can only create one site.')
 
         site = self._create_site()

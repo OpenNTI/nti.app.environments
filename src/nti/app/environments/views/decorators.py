@@ -56,7 +56,7 @@ class AbstractRequestAwareDecorator(object):
 class CustomerSitesLinkDecorator(AbstractRequestAwareDecorator):
 
     def _has_existing_sites(self, owner):
-        for site in get_sites_folder(request=self.request):
+        for site in get_sites_folder(request=self.request).values():
             if site.owner == owner:
                 return True
         return False
@@ -65,6 +65,9 @@ class CustomerSitesLinkDecorator(AbstractRequestAwareDecorator):
         links = external.setdefault(StandardExternalFields.LINKS, [])
         link = Link(context, rel='sites', elements=('sites',))
         links.append(link)
+
+        if context.email != self.request.authenticated_userid:
+            return
 
         if is_admin_or_account_manager(context.email, self.request) or not self._has_existing_sites(context):
             external['can_create_new_site'] = True
