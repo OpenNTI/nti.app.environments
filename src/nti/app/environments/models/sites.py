@@ -138,6 +138,13 @@ class PersistentSite(SchemaConfigured, PersistentCreatedModDateTrackingObject, C
 
     id = alias('__name__')
 
+    def __acl__(self):
+        result = [(Allow, ADMIN_ROLE, ALL_PERMISSIONS),
+                  (Allow, ACCOUNT_MANAGEMENT_ROLE, (ACT_READ,))]
+        if self.owner:
+            result.insert(0, (Allow, self.owner.email, (ACT_READ,)))
+        return result
+
     def __init__(self, parent_site=None, *args, **kwargs):
         SchemaConfigured.__init__(self, *args, **kwargs)
         PersistentCreatedModDateTrackingObject.__init__(self)

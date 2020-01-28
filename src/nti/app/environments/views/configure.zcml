@@ -28,6 +28,10 @@
 			 factory="nti.traversal.traversal.DefaultAdapterTraversable"
 			 provides="zope.traversing.interfaces.ITraversable" />
 
+	<adapter for="nti.app.environments.interfaces.ISitesCollection pyramid.interfaces.IRequest"
+			 factory=".traversal.SitesCollectionTraversable"
+			 provides="zope.traversing.interfaces.ITraversable" />
+
 	<adapter name="sites"
 		 for="nti.app.environments.models.interfaces.ICustomer pyramid.interfaces.IRequest"
 		 factory=".traversal.CustomerSitesPathAdapter"

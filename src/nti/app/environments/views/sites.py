@@ -42,6 +42,7 @@ from nti.app.environments.models.sites import PersistentSite
 from nti.app.environments.models.sites import SharedEnvironment
 from nti.app.environments.models.sites import TrialLicense
 from nti.app.environments.models.utils import get_customers_folder
+from nti.app.environments.models.utils import get_sites_with_owner
 from nti.app.environments.models.utils import get_sites_folder
 from nti.app.environments.models.utils import get_hosts_folder
 from nti.app.environments.models.utils import does_customer_have_sites
@@ -261,6 +262,16 @@ class SiteUpdateView(SiteBaseView, ObjectCreateUpdateViewMixin):
         self.updateObjectWithExternal(self.context, external=external)
         self._log(external)
         return {}
+
+
+@view_config(renderer='rest',
+             context=ILMSSite,
+             request_method='GET',
+             permission=ACT_READ)
+class SiteGetView(BaseView):
+
+    def __call__(self):
+        return self.context
 
 
 class BaseSiteFieldPutView(BaseFieldPutView):
@@ -613,12 +624,8 @@ class SiteUsagesBulkUpdateView(BaseView, ObjectCreateUpdateViewMixin):
 class SitesListForCustomerView(BaseView):
 
     def _get_sites(self):
-        result = []
-        sites = get_sites_folder(request=self.request)
-        for site in sites.values():
-            if site.owner == self.context.__parent__:
-                result.append(site)
-        return result
+        sites = get_sites_with_owner(self.context.owner)
+        return [x for x in sites]
 
     def __call__(self):
         result = LocatedExternalDict()
