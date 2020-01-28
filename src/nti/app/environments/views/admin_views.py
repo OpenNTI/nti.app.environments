@@ -102,8 +102,7 @@ class CustomerDetailView(BaseTemplateView, TableViewMixin):
         sites = self._get_sites_folder()
         table = make_specific_table(SitesTable, sites, self.request, email=self.context.email)
         return {'customers_list_link': self.request.resource_url(self.context.__parent__, '@@list'),
-                'customer': {'email': self.context.email,
-                             'name': self.context.name,
+                'customer': {'customer': self.context,
                              'hubspot': self._format_hubspot(self.context.hubspot_contact) if self.context.hubspot_contact else None},
                 'table': table,
                 'is_deletion_allowed': self._is_deletion_allowed(table)}

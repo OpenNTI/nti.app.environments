@@ -43,6 +43,7 @@ class ChallengeView(BaseView):
     def _do_call(self, params, verify_url=False):
         name = self._get_value('name', params, required=True)
         email = self._get_value('email', params, required=True)
+        organization = self._get_value('organization', params)
 
         # forget any user information we may have
         forget(self.request)
@@ -61,6 +62,7 @@ class ChallengeView(BaseView):
         template_args = {
             'name': name,
             'email': email,
+            'organization': organization,
             'code_suffix': code_suffix
         }
 
@@ -69,6 +71,7 @@ class ChallengeView(BaseView):
                                             '@@verify_challenge',
                                             query={'email': email,
                                                    'name': name,
+                                                   'organization': organization,
                                                    'code': code})
             template_args['url'] = url
 
@@ -80,6 +83,7 @@ class ChallengeView(BaseView):
                                             text_template_extension='.mak')
         return {'name': name,
                 'email': email,
+                'organization': organization,
                 'code_prefix': code_prefix}
 
     @view_config(renderer='json',
@@ -126,6 +130,7 @@ class ChallengerVerification(BaseView):
         email = self._get_value('email', params, required=True)
         code = self._get_value('code', params, required=True)
         name = self._get_value('name', params)
+        organization = self._get_value('organization', params)
 
         # Get the customer
         customer = self.context.get(email)
@@ -147,6 +152,9 @@ class ChallengerVerification(BaseView):
         if name:
             customer.name = name
             customer.last_verified = datetime.datetime.utcnow()
+
+        if organization:
+            customer.organization = organization
 
         # See other the user to the create site form
         return {'email': email,
