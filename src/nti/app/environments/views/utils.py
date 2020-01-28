@@ -8,6 +8,10 @@ from zope.schema._bootstrapinterfaces import WrongContainedType
 
 from zope.schema.interfaces import NotUnique
 
+from nti.environments.management.dns import is_dns_name_available as _is_dns_name_available
+
+from nti.app.environments.models.utils import get_sites_folder
+
 
 def raise_json_error(factory, error, field=None):
     if isinstance(error, ValidationError):
@@ -40,3 +44,15 @@ def raise_json_error(factory, error, field=None):
     result = factory(message)
     result.text = body
     raise result
+
+
+def is_dns_name_available(dns_name, sites_folder=None):
+    """
+    A domain is available if a) there are know sites that use the domain
+    and b) there isn't a dns reservation for it.
+    """
+    sites_folder = get_sites_folder() if sites_folder is None else sites_folder
+    for site in sites_folder.values():
+        if dns_name in site.dns_names or ():
+            return False
+    return _is_dns_name_available(dns_name)

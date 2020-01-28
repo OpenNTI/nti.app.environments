@@ -2,6 +2,8 @@ import csv
 import datetime
 
 from nti.externalization.interfaces import LocatedExternalDict
+from nti.externalization.interfaces import StandardExternalFields
+
 from pyramid import httpexceptions as hexc
 from pyramid.view import view_config
 from zope.cachedescriptors.property import Lazy
@@ -16,6 +18,10 @@ from nti.app.environments.auth import ACT_EDIT_SITE_LICENSE
 from nti.app.environments.auth import ACT_READ
 from nti.app.environments.auth import ACT_REQUEST_TRIAL_SITE
 from nti.app.environments.auth import ACT_UPDATE
+from nti.app.environments.auth import is_admin_or_account_manager
+
+from nti.app.environments.interfaces import ISitesCollection
+
 from nti.app.environments.models.events import SiteCreatedEvent
 from nti.app.environments.models.events import SiteUpdatedEvent
 from nti.app.environments.models.hosts import PersistentHost
@@ -29,18 +35,23 @@ from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import SITE_STATUS_PENDING
 from nti.app.environments.models.interfaces import SITE_STATUS_UNKNOWN
 from nti.app.environments.models.interfaces import checkEmailAddress
+
 from nti.app.environments.models.sites import DedicatedEnvironment
 from nti.app.environments.models.sites import EnterpriseLicense
 from nti.app.environments.models.sites import PersistentSite
 from nti.app.environments.models.sites import SharedEnvironment
 from nti.app.environments.models.sites import TrialLicense
 from nti.app.environments.models.utils import get_customers_folder
+from nti.app.environments.models.utils import get_sites_folder
 from nti.app.environments.models.utils import get_hosts_folder
+from nti.app.environments.models.utils import does_customer_have_sites
+
 from nti.app.environments.utils import convertToUTC
 from nti.app.environments.utils import find_iface
 from nti.app.environments.utils import formatDateToLocal
 from nti.app.environments.utils import parseDate
 from nti.app.environments.views.utils import raise_json_error
+from nti.app.environments.views.utils import is_dns_name_available
 
 from .base import BaseFieldPutView
 from .base import BaseView
@@ -48,6 +59,11 @@ from .base import ObjectCreateUpdateViewMixin
 from .base import createCustomer
 from .base import getOrCreateCustomer
 from .base_csv import CSVBaseView
+
+ITEMS = StandardExternalFields.ITEMS
+TOTAL = StandardExternalFields.TOTAL
+ITEM_COUNT = StandardExternalFields.ITEM_COUNT
+LINKS = StandardExternalFields.LINKS
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -129,44 +145,81 @@ class SiteCreationView(SiteBaseView, ObjectCreateUpdateViewMixin):
              name="request_trial_site")
 class RequestTrialSiteView(SiteBaseView, ObjectCreateUpdateViewMixin):
 
+    @Lazy
+    def sites_folder(self):
+        return self.context
+
+    def _get_owner(self, params):
+        owner = self._handle_owner(params.get('owner'), created=True)
+        return owner
+
+    def _check_for_owner(self, owner, is_admin_or_management):
+        # if owner is not admin or management, they can only create at most one site.
+        if not is_admin_or_management and does_customer_have_sites(owner):
+            raise_json_error(hexc.HTTPConflict,
+                            'Existing sites for owner: {}.'.format(owner.email))
+
     def readInput(self):
         params = super(RequestTrialSiteView, self).readInput()
 
         kwargs = {}
-        for attr_name in ('client_name', 'owner', 'dns_names'):
-            if attr_name in params:
-                kwargs[attr_name] = params[attr_name]
+        kwargs['owner'] = self._get_owner(params)
 
-        kwargs['owner'] = self._handle_owner(kwargs.get('owner'), created=True)
+        is_admin_or_management = is_admin_or_account_manager(kwargs['owner'].email, self.request)
 
-        if not kwargs.get('dns_names') \
-            or (isinstance(kwargs.get('dns_names'), (list, tuple)) and len(kwargs['dns_names'])==0):
-            raise_json_error(hexc.HTTPUnprocessableEntity,
-                            'Please provide at least one site url.')
+        self._check_for_owner(kwargs['owner'], is_admin_or_management)
 
-        _now = datetime.datetime.utcnow()
-        kwargs.update({'status': SITE_STATUS_PENDING,
-                       'license': TrialLicense(start_date=_now,
-                                               end_date=_now + datetime.timedelta(days=90))})
+        kwargs['dns_names'] = self._handle_dns_names(params, is_admin_or_management)
+        kwargs['license'] = self._create_license(is_admin_or_management)
+        kwargs['status'] = SITE_STATUS_PENDING
         return kwargs
 
-    def __call__(self):
+    def _handle_dns_names(self, params, is_owner_admin_or_management):
+        names = params.get('dns_names') or []
+        if not isinstance(names, list) or not names or len(names) != 1:
+            raise_json_error(hexc.HTTPUnprocessableEntity, 'Please provide one site url.')
+
+        names = [x.strip().lower() if isinstance(x, str) else x for x in names]
+
+        for name in names:
+            if not isinstance(name, str) \
+                or (not is_owner_admin_or_management and not name.endswith('nextthought.io')):
+                raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid site url: {}.".format(name))
+
+        for name in names:
+            if not is_dns_name_available(name, self.sites_folder):
+                raise_json_error(hexc.HTTPUnprocessableEntity, "Site url is not available: {}.".format(name))
+
+        return names
+
+    def _create_license(self, is_owner_admin_or_manager):
+        # Trial days is 90 if owner is admin/management, else 30.
+        start_date = datetime.datetime.utcnow()
+        days = 90 if is_owner_admin_or_manager else 30
+        return TrialLicense(start_date=start_date,
+                            end_date=start_date + datetime.timedelta(days=days))
+
+    def _create_site(self):
         try:
             site = PersistentSite()
             site.creator = self.request.authenticated_userid
             site = self.updateObjectWithExternal(site, self.readInput())
-            self.context.addSite(site)
+            self.sites_folder.addSite(site)
             # send email, etc.
             notify(SiteCreatedEvent(site))
 
             logger.info("%s has requested a new trial site be created, site id: %s.",
                         self.request.authenticated_userid,
                         site.id)
-
-            self.request.response.status = 201
-            return {'redirect_url': self.request.resource_url(site, '@@details')}
+            return site
         except InvalidItemType:
             raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid site type.")
+
+    def __call__(self):
+        site = self._create_site()
+        self.request.response.status = 201
+        return {'redirect_url': self.request.resource_url(site, '@@details')}
+
 
 @view_config(renderer='json',
              context=ILMSSite,
@@ -551,3 +604,48 @@ class SiteUsagesBulkUpdateView(BaseView, ObjectCreateUpdateViewMixin):
         result.__parent__ = self.context.__parent__
         result['total_updated'] = len(incoming)
         return result
+
+
+@view_config(renderer='rest',
+             context=ISitesCollection,
+             request_method='GET',
+             permission=ACT_READ)
+class SitesListForCustomerView(BaseView):
+
+    def _get_sites(self):
+        result = []
+        sites = get_sites_folder(request=self.request)
+        for site in sites.values():
+            if site.owner == self.context.__parent__:
+                result.append(site)
+        return result
+
+    def __call__(self):
+        result = LocatedExternalDict()
+        result.__parent__ = self.context.__parent__
+        result.__name__ = self.context.__name__
+        result[ITEMS] = items = self._get_sites()
+        result[ITEM_COUNT] = result[TOTAL] = len(items)
+        return result
+
+
+@view_config(renderer='rest',
+             context=ISitesCollection,
+             request_method='POST',
+             permission=ACT_CREATE)
+class CreateNewTrialSiteView(RequestTrialSiteView):
+
+    def _get_owner(self, unused_params=None):
+        return self.context.__parent__
+
+    def _check_for_owner(self, owner, _):
+        pass
+
+    @Lazy
+    def sites_folder(self):
+        return get_sites_folder(request=self.request)
+
+    def __call__(self):
+        site = self._create_site()
+        self.request.response.status = 201
+        return site

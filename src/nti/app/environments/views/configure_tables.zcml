@@ -7,7 +7,6 @@
 	<include package="zope.security" file="meta.zcml" />
 	<include package="zope.component" />
 	<include package="zope.security" />
-	
 	<include package="z3c.table" />
 
 	<adapter factory="._table_utils.TrivialTableAbsoluteURL" />
@@ -264,10 +263,4 @@
 			 for="* * ._table_utils.BaseTable"
 			 provides="z3c.table.interfaces.IBatchProvider"
 			 name="default-batch" />
-
-	<!-- https://github.com/zopefoundation/pyramid_zope_request -->
-	<adapter factory="pyramid_zope_request.PyramidPublisherRequest"
-			 for="pyramid.interfaces.IRequest"
-			 provides="zope.publisher.interfaces.browser.IBrowserRequest" />
-
 </configure>
