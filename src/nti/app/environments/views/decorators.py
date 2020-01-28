@@ -11,9 +11,11 @@ from nti.links import Link
 
 from nti.property.property import alias
 
-from nti.app.environments.auth import ACT_CREATE
+from nti.app.environments.auth import ACT_CREATE, is_admin_or_account_manager
 
-from nti.app.environments.models.interfaces import ICustomer
+from nti.app.environments.models.interfaces import ICustomer, ILMSSite
+
+from nti.app.environments.models.externalization import SITE_FIELDS_EXTERNAL_FOR_ADMIN_ONLY
 
 from nti.app.environments.views.traversal import SitesCollection
 
@@ -66,3 +68,16 @@ class CustomerSitesLinkDecorator(AbstractRequestAwareDecorator):
 
         if self.request.has_permission(SitesCollection(context, self.request), ACT_CREATE):
             external['can_create_new_site'] = True
+
+
+@component.adapter(ILMSSite)
+@interface.implementer(IExternalObjectDecorator)
+class SiteInfoDecorator(AbstractRequestAwareDecorator):
+
+    def _predicate(self, unused_context, unused_result):
+        return is_admin_or_account_manager(self.request.authenticated_userid, self.request)
+
+    def _do_decorate_external(self, context, external):
+        for attr_name in SITE_FIELDS_EXTERNAL_FOR_ADMIN_ONLY:
+            if attr_name not in external:
+                external[attr_name] = getattr(context, attr_name)

@@ -224,7 +224,6 @@ class TestSites(BaseTest):
                                          'id': 'xxxxid2',
                                          'status': 'PENDING',
                                          'dns_names': ['t.nt.com'],
-                                         'environment': None,
                                          'owner': has_entries({'email': '103@gmail.com',
                                                                'MimeType': 'application/vnd.nextthought.app.environments.customer'}),
                                          'license': has_entries({'start_date': '2019-01-02T00:00:00Z',
@@ -233,6 +232,7 @@ class TestSites(BaseTest):
                                          'CreatedTime': not_none(),
                                          'Last Modified': not_none(),
                                          'setup_state': None}))
+        assert_that('environment' not in result, is_(True))
 
         inst = update_from_external_object(inst, {'dns_names': [],
                                                   'setup_state': SetupStateFailure()})

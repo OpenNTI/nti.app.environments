@@ -9,11 +9,19 @@ from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import IHost
 
 
+SITE_FIELDS_EXTERNAL_FOR_ADMIN_ONLY = ('environment', )
+
+
 @component.adapter(ILMSSite)
 @interface.implementer(IInternalObjectExternalizer)
 class SiteExternalizer(InterfaceObjectIO):
 
     _ext_iface_upper_bound = ILMSSite
+
+    _excluded_out_ivars_ = frozenset(
+        getattr(InterfaceObjectIO,'_excluded_out_ivars_').union(
+            {*SITE_FIELDS_EXTERNAL_FOR_ADMIN_ONLY,})
+    )
 
     def toExternalObject(self, **kwargs):
         context = self._ext_replacement()
