@@ -307,7 +307,8 @@ class ISetupState(IContained):
 
     # Right now we track this for all states. We may only
     # need it for pending?
-    task_state = Object(title='The task serialization information')
+    task_state = Object(interface.Interface,
+                        title='The task serialization information')
 
 
 class ISetupStatePending(ISetupState):
