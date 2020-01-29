@@ -29,6 +29,8 @@ from nti.schema.field import Object
 from nti.schema.field import UniqueIterable
 from nti.schema.field import Int
 
+from nti.environments.management.interfaces import IInitializedSiteInfo
+
 MessageFactory = zope_i18nmessageid.MessageFactory('nti.app.environments')
 _ = MessageFactory
 
@@ -303,23 +305,29 @@ class ISetupState(IContained):
     Identifies a site setup state.
     """
 
+    # Right now we track this for all states. We may only
+    # need it for pending?
+    task_state = Object(title='The task serialization information')
+
 
 class ISetupStatePending(ISetupState):
-
-    task_id = ValidTextLine(title="The task id.",
-                            required=False)
+    """
+    A site that is in the process of being setup
+    """
 
 
 class ISetupStateSuccess(ISetupState):
+    """
+    A site that has succesfully gone through the setup process
+    """
 
-    urls = UniqueIterable(value_type=ValidTextLine(min_length=1),
-                          title='The links returned when site is set up successfully.',
-                          min_length=1,
-                          max_length=2,
-                          required=True)
-
+    site_info = Object(IInitializedSiteInfo, title='Information about the site that was succesfull created')
 
 class ISetupStateFailure(ISetupState):
+    """
+    A site that failed setup
+    """
+    
     pass
 
 
