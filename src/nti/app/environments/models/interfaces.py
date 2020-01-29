@@ -185,6 +185,10 @@ class ICustomer(IContained):
     last_verified = DateTime(title=u'The datetime this customer was verified via email',
                         required=False)
 
+    organization = ValidTextLine(title="The organization name this customer belongs to",
+                                 min_length=1,
+                                 required=False)
+
 
 class ICustomersContainer(IContainer):
 

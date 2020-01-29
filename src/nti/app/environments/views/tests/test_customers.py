@@ -65,7 +65,7 @@ class TestChallengeView(BaseAppTest):
                                                 'template_args': has_entries({'name': 'Test User',
                                                                               'email': 'test@example.com',
                                                                               'code_suffix': has_length(9),
-                                                                              'url': starts_with('http://localhost/onboarding/customers/@@verify_challenge?email=test%40example.com&name=Test+User&code=')}),
+                                                                              'url': starts_with('http://localhost/onboarding/customers/@@verify_challenge')}),
                                                 'text_template_extension': '.mak'}))
 
     @with_test_app()

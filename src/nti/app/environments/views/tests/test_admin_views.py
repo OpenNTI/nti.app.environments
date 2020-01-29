@@ -66,8 +66,7 @@ class TestAdminViews(BaseAppTest):
             view = CustomerDetailView(customer, self.request)
             result = view()
             assert_that(result, has_entries({'customers_list_link': 'http://example.com/onboarding/customers/@@list',
-                                             'customer': has_entries({'email': email,
-                                                          'name': 'testname',
+                                             'customer': has_entries({'customer': customer,
                                                           'hubspot': has_entries({'contact_vid': 'vid001'})}),
                                              'table': instance_of(SitesTable)}))
 
