@@ -53,7 +53,8 @@ def configure(settings=None, registry=None):
         config.include('pyramid_chameleon')
         config.include('pyramid_mako')
         config.include('.routes')
-        config.load_zcml('configure.zcml')
+
+        config.load_zcml('configure.zcml', features=settings.get('zcml.features', '').split())
 
         # Load celery
         config.include('.tasks')
