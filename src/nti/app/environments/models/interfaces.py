@@ -407,6 +407,16 @@ class ILMSSiteUpdatedEvent(interface.Interface):
 
     external_values = interface.Attribute("A dictionary that storing the external values.")
 
+class ILMSSiteSetupFinished(interface.Interface):
+    """
+    An event that fires when a site setup has finished. 
+    The setup_state field will be updated to reflect the current state
+    of the site.
+    """
+    site = Object(ILMSSite,
+                  title="The site object created.",
+                  required=True)
+
 
 class ISiteUsage(IContained):
 
