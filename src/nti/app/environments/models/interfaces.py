@@ -309,6 +309,7 @@ class ISetupState(IContained):
     # need it for pending?
     task_state = Object(interface.Interface,
                         title='The task serialization information')
+    task_state.setTaggedValue('_ext_excluded_out', True)
 
 
 class ISetupStatePending(ISetupState):
@@ -323,6 +324,7 @@ class ISetupStateSuccess(ISetupState):
     """
 
     site_info = Object(IInitializedSiteInfo, title='Information about the site that was succesfull created')
+    site_info.setTaggedValue('_ext_excluded_out', True)
 
 class ISetupStateFailure(ISetupState):
     """
@@ -330,6 +332,7 @@ class ISetupStateFailure(ISetupState):
     """
     
     exception = interface.Attribute('The exception resulting in the failure')
+    exception.setTaggedValue('_ext_excluded_out', True)
 
 
 class ILMSSite(IContained, IAttributeAnnotatable):
