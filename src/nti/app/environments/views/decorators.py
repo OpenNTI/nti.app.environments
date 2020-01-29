@@ -66,7 +66,7 @@ class CustomerSitesLinkDecorator(AbstractRequestAwareDecorator):
         link = Link(context, rel='sites', elements=('sites',))
         links.append(link)
 
-        if self.request.has_permission(SitesCollection(context, self.request), ACT_CREATE):
+        if self.request.has_permission(ACT_CREATE, SitesCollection(context, self.request)):
             external['can_create_new_site'] = True
 
 
@@ -81,3 +81,6 @@ class SiteInfoDecorator(AbstractRequestAwareDecorator):
         for attr_name in SITE_FIELDS_EXTERNAL_FOR_ADMIN_ONLY:
             if attr_name not in external:
                 external[attr_name] = getattr(context, attr_name)
+
+
+
