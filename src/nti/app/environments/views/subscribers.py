@@ -228,6 +228,10 @@ def _setup_newly_created_site(event):
     name = site.owner.name
     email = site.owner.email
 
+    # Name is required by our setup scripts but not yet in the iface
+    # Blow up here if we have no name
+    assert name
+
     # If the transaction was successful we setup the site.
     transaction.get().addAfterCommitHook(
             _maybe_setup_site, args=(app, sid, cname, dns, name, email), kws=None
