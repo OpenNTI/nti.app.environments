@@ -90,7 +90,7 @@ def _store_task_results(siteid, result):
 
     gevent.spawn(_store)
 
-def _maybe_setup_site(success, app, siteid, client_name, dns_name):
+def _maybe_setup_site(success, app, siteid, client_name, dns_name, name, email):
     """
     On succesful commit dispatch a task to setup the site. Note this happens in an after
     commit hook and we are outside of the transaction. We must be very careful that we
@@ -111,7 +111,7 @@ def _maybe_setup_site(success, app, siteid, client_name, dns_name):
         return
     
     try:
-        result = ISetupEnvironmentTask(app)(siteid, client_name, dns_name)
+        result = ISetupEnvironmentTask(app)(siteid, client_name, dns_name, name, email)
         _store_task_results(siteid, result)
     except:
         logger.exception('Unable to queue site setup for %s' % siteid)
@@ -128,9 +128,11 @@ def _setup_newly_created_site(event):
     sid = site.id
     cname = site.client_name
     dns = site.dns_names[0]
+    name = site.owner.name
+    email = site.owner.email
 
     # If the transaction was successful we setup the site.
     transaction.get().addAfterCommitHook(
-            _maybe_setup_site, args=(app, sid, cname, dns), kws=None
+            _maybe_setup_site, args=(app, sid, cname, dns, name, email), kws=None
     )   
 
