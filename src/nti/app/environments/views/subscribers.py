@@ -26,6 +26,7 @@ from nti.app.environments.models.interfaces import ISetupStatePending
 
 from nti.app.environments.models.sites import SetupStatePending
 from nti.app.environments.models.sites import SetupStateSuccess
+from nti.app.environments.models.sites import SetupStateFailure
 
 from nti.app.environments.models.utils import get_sites_folder
 
@@ -78,6 +79,8 @@ def _update_host_load_on_site_environment_updated(event):
 # Note the care taken around when we dispatch the task, and how
 # we safely capture the result.
 
+_marker = object()
+
 def _store_task_results(siteid, result):
     """
     Given a siteid, which should be a pending site, and a celery
@@ -115,38 +118,57 @@ def _store_task_results(siteid, result):
         wait = 1
         maxwait = 4 * 60 * 60 # 4 hours This is way way longer than we need
         i = 0
-        tresult = None
+        tresult = _marker
         while i < maxwait:
             logger.info('Checking status for site %s', siteid)
 
             try:
-                tresult = result.get(timeout=1)
+                # Propogate False causes exceptions to return instead of reraise here
+                tresult = result.get(timeout=1, propagate=False)
                 if result:
                     break
             except TimeoutError:
                 pass
 
             time.sleep(interval)
-        
-        logger.info('Setup for site %s finished with result %s', siteid, tresult)
+            i += interval
 
-        def _mark_success(root):
-            logger.info('Marking site %s as succesful', siteid)
+        if tresult is _marker:
+            # Uh oh, we never got a result.
+            # In the context of the greenlet we just want to yell and exit.
+            # In other contexts raising is probably more appropriate. This is effectively a timeout
+            app = component.getUtility(ICeleryApp)
+            task = ISetupEnvironmentTask(app)
+            logger.error('Spin up task %s for site %s never completed. Abandoned task?', siteid, task.save_state(result))
+            return
+
+        # We have a result. now we need to update state
+        logger.info('Setup for site %s finished successful=%s', siteid, result.successful())
+        def _mark_complete(root):
+            logger.info('Updating setup state for site %s finished successful=%s', siteid, result.successful())
 
             site = get_sites_folder(root)[siteid]
 
             assert ISetupStatePending.providedBy(site.setup_state)
 
-            finished = SetupStateSuccess()
-            finished.task_state = site.setup_state.task_state
-            finished.site_info = tresult
+            failed = isinstance(tresult, Exception)
 
-            site.setup_state = finished
+            state = None
+            if failed:
+                state = SetupStateFailure()
+                state.exception = tresult
+            else:
+                state = SetupStateSuccess()
+                state.site_info = tresult
 
-        # TODO what if AsyncResult.get raises. we need to capture that as failure.
-        # TOOD handle not ever getting a result
+            assert state
+
+            state.task_state = site.setup_state.task_state
+
+            site.setup_state = state
+
         # TODO what if this greenlet dies due to a restart.
-        tx_runner(_mark_success, retries=5, sleep=0.1)
+        tx_runner(_mark_complete, retries=5, sleep=0.1)
 
     gevent.spawn(_store)
 

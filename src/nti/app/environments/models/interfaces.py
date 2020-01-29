@@ -329,7 +329,7 @@ class ISetupStateFailure(ISetupState):
     A site that failed setup
     """
     
-    pass
+    exception = interface.Attribute('The exception resulting in the failure')
 
 
 class ILMSSite(IContained, IAttributeAnnotatable):
