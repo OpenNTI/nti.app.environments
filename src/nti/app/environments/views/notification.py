@@ -1,3 +1,5 @@
+from urllib.parse import urljoin
+
 from zope import component
 
 from pyramid.threadlocal import get_current_request
@@ -77,3 +79,24 @@ class SiteCreatedEmailNotifier(BaseEmailNotifier):
                                 content_type="application/json",
                                 data=data)
         return [attachment]
+
+
+class SiteSetupEmailNotifier(BaseEmailNotifier):
+
+    _template = 'nti.app.environments:email_templates/site_setup_completed'
+    _subject = "It's time to setup your password!"
+
+    def __init__(self, context, request=None):
+        super(SiteSetupEmailNotifier, self).__init__(context, request)
+        self.site = context
+
+    def _recipients(self):
+        return [self.site.owner.email]
+
+    def _template_args(self):
+        template_args = {
+            'name': self.site.owner.email,
+            'site_domain_link': "http://{dns_name}/".format(dns_name=self.site.dns_names[0]),
+            'password_setup_link': urljoin(self.request.application_url, 'sites/{}'.format(self.site.id))
+        }
+        return template_args

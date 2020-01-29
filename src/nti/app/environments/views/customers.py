@@ -57,7 +57,7 @@ class ChallengeView(BaseView):
         # Setup the customer object to be challenged
         code = setup_challenge_for_customer(customer)
         code_prefix = code[:6]
-        code_suffix = "{} - {}".format(code[6:9], code[9:]).upper()
+        code_suffix = code[6:].upper()
 
         template_args = {
             'name': name,
@@ -77,7 +77,7 @@ class ChallengeView(BaseView):
 
         mailer = self._mailer()
         mailer.queue_simple_html_text_email("nti.app.environments:email_templates/verify_customer",
-                                            subject="NextThought verification code: {}".format(code_suffix),
+                                            subject="NextThought Confirmation Code: {}".format(code_suffix),
                                             recipients=[email],
                                             template_args=template_args,
                                             text_template_extension='.mak')

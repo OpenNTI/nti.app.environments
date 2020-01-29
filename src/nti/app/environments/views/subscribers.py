@@ -44,6 +44,7 @@ from nti.app.environments.models.utils import get_sites_folder
 from nti.app.environments.models.utils import get_hosts_folder
 
 from nti.app.environments.views.notification import SiteCreatedEmailNotifier
+from nti.app.environments.views.notification import SiteSetupEmailNotifier
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -52,6 +53,19 @@ logger = __import__('logging').getLogger(__name__)
 def _site_created_event(event):
     notifier = SiteCreatedEmailNotifier(event.site)
     notifier.notify()
+
+
+@component.adapter(ILMSSiteCreatedEvent)
+def _notify_owner_on_site_created(event):
+    site = event.site
+    if not site.owner or not site.dns_names:
+        return
+
+    logger.info("Notifying user to set up password for site : %s", site.dns_names[0])
+
+    notifier = SiteSetupEmailNotifier(site)
+    notifier.notify()
+
 
 @component.adapter(ILMSSite, IObjectAddedEvent)
 def _update_host_load_on_site_added(site, unused_event):
@@ -237,6 +251,7 @@ def _setup_newly_created_site(event):
             _maybe_setup_site, args=(app, sid, cname, dns, name, email), kws=None
     )   
 
+
 @component.adapter(ILMSSiteSetupFinished)
 def _associate_site_to_host(event):
     site = event.site
@@ -266,6 +281,3 @@ def _associate_site_to_host(event):
                                load_factor=1)
     site.environment = env
     host.recompute_current_load()
-    
-
-    
