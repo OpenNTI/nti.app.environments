@@ -1,6 +1,10 @@
 import gevent
 
+import time
+
 import transaction
+
+from celery.exceptions import TimeoutError
 
 from zope import component
 
@@ -18,6 +22,12 @@ from nti.environments.management.interfaces import ISetupEnvironmentTask
 from nti.app.environments.interfaces import ITransactionRunner
 
 from nti.app.environments.models.interfaces import SITE_STATUS_PENDING
+from nti.app.environments.models.interfaces import ISetupStatePending
+
+from nti.app.environments.models.sites import SetupStatePending
+from nti.app.environments.models.sites import SetupStateSuccess
+
+from nti.app.environments.models.utils import get_sites_folder
 
 from nti.app.environments.views.notification import SiteCreatedEmailNotifier
 
@@ -82,11 +92,61 @@ def _store_task_results(siteid, result):
     tx_runner = component.getUtility(ITransactionRunner)
     
     def _store():
-        def _do_store():
-            logger.info('Storing taskid %s for site %s', result, siteid)
+        def _do_store(root):
+            logger.info('Storing task state %s for site %s', result, siteid)
+            
+            site = get_sites_folder(root)[siteid]
+
+            assert site.setup_state is None
+
+            app = component.getUtility(ICeleryApp)
+            task = ISetupEnvironmentTask(app)
+
+            pending = SetupStatePending()
+            pending.task_state = task.save_task(result)
+            site.setup_state = pending
 
         tx_runner(_do_store, retries=5, sleep=0.1)
+
+        # Query for results every 5 seconds, waiting 1 second each time.
+        # Give up after 4 hours
+
+        interval = 5
+        wait = 1
+        maxwait = 4 * 60 * 60 # 4 hours This is way way longer than we need
+        i = 0
+        tresult = None
+        while i < maxwait:
+            logger.info('Checking status for site %s', siteid)
+
+            try:
+                tresult = result.get(timeout=1)
+                if result:
+                    break
+            except TimeoutError:
+                pass
+
+            time.sleep(interval)
         
+        logger.info('Setup for site %s finished with result %s', siteid, tresult)
+
+        def _mark_success(root):
+            logger.info('Marking site %s as succesful', siteid)
+
+            site = get_sites_folder(root)[siteid]
+
+            assert ISetupStatePending.providedBy(site.setup_state)
+
+            finished = SetupStateSuccess()
+            finished.task_state = site.setup_state.task_state
+            finished.site_info = tresult
+
+            site.setup_state = finished
+
+        # TODO what if AsyncResult.get raises. we need to capture that as failure.
+        # TOOD handle not ever getting a result
+        # TODO what if this greenlet dies due to a restart.
+        tx_runner(_mark_success, retries=5, sleep=0.1)
 
     gevent.spawn(_store)
 
