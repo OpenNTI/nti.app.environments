@@ -68,4 +68,8 @@
 	<adapter factory=".adapters.BrokenExternalObject" />
 
 	<utility component=".transactions.run_job" />
+
+	<adapter for="nti.app.environments.models.interfaces.ILMSSite pyramid.interfaces.IRequest"
+			 factory=".adapters.SiteLinks"
+			 provides=".interfaces.ISiteLinks" />
 </configure>

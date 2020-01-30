@@ -13,7 +13,10 @@ from nti.property.property import alias
 
 from nti.app.environments.auth import ACT_CREATE, is_admin_or_account_manager
 
+from nti.app.environments.interfaces import ISiteLinks
+
 from nti.app.environments.models.interfaces import ICustomer, ILMSSite
+from nti.app.environments.models.interfaces import ISetupStateSuccess
 
 from nti.app.environments.models.externalization import SITE_FIELDS_EXTERNAL_FOR_ADMIN_ONLY
 
@@ -82,5 +85,24 @@ class SiteInfoDecorator(AbstractRequestAwareDecorator):
             if attr_name not in external:
                 external[attr_name] = getattr(context, attr_name)
 
+@component.adapter(ILMSSite)
+@interface.implementer(IExternalObjectDecorator)
+class ContinueLinkDecorator(AbstractRequestAwareDecorator):
+
+    
+    def _predicate(self, context, unused_result):
+        """
+        Only the owner of the site gets this link
+        """
+        return context.owner.email == self.request.authenticated_userid \
+            and ISetupStateSuccess.providedBy(context.setup_state)
+
+    def _do_decorate_external(self, context, external):
+        links = external.setdefault(StandardExternalFields.LINKS, [])
+
+        link = Link(context, elements=('@@continue_to_site', ), rel='setup.continue')
+        links.append(link)
+
+    
 
 
