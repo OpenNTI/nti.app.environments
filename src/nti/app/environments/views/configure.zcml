@@ -12,6 +12,7 @@
 
 	<!-- handlers -->
 	<subscriber handler=".subscribers._site_created_event" />
+	<subscriber handler=".subscribers._notify_owner_on_site_created" />
 	<subscriber handler=".subscribers._update_host_load_on_site_added" />
 	<subscriber handler=".subscribers._update_host_load_on_site_removed" />
 	<subscriber handler=".subscribers._update_host_load_on_site_environment_updated" />
