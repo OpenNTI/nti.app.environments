@@ -326,6 +326,9 @@ class ISetupStateSuccess(ISetupState):
     site_info = Object(IInitializedSiteInfo, title='Information about the site that was succesfull created')
     site_info.setTaggedValue('_ext_excluded_out', True)
 
+    invite_accepted_date = DateTime(title=u'The datetime the inital invite was accepted',
+                                    required=False)
+
 class ISetupStateFailure(ISetupState):
     """
     A site that failed setup

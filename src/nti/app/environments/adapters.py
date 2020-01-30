@@ -118,8 +118,14 @@ class SiteLinks(object):
         # Now we have to build things up backwards.
 
         # The last hop is through us to mark as accepted, and then to the app
+        query = {'return': self.application_url}
+        rfstate = self.request.session.get('onboarding.continue_to_site.state', None) if self.request else None
+        if rfstate:
+            query['state'] = rfstate
+        # See nti.app.environments.views.sites.ContinueToSite
+        
         ping_back = self.request.resource_url(self.site, '@@invitation_accepted',
-                                              query={'return': self.application_url})
+                                              query=query)
 
         # Prior to that the user gets sent to the login accept view. Note this has to be relative
         # to the app host

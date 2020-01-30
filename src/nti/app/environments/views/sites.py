@@ -1,11 +1,16 @@
 import csv
 import datetime
+import hashlib
+import os
 
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
 
 from pyramid import httpexceptions as hexc
 from pyramid.view import view_config
+
+from zope import component
+
 from zope.cachedescriptors.property import Lazy
 from zope.container.interfaces import InvalidItemType
 from zope.event import notify
@@ -21,6 +26,7 @@ from nti.app.environments.auth import ACT_UPDATE
 from nti.app.environments.auth import is_admin_or_account_manager
 
 from nti.app.environments.interfaces import ISitesCollection
+from nti.app.environments.interfaces import ISiteLinks
 
 from nti.app.environments.models.events import SiteCreatedEvent
 from nti.app.environments.models.events import SiteUpdatedEvent
@@ -35,6 +41,7 @@ from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import SITE_STATUS_PENDING
 from nti.app.environments.models.interfaces import SITE_STATUS_UNKNOWN
 from nti.app.environments.models.interfaces import checkEmailAddress
+from nti.app.environments.models.interfaces import ISetupStateSuccess
 
 from nti.app.environments.models.sites import DedicatedEnvironment
 from nti.app.environments.models.sites import EnterpriseLicense
@@ -656,3 +663,100 @@ class CreateNewTrialSiteView(RequestTrialSiteView):
         site = self._create_site()
         self.request.response.status = 201
         return site
+
+
+@view_config(renderer='rest',
+             context=ILMSSite,
+             request_method='GET',
+             permission=ACT_READ,
+             name="continue_to_site")
+class ContinueToSite(BaseView):
+    """
+    Given a site whose environment and site are setup, send
+    the user through ot finish creating their account, or on in to the site.
+    """
+
+    
+    def __call__(self):
+        if self.context.owner.email != self.request.authenticated_userid:
+            raise hexc.HTTPForbidden()
+
+        setup_state = self.context.setup_state
+        if not ISetupStateSuccess.providedBy(setup_state):
+            logger.warn('Asked to continute but no site %s is not in setup_status succesful', self.context.id)
+            raise hexc.HTTPBadRequest()
+
+        links = component.getMultiAdapter((self.context, self.request))
+
+        # if we don't have an invite to accept, send them to the app
+        if setup_state.invite_accepted_date:
+            return hexc.HTTPSeeOther(links.application_url)
+
+        # They haven't accepted the invite yet. Initiate that process
+        state = hashlib.sha256(os.urandom(1024)).hexdigest()
+        self.request.session['onboarding.continue_to_site.state'] = state
+
+        return hexc.HTTPSeeOther(links.complete_account_url)
+
+        
+        
+
+@view_config(renderer='rest',
+             context=ILMSSite,
+             request_method='GET',
+             permission=ACT_READ,
+             name="mark_invite_accepted")
+class MarkInviteAcceptedView(BaseView):
+    """
+    Mark the site setup_state as having its invitation
+    accepted and return to the result.
+
+    TODO: We guard against a csrf here by requiring state in the session,
+    but we don't do anything to make sure the end user isn't h
+    itting this without actually accepting the invite.
+    Ideally we would have a way to actually know the invite was accepted, via
+    a postback or an ability to query it. Kick that can down the road, surely
+    a user wouldn't do that, and if they do it doesn't really hurt anything..
+    """
+
+    def make_redirect(self):
+        """
+        If a return query param was provided return to that.
+        otherwise send them to the application_url
+        """
+        location = self.request.params.get('return', None)
+        if not location:
+            location = component.getMultiAdapter((self.context, self.request)).application_url
+
+        return hexc.HTTPSeeOther(location=location)
+    
+    def __call__(self):
+        if self.context.owner.email != self.request.authenticated_userid:
+            raise hexc.HTTPForbidden()
+
+        # We expect to be given a state parameter that should match what we put in the
+        # session in the ContinueToSite view.
+        param_state = self.request.params.get('state', None)
+        if not param_state or param_state != self.request.session.get('onboarding.continue_to_site.state'):
+            raise hexc.HTTPBadRequest('State Mismatch')
+
+        setup_state = self.context.setup_state
+
+        # If we aren't in a succesful setup state
+        if not ISetupStateSuccess.providedBy(setup_state):
+            logger.warn('Attempted to mark invite accepted for site %s is in state %s',
+                        self.context.id, setup_state)
+            return self.make_redirect()
+
+        # If this has already been marked as accepted just return
+        if setup_state.invite_accepted_date:
+            logger.warn('Attempted to mark invite accecpted for site %s but it was marked at %s',
+                        self.context.id, setup_state.invite_accepted_time)
+            return self.make_redirect()
+
+        setup_state.invite_accepted_date = datetime.datetime.utcnow()
+        self.request.environ['nti.request_had_transaction_side_effects'] = True
+
+        # Let the transaction commit
+        return self.make_redirect()
+        

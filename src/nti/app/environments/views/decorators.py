@@ -98,11 +98,9 @@ class ContinueLinkDecorator(AbstractRequestAwareDecorator):
             and ISetupStateSuccess.providedBy(context.setup_state)
 
     def _do_decorate_external(self, context, external):
-        site_links = component.getMultiAdapter((context, self.request), ISiteLinks)
-        
         links = external.setdefault(StandardExternalFields.LINKS, [])
 
-        link = Link(site_links.complete_account_url, rel='setup.continue')
+        link = Link(context, elements=('@@continue_to_site', ), rel='setup.continue')
         links.append(link)
 
     
