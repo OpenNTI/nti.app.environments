@@ -14,6 +14,8 @@ from nti.containers.containers import CaseInsensitiveCheckingLastModifiedBTreeCo
 
 from nti.dublincore.datastructures import PersistentCreatedModDateTrackingObject
 
+from nti.traversal.traversal import find_interface
+
 from nti.schema.fieldproperty import createFieldProperties
 from nti.schema.schema import SchemaConfigured
 
@@ -24,6 +26,7 @@ from nti.app.environments.auth import ACCOUNT_MANAGEMENT_ROLE
 from nti.app.environments.models.interfaces import IHost
 from nti.app.environments.models.interfaces import IHostsContainer
 from nti.app.environments.models.interfaces import IDedicatedEnvironment
+from nti.app.environments.models.interfaces import IOnboardingRoot
 
 from nti.app.environments.models.utils import get_sites_folder
 
@@ -52,7 +55,7 @@ class PersistentHost(SchemaConfigured, PersistentCreatedModDateTrackingObject, C
 
     def recompute_current_load(self, exclusive_site=None):
         _load = 0
-        for site in get_sites_folder().values():
+        for site in get_sites_folder(onboarding_root=find_interface(self, IOnboardingRoot)).values():
             if      site != exclusive_site \
                 and IDedicatedEnvironment.providedBy(site.environment) \
                 and site.environment.host == self:
@@ -83,6 +86,22 @@ class HostsFolder(CaseInsensitiveCheckingLastModifiedBTreeContainer):
         host_id = getattr(host, 'id', host)
         del self[host_id]
 
+
+def get_or_create_host(host_folder, host_name, capacity=20):
+    """
+    Returns the host object for the provided hostname.
+    If a host with the name can't be found one is created with the
+    provided capacity.
+    """
+
+    # If this collection ever gets large this will slow down
+    for host in host_folder.values():
+        if host.host_name == host_name:
+            return host
+
+    new_host= PersistentHost(host_name=host_name, capacity=capacity)
+    host_folder.addHost(new_host)
+    return new_host
 
 def _generate_host_id():
     return 'H' + uuid.uuid4().hex

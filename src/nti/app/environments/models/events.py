@@ -2,6 +2,7 @@ from zope import interface
 
 from nti.app.environments.models.interfaces import ILMSSiteCreatedEvent
 from nti.app.environments.models.interfaces import ILMSSiteUpdatedEvent
+from nti.app.environments.models.interfaces import ILMSSiteSetupFinished
 
 
 @interface.implementer(ILMSSiteCreatedEvent)
@@ -18,3 +19,9 @@ class SiteUpdatedEvent(object):
         self.site = site
         self.original_values = original_values
         self.external_values = external_values
+
+@interface.implementer(ILMSSiteSetupFinished)
+class SiteSetupFinishedEvent(object):
+
+    def __init__(self, site):
+        self.site = site

@@ -7,6 +7,7 @@ from nti.transactions.transactions import TransactionLoop
 
 logger = __import__('logging').getLogger(__name__)
 
+from .interfaces import IOnboardingServer
 from .interfaces import ITransactionRunner
 
 
@@ -46,7 +47,9 @@ class _RunInTransaction(TransactionLoop):
         return note
 
     def run_handler(self, *args, **kwargs): # pylint:disable=arguments-differ
-        return self.handler(*args, **kwargs)
+        server = component.getUtility(IOnboardingServer)
+        root = server.root_onboarding_folder(self._connection)
+        return self.handler(root, *args, **kwargs)
 
     def setUp(self):
         # After the transaction manager has been put into explicit
