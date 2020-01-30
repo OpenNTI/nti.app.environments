@@ -58,7 +58,8 @@ requires = [
     'zope.securitypolicy',
     'pyramid_zope_request',
     'hubspot3',
-    'z3c.rml'
+    'z3c.rml',
+    'zope.cachedescriptors'
 ]
 
 tests_require = [

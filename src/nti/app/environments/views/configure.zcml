@@ -29,6 +29,10 @@
 			for="nti.app.environments.models.interfaces.ILMSSite pyramid.interfaces.IRequest"
 			provides="nti.externalization.interfaces.IExternalObjectDecorator" />
 
+	<subscriber factory=".decorators.ContinueLinkDecorator"
+			for="nti.app.environments.models.interfaces.ILMSSite pyramid.interfaces.IRequest"
+			provides="nti.externalization.interfaces.IExternalObjectDecorator" />
+
 	<!-- traversal -->
 	<adapter for="nti.app.environments.models.interfaces.ICustomer pyramid.interfaces.IRequest"
 			 factory="nti.traversal.traversal.DefaultAdapterTraversable"

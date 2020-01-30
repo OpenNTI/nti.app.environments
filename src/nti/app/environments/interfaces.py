@@ -1,5 +1,7 @@
 from zope import interface
 
+from nti.schema.field import ValidTextLine
+
 from zope.securitypolicy.interfaces import IPrincipalRoleManager
 
 
@@ -67,3 +69,18 @@ class ICollection(interface.Interface):
 
 class ISitesCollection(ICollection):
     pass
+
+
+class ISiteLinks(interface.Interface):
+    """
+    Important links related to a site. Typically registered as an adapter
+    on ILMSSite, IRequest
+    """
+
+    application_url = ValidTextLine(title='The application url')
+
+    complete_account_url = ValidTextLine(title='The url to follow to finish setting up an account.')
+
+    
+
+    
