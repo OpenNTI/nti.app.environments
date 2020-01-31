@@ -65,7 +65,6 @@ from .base import BaseFieldPutView
 from .base import BaseView
 from .base import ObjectCreateUpdateViewMixin
 from .base import createCustomer
-from .base import getOrCreateCustomer
 from .base_csv import CSVBaseView
 
 ITEMS = StandardExternalFields.ITEMS
@@ -103,12 +102,13 @@ class SiteBaseView(BaseView):
         if customer is None and created is True:
             contact = self._client.fetch_contact_by_email(value)
             if contact:
+                if not contact['name']:
+                    raise_json_error(hexc.HTTPUnprocessableEntity,
+                                     "Name is missing for customer on hubspot: {}.".format(value))
                 customer = createCustomer(folder,
                                           email=value,
                                           name=contact['name'],
                                           hs_contact_vid=contact['canonical-vid'])
-            else:
-                customer = getOrCreateCustomer(folder, value)
 
         if customer is None:
             raise_json_error(hexc.HTTPUnprocessableEntity,

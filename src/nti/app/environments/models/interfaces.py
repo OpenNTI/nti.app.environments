@@ -176,7 +176,8 @@ class ICustomer(IContained):
 
     name = ValidTextLine(title=u'Your name',
                          description=u"Your full name",
-                         required=False,
+                         required=True,
+                         min_length=1,
                          constraint=checkRealname)
 
     hubspot_contact = Object(IHubspotContact,

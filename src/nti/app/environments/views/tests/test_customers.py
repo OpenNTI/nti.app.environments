@@ -60,11 +60,11 @@ class TestChallengeView(BaseAppTest):
         customers = self._root().get('customers')
         assert_that(customers['test@example.com'], has_properties({'email': 'test@example.com'}))
         assert_that(_result[0][0], is_(('nti.app.environments:email_templates/verify_customer',)))
-        assert_that(_result[0][1], has_entries({'subject': starts_with('NextThought verification code: '),
+        assert_that(_result[0][1], has_entries({'subject': starts_with('NextThought Confirmation Code:'),
                                                 'recipients': ['test@example.com'],
                                                 'template_args': has_entries({'name': 'Test User',
                                                                               'email': 'test@example.com',
-                                                                              'code_suffix': has_length(9),
+                                                                              'code_suffix': has_length(6),
                                                                               'url': starts_with('http://localhost/onboarding/customers/@@verify_challenge')}),
                                                 'text_template_extension': '.mak'}))
 
@@ -98,11 +98,11 @@ class TestChallengeView(BaseAppTest):
         customers = self._root().get('customers')
         assert_that(customers['test@example.com'], has_properties({'email': 'test@example.com'}))
         assert_that(_result[0][0], is_(('nti.app.environments:email_templates/verify_customer',)))
-        assert_that(_result[0][1], has_entries({'subject': starts_with('NextThought verification code: '),
+        assert_that(_result[0][1], has_entries({'subject': starts_with('NextThought Confirmation Code: '),
                                                 'recipients': ['test@example.com'],
                                                 'template_args': has_entries({'name': 'Test User',
                                                                               'email': 'test@example.com',
-                                                                              'code_suffix': has_length(9)}),
+                                                                              'code_suffix': has_length(6)}),
                                                 'text_template_extension': '.mak'}))
         assert_that(_result[0][1]['template_args'].keys(), not_(has_items('url')))
 

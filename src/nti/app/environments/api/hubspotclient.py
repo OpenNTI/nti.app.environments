@@ -42,8 +42,8 @@ class HubspotClient(object):
 
         props = contact['properties']
 
-        first = props['firstname']['value'] if 'firstname' in props else None
-        last = props['lastname']['value'] if 'lastname' in props else None
+        first = props['firstname']['value'].strip() if 'firstname' in props else None
+        last = props['lastname']['value'].strip() if 'lastname' in props else None
         name = "{} {}".format(first, last) if first and last else first or last
         return {'canonical-vid': contact['canonical-vid'],
                 'email': props['email']['value'],
