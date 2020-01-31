@@ -173,9 +173,9 @@ def createCustomer(container, email, name, organization=None, hs_contact_vid=Non
     return customer
 
 
-def getOrCreateCustomer(container, email, name, organization, hs_contact_vid=None):
+def getOrCreateCustomer(container, email, name, organization=None, hs_contact_vid=None):
     try:
         customer = container[email]
     except KeyError:
-        customer = createCustomer(container, email, name, hs_contact_vid)
+        customer = createCustomer(container, email, name, organization=organization, hs_contact_vid=hs_contact_vid)
     return customer
