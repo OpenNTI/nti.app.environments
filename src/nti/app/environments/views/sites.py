@@ -26,7 +26,6 @@ from nti.app.environments.auth import ACT_UPDATE
 from nti.app.environments.auth import is_admin_or_account_manager
 
 from nti.app.environments.interfaces import ISitesCollection
-from nti.app.environments.interfaces import ISiteLinks
 
 from nti.app.environments.models.events import SiteCreatedEvent
 from nti.app.environments.models.events import SiteUpdatedEvent

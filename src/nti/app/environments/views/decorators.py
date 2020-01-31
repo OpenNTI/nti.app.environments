@@ -13,8 +13,6 @@ from nti.property.property import alias
 
 from nti.app.environments.auth import ACT_CREATE, is_admin_or_account_manager
 
-from nti.app.environments.interfaces import ISiteLinks
-
 from nti.app.environments.models.interfaces import ICustomer, ILMSSite
 from nti.app.environments.models.interfaces import ISetupStateSuccess
 
