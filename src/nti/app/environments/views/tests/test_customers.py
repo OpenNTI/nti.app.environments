@@ -177,7 +177,7 @@ class TestChallengerVerification(BaseAppTest):
         params = {'email': 'test@g.com', 'code': 'xxxxxx', 'name': "okc"}
         result = self.testapp.post_json(url, params=params, status=200, extra_environ=self._make_environ(username=None)).json_body
         assert_that(result, has_entries({'email': 'test@g.com',
-                                         'customer': has_entries({'email': 'test@g.com', 'name': 'okc'})}))
+                                         'customer': has_entries({'email': 'test@g.com'})}))
 
 
 class TestChallegePages(BaseAppTest):

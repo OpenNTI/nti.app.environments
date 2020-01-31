@@ -89,7 +89,7 @@ class TestSiteCreationView(BaseAppTest):
         with ensure_free_txn():
             sites = self._root().get('sites')
             assert_that(sites, has_length(0))
-            getOrCreateCustomer(self._root().get('customers'), 'test@gmail.com', 'Test Name')
+            getOrCreateCustomer(self._root().get('customers'), 'test@gmail.com', 'Test Name', 'Organization')
             mock_customers.return_value = self._root().get('customers')
 
         result = self.testapp.post_json(url, params=params, status=201, extra_environ=self._make_environ(username='admin001'))
@@ -730,7 +730,7 @@ class TestSitesUploadCSVView(BaseAppTest):
         result = view._process_owner({'Hubspot Contact': 'test2@nt.com'})
         assert_that(result, has_properties({'email': 'test2@nt.com', 'hubspot_contact': not_none(), 'name': 'Test OK'}))
         assert_that(customers, has_length(1))
-        
+
         result = view._process_owner({'Hubspot Contact': 'test3@nt.com'})
         assert_that(result, has_properties({'email': 'test3@nt.com', 'hubspot_contact': has_properties({'contact_vid': '123'}), 'name': 'Test OK'}))
         assert_that(customers, has_length(2))
@@ -806,7 +806,7 @@ class TestSitesUploadCSVView(BaseAppTest):
     def testGet(self, mock_client):
         mock_client.return_value = client = mock.MagicMock()
         client.fetch_contact_by_email = lambda email: None
-        
+
         sites = self._root().get('sites')
         assert_that(sites, has_length(0))
         with ensure_free_txn():

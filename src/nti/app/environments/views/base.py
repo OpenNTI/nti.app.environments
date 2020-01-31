@@ -163,18 +163,19 @@ class BaseFieldPutView(BaseView, ObjectCreateUpdateViewMixin):
                              error=err)
 
 
-def createCustomer(container, email, name, hs_contact_vid=None):
+def createCustomer(container, email, name, organization=None, hs_contact_vid=None):
     customer = PersistentCustomer(email=email,
-                                  name=name)
+                                  name=name,
+                                  organization=organization)
     if hs_contact_vid:
         customer.hubspot_contact = HubspotContact(contact_vid=str(hs_contact_vid))
     container.addCustomer(customer)
     return customer
 
 
-def getOrCreateCustomer(container, email, name, hs_contact_vid=None):
+def getOrCreateCustomer(container, email, name, organization=None, hs_contact_vid=None):
     try:
         customer = container[email]
     except KeyError:
-        customer = createCustomer(container, email, name, hs_contact_vid)
+        customer = createCustomer(container, email, name, organization=organization, hs_contact_vid=hs_contact_vid)
     return customer

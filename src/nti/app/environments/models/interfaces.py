@@ -334,7 +334,7 @@ class ISetupStateFailure(ISetupState):
     """
     A site that failed setup
     """
-    
+
     exception = interface.Attribute('The exception resulting in the failure')
     exception.setTaggedValue('_ext_excluded_out', True)
 
@@ -416,7 +416,7 @@ class ILMSSiteUpdatedEvent(interface.Interface):
 
 class ILMSSiteSetupFinished(interface.Interface):
     """
-    An event that fires when a site setup has finished. 
+    An event that fires when a site setup has finished.
     The setup_state field will be updated to reflect the current state
     of the site.
     """
