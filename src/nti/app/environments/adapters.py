@@ -141,5 +141,5 @@ class SiteLinks(object):
         parsed = urlparse(invite_href)
         params = parse_qs(parsed.query)
         params['success'] = account_creation
-        parsed = parsed._replace(query=urlencode(params))
+        parsed = parsed._replace(query=urlencode(params, doseq=True))
         return urlunparse(parsed)
