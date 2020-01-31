@@ -1,3 +1,8 @@
+# NOTE: We must not import *anything* before the patch
+#import gevent; gevent.config.resolver = 'dnspython'
+import gevent.monkey
+gevent.monkey.patch_all()
+
 from zope.component import getGlobalSiteManager
 
 import zope.i18nmessageid as zope_i18nmessageid
@@ -23,7 +28,7 @@ set_hook()
 
 
 def main(global_config, **settings):
-    """ 
+    """
     This function returns a Pyramid WSGI application.
     """
     config = configure(settings)
@@ -38,6 +43,6 @@ def main(global_config, **settings):
 
     # Create and register our onboarding server
     server = OnboardingServer(config.registry._zodb_databases)
-    getGlobalSiteManager().registerUtility(server, IOnboardingServer) 
-    
+    getGlobalSiteManager().registerUtility(server, IOnboardingServer)
+
     return config.make_wsgi_app()
