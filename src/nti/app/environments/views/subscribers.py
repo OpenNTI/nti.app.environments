@@ -16,6 +16,8 @@ from zope.lifecycleevent import IObjectRemovedEvent
 
 from nti.traversal.traversal import find_interface
 
+from nti.app.environments.api.hubspotclient import get_hubspot_client
+
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import IOnboardingRoot
 from nti.app.environments.models.interfaces import IDedicatedEnvironment
@@ -31,6 +33,8 @@ from nti.app.environments.models.events import SiteSetupFinishedEvent
 from nti.app.environments.models.interfaces import SITE_STATUS_PENDING
 from nti.app.environments.models.interfaces import ISetupStatePending
 from nti.app.environments.models.interfaces import ISetupStateSuccess
+
+from nti.app.environments.models.customers import HubspotContact
 
 from nti.app.environments.models.hosts import get_or_create_host
 
@@ -53,13 +57,23 @@ logger = __import__('logging').getLogger(__name__)
 
 @component.adapter(ICustomerVerifiedEvent)
 def _update_customer_verified(event):
-    event.customer.last_verified = datetime.utcnow()
+    _now = time.time()
+    event.customer.last_verified = datetime.utcfromtimestamp(_now)
+    event.customer.updateLastModIfGreater(_now)
 
 
 @component.adapter(ICustomerVerifiedEvent)
 def _upload_customer_to_hubspot(event):
-    # TODO
-    pass
+    client = get_hubspot_client()
+    customer = event.customer
+    result = client.upsert_contact(customer.email,
+                                   customer.name)
+
+    if customer.hubspot_contact is None:
+        customer.hubspot_contact = HubspotContact(contact_vid=result['contact_vid'])
+    elif customer.hubspot_contact.contact_vid != result['contact_vid']:
+        customer.hubspot_contact.contact_vid = result['contact_vid']
+
 
 @component.adapter(ILMSSiteCreatedEvent)
 def _site_created_event(event):

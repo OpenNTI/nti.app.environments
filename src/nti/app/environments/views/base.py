@@ -164,12 +164,16 @@ class BaseFieldPutView(BaseView, ObjectCreateUpdateViewMixin):
 
 
 def createCustomer(container, email, name, organization=None, hs_contact_vid=None):
-    customer = PersistentCustomer(email=email,
-                                  name=name,
-                                  organization=organization)
-    if hs_contact_vid:
-        customer.hubspot_contact = HubspotContact(contact_vid=str(hs_contact_vid))
-    container.addCustomer(customer)
+    try:
+        customer = PersistentCustomer(email=email,
+                                      name=name,
+                                      organization=organization)
+        if hs_contact_vid:
+            customer.hubspot_contact = HubspotContact(contact_vid=str(hs_contact_vid))
+        container.addCustomer(customer)
+    except ValueError as err:
+        raise_json_error(hexc.HTTPUnprocessableEntity,
+                         str(err))
     return customer
 
 

@@ -49,6 +49,31 @@ class HubspotClient(object):
                 'email': props['email']['value'],
                 'name': name or ''}
 
+    def upsert_contact(self, email, name):
+        logger.info("Upserting contact to hubspot with email: %s, name: %s.", email, name)
+        firstname, lastname = _split_name(name)
+
+        props = []
+        for prop_name, prop_value in (('firstname', firstname),
+                             ('lastname', lastname)):
+            props.append({'property': prop_name,
+                          'value': prop_value})
+
+        data = {'properties': props}
+        result = self._call(self._client.contacts.create_or_update_by_email,
+                            email,
+                            data=data)
+
+        return {'contact_vid': str(result['vid'])}
+
+
+def _split_name(name):
+    # Here we suppose first name always exists, last name may be empty.
+    names = name.rsplit(' ', maxsplit=1)
+    firstname = names[0]
+    lastname = names[1] if len(names) == 2 else ''
+    return (firstname, lastname)
+
 
 _hubspot_client =None
 

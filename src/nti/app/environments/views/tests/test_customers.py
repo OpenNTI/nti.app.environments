@@ -53,6 +53,10 @@ class TestChallengeView(BaseAppTest):
         result = self.testapp.post(url, params=params, status=400, extra_environ=self._make_environ(username=None)).json_body
         assert_that(result, has_entries({'message': 'Invalid email.'}))
 
+        params = {'name': '123456', 'email': 'test@example.com'}
+        result = self.testapp.post(url, params=params, status=422, extra_environ=self._make_environ(username=None)).json_body
+        assert_that(result, has_entries({'message': 'Invalid Realname 123456'}))
+
         params = {'name': 'Test User', 'email': 'test@example.com'}
         result = self.testapp.post(url, params=params, status=200, extra_environ=self._make_environ(username=None)).json_body
         assert_that(result, has_entries({'redirect_uri': 'http://localhost/onboarding/customers/@@email_challenge_verify'}))
@@ -90,6 +94,10 @@ class TestChallengeView(BaseAppTest):
         result = self.testapp.post_json(url, params=params, status=400, extra_environ=self._make_environ(username=None)).json_body
         assert_that(result, has_entries({'message': 'Invalid email.'}))
 
+        params = {'name': '123456', 'email': 'test@example.com'}
+        result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username=None)).json_body
+        assert_that(result, has_entries({'message': 'Invalid Realname 123456'}))
+
         params = {'name': 'Test User', 'email': 'test@example.com'}
         result = self.testapp.post_json(url, params=params, status=200, extra_environ=self._make_environ(username=None)).json_body
         assert_that(result, has_entries({'name': 'Test User',
@@ -110,8 +118,9 @@ class TestChallengeView(BaseAppTest):
 class TestChallengerVerification(BaseAppTest):
 
     @with_test_app()
+    @mock.patch('nti.app.environments.views.subscribers.get_hubspot_client')
     @mock.patch('nti.app.environments.views.customers.validate_challenge_for_customer')
-    def test_verify_challenge(self, mock_validate):
+    def test_verify_challenge(self, mock_validate, mock_client):
         url = '/onboarding/customers/@@verify_challenge'
         params = {}
         result = self.testapp.post(url, params=params, status=422, extra_environ=self._make_environ(username=None)).json_body
@@ -141,6 +150,9 @@ class TestChallengerVerification(BaseAppTest):
         assert_that(result['message'], is_("That code wasn't valid. Give it another go!"))
 
         mock_validate.return_value = True
+        mock_client.return_value = _client = mock.MagicMock()
+        _client.upsert_contact = lambda email, name: {'contact_vid': '123'}
+        
         params = {'email': 'test@g.com', 'code': 'xxxxxx'}
         result = self.testapp.post(url, params=params, status=200, extra_environ=self._make_environ(username=None)).json_body
         assert_that(result, has_entries({'redirect_uri': '/'}))
@@ -149,8 +161,9 @@ class TestChallengerVerification(BaseAppTest):
         assert_that(result, has_entries({'redirect_uri': '/'}))
 
     @with_test_app()
+    @mock.patch('nti.app.environments.views.subscribers.get_hubspot_client')
     @mock.patch('nti.app.environments.views.customers.validate_challenge_for_customer')
-    def test_email_challenge_verify(self, mock_validate):
+    def test_email_challenge_verify(self, mock_validate, mock_client):
         url = '/onboarding/customers/@@email_challenge_verify'
         params = {}
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username=None)).json_body
@@ -174,10 +187,14 @@ class TestChallengerVerification(BaseAppTest):
         assert_that(result['message'], is_("That code wasn't valid. Give it another go!"))
 
         mock_validate.return_value = True
+        mock_client.return_value = _client = mock.MagicMock()
+        _client.upsert_contact = lambda email, name: {'contact_vid': '123'}
+
         params = {'email': 'test@g.com', 'code': 'xxxxxx', 'name': "okc"}
         result = self.testapp.post_json(url, params=params, status=200, extra_environ=self._make_environ(username=None)).json_body
         assert_that(result, has_entries({'email': 'test@g.com',
-                                         'customer': has_entries({'email': 'test@g.com'})}))
+                                         'customer': has_entries({'email': 'test@g.com',
+                                                                  'hubspot_contact': has_entries({'contact_vid': '123'})})}))
 
 
 class TestChallegePages(BaseAppTest):
