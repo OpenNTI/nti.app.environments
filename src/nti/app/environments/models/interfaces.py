@@ -18,6 +18,8 @@ from zope.i18n import translate
 
 import zope.i18nmessageid as zope_i18nmessageid
 
+from zope.interface.interfaces import IObjectEvent
+
 from nti.i18n.locales.interfaces import ICcTLDInformation
 
 from nti.schema.interfaces import InvalidValue
@@ -414,6 +416,7 @@ class ILMSSiteUpdatedEvent(interface.Interface):
 
     external_values = interface.Attribute("A dictionary that storing the external values.")
 
+
 class ILMSSiteSetupFinished(interface.Interface):
     """
     An event that fires when a site setup has finished.
@@ -423,6 +426,12 @@ class ILMSSiteSetupFinished(interface.Interface):
     site = Object(ILMSSite,
                   title="The site object created.",
                   required=True)
+
+
+class ICustomerVerifiedEvent(IObjectEvent):
+    """
+    An event that fires when a customer has been verified.
+    """
 
 
 class ISiteUsage(IContained):

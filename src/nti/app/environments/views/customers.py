@@ -1,11 +1,12 @@
-import datetime
-
 from pyramid import httpexceptions as hexc
 
 from pyramid.view import view_config
 from pyramid.view import view_defaults
 
 from zope import component
+
+from zope.event import notify
+
 from zope.schema._bootstrapinterfaces import ConstraintNotSatisfied
 
 from nti.app.environments.api.hubspotclient import get_hubspot_client
@@ -22,6 +23,8 @@ from nti.app.environments.authentication import forget
 from nti.app.environments.authentication import remember
 from nti.app.environments.authentication import setup_challenge_for_customer
 from nti.app.environments.authentication import validate_challenge_for_customer
+
+from nti.app.environments.models.events import CustomerVerifiedEvent
 
 from nti.externalization.interfaces import LocatedExternalDict
 
@@ -146,8 +149,7 @@ class ChallengerVerification(BaseView):
 
         # remember the user
         remember(self.request, email)
-
-        customer.last_verified = datetime.datetime.utcnow()
+        notify(CustomerVerifiedEvent(customer))
 
         # See other the user to the create site form
         return {'email': email,

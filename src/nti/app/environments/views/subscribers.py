@@ -1,8 +1,9 @@
-import gevent
 
 import time
-
+import gevent
 import transaction
+
+from datetime import datetime
 
 from celery.exceptions import TimeoutError
 
@@ -16,14 +17,14 @@ from zope.lifecycleevent import IObjectRemovedEvent
 from nti.traversal.traversal import find_interface
 
 from nti.app.environments.models.interfaces import ILMSSite
+from nti.app.environments.models.interfaces import IOnboardingRoot
 from nti.app.environments.models.interfaces import IDedicatedEnvironment
 from nti.app.environments.models.interfaces import ILMSSiteCreatedEvent
 from nti.app.environments.models.interfaces import ILMSSiteUpdatedEvent
 from nti.app.environments.models.interfaces import ILMSSiteSetupFinished
-from nti.app.environments.models.interfaces import IOnboardingRoot
+from nti.app.environments.models.interfaces import ICustomerVerifiedEvent
 
-from nti.environments.management.interfaces import ICeleryApp
-from nti.environments.management.interfaces import ISetupEnvironmentTask
+from nti.app.environments.api.hubspotclient import get_hubspot_client
 
 from nti.app.environments.interfaces import ITransactionRunner
 
@@ -46,8 +47,21 @@ from nti.app.environments.models.utils import get_hosts_folder
 from nti.app.environments.views.notification import SiteCreatedEmailNotifier
 from nti.app.environments.views.notification import SiteSetupEmailNotifier
 
+from nti.environments.management.interfaces import ICeleryApp
+from nti.environments.management.interfaces import ISetupEnvironmentTask
+
 logger = __import__('logging').getLogger(__name__)
 
+
+@component.adapter(ICustomerVerifiedEvent)
+def _update_customer_verified(event):
+    event.customer.last_verified = datetime.utcnow()
+
+
+@component.adapter(ICustomerVerifiedEvent)
+def _upload_customer_to_hubspot(event):
+    # TODO
+    pass
 
 @component.adapter(ILMSSiteCreatedEvent)
 def _site_created_event(event):

@@ -12,6 +12,8 @@
 
 	<!-- handlers -->
 	<subscriber handler=".subscribers._site_created_event" />
+	<subscriber handler=".subscribers._update_customer_verified" />
+	<subscriber handler=".subscribers._upload_customer_to_hubspot" />
 	<subscriber handler=".subscribers._notify_owner_on_site_created" />
 	<subscriber handler=".subscribers._update_host_load_on_site_added" />
 	<subscriber handler=".subscribers._update_host_load_on_site_removed" />
