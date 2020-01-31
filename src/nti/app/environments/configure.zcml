@@ -45,14 +45,22 @@
 
 	<include package="nti.environments.management" />
 
-	<utility
-	    factory=".authentication.EmailChallengeOTPGenerator"
-	    provides=".interfaces.IOTPGenerator"/>
+    <configure zcml:condition="not-have devmode">
+    	<utility
+    	    factory=".authentication.EmailChallengeOTPGenerator"
+    	    provides=".interfaces.IOTPGenerator"/>
+    </configure>
+
+    <configure zcml:condition="have devmode">
+        <utility
+            factory=".authentication.DevmodeFixedChallengeOTPGenerator"
+            provides=".interfaces.IOTPGenerator"/>
+    </configure>
 
 	<include package=".models" file="configure.zcml" />
-	
+
 	<include package=".views" file="configure.zcml" />
-	
+
 	<include package=".securitypolicy" file="configure.zcml" />
 
 	<include package=".renderers" file="configure.zcml" />
