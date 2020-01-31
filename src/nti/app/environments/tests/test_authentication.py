@@ -1,15 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from hamcrest import assert_that
-from hamcrest import has_length
+from hamcrest import is_
 from hamcrest import is_in
+from hamcrest import has_length
+from hamcrest import assert_that
 from hamcrest import only_contains
 
 import unittest
 
-from ..authentication import EmailChallengeOTPGenerator
 from ..authentication import _Z_BASE_32_ALPHABET
+from ..authentication import EmailChallengeOTPGenerator
+from ..authentication import DevmodeFixedChallengeOTPGenerator
+
 
 class TestEmailChallengeGeneratorTest(unittest.TestCase):
 
@@ -27,3 +30,8 @@ class TestEmailChallengeGeneratorTest(unittest.TestCase):
 
         # We can ask for a longer code if we want
         assert_that(self.generator.generate_passphrase(100), has_length(100))
+
+    def test_devmode(self):
+        generator = DevmodeFixedChallengeOTPGenerator()
+        assert_that(generator.generate_passphrase(), is_('0' * 12))
+        assert_that(generator.generate_passphrase(100), is_('0' * 100))

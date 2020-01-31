@@ -27,11 +27,20 @@ class EmailChallengeOTPGenerator(object):
 
     This implementation is based on https://github.com/portier/portier-broker/issues/69
     """
-    alphabet = _Z_BASE_32_ALPHABET    
+    alphabet = _Z_BASE_32_ALPHABET
 
     def generate_passphrase(self, length=_EMAIL_OTP_PASS_LENGTH):
         return ''.join(random.choices(self.alphabet, k=length))
 
+
+@interface.implementer(IOTPGenerator)
+class DevmodeFixedChallengeOTPGenerator(object):
+    """
+    A fixed 000000000 passphrase generator, only for devmode.
+    """
+
+    def generate_passphrase(self, length=_EMAIL_OTP_PASS_LENGTH):
+        return '0' * length
 
 
 _CHALLENGE_EXPIRATION_TIME = 4*60*60 # 4 hours is pretty long
@@ -47,7 +56,7 @@ def setup_challenge_for_customer(customer):
     Returns the the one time use code
     """
     generator = component.getUtility(IOTPGenerator)
-    
+
     code = generator.generate_passphrase()
     now = datetime.datetime.utcnow()
     attempts = 0
@@ -59,7 +68,7 @@ def setup_challenge_for_customer(customer):
     annotations[_CHALLENGE_ANNOTATION_KEY] = (code, now, attempts)
     return code
 
-    
+
 def validate_challenge_for_customer(customer, code):
     """
     Validates the provided challenge against the given customer.
@@ -86,13 +95,13 @@ def validate_challenge_for_customer(customer, code):
         return False
 
     # we are good on age, and attempts
-    if not code or code.lower() != expected_code:    
+    if not code or code.lower() != expected_code:
         annotations[_CHALLENGE_ANNOTATION_KEY] = (expected_code, created, attempts+1)
         return False
 
     del annotations[_CHALLENGE_ANNOTATION_KEY]
     return True
-        
+
 
 def remember(request, userid, **kwargs):
     headers = p_remember(request, userid)
