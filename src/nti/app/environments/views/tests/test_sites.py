@@ -1,11 +1,10 @@
 import datetime
-import tempfile
-import shutil
 import os
 
 from unittest import mock
 from hamcrest import assert_that
 from hamcrest import has_length
+from hamcrest import has_items
 from hamcrest import has_entries
 from hamcrest import has_properties
 from hamcrest import instance_of
@@ -16,11 +15,7 @@ from hamcrest import raises
 from hamcrest import not_none
 from hamcrest import is_
 
-from pyramid_mailer.interfaces import IMailer
-from pyramid_mailer import Mailer
 from pyramid import httpexceptions as hexc
-
-from zope import component
 
 from zope.interface.exceptions import Invalid
 
@@ -378,28 +373,29 @@ class TestSitePutView(BaseAppTest):
 class TestRequestTrialSiteView(BaseAppTest):
 
     @with_test_app()
+    @mock.patch('nti.app.environments.views.notification._mailer')
     @mock.patch('nti.app.environments.views.utils._is_dns_name_available')
     @mock.patch('nti.app.environments.views.sites.get_hubspot_client')
     @mock.patch('nti.app.environments.views.sites.is_admin_or_account_manager')
-    def testRequestTrialSiteView(self, mock_admin, mock_client, mock_dns_available):
+    def testRequestTrialSiteView(self, mock_admin, mock_client, mock_dns_available, mock_mailer):
         _client = mock.MagicMock()
         _client.fetch_contact_by_email = lambda email: None
         mock_client.return_value = _client
         mock_admin.return_value = True
+
+        _result = []
+        mock_mailer.return_value = _mailer = mock.MagicMock()
+        _mailer.queue_simple_html_text_email = lambda *args, **kwargs: _result.append((args, kwargs))
+
         url = '/onboarding/sites/@@request_trial_site'
         with ensure_free_txn():
-            dirpath = tempfile.mkdtemp()
-            os.mkdir(os.path.join(dirpath, 'new'))
-            os.mkdir(os.path.join(dirpath, 'cur'))
-            os.mkdir(os.path.join(dirpath, 'tmp'))
-            component.getGlobalSiteManager().registerUtility(Mailer(default_sender='no-reply.nextthought.com',
-                                                                    queue_path=dirpath), IMailer)
             sites = self._root().get('sites')
             assert_that(sites, has_length(0))
 
             customers = self._root().get('customers')
             customers.addCustomer(PersistentCustomer(email='123@gmail.com', name="testname"))
-            assert_that(customers, has_length(1))
+            customers.addCustomer(PersistentCustomer(email="1234@gmail.com", name="testok"))
+            assert_that(customers, has_length(2))
 
         params = {}
         self.testapp.post_json(url, params=params, status=302, extra_environ=self._make_environ(username=None))
@@ -429,6 +425,17 @@ class TestRequestTrialSiteView(BaseAppTest):
         result = self.testapp.post_json(url, params=params, status=201, extra_environ=self._make_environ(username='admin001')).json_body
         assert_that(result['redirect_url'], starts_with('http://localhost/onboarding/sites/'))
 
+        assert_that(_result, has_length(2))
+        assert_that([x[0] for x in _result], has_items(('nti.app.environments:email_templates/new_site_request',),
+                                                       ('nti.app.environments:email_templates/site_setup_completed',)))
+        assert_that([x[1] for x in _result], has_items(has_entries({'subject': "It's time to setup your password!",
+                                                                    'recipients': ['123@gmail.com'],
+                                                                    'template_args': has_entries({'name': '123@gmail.com',
+                                                                                     'site_domain_link': 'http://xxx/',
+                                                                                     'password_setup_link': starts_with('http://localhost/sites/S')}),
+                                                                    'attachments': None,
+                                                                    'text_template_extension': '.mak'})))
+
         params = {'owner': '1234@gmail.com', 'dns_names': ['yyy', 'zzz']}
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001')).json_body
         assert_that(result['message'], starts_with('Please provide one site url.'))
@@ -443,10 +450,8 @@ class TestRequestTrialSiteView(BaseAppTest):
         assert_that(result['redirect_url'], starts_with('http://localhost/onboarding/sites/'))
 
         with ensure_free_txn():
-            component.getGlobalSiteManager().unregisterUtility(Mailer(default_sender='no-reply.nextthought.com'), IMailer)
-            shutil.rmtree(dirpath)
             assert_that(sites, has_length(2))
-            assert_that(customers, has_length(2))
+            assert_that(customers, has_length(3))
             assert_that(customers['12345@gmail.com'].hubspot_contact.contact_vid, '133')
 
     @with_test_app()
@@ -486,22 +491,22 @@ class TestRequestTrialSiteView(BaseAppTest):
 class TestCreateNewTrialSiteView(BaseAppTest):
 
     @with_test_app()
+    @mock.patch('nti.app.environments.views.notification._mailer')
     @mock.patch('nti.app.environments.views.sites.get_hubspot_client')
     @mock.patch('nti.app.environments.views.sites.is_admin_or_account_manager')
     @mock.patch('nti.app.environments.views.utils._is_dns_name_available')
-    def testCreateNewTrialSiteView(self, mock_dns_available, mock_admin, mock_client):
+    def testCreateNewTrialSiteView(self, mock_dns_available, mock_admin, mock_client, mock_mailer):
         _client = mock.MagicMock()
         _client.fetch_contact_by_email = lambda email: None
         mock_client.return_value = _client
         mock_admin.return_value = False
+
+        _result = []
+        mock_mailer.return_value = _mailer = mock.MagicMock()
+        _mailer.queue_simple_html_text_email = lambda *args, **kwargs: _result.append((args, kwargs))
+
         url = '/onboarding/customers/user001@example.com/sites'
         with ensure_free_txn():
-            dirpath = tempfile.mkdtemp()
-            os.mkdir(os.path.join(dirpath, 'new'))
-            os.mkdir(os.path.join(dirpath, 'cur'))
-            os.mkdir(os.path.join(dirpath, 'tmp'))
-            component.getGlobalSiteManager().registerUtility(Mailer(default_sender='no-reply.nextthought.com',
-                                                                    queue_path=dirpath), IMailer)
             sites = self._root().get('sites')
             assert_that(sites, has_length(0))
 
@@ -526,11 +531,6 @@ class TestCreateNewTrialSiteView(BaseAppTest):
 
         params = {'dns_names': ['yyy.nextthought.io']}
         self.testapp.post_json(url, params=params, status=403, extra_environ=self._make_environ(username='user001@example.com'))
-
-        with ensure_free_txn():
-            component.getGlobalSiteManager().unregisterUtility(Mailer(default_sender='no-reply.nextthought.com'), IMailer)
-            shutil.rmtree(dirpath)
-            assert_that(sites, has_length(1))
 
 
 class TestSitesUploadCSVView(BaseAppTest):

@@ -75,6 +75,6 @@ def configure(settings=None, registry=None):
 
         config.add_traverser( ZopeResourceTreeTraverser )
 
-        config.scan(ignore=[_ignore_tests_scan_callable, 'nti.app.environments.tasks'])
+        config.scan(ignore=[_ignore_tests_scan_callable, 'nti.app.environments.tasks', 'nti.app.environments.nti_gunicorn'])
 
     return config

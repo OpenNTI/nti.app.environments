@@ -24,8 +24,6 @@ from nti.app.environments.models.interfaces import ILMSSiteUpdatedEvent
 from nti.app.environments.models.interfaces import ILMSSiteSetupFinished
 from nti.app.environments.models.interfaces import ICustomerVerifiedEvent
 
-from nti.app.environments.api.hubspotclient import get_hubspot_client
-
 from nti.app.environments.interfaces import ITransactionRunner
 
 from nti.app.environments.models.events import SiteSetupFinishedEvent

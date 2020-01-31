@@ -16,6 +16,10 @@ from nti.externalization.interfaces import IExternalObjectRepresenter
 from nti.mailer.interfaces import ITemplatedMailer
 
 
+def _mailer():
+    return component.getUtility(ITemplatedMailer, name='default')
+
+
 class BaseEmailNotifier(object):
 
     _template = None
@@ -35,7 +39,7 @@ class BaseEmailNotifier(object):
         return None
 
     def notify(self):
-        mailer = component.getUtility(ITemplatedMailer, name='default')
+        mailer = _mailer()
         mailer.queue_simple_html_text_email(self._template,
                                             subject=self._subject,
                                             recipients=self._recipients(),
