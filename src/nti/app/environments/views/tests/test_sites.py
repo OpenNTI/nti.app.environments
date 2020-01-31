@@ -13,6 +13,7 @@ from hamcrest import contains_string
 from hamcrest import starts_with
 from hamcrest import calling
 from hamcrest import raises
+from hamcrest import not_none
 from hamcrest import is_
 
 from pyramid_mailer.interfaces import IMailer
@@ -38,7 +39,7 @@ from nti.app.environments.models.sites import TrialLicense
 from nti.app.environments.models.sites import EnterpriseLicense
 from nti.app.environments.models.sites import PersistentSite
 from nti.app.environments.models.sites import SharedEnvironment
-from nti.app.environments.models.interfaces import ICustomer, ISiteUsage
+from nti.app.environments.models.interfaces import ISiteUsage
 from nti.app.environments.models.interfaces import IEnterpriseLicense
 from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import ISharedEnvironment
@@ -88,7 +89,7 @@ class TestSiteCreationView(BaseAppTest):
         with ensure_free_txn():
             sites = self._root().get('sites')
             assert_that(sites, has_length(0))
-            getOrCreateCustomer(self._root().get('customers'), 'test@gmail.com')
+            getOrCreateCustomer(self._root().get('customers'), 'test@gmail.com', 'Test Name')
             mock_customers.return_value = self._root().get('customers')
 
         result = self.testapp.post_json(url, params=params, status=201, extra_environ=self._make_environ(username='admin001'))
@@ -377,9 +378,10 @@ class TestSitePutView(BaseAppTest):
 class TestRequestTrialSiteView(BaseAppTest):
 
     @with_test_app()
+    @mock.patch('nti.app.environments.views.utils._is_dns_name_available')
     @mock.patch('nti.app.environments.views.sites.get_hubspot_client')
     @mock.patch('nti.app.environments.views.sites.is_admin_or_account_manager')
-    def testRequestTrialSiteView(self, mock_admin, mock_client):
+    def testRequestTrialSiteView(self, mock_admin, mock_client, mock_dns_available):
         _client = mock.MagicMock()
         _client.fetch_contact_by_email = lambda email: None
         mock_client.return_value = _client
@@ -420,6 +422,8 @@ class TestRequestTrialSiteView(BaseAppTest):
         params = {'owner': '123@gmail.com', 'dns_names': [None]}
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001')).json_body
         assert_that(result['message'], is_('Invalid site url: None.'))
+
+        mock_dns_available.return_value = True
 
         params = {'owner': '123@gmail.com', 'dns_names': ['xxx']}
         result = self.testapp.post_json(url, params=params, status=201, extra_environ=self._make_environ(username='admin001')).json_body
@@ -484,7 +488,8 @@ class TestCreateNewTrialSiteView(BaseAppTest):
     @with_test_app()
     @mock.patch('nti.app.environments.views.sites.get_hubspot_client')
     @mock.patch('nti.app.environments.views.sites.is_admin_or_account_manager')
-    def testCreateNewTrialSiteView(self, mock_admin, mock_client):
+    @mock.patch('nti.app.environments.views.utils._is_dns_name_available')
+    def testCreateNewTrialSiteView(self, mock_dns_available, mock_admin, mock_client):
         _client = mock.MagicMock()
         _client.fetch_contact_by_email = lambda email: None
         mock_client.return_value = _client
@@ -515,6 +520,7 @@ class TestCreateNewTrialSiteView(BaseAppTest):
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='user001@example.com')).json_body
         assert_that(result, has_entries({'message': 'Invalid site url: xxx.'}))
 
+        mock_dns_available.return_value = True
         params = {'dns_names': ['xxx.nextthought.io']}
         self.testapp.post_json(url, params=params, status=201, extra_environ=self._make_environ(username='user001@example.com'))
 
@@ -712,23 +718,22 @@ class TestSitesUploadCSVView(BaseAppTest):
         assert_that(calling(view._process_environment).with_args({'Environment': 'x'}), raises(ValueError, pattern="Invalid Environment."))
 
         # owner
-        result = view._process_owner({'Hubspot Contact': 'test@nt.com'})
-        assert_that(ICustomer.providedBy(result))
-        assert_that(result, has_properties({'email': 'test@nt.com', 'hubspot_contact': None, 'name': None}))
+        assert_that(calling(view._process_owner).with_args({'Hubspot Contact': 'test@nt.com'}),
+                    raises(hexc.HTTPUnprocessableEntity, pattern="No customer found with email: test@nt.com."))
+
+        _client.fetch_contact_by_email = lambda email: {'canonical-vid': 123, 'email': email, 'name': 'Test OK'}
+
+        result = view._process_owner({'Hubspot Contact': 'test2@nt.com'})
+        assert_that(result, has_properties({'email': 'test2@nt.com', 'hubspot_contact': not_none(), 'name': 'Test OK'}))
         assert_that(customers, has_length(1))
 
         result = view._process_owner({'Hubspot Contact': 'test2@nt.com'})
-        assert_that(result, has_properties({'email': 'test2@nt.com', 'hubspot_contact': None, 'name': None}))
-        assert_that(customers, has_length(2))
-
-        result = view._process_owner({'Hubspot Contact': 'test2@nt.com'})
-        assert_that(result, has_properties({'email': 'test2@nt.com', 'hubspot_contact': None, 'name': None}))
-        assert_that(customers, has_length(2))
-
-        _client.fetch_contact_by_email = lambda email: {'canonical-vid': 123, 'email': email, 'name': 'Test OK'}
+        assert_that(result, has_properties({'email': 'test2@nt.com', 'hubspot_contact': not_none(), 'name': 'Test OK'}))
+        assert_that(customers, has_length(1))
+        
         result = view._process_owner({'Hubspot Contact': 'test3@nt.com'})
         assert_that(result, has_properties({'email': 'test3@nt.com', 'hubspot_contact': has_properties({'contact_vid': '123'}), 'name': 'Test OK'}))
-        assert_that(customers, has_length(3))
+        assert_that(customers, has_length(2))
 
         result = view._process_owner({'Hubspot Contact': ''})
         assert_that(result.email, is_('tony.tarleton@nextthought.com'))
@@ -808,6 +813,13 @@ class TestSitesUploadCSVView(BaseAppTest):
             hosts = self._root().get('hosts')
             host1 = hosts.addHost(PersistentHost(host_name='host3.4pp', capacity=5))
             host2 = hosts.addHost(PersistentHost(host_name='app1.4pp', capacity=5))
+        result = self._upload_file(self.site_info, status=422)
+        assert_that(result.json_body['message'], is_("No customer found with email: 10@gmail.com."))
+
+        with ensure_free_txn():
+            customers = self._root().get('customers')
+            for email in ('10@gmail.com', '11@gmail.com', 'xx@gmail.com'):
+                customers.addCustomer(PersistentCustomer(email=email, name="Test Name"))
         self._upload_file(self.site_info)
 
         assert_that(sites, has_length(4))

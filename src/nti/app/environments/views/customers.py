@@ -49,7 +49,7 @@ class ChallengeView(BaseView):
         forget(self.request)
 
         try:
-            customer = getOrCreateCustomer(self.context, email)
+            customer = getOrCreateCustomer(self.context, email, name)
         except ConstraintNotSatisfied as e:
             raise_json_error(hexc.HTTPBadRequest,
                              'Invalid {}.'.format(e.field.__name__))
@@ -151,10 +151,11 @@ class ChallengerVerification(BaseView):
 
         if name:
             customer.name = name
-            customer.last_verified = datetime.datetime.utcnow()
 
         if organization:
             customer.organization = organization
+
+        customer.last_verified = datetime.datetime.utcnow()
 
         # See other the user to the create site form
         return {'email': email,
@@ -255,6 +256,10 @@ class CustomerCreationView(BaseView):
         if not contact:
             raise_json_error(hexc.HTTPUnprocessableEntity,
                              "No hubspot contact found: {}.".format(email))
+
+        if not contact['name']:
+            raise_json_error(hexc.HTTPUnprocessableEntity,
+                             "Name is missing on hubspot: {}.".format(email))
 
         customer = createCustomer(self.context,
                                   email=email,

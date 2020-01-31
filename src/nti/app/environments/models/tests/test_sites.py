@@ -180,10 +180,10 @@ class TestSites(BaseTest):
         errors = getValidationErrors(ILMSSite, inst)
         assert_that(errors, has_length(1))
 
-        inst = PersistentSite(owner=PersistentCustomer(email='103@gmail.com', created=datetime.datetime.utcnow()))
+        inst = PersistentSite(owner=PersistentCustomer(email='103@gmail.com', name="test name"))
         assert_that(inst.owner, is_(None))
 
-        owner = folder.addCustomer(PersistentCustomer(email='103@gmail.com', created=datetime.datetime.utcnow()))
+        owner = folder.addCustomer(PersistentCustomer(email='103@gmail.com', name="test name"))
         inst = PersistentSite(id='xxxxid',
                               owner=owner,
                               environment=SharedEnvironment(name='alpha'),
@@ -238,7 +238,7 @@ class TestSites(BaseTest):
                                                   'setup_state': SetupStateFailure()})
         assert_that(inst, has_properties({'dns_names': [],
                                           'setup_state': None}))
-        inst.setup_state = SetupStateFailure()
+        inst.setup_state = SetupStateFailure(task_state='ok')
         result = to_external_object(inst)
         assert_that(result['setup_state'], has_entries({'MimeType': 'application/vnd.nextthought.app.environments.setupstatefailure'}))
 
@@ -299,18 +299,16 @@ class TestSites(BaseTest):
         assert_that(calling(folder.addSite).with_args(SharedEnvironment(name="test")), raises(InvalidItemType))
 
     def testSetupStatePending(self):
-        state = SetupStatePending(task_id="abc")
+        state = SetupStatePending()
         result = toExternalObject(state)
-        assert_that(result, has_entries({'MimeType': 'application/vnd.nextthought.app.environments.setupstatepending',
-                                         'task_id': 'abc'}))
+        assert_that(result, has_entries({'MimeType': 'application/vnd.nextthought.app.environments.setupstatepending'}))
         assert_that(calling(new_from_external_object).with_args(result),
                     raises(ComponentLookupError, pattern="No factory for object"))
 
     def testSetupStateSuccess(self):
-        state = SetupStateSuccess(urls=['abc', 'efg'])
+        state = SetupStateSuccess()
         result = toExternalObject(state)
-        assert_that(result, has_entries({'MimeType': 'application/vnd.nextthought.app.environments.setupstatesuccess',
-                                         'urls': ['abc', 'efg']}))
+        assert_that(result, has_entries({'MimeType': 'application/vnd.nextthought.app.environments.setupstatesuccess'}))
         assert_that(calling(new_from_external_object).with_args(result),
                     raises(ComponentLookupError, pattern="No factory for object"))
 

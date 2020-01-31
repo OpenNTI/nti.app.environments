@@ -62,14 +62,16 @@ class TestCustomers(BaseTest):
                                           'hubspot_contact': None,
                                           'last_verified': None}))
         errors = getValidationErrors(ICustomer, inst)
-        assert_that(errors, has_length(1))
-        assert_that(errors, has_items(('email', RequiredMissing('email'))))
+        assert_that(errors, has_length(2))
+        assert_that(errors, has_items(('email', RequiredMissing('email')),
+                                      ('name', RequiredMissing('name'))))
 
         inst = PersistentCustomer(email='xxx@gmail.com',
+                                  name="Test User",
                                   created=datetime.datetime.utcnow())
         assert_that(inst, has_properties({'email': 'xxx@gmail.com',
                                           'createdTime': not_none(),
-                                          'name': None,
+                                          'name': "Test User",
                                           'hubspot_contact': None,
                                           'last_verified': None}))
         errors = getValidationErrors(ICustomer, inst)
