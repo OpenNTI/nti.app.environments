@@ -676,7 +676,7 @@ class ContinueToSite(BaseView):
     the user through ot finish creating their account, or on in to the site.
     """
 
-    
+
     def __call__(self):
         if self.context.owner.email != self.request.authenticated_userid:
             raise hexc.HTTPForbidden()
@@ -698,8 +698,8 @@ class ContinueToSite(BaseView):
 
         return hexc.HTTPSeeOther(links.complete_account_url)
 
-        
-        
+
+
 
 @view_config(renderer='rest',
              context=ILMSSite,
@@ -729,7 +729,7 @@ class MarkInviteAcceptedView(BaseView):
             location = component.getMultiAdapter((self.context, self.request)).application_url
 
         return hexc.HTTPSeeOther(location=location)
-    
+
     def __call__(self):
         if self.context.owner.email != self.request.authenticated_userid:
             raise hexc.HTTPForbidden()
@@ -759,4 +759,4 @@ class MarkInviteAcceptedView(BaseView):
 
         # Let the transaction commit
         return self.make_redirect()
-        
+

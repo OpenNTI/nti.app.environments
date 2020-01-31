@@ -49,7 +49,7 @@ class ChallengeView(BaseView):
         forget(self.request)
 
         try:
-            customer = getOrCreateCustomer(self.context, email, name)
+            customer = getOrCreateCustomer(self.context, email, name, organization)
         except ConstraintNotSatisfied as e:
             raise_json_error(hexc.HTTPBadRequest,
                              'Invalid {}.'.format(e.field.__name__))
@@ -129,8 +129,6 @@ class ChallengerVerification(BaseView):
     def do_verify(self, params):
         email = self._get_value('email', params, required=True)
         code = self._get_value('code', params, required=True)
-        name = self._get_value('name', params)
-        organization = self._get_value('organization', params)
 
         # Get the customer
         customer = self.context.get(email)
@@ -148,12 +146,6 @@ class ChallengerVerification(BaseView):
 
         # remember the user
         remember(self.request, email)
-
-        if name:
-            customer.name = name
-
-        if organization:
-            customer.organization = organization
 
         customer.last_verified = datetime.datetime.utcnow()
 

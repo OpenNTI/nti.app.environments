@@ -120,11 +120,11 @@ def _store_task_results(siteid, result):
     """
 
     tx_runner = component.getUtility(ITransactionRunner)
-    
+
     def _store():
         def _do_store(root):
             logger.info('Storing task state %s for site %s', result, siteid)
-            
+
             site = get_sites_folder(root)[siteid]
 
             assert site.setup_state is None
@@ -220,7 +220,7 @@ def _maybe_setup_site(success, app, siteid, client_name, dns_name, name, email):
     """
     if not success:
         return
-    
+
     try:
         result = ISetupEnvironmentTask(app)(siteid, client_name, dns_name, name, email)
         _store_task_results(siteid, result)
@@ -249,7 +249,7 @@ def _setup_newly_created_site(event):
     # If the transaction was successful we setup the site.
     transaction.get().addAfterCommitHook(
             _maybe_setup_site, args=(app, sid, cname, dns, name, email), kws=None
-    )   
+    )
 
 
 @component.adapter(ILMSSiteSetupFinished)
@@ -261,7 +261,7 @@ def _associate_site_to_host(event):
     setup_info = site.setup_state.site_info
     if not setup_info.host:
         return
-    
+
     logger.info('Associating site %s with host %s', site.id, setup_info.host)
 
     # We have to be careful here b/c we may not be running in a request. Typically
