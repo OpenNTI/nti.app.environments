@@ -124,7 +124,7 @@ class SiteLinks(object):
             query['state'] = rfstate
         # See nti.app.environments.views.sites.ContinueToSite
         
-        ping_back = self.request.resource_url(self.site, '@@invitation_accepted',
+        ping_back = self.request.resource_url(self.site, '@@mark_invite_accepted',
                                               query=query)
 
         # Prior to that the user gets sent to the login accept view. Note this has to be relative
