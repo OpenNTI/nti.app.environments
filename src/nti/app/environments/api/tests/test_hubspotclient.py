@@ -73,3 +73,28 @@ class TestHubspotClient(unittest.TestCase):
         assert_that(result, has_entries({'email': 'test@gmail.com',
                                          'name': 'TestFirst TestLast',
                                          'canonical-vid': 12630274}))
+
+
+    @mock.patch("nti.app.environments.api.hubspotclient.Hubspot3")
+    def test_upsert_contact(self, mockHub):
+        mockcontacts = mock.Mock()
+        mockcontacts.create_or_update_by_email.return_value = {'vid': 123}
+        mockcontacts.create_or_update_by_email.__name__ = 'test'
+        mockHub.return_value = mock.Mock(contacts=mockcontacts)
+
+        client = HubspotClient("test")
+        result = client.upsert_contact('testing@gmail.com', 'Test Last')
+        assert_that(result, has_entries({'contact_vid': '123'}))
+
+        # No found
+        def _upsert(*args, **kwargs):
+            raise hubspot3.error.HubspotNotFound(None, None)
+        mockcontacts.create_or_update_by_email.side_effect = _upsert
+        result = client.upsert_contact('testing@gmail.com', 'Test Last')
+        assert_that(result, is_(None))
+
+        def _upsert2(*args, **kwargs):
+            raise hubspot3.error.HubspotError(None, None)
+        mockcontacts.create_or_update_by_email.side_effect = _upsert2
+        assert_that(calling(client.upsert_contact).with_args('testing@gmail.com', 'Test Last'),
+                    raises(hubspot3.error.HubspotError))

@@ -68,6 +68,8 @@ def _upload_customer_to_hubspot(event):
     customer = event.customer
     result = client.upsert_contact(customer.email,
                                    customer.name)
+    if result is None:
+        return
 
     if customer.hubspot_contact is None:
         customer.hubspot_contact = HubspotContact(contact_vid=result['contact_vid'])

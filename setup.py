@@ -11,6 +11,7 @@ with open(os.path.join(here, 'CHANGES.txt')) as f:
 requires = [
     'dnspython',
     'gunicorn[gevent]',
+    'nameparser',
     'python-dateutil',
     'plaster_pastedeploy',
     'pyramid',

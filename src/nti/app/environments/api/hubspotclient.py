@@ -1,5 +1,7 @@
 import time
 
+from nameparser import HumanName
+
 from hubspot3 import Hubspot3
 from hubspot3.error import HubspotNotFound
 from hubspot3.error import HubspotError
@@ -63,16 +65,17 @@ class HubspotClient(object):
         result = self._call(self._client.contacts.create_or_update_by_email,
                             email,
                             data=data)
+        # This shouldn't happen in practice unless the hubspot3 API is outdated.
+        if result is None:
+            logger.warning("Failed to upsert contact for email (%s) in hubspot.", email)
+            return None
 
         return {'contact_vid': str(result['vid'])}
 
 
 def _split_name(name):
-    # Here we suppose first name always exists, last name may be empty.
-    names = name.rsplit(' ', maxsplit=1)
-    firstname = names[0]
-    lastname = names[1] if len(names) == 2 else ''
-    return (firstname, lastname)
+    name = HumanName(name)
+    return (name.first, name.last)
 
 
 _hubspot_client =None
