@@ -71,6 +71,7 @@ def _upload_customer_to_hubspot(event):
     if result is None:
         return
 
+    logger.info("Updating hubspot_contact for customer (%s).", customer.email)
     if customer.hubspot_contact is None:
         customer.hubspot_contact = HubspotContact(contact_vid=result['contact_vid'])
     elif customer.hubspot_contact.contact_vid != result['contact_vid']:
