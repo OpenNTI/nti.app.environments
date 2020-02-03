@@ -57,6 +57,8 @@
             provides=".interfaces.IOTPGenerator"/>
     </configure>
 
+    <include package=".mailer" file="configure.zcml" />
+
 	<include package=".models" file="configure.zcml" />
 
 	<include package=".views" file="configure.zcml" />
