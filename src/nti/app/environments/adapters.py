@@ -129,7 +129,7 @@ class SiteLinks(object):
 
         # Prior to that the user gets sent to the login accept view. Note this has to be relative
         # to the app host
-        account_creation = urljoin(self.application_url, '/login/signup')
+        account_creation = urljoin(self.application_url, '/login/account-setup')
         parsed = urlparse(account_creation)
         parsed = parsed._replace(scheme='', netloc='', query=urlencode({'return': ping_back}))
         account_creation = urlunparse(parsed)
