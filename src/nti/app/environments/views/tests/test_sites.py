@@ -96,7 +96,8 @@ class TestSiteCreationView(BaseAppTest):
                                                            'environment': has_properties({'name': 'assoc'}),
                                                            'license': instance_of(TrialLicense),
                                                            'status': 'PENDING',
-                                                           'dns_names': ['t1.nextthought.com', 't2.nextthought.com']}))
+                                                           'dns_names': ['t1.nextthought.com', 't2.nextthought.com'],
+                                                           'client_name': 't1.nextthought.com'}))
         assert_that(site.created.strftime('%y-%m-%d %H:%M:%S'), '2019-11-26 06:00:00')
 
         # edit
@@ -159,6 +160,7 @@ class TestSitePutView(BaseAppTest):
                                              dns_names=['x', 'y'],
                                              owner=customer), siteId=site_id)
             assert_that(sites, has_length(2))
+            assert_that(sites['Sxxx1'].client_name, is_('x'))
 
         url = '/onboarding/sites/Sxxx1'
 
@@ -206,8 +208,8 @@ class TestSitePutView(BaseAppTest):
         assert_that(result.json_body, has_entries({"message": "Missing field: dns_names."}))
 
         params = { 'dns_names': [] }
-        self.testapp.put_json(url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
-        assert_that(sites['Sxxx1'].dns_names, is_([]))
+        result = self.testapp.put_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
+        assert_that(result.json_body, has_entries({'message': 'Dns_names is too short.'}))
 
         params = { 'dns_names': ['xxx'] }
         self.testapp.put_json(url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
@@ -397,31 +399,31 @@ class TestRequestTrialSiteView(BaseAppTest):
             customers.addCustomer(PersistentCustomer(email="1234@gmail.com", name="testok"))
             assert_that(customers, has_length(2))
 
-        params = {}
+        params = {'client_name': 'xyz'}
         self.testapp.post_json(url, params=params, status=302, extra_environ=self._make_environ(username=None))
         self.testapp.post_json(url, params=params, status=403, extra_environ=self._make_environ(username='user001'))
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001')).json_body
         assert_that(result, has_entries({'message': 'Missing email.'}))
 
-        params = {'owner': 'xyz'}
+        params = {'owner': 'xyz', 'client_name': 'xyz'}
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001')).json_body
         assert_that(result, has_entries({'message': 'Invalid email.'}))
 
-        params = {'owner': '123@gmail.com'}
+        params = {'owner': '123@gmail.com', 'client_name': 'xyz'}
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001')).json_body
         assert_that(result, has_entries({'message': 'Please provide one site url.'}))
 
-        params = {'owner': '123@gmail.com', 'dns_names': []}
+        params = {'owner': '123@gmail.com', 'dns_names': [], 'client_name': 'xyz'}
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001')).json_body
         assert_that(result['message'], starts_with('Please provide one site url.'))
 
-        params = {'owner': '123@gmail.com', 'dns_names': [None]}
+        params = {'owner': '123@gmail.com', 'dns_names': [None], 'client_name': 'xyz'}
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001')).json_body
         assert_that(result['message'], is_('Invalid site url: None.'))
 
         mock_dns_available.return_value = True
 
-        params = {'owner': '123@gmail.com', 'dns_names': ['xxx']}
+        params = {'owner': '123@gmail.com', 'dns_names': ['xxx'], 'client_name': 'xyz'}
         result = self.testapp.post_json(url, params=params, status=201, extra_environ=self._make_environ(username='admin001')).json_body
         assert_that(result['redirect_url'], starts_with('http://localhost/onboarding/sites/'))
 
@@ -436,16 +438,16 @@ class TestRequestTrialSiteView(BaseAppTest):
                                                                     'attachments': None,
                                                                     'text_template_extension': '.mak'})))
 
-        params = {'owner': '1234@gmail.com', 'dns_names': ['yyy', 'zzz']}
+        params = {'owner': '1234@gmail.com', 'dns_names': ['yyy', 'zzz'], 'client_name': 'xyz'}
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001')).json_body
         assert_that(result['message'], starts_with('Please provide one site url.'))
 
-        params = {'owner': '1234@gmail.com', 'dns_names': ['xxx']}
+        params = {'owner': '1234@gmail.com', 'dns_names': ['xxx'], 'client_name': 'xyz'}
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001')).json_body
         assert_that(result['message'], is_('Site url is not available: xxx.'))
 
         _client.fetch_contact_by_email = lambda email: {'canonical-vid': '133','email': email, 'name': "OKC Test"}
-        params = {'owner': '12345@gmail.com', 'dns_names': ['ooo']}
+        params = {'owner': '12345@gmail.com', 'dns_names': ['ooo'], 'client_name': 'xyz'}
         result = self.testapp.post_json(url, params=params, status=201, extra_environ=self._make_environ(username='admin001')).json_body
         assert_that(result['redirect_url'], starts_with('http://localhost/onboarding/sites/'))
 
@@ -514,20 +516,23 @@ class TestCreateNewTrialSiteView(BaseAppTest):
             customers.addCustomer(PersistentCustomer(email='user001@example.com', name="testname"))
             assert_that(customers, has_length(1))
 
-        params = {}
+        params = {'client_name': 'xyz'}
         self.testapp.post_json(url, params=params, status=302, extra_environ=self._make_environ(username=None))
         self.testapp.post_json(url, params=params, status=403, extra_environ=self._make_environ(username='user002@example.com'))
 
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='user001@example.com')).json_body
         assert_that(result, has_entries({'message': 'Please provide one site url.'}))
 
-        params = {'dns_names': ['xxx']}
+        params = {'dns_names': ['xxx'], 'client_name': 'xyz'}
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='user001@example.com')).json_body
         assert_that(result, has_entries({'message': 'Invalid site url: xxx.'}))
 
         mock_dns_available.return_value = True
-        params = {'dns_names': ['xxx.nextthought.io']}
-        self.testapp.post_json(url, params=params, status=201, extra_environ=self._make_environ(username='user001@example.com'))
+        params = {'dns_names': ['xxx.nextthought.io'], 'client_name': 'xyz'}
+        result = self.testapp.post_json(url, params=params, status=201, extra_environ=self._make_environ(username='user001@example.com')).json_body
+        assert_that(result, has_entries({'client_name': 'xyz',
+                                         'dns_names': ['xxx.nextthought.io'],
+                                         'owner': has_entries({'email': 'user001@example.com'})}))
 
         params = {'dns_names': ['yyy.nextthought.io']}
         self.testapp.post_json(url, params=params, status=403, extra_environ=self._make_environ(username='user001@example.com'))
