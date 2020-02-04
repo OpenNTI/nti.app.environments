@@ -164,9 +164,18 @@ def _update_host_load_on_site_environment_updated(event):
     if old_host == new_host and old_load == new_load:
         return
 
+    client = statsd_client()
     for host in set([old_host, new_host]):
         if host:
             host.recompute_current_load()
+            if client is not None:
+                host_str = '%s_%s' % (host.id, host.name)
+                client.gauge('nti.onboarding.host_%s_capacity' % host_str,
+                             host.capacity)
+                client.gauge('nti.onboarding.host_%s_current_load' % host_str,
+                             host.current_load)
+
+
 
 # TODO The mechanics of actually dispatching the setup task
 # and capturing the task for status and results fetching
