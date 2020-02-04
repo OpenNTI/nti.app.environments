@@ -5,6 +5,7 @@ from nameparser import HumanName
 from hubspot3 import Hubspot3
 from hubspot3.error import HubspotNotFound
 from hubspot3.error import HubspotError
+from hubspot3.error import HubspotConflict
 
 from nti.app.environments.settings import HUBSPOT_API_KEY
 from nti.app.environments.settings import HUBSPOT_PORTAL_ID
@@ -24,6 +25,8 @@ class HubspotClient(object):
             response = _callable(*args, **kwargs)
         except HubspotNotFound:
             response = None
+        except HubspotConflict:
+            raise
         except HubspotError:
             logger.exception("Unknown error.")
             raise
@@ -32,12 +35,24 @@ class HubspotClient(object):
         logger.info("End %s, elapsed: %s seconds.", _callable.__name__, elapsed)
         return response
 
+    def _fetch_contact_by_email(self, email):
+        return self._call(self._client.contacts.get_by_email,
+                          email,
+                          properties=['email', 'firstname', 'lastname'],
+                          params={'showListMemberships': 'false',
+                                  'propertyMode':'value_only'})
+
+    def _create_contact(self, email, name, product_interest):
+        firstname, lastname = _split_name(name)
+        data = self._build_data(email=email,
+                                firstname=firstname,
+                                lastname=lastname,
+                                product_interest=product_interest)
+        return self._call(self._client.contacts.create,
+                          data)
+
     def fetch_contact_by_email(self, email):
-        contact = self._call(self._client.contacts.get_contact_by_email,
-                             email,
-                             properties=['email', 'firstname', 'lastname'],
-                             params={'showListMemberships': 'false',
-                                     'propertyMode':'value_only'})
+        contact = self._fetch_contact_by_email(email)
         if not contact:
             logger.warning("No hubspot contact found with email: {}".format(email))
             return None
@@ -51,26 +66,68 @@ class HubspotClient(object):
                 'email': props['email']['value'],
                 'name': name or ''}
 
-    def upsert_contact(self, email, name):
-        logger.info("Upserting contact to hubspot with email: %s, name: %s.", email, name)
-        firstname, lastname = _split_name(name)
+    def create_contact(self, email, name, product_interest):
+        logger.info("Inserting a new contact to hubspot with email: %s, name: %s, product_interest: %s.",
+                    email, name, product_interest)
+        try:
+            firstname, lastname = _split_name(name)
+            data = self._build_data(email=email,
+                                    firstname=firstname,
+                                    lastname=lastname,
+                                    product_interest=product_interest)
+            result = self._call(self._client.contacts.create,
+                                data)
+        except HubspotConflict:
+            logger.warn("Existing hubspot contact: %s.", email)
+            result = None
 
-        props = []
-        for prop_name, prop_value in (('firstname', firstname),
-                             ('lastname', lastname)):
-            props.append({'property': prop_name,
-                          'value': prop_value})
-
-        data = {'properties': props}
-        result = self._call(self._client.contacts.create_or_update_by_email,
-                            email,
-                            data=data)
-        # This shouldn't happen in practice unless the hubspot3 API is outdated.
         if result is None:
-            logger.warning("Failed to upsert contact for email (%s) in hubspot.", email)
+            logger.warn("Failed to insert contact to hubspot with email: %s, name: %s, product_interest: %s.",
+                        email, name, product_interest)
+        return result
+
+    def update_contact(self, email, product_interest):
+        logger.info("Updating contact to hubspot with email: %s, product_interest: %s.",
+                    email, product_interest)
+        data = self._build_data(product_interest=product_interest)
+
+        # update_by_email returns 204 No Content if successfully.
+        result = self._call(self._client.contacts.update_by_email,
+                            email,
+                            data)
+        if result is None:
+            logger.warn("Failed to update contact to hubspot with email: %s, product_interest: %s.",
+                        email, product_interest)
+        return result
+
+    def upsert_contact(self, email, name, product_interest='LMS'):
+        result = self._fetch_contact_by_email(email)
+        if result is None:
+            result = self.create_contact(email, name, product_interest)
+        else:
+            result = self.update_contact(email, product_interest)
+            # Needs to fetch the latest contact_vid.
+            if result is not None:
+                result = self._fetch_contact_by_email(email)
+
+        if result is None:
             return None
 
         return {'contact_vid': str(result['vid'])}
+
+    def _build_data(self, email=None, firstname=None, lastname=None, product_interest=None):
+        props = []
+        for prop_name, prop_value in (('email', email),
+                                      ('firstname', firstname),
+                                      ('lastname', lastname),
+                                      ('product_interest', product_interest)):
+            if prop_value is not None:
+                props.append(self._build_property(prop_name, prop_value))
+        return {'properties': props}
+
+    def _build_property(self, prop_name, prop_value):
+        return {'property': prop_name,
+                'value': prop_value}
 
 
 def _split_name(name):
