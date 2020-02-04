@@ -45,15 +45,6 @@ class HubspotClient(object):
                           params={'showListMemberships': 'false',
                                   'propertyMode':'value_only'})
 
-    def _create_contact(self, email, name, product_interest):
-        firstname, lastname = _split_name(name)
-        data = self._build_data(email=email,
-                                firstname=firstname,
-                                lastname=lastname,
-                                product_interest=product_interest)
-        return self._call(self._client.contacts.create,
-                          data)
-
     def fetch_contact_by_email(self, email):
         contact = self._fetch_contact_by_email(email)
         if not contact:
