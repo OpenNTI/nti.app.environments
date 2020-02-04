@@ -3,6 +3,9 @@ import gevent; gevent.config.resolver = 'dnspython'
 import gevent.monkey
 gevent.monkey.patch_all()
 
+from nti.app.environments._monkey import patch
+patch()
+
 from zope.component import getGlobalSiteManager
 
 import zope.i18nmessageid as zope_i18nmessageid

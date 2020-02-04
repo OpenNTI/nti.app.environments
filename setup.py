@@ -45,7 +45,7 @@ requires = [
     'zope.container',
     'zope.site',
     'zope.generations',
-    'RelStorage==3.0b3',
+    'RelStorage',
     'zc.zlibstorage',
     'nti.i18n',
     'z3c.schema',
