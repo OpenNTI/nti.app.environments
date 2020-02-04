@@ -35,10 +35,13 @@ class HubspotClient(object):
         logger.info("End %s, elapsed: %s seconds.", _callable.__name__, elapsed)
         return response
 
-    def _fetch_contact_by_email(self, email):
+    def _fetch_contact_by_email(self, email, product_interest=False):
+        props = ['email', 'firstname', 'lastname']
+        if product_interest:
+            props.append('product_interest')
         return self._call(self._client.contacts.get_by_email,
                           email,
-                          properties=['email', 'firstname', 'lastname'],
+                          properties=props,
                           params={'showListMemberships': 'false',
                                   'propertyMode':'value_only'})
 
@@ -101,14 +104,22 @@ class HubspotClient(object):
         return result
 
     def upsert_contact(self, email, name, product_interest='LMS'):
-        result = self._fetch_contact_by_email(email)
+        result = self._fetch_contact_by_email(email, product_interest=True)
         if result is None:
             result = self.create_contact(email, name, product_interest)
         else:
-            result = self.update_contact(email, product_interest)
-            # Needs to fetch the latest contact_vid.
-            if result is not None:
-                result = self._fetch_contact_by_email(email)
+            interest = result['properties']['product_interest']['value'].split(';')
+            if product_interest not in interest:
+                # Only when product_interest changes, we call update.
+                interest.append(product_interest)
+                interest = ';'.join(interest)
+                result = self.update_contact(email, interest)
+
+                # Fetch the latest contact_vid in case its contact_vid changes.
+                if result is not None:
+                    result = self._fetch_contact_by_email(email)
+            else:
+                logger.info("No need to update contact to hubspot with email: %s.", email)
 
         if result is None:
             return None
