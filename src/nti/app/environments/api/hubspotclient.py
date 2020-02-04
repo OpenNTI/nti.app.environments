@@ -7,6 +7,11 @@ from hubspot3.error import HubspotNotFound
 from hubspot3.error import HubspotError
 from hubspot3.error import HubspotConflict
 
+from zope import component
+from zope import interface
+
+from nti.app.environments.api.interfaces import IHubspotClientFactory
+
 from nti.app.environments.settings import HUBSPOT_API_KEY
 from nti.app.environments.settings import HUBSPOT_PORTAL_ID
 
@@ -136,6 +141,25 @@ class HubspotClient(object):
                 'value': prop_value}
 
 
+class DevModeHubspotClient(HubspotClient):
+
+    def upsert_contact(self, email, name, product_interest='LMS'):
+        if not email.endswith('@nextthought.com'):
+            logger.info("In devmode, only contacts that end with @nextthought.com can be created or updated.")
+            return
+        return super(DevModeHubspotClient, self).upsert_contact(email, name, product_interest)
+
+
+@interface.implementer(IHubspotClientFactory)
+def _hubspot_client_factory():
+    return HubspotClient
+
+
+@interface.implementer(IHubspotClientFactory)
+def _devmode_hubspot_client_factory():
+    return DevModeHubspotClient
+
+
 def _split_name(name):
     name = HumanName(name)
     return (name.first, name.last)
@@ -146,7 +170,8 @@ _hubspot_client =None
 def get_hubspot_client():
     global _hubspot_client
     if _hubspot_client is None:
-        _hubspot_client = HubspotClient(HUBSPOT_API_KEY)
+        factory = component.getUtility(IHubspotClientFactory)
+        _hubspot_client = factory(HUBSPOT_API_KEY)
     return _hubspot_client
 
 

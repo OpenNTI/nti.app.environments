@@ -1,0 +1,22 @@
+<!-- -*- mode: nxml -*- -->
+<configure	xmlns="http://namespaces.zope.org/zope"
+			xmlns:i18n="http://namespaces.zope.org/i18n"
+			xmlns:zcml="http://namespaces.zope.org/zcml">
+
+	<include package="zope.component" file="meta.zcml" />
+	<include package="zope.security" file="meta.zcml" />
+	<include package="zope.component" />
+	<include package="zope.security" />
+
+	<configure zcml:condition="have devmode">
+		<utility factory=".hubspotclient._devmode_hubspot_client_factory"
+			 	 provides=".interfaces.IHubspotClientFactory" />
+	</configure>
+
+	<configure zcml:condition="not-have devmode">
+		<utility factory=".hubspotclient._hubspot_client_factory"
+			 	 provides=".interfaces.IHubspotClientFactory" />
+	</configure>
+
+
+</configure>
