@@ -73,10 +73,8 @@ class HubspotClient(object):
         logger.info("Inserting a new contact to hubspot with email: %s, name: %s, product_interest: %s.",
                     email, name, product_interest)
         try:
-            firstname, lastname = _split_name(name)
             data = self._build_data(email=email,
-                                    firstname=firstname,
-                                    lastname=lastname,
+                                    name=name,
                                     product_interest=product_interest)
             result = self._call(self._client.contacts.create,
                                 data)
@@ -89,51 +87,50 @@ class HubspotClient(object):
                         email, name, product_interest)
         return result
 
-    def update_contact(self, email, product_interest):
-        logger.info("Updating contact to hubspot with email: %s, product_interest: %s.",
-                    email, product_interest)
-        data = self._build_data(product_interest=product_interest)
+    def update_contact(self, email, name, product_interest):
+        logger.info("Updating contact to hubspot with email: %s, name: %s, product_interest: %s.",
+                    email, name, product_interest)
+        data = self._build_data(name=name,
+                                product_interest=product_interest)
 
         # update_by_email returns 204 No Content if successfully.
         result = self._call(self._client.contacts.update_by_email,
                             email,
                             data)
         if result is None:
-            logger.warn("Failed to update contact to hubspot with email: %s, product_interest: %s.",
-                        email, product_interest)
+            logger.warn("Failed to update contact to hubspot with email: %s, name: %s, product_interest: %s.",
+                        email, name, product_interest)
         return result
 
-    def _parse_interest(self, result):
+    def _new_interest(self, result, product_interest):
         interest = result['properties'].get('product_interest') or {}
         interest = interest.get('value')
-        return interest.split(';') if interest else []
+        interest = interest.split(';') if interest else []
+        if product_interest not in interest:
+            interest.append(product_interest)
+        return ';'.join(interest)
 
     def upsert_contact(self, email, name, product_interest='LMS'):
-        logger.info("Upserting contact to hubspot with email: %s, name: %s.",
-                    email, name)
+        logger.info("Upserting contact to hubspot for email: %s.", email)
         result = self._fetch_contact_by_email(email, product_interest=True)
         if result is None:
             result = self.create_contact(email, name, product_interest)
         else:
-            interest = self._parse_interest(result)
-            if product_interest not in interest:
-                # Only when product_interest changes, we call update.
-                interest.append(product_interest)
-                interest = ';'.join(interest)
-                result = self.update_contact(email, interest)
+            interest = self._new_interest(result, product_interest)
+            result = self.update_contact(email, name, interest)
 
-                # Fetch the latest contact_vid in case its contact_vid changes.
-                if result is not None:
-                    result = self._fetch_contact_by_email(email)
-            else:
-                logger.info("No need to update contact to hubspot with email: %s.", email)
+            # Fetch the latest contact_vid in case its contact_vid changes.
+            if result is not None:
+                result = self._fetch_contact_by_email(email)
 
         if result is None:
+            logger.info("Failing to upsert contact to hubspot for email: %s.", email)
             return None
 
         return {'contact_vid': str(result['vid'])}
 
-    def _build_data(self, email=None, firstname=None, lastname=None, product_interest=None):
+    def _build_data(self, email=None, name=None, product_interest=None):
+        firstname, lastname = _split_name(name) if name else (None, None)
         props = []
         for prop_name, prop_value in (('email', email),
                                       ('firstname', firstname),
