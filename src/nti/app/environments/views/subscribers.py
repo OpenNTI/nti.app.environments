@@ -2,9 +2,11 @@ import time
 import gevent
 import transaction
 
+from celery.exceptions import TimeoutError
+
 from datetime import datetime
 
-from celery.exceptions import TimeoutError
+from perfmetrics import statsd_client
 
 from zope import component
 
@@ -18,6 +20,7 @@ from nti.traversal.traversal import find_interface
 from nti.app.environments.api.hubspotclient import get_hubspot_client
 
 from nti.app.environments.models.interfaces import ILMSSite
+from nti.app.environments.models.interfaces import ICustomer
 from nti.app.environments.models.interfaces import IOnboardingRoot
 from nti.app.environments.models.interfaces import IDedicatedEnvironment
 from nti.app.environments.models.interfaces import ILMSSiteCreatedEvent
@@ -114,7 +117,6 @@ def _update_host_load_on_site_removed(site, unused_event):
 
 
 def _update_site_stats(lms_site):
-    from perfmetrics import statsd_client
     client = statsd_client()
     if client is not None:
         client.gauge('nti.onboarding.lms_site_count', len(lms_site.__parent__))
@@ -128,6 +130,22 @@ def _update_stats_on_site_added(lms_site, unused_event):
 @component.adapter(ILMSSite, IObjectRemovedEvent)
 def _update_stats_on_site_removed(lms_site, unused_event):
     _update_site_stats(lms_site)
+
+
+def _update_customer_stats(customer):
+    client = statsd_client()
+    if client is not None:
+        client.gauge('nti.onboarding.customer_count', len(customer.__parent__))
+
+
+@component.adapter(ICustomer, IObjectAddedEvent)
+def _update_stats_on_customer_added(customer, unused_event):
+    _update_customer_stats(customer)
+
+
+@component.adapter(ICustomer, IObjectRemovedEvent)
+def _update_stats_on_customer_removed(customer, unused_event):
+    _update_customer_stats(customer)
 
 
 @component.adapter(ILMSSiteUpdatedEvent)
@@ -216,6 +234,7 @@ def _maybe_setup_site(success, app, siteid, client_name, dns_name, name, email):
         _store_task_results(siteid, result)
     except:
         logger.exception('Unable to queue site setup for %s' % siteid)
+
 
 @component.adapter(ILMSSiteCreatedEvent)
 def _setup_newly_created_site(event):
