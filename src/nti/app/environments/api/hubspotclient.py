@@ -103,12 +103,19 @@ class HubspotClient(object):
                         email, product_interest)
         return result
 
+    def _parse_interest(self, result):
+        interest = result['properties'].get('product_interest') or {}
+        interest = interest.get('value')
+        return interest.split(';') if interest else []
+
     def upsert_contact(self, email, name, product_interest='LMS'):
+        logger.info("Upserting contact to hubspot with email: %s, name: %s.",
+                    email, name)
         result = self._fetch_contact_by_email(email, product_interest=True)
         if result is None:
             result = self.create_contact(email, name, product_interest)
         else:
-            interest = result['properties']['product_interest']['value'].split(';')
+            interest = self._parse_interest(result)
             if product_interest not in interest:
                 # Only when product_interest changes, we call update.
                 interest.append(product_interest)
