@@ -186,7 +186,7 @@ def _store_task_results(siteid, task_results):
                     siteid, task_results.successful())
         def _mark_complete(root):
             logger.info('Updating setup state for site %s finished successful=%s',
-                        siteid, result.successful())
+                        siteid, task_results.successful())
             site = get_sites_folder(root)[siteid]
 
             assert ISetupStatePending.providedBy(site.setup_state)
