@@ -149,69 +149,6 @@ def _store_task_results(siteid, task_results):
 
         tx_runner(_do_store, retries=5, sleep=0.1)
 
-        # Query for results every 5 seconds, waiting 1 second each time.
-        # Give up after 4 hours
-
-        interval = 5
-        wait = 1
-        maxwait = 4 * 60 * 60 # 4 hours This is way way longer than we need
-        i = 0
-        result = _marker
-        while i < maxwait:
-            logger.info('Checking status for site %s', siteid)
-
-            try:
-                # Propogate False causes exceptions to return instead of reraise here
-                result = task_results.get(timeout=wait, propagate=False)
-                if result:
-                    break
-            except TimeoutError:
-                pass
-
-            gevent.sleep(interval)
-            i += interval
-
-        if result is _marker:
-            # Uh oh, we never got a result.
-            # In the context of the greenlet we just want to yell and exit.
-            # In other contexts raising is probably more appropriate. This is effectively a timeout
-            app = component.getUtility(ICeleryApp)
-            task = ISetupEnvironmentTask(app)
-            logger.error('Spin up task %s for site %s never completed. Abandoned task?',
-                         siteid, task.save_state(task_results))
-            return
-
-        # We have a result. now we need to update state
-        logger.info('Setup for site %s finished successful=%s',
-                    siteid, task_results.successful())
-        def _mark_complete(root):
-            logger.info('Updating setup state for site %s finished successful=%s',
-                        siteid, task_results.successful())
-            site = get_sites_folder(root)[siteid]
-
-            assert ISetupStatePending.providedBy(site.setup_state)
-
-            failed = isinstance(result, Exception)
-
-            state = None
-            if failed:
-                state = SetupStateFailure()
-                state.exception = result
-            else:
-                state = SetupStateSuccess()
-                state.site_info = result
-
-            assert state
-
-            state.task_state = site.setup_state.task_state
-
-            site.setup_state = state
-
-            notify(SiteSetupFinishedEvent(site))
-
-        # TODO what if this greenlet dies due to a restart.
-        tx_runner(_mark_complete, retries=5, sleep=0.1)
-
     gevent.spawn(_store)
 
 def _maybe_setup_site(success, app, siteid, client_name, dns_name, name, email):

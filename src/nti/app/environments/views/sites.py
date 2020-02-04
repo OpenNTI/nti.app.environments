@@ -3,6 +3,8 @@ import datetime
 import hashlib
 import os
 
+from celery.exceptions import TimeoutError
+
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
 
@@ -14,6 +16,9 @@ from zope import component
 from zope.cachedescriptors.property import Lazy
 from zope.container.interfaces import InvalidItemType
 from zope.event import notify
+
+from nti.environments.management.interfaces import ICeleryApp
+from nti.environments.management.interfaces import ISetupEnvironmentTask
 
 from nti.app.environments.api.hubspotclient import get_hubspot_client
 from nti.app.environments.auth import ACT_CREATE
@@ -29,6 +34,8 @@ from nti.app.environments.interfaces import ISitesCollection
 
 from nti.app.environments.models.events import SiteCreatedEvent
 from nti.app.environments.models.events import SiteUpdatedEvent
+from nti.app.environments.models.events import SiteSetupFinishedEvent
+
 from nti.app.environments.models.hosts import PersistentHost
 from nti.app.environments.models.interfaces import IDedicatedEnvironment
 from nti.app.environments.models.interfaces import ILMSSite
@@ -41,12 +48,16 @@ from nti.app.environments.models.interfaces import SITE_STATUS_PENDING
 from nti.app.environments.models.interfaces import SITE_STATUS_UNKNOWN
 from nti.app.environments.models.interfaces import checkEmailAddress
 from nti.app.environments.models.interfaces import ISetupStateSuccess
+from nti.app.environments.models.interfaces import ISetupStatePending
 
 from nti.app.environments.models.sites import DedicatedEnvironment
 from nti.app.environments.models.sites import EnterpriseLicense
 from nti.app.environments.models.sites import PersistentSite
 from nti.app.environments.models.sites import SharedEnvironment
 from nti.app.environments.models.sites import TrialLicense
+from nti.app.environments.models.sites import SetupStateSuccess
+from nti.app.environments.models.sites import SetupStateFailure
+
 from nti.app.environments.models.utils import get_customers_folder
 from nti.app.environments.models.utils import get_sites_with_owner
 from nti.app.environments.models.utils import get_sites_folder
@@ -662,6 +673,64 @@ class CreateNewTrialSiteView(RequestTrialSiteView):
         site = self._create_site()
         self.request.response.status = 201
         return site
+
+
+@view_config(renderer='rest',
+             context=ILMSSite,
+             request_method='GET',
+             permission=ACT_READ,
+             name="query-setup-state")
+class QuerySetupState(BaseView):
+    """
+    A long polling style view to query site setup state.
+    This view returns the site object
+    """
+
+
+    def __call__(self):
+        if self.context.owner.email != self.request.authenticated_userid:
+            raise hexc.HTTPForbidden()
+
+        setup_state = self.context.setup_state
+
+        # Finsihed already, return immediately
+        if not ISetupStatePending.providedBy(setup_state):
+            return self.context
+
+        # query for status up to the max wait time
+        max_wait = max(min(30, int(self.request.params.get('max_wait', 30))), 1)
+
+        app = component.getUtility(ICeleryApp)
+        task = ISetupEnvironmentTask(app)
+
+        assert setup_state.task_state
+
+        async_result = task.restore_task(setup_state.task_state)
+
+        try:
+            result = async_result.get(timeout=max_wait, propagate=False)
+        except TimeoutError:
+            return self.context
+
+        failed = isinstance(result, Exception)
+
+        state = None
+        if failed:
+            state = SetupStateFailure()
+            state.exception = result
+        else:
+            state = SetupStateSuccess()
+            state.site_info = result
+
+        state.task_state = self.context.setup_state.task_state
+
+        self.context.setup_state = state
+
+        notify(SiteSetupFinishedEvent(self.context))
+
+        # we have side effects
+        self.request.environ['nti.request_had_transaction_side_effects'] = True
+        return self.context
 
 
 @view_config(renderer='rest',
