@@ -113,6 +113,23 @@ def _update_host_load_on_site_removed(site, unused_event):
         site.environment.host.recompute_current_load(exclusive_site=site)
 
 
+def _update_site_stats(lms_site):
+    from perfmetrics import statsd_client
+    client = statsd_client()
+    if client is not None:
+        client.gauge('nti.onboarding.lms_site_count', len(lms_site.__parent__))
+
+
+@component.adapter(ILMSSite, IObjectAddedEvent)
+def _update_stats_on_site_added(lms_site, unused_event):
+    _update_site_stats(lms_site)
+
+
+@component.adapter(ILMSSite, IObjectRemovedEvent)
+def _update_stats_on_site_removed(lms_site, unused_event):
+    _update_site_stats(lms_site)
+
+
 @component.adapter(ILMSSiteUpdatedEvent)
 def _update_host_load_on_site_environment_updated(event):
     if 'environment' not in event.external_values:

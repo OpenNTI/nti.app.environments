@@ -3,24 +3,23 @@ import datetime
 import hashlib
 import os
 
-from celery.exceptions import TimeoutError
-
-from nti.externalization.interfaces import LocatedExternalDict
-from nti.externalization.interfaces import StandardExternalFields
-
 from pyramid import httpexceptions as hexc
+
 from pyramid.view import view_config
 
 from zope import component
 
 from zope.cachedescriptors.property import Lazy
+
 from zope.container.interfaces import InvalidItemType
+
 from zope.event import notify
 
 from nti.environments.management.interfaces import ICeleryApp
 from nti.environments.management.interfaces import ISetupEnvironmentTask
 
 from nti.app.environments.api.hubspotclient import get_hubspot_client
+
 from nti.app.environments.auth import ACT_CREATE
 from nti.app.environments.auth import ACT_DELETE
 from nti.app.environments.auth import ACT_EDIT_SITE_ENVIRONMENT
@@ -68,8 +67,12 @@ from nti.app.environments.utils import convertToUTC
 from nti.app.environments.utils import find_iface
 from nti.app.environments.utils import formatDateToLocal
 from nti.app.environments.utils import parseDate
+
 from nti.app.environments.views.utils import raise_json_error
 from nti.app.environments.views.utils import is_dns_name_available
+
+from nti.externalization.interfaces import LocatedExternalDict
+from nti.externalization.interfaces import StandardExternalFields
 
 from .base import BaseFieldPutView
 from .base import BaseView
