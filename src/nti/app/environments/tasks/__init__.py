@@ -16,9 +16,11 @@ def includeme(config):
     The celery application is made available as utility
     registered as ICeleryApp
     """
-    app = configure_celery(settings=component.getUtility(ISettings))
+    def _build_celery():
+        app = configure_celery(settings=component.getUtility(ISettings))
 
-    interface.alsoProvides(app, ICeleryApp)
-    getGlobalSiteManager().registerUtility(app, ICeleryApp)
+        interface.alsoProvides(app, ICeleryApp)
+        getGlobalSiteManager().registerUtility(app, ICeleryApp)
+        app.finalize()
 
-    config.action(("celery", "finalize"), app.finalize)
+    config.action(("celery", "setup"), _build_celery)
