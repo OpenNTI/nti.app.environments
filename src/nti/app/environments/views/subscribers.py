@@ -1,5 +1,4 @@
 
-import time
 import gevent
 import transaction
 
@@ -120,7 +119,7 @@ def _update_host_load_on_site_environment_updated(event):
 
 _marker = object()
 
-def _store_task_results(siteid, result):
+def _store_task_results(siteid, task_results):
     """
     Given a siteid, which should be a pending site, and a celery
     async result, associate the two. We spin up a greenlet that utilizes
@@ -135,7 +134,7 @@ def _store_task_results(siteid, result):
 
     def _store():
         def _do_store(root):
-            logger.info('Storing task state %s for site %s', result, siteid)
+            logger.info('Storing task state %s for site %s', task_results, siteid)
 
             site = get_sites_folder(root)[siteid]
 
@@ -145,7 +144,7 @@ def _store_task_results(siteid, result):
             task = ISetupEnvironmentTask(app)
 
             pending = SetupStatePending()
-            pending.task_state = task.save_task(result)
+            pending.task_state = task.save_task(task_results)
             site.setup_state = pending
 
         tx_runner(_do_store, retries=5, sleep=0.1)
@@ -157,48 +156,50 @@ def _store_task_results(siteid, result):
         wait = 1
         maxwait = 4 * 60 * 60 # 4 hours This is way way longer than we need
         i = 0
-        tresult = _marker
+        result = _marker
         while i < maxwait:
             logger.info('Checking status for site %s', siteid)
 
             try:
                 # Propogate False causes exceptions to return instead of reraise here
-                tresult = result.get(timeout=1, propagate=False)
+                result = task_results.get(timeout=wait, propagate=False)
                 if result:
                     break
             except TimeoutError:
                 pass
 
-            time.sleep(interval)
+            gevent.sleep(interval)
             i += interval
 
-        if tresult is _marker:
+        if result is _marker:
             # Uh oh, we never got a result.
             # In the context of the greenlet we just want to yell and exit.
             # In other contexts raising is probably more appropriate. This is effectively a timeout
             app = component.getUtility(ICeleryApp)
             task = ISetupEnvironmentTask(app)
-            logger.error('Spin up task %s for site %s never completed. Abandoned task?', siteid, task.save_state(result))
+            logger.error('Spin up task %s for site %s never completed. Abandoned task?',
+                         siteid, task.save_state(task_results))
             return
 
         # We have a result. now we need to update state
-        logger.info('Setup for site %s finished successful=%s', siteid, result.successful())
+        logger.info('Setup for site %s finished successful=%s',
+                    siteid, task_results.successful())
         def _mark_complete(root):
-            logger.info('Updating setup state for site %s finished successful=%s', siteid, result.successful())
-
+            logger.info('Updating setup state for site %s finished successful=%s',
+                        siteid, result.successful())
             site = get_sites_folder(root)[siteid]
 
             assert ISetupStatePending.providedBy(site.setup_state)
 
-            failed = isinstance(tresult, Exception)
+            failed = isinstance(result, Exception)
 
             state = None
             if failed:
                 state = SetupStateFailure()
-                state.exception = tresult
+                state.exception = result
             else:
                 state = SetupStateSuccess()
-                state.site_info = tresult
+                state.site_info = result
 
             assert state
 
@@ -215,7 +216,7 @@ def _store_task_results(siteid, result):
 
 def _maybe_setup_site(success, app, siteid, client_name, dns_name, name, email):
     """
-    On succesful commit dispatch a task to setup the site. Note this happens in an after
+    On successful commit dispatch a task to setup the site. Note this happens in an after
     commit hook and we are outside of the transaction. We must be very careful that we
     don't do anything here that we expect to happen transactionally. If this fails
     we're left with a site in the pending state that will need to be retriggered. We catch
