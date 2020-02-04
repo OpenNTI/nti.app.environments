@@ -1,5 +1,4 @@
 
-import time
 import gevent
 import transaction
 
@@ -163,13 +162,13 @@ def _store_task_results(siteid, result):
 
             try:
                 # Propogate False causes exceptions to return instead of reraise here
-                tresult = result.get(timeout=1, propagate=False)
-                if result:
+                tresult = result.get(timeout=wait, propagate=False)
+                if tresult:
                     break
             except TimeoutError:
                 pass
 
-            time.sleep(interval)
+            gevent.sleep(interval)
             i += interval
 
         if tresult is _marker:
@@ -184,8 +183,6 @@ def _store_task_results(siteid, result):
         # We have a result. now we need to update state
         logger.info('Setup for site %s finished successful=%s', siteid, result.successful())
         def _mark_complete(root):
-            logger.info('Updating setup state for site %s finished successful=%s', siteid, result.successful())
-
             site = get_sites_folder(root)[siteid]
 
             assert ISetupStatePending.providedBy(site.setup_state)
