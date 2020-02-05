@@ -32,7 +32,7 @@ def configure(settings=None, registry=None):
     # Use ZCA global site manager
     if registry is None:
         registry = getGlobalSiteManager()
-    
+
     with Configurator(registry=registry) as config:
         config.setup_registry(settings=settings)
 
@@ -53,12 +53,13 @@ def configure(settings=None, registry=None):
         config.include('pyramid_chameleon')
         config.include('pyramid_mako')
         config.include('.routes')
+        config.include('.stats')
 
         config.load_zcml('configure.zcml', features=settings.get('zcml.features', '').split())
 
         # Load celery
         config.include('.tasks')
-        
+
         # security policies
         authn_policy = AuthenticationPolicy('foo',
                                             hashalg='sha512')
