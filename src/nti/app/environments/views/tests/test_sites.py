@@ -44,6 +44,9 @@ from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import ISharedEnvironment
 from nti.app.environments.models.interfaces import IDedicatedEnvironment
 
+from nti.fakestatsd.matchers import is_gauge
+from nti.fakestatsd.matchers import is_counter
+
 
 def _absolute_path(filename):
     return os.path.join(os.path.dirname(__file__), 'resources/'+filename)
@@ -147,6 +150,10 @@ class TestSiteCreationView(BaseAppTest):
             external = to_external_object(site)
             assert_that(external, has_entries({'id': 'S1id'}))
 
+        assert_that(self.statsd.metrics,
+                    has_items(is_counter('nti.onboarding.lms_site_count', '1'),
+                              is_gauge('nti.onboarding.customer_count', '1')))
+
 
 class TestSitePutView(BaseAppTest):
 
@@ -226,6 +233,11 @@ class TestSitePutView(BaseAppTest):
         params = { 'dns_names': ['xxx', 'xxx'] }
         result = self.testapp.put_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
         assert_that(result.json_body, has_entries({'message': 'Existing duplicated xxx for dns_names.'}))
+
+#         assert_that(statsd.metrics, has_items(is_counter('nti.analytics.events.received.malformed', '1'),
+#                                               is_counter('nti.analytics.events.received.total', '3')))
+
+
 
     @with_test_app()
     @mock.patch('nti.app.environments.models.utils.get_onboarding_root')

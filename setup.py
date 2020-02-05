@@ -72,7 +72,8 @@ tests_require = [
     'fudge',
     'zope.testing',
     'zope.testrunner',
-    'nti.testing'
+    'nti.testing',
+    'nti.fakestatsd'
 ]
 
 docs_require = [

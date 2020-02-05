@@ -116,15 +116,11 @@ def _update_host_load_on_site_removed(site, unused_event):
         site.environment.host.recompute_current_load(exclusive_site=site)
 
 
-def _update_site_stats(client, lms_site):
-    client.gauge('nti.onboarding.lms_site_count', len(lms_site.__parent__))
-
-
 @component.adapter(ILMSSite, IObjectAddedEvent)
 def _update_stats_on_site_added(lms_site, unused_event):
     client = statsd_client()
     if client is not None:
-        _update_site_stats(lms_site)
+        client.incr('nti.onboarding.lms_site_count', len(lms_site.__parent__))
         status_str = _get_stat_status_str(lms_site.status)
         client.incr(status_str)
 
@@ -133,7 +129,7 @@ def _update_stats_on_site_added(lms_site, unused_event):
 def _update_stats_on_site_removed(lms_site, unused_event):
     client = statsd_client()
     if client is not None:
-        _update_site_stats(lms_site)
+        client.decr('nti.onboarding.lms_site_count', len(lms_site.__parent__))
         status_str = _get_stat_status_str(lms_site.status)
         client.decr(status_str)
 
@@ -146,14 +142,18 @@ def _get_stat_status_str(status):
 def _update_stats_on_site_updated(event):
     client = statsd_client()
     if client is not None:
-        original_status = event.original_values['status']
-        new_status = event.external_values['status']
-        if original_status:
-            original_status_str = _get_stat_status_str(original_status)
-            client.decr(original_status_str)
-        if new_status:
-            new_status_str = _get_stat_status_str(new_status)
-            client.incr(new_status_str)
+        try:
+            original_status = event.original_values['status']
+            new_status = event.external_values['status']
+        except KeyError:
+            return
+        else:
+            if original_status:
+                original_status_str = _get_stat_status_str(original_status)
+                client.decr(original_status_str)
+            if new_status:
+                new_status_str = _get_stat_status_str(new_status)
+                client.incr(new_status_str)
 
 
 def _update_customer_stats(customer):
