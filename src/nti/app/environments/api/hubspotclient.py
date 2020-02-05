@@ -173,8 +173,6 @@ def _split_name(name):
     return (name.first, name.last)
 
 
-_hubspot_client =None
-
 def get_hubspot_client():
     return component.getUtility(IHubspotClient)
 
