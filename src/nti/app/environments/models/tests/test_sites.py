@@ -171,12 +171,12 @@ class TestSites(BaseTest):
                                           'owner': None,
                                           'createdTime': not_none(),
                                           'lastModified': not_none(),
-                                          'dns_names': (),
+                                          'dns_names': None,
                                           'status': 'UNKNOWN'}))
         errors = getValidationErrors(ILMSSite, inst)
-        assert_that(errors, has_length(1))
+        assert_that(errors, has_length(3))
 
-        inst = PersistentSite(status='PENDING')
+        inst = PersistentSite(status='PENDING', dns_names= ['xyz'])
         errors = getValidationErrors(ILMSSite, inst)
         assert_that(errors, has_length(1))
 
@@ -234,9 +234,12 @@ class TestSites(BaseTest):
                                          'setup_state': None}))
         assert_that('environment' not in result, is_(True))
 
-        inst = update_from_external_object(inst, {'dns_names': [],
+        assert_that(calling(update_from_external_object).with_args(inst, {'dns_names': []}),
+                    raises(Exception, pattern="Dns_names is too short"))
+
+        inst = update_from_external_object(inst, {'dns_names': set(['xxx']),
                                                   'setup_state': SetupStateFailure()})
-        assert_that(inst, has_properties({'dns_names': [],
+        assert_that(inst, has_properties({'dns_names': ['xxx'],
                                           'setup_state': None}))
         inst.setup_state = SetupStateFailure(task_state='ok')
         result = to_external_object(inst)
@@ -259,7 +262,7 @@ class TestSites(BaseTest):
                               owner=owner,
                               environment=None,
                               license=TrialLicense(start_date=datetime.datetime(2019,1,2,0,0,0), end_date=datetime.datetime(2019,1,3,0,0,0)),
-                              dns_names=set(['t2.nt.com']),
+                              dns_names=['t2.nt.com'],
                               status='PENDING')
         assert_that(calling(setattr).with_args(child, 'parent_site', child), raises(interface.Invalid))
         assert_that(calling(setattr).with_args(child, 'parent_site', 33), raises(interface.Invalid))
@@ -272,7 +275,7 @@ class TestSites(BaseTest):
                               owner=PersistentCustomer(email='103@gmail.com', created=datetime.datetime.utcnow()),
                               environment=SharedEnvironment(name='alpha'),
                               license=TrialLicense(start_date=datetime.datetime.utcnow(), end_date=datetime.datetime.utcnow()),
-                              dns_names=set(['t.nt.com']),
+                              dns_names=['t.nt.com'],
                               status='ACTIVE')
         folder.addSite(site, siteId='okc')
         assert_that(site.__name__, 'xxxxid')

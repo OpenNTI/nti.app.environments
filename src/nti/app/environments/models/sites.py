@@ -5,6 +5,8 @@ from pyramid.security import ALL_PERMISSIONS
 
 from zope import interface
 
+from zope.cachedescriptors.property import readproperty
+
 from zope.container.contained import Contained
 
 from nti.containers.containers import CaseInsensitiveCheckingLastModifiedBTreeContainer
@@ -177,6 +179,10 @@ class PersistentSite(SchemaConfigured, PersistentCreatedModDateTrackingObject, C
         self._parent_ref = IWeakRef(parent) if parent else None
 
     parent_site = property(_get_parent_site, _set_parent_site)
+
+    @readproperty
+    def client_name(self):
+        return next(iter(self.dns_names)) if self.dns_names else None
 
 
 @interface.implementer(ILMSSitesContainer)

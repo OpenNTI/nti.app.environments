@@ -354,7 +354,7 @@ class ILMSSite(IContained, IAttributeAnnotatable):
     dns_names = UniqueIterable(value_type=ValidTextLine(min_length=1),
                                title='DNS names this site is known to be accessible via',
                                required=True,
-                               default=tuple())
+                               min_length=1)
 
     license = Object(ISiteLicense,
                      title=u'The license governing access to this site',
@@ -370,7 +370,8 @@ class ILMSSite(IContained, IAttributeAnnotatable):
 
     client_name = ValidTextLine(title="The Client Display Name",
                                 max_length=40,
-                                required=False)
+                                min_length=1,
+                                required=True)
 
     parent_site = interface.Attribute("The parent site of this site")
     parent_site.setTaggedValue('_ext_excluded_out', True)

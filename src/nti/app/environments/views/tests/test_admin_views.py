@@ -128,7 +128,7 @@ class TestAdminViews(BaseAppTest):
                                                  'environment': has_entries({'type': 'shared'}),
                                                  'environment_edit_link': None,
                                                  'creator': None,
-                                                 'client_name': None,
+                                                 'client_name': 'x',
                                                  'site_edit_link': None,
                                                  'lastModified': not_none()
                                              })}))

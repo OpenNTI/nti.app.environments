@@ -181,6 +181,7 @@ class RequestTrialSiteView(SiteBaseView, ObjectCreateUpdateViewMixin):
         params = super(RequestTrialSiteView, self).readInput()
 
         kwargs = {}
+        kwargs['client_name'] = self._get_value('client_name', required=True)
         kwargs['owner'] = self._get_owner(params)
 
         is_admin_or_management = is_admin_or_account_manager(kwargs['owner'].email, self.request)
