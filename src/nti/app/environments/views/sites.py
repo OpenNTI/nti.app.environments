@@ -697,9 +697,6 @@ class QuerySetupState(BaseView):
         if not ISetupStatePending.providedBy(setup_state):
             return self.context
 
-        # query for status up to the max wait time
-        max_wait = max(min(30, int(self.request.params.get('max_wait', 30))), 1)
-
         app = component.getUtility(ICeleryApp)
         task = ISetupEnvironmentTask(app)
 
@@ -707,10 +704,10 @@ class QuerySetupState(BaseView):
 
         async_result = task.restore_task(setup_state.task_state)
 
-        try:
-            result = async_result.get(timeout=max_wait, propagate=False)
-        except TimeoutError:
+        if not async_result.ready():
             return self.context
+
+        result = async_result.result
 
         failed = isinstance(result, Exception)
 
