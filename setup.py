@@ -69,6 +69,7 @@ tests_require = [
     'pytest >= 3.7.4',
     'pytest-cov',
     'pyhamcrest',
+    'fudge',
     'zope.testing',
     'zope.testrunner',
     'nti.testing'
@@ -105,7 +106,13 @@ setup(
     zip_safe=False,
     extras_require={
         'test': tests_require,
-        'docs': docs_require
+        'docs': docs_require,
+        'postgresql': [
+            'psycopg2'
+        ],
+        'postgresql-dev': [
+            'psycopg2-binary'
+        ]
     },
     install_requires=requires,
     entry_points={
