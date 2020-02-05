@@ -22,6 +22,9 @@ from zope.interface.exceptions import Invalid
 from nti.externalization import to_external_object
 from nti.externalization.internalization.updater import update_from_external_object
 
+from nti.environments.management.tasks import SiteInfo
+from nti.environments.management.tasks import SetupTaskState
+
 from nti.app.environments.views.customers import getOrCreateCustomer
 from nti.app.environments.views.sites import SitesUploadCSVView,\
     RequestTrialSiteView
@@ -34,6 +37,7 @@ from nti.app.environments.models.sites import TrialLicense
 from nti.app.environments.models.sites import EnterpriseLicense
 from nti.app.environments.models.sites import PersistentSite
 from nti.app.environments.models.sites import SharedEnvironment
+from nti.app.environments.models.sites import SetupStateSuccess
 from nti.app.environments.models.interfaces import ISiteUsage
 from nti.app.environments.models.interfaces import IEnterpriseLicense
 from nti.app.environments.models.interfaces import ITrialLicense
@@ -930,3 +934,35 @@ class TestSitesListForCustomerView(BaseAppTest):
         assert_that(result.json_body, has_entries({'id': 'S001', 'owner': has_entries({'email': 'user001@example.com'})}))
         result = self.testapp.get(url, status=200, extra_environ=self._make_environ(username='admin001'))
         assert_that(result.json_body, has_entries({'id': 'S001', 'owner': has_entries({'email': 'user001@example.com'})}))
+
+
+class TestContinueToSite(BaseAppTest):
+
+    @with_test_app()
+    def testContinueToSite(self):
+        with ensure_free_txn():
+            with mock.patch('nti.app.environments.models.utils.get_onboarding_root') as mock_get_onboarding_root:
+                mock_get_onboarding_root.return_value = self._root()
+                customers = self._root().get('customers')
+                customers.addCustomer(PersistentCustomer(email='user001@example.com', name="testname"))
+                sites = self._root().get('sites')
+                for email, siteId in (('user001@example.com', 'S001'),):
+                    sites.addSite(PersistentSite(dns_names=['xx.nextthought.io'],
+                                                 owner = customers.getCustomer(email),
+                                                 license=TrialLicense(start_date=datetime.datetime(2020, 1, 28),
+                                                                      end_date=datetime.datetime(2020, 1, 9))), siteId=siteId)
+
+        url = '/onboarding/sites/S001/@@continue_to_site'
+        self.testapp.get(url, status=302, extra_environ=self._make_environ(username=None))
+        self.testapp.get(url, status=403, extra_environ=self._make_environ(username='user001'))
+        self.testapp.get(url, status=403, extra_environ=self._make_environ(username='admin001'))
+        self.testapp.get(url, status=400, extra_environ=self._make_environ(username='user001@example.com'))
+
+        with ensure_free_txn():
+            site_info = SiteInfo(site_id='S001', dns_name='xx.nextthought.io')
+            site_info.admin_invitation = '/dataserver2/@@accept-site-invitation?code=mockcode'
+            site_info.host = 'test.host'
+            sites['S001'].setup_state = SetupStateSuccess(task_state=SetupTaskState('task1', 'group1'),
+                                                          site_info=site_info)
+
+        self.testapp.get(url, status=303, extra_environ=self._make_environ(username='user001@example.com'))
