@@ -19,6 +19,7 @@ Getting Started
 - Prerequisites for psycopg2 (MacOS)
     brew install postgresql (including libpq-dev and python-dev, which may be installed in other ways.)
     export DYLD_FALLBACK_LIBRARY_PATH=/Library/PostgreSQL/12/lib:$DYLD_FALLBACK_LIBRARY_PATH
+    or install its binary version (https://www.psycopg.org/docs/install.html#binary-install-from-pypi)
 
 - Install the project in editable mode with its testing requirements.
 

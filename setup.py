@@ -61,8 +61,7 @@ requires = [
     'pyramid_zope_request',
     'hubspot3',
     'z3c.rml',
-    'zope.cachedescriptors',
-    'psycopg2'
+    'zope.cachedescriptors'
 ]
 
 tests_require = [
@@ -107,7 +106,13 @@ setup(
     zip_safe=False,
     extras_require={
         'test': tests_require,
-        'docs': docs_require
+        'docs': docs_require,
+        'postgresql': [
+            'psycopg2'
+        ],
+        'postgresql-dev': [
+            'psycopg2-binary'
+        ]
     },
     install_requires=requires,
     entry_points={
