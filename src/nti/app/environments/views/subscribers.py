@@ -22,11 +22,13 @@ from nti.app.environments.api.hubspotclient import get_hubspot_client
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ICustomer
 from nti.app.environments.models.interfaces import IOnboardingRoot
-from nti.app.environments.models.interfaces import IDedicatedEnvironment
 from nti.app.environments.models.interfaces import ILMSSiteCreatedEvent
 from nti.app.environments.models.interfaces import ILMSSiteUpdatedEvent
+from nti.app.environments.models.interfaces import IDedicatedEnvironment
 from nti.app.environments.models.interfaces import ILMSSiteSetupFinished
 from nti.app.environments.models.interfaces import ICustomerVerifiedEvent
+from nti.app.environments.models.interfaces import INewLMSSiteCreatedEvent
+from nti.app.environments.models.interfaces import ITrialLMSSiteCreatedEvent
 
 from nti.app.environments.interfaces import ITransactionRunner
 
@@ -53,6 +55,8 @@ from nti.app.environments.views.notification import SiteSetupEmailNotifier
 
 from nti.environments.management.interfaces import ICeleryApp
 from nti.environments.management.interfaces import ISetupEnvironmentTask
+
+from nti.externalization.interfaces import IObjectModifiedFromExternalEvent
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -86,13 +90,13 @@ def _upload_customer_to_hubspot(event):
         customer.hubspot_contact.contact_vid = result['contact_vid']
 
 
-@component.adapter(ILMSSiteCreatedEvent)
+@component.adapter(ITrialLMSSiteCreatedEvent)
 def _site_created_event(event):
     notifier = SiteCreatedEmailNotifier(event.site)
     notifier.notify()
 
 
-@component.adapter(ILMSSiteCreatedEvent)
+@component.adapter(ITrialLMSSiteCreatedEvent)
 def _notify_owner_on_site_created(event):
     site = event.site
     if not site.owner or not site.dns_names:
@@ -104,8 +108,9 @@ def _notify_owner_on_site_created(event):
     notifier.notify()
 
 
-@component.adapter(ILMSSite, IObjectAddedEvent)
-def _update_host_load_on_site_added(site, unused_event):
+@component.adapter(ILMSSiteCreatedEvent)
+def _update_host_load_on_site_added(event):
+    site = event.site
     if IDedicatedEnvironment.providedBy(site.environment):
         site.environment.host.recompute_current_load()
 
@@ -116,13 +121,13 @@ def _update_host_load_on_site_removed(site, unused_event):
         site.environment.host.recompute_current_load(exclusive_site=site)
 
 
-@component.adapter(ILMSSite, IObjectAddedEvent)
-def _update_stats_on_site_added(lms_site, unused_event):
+@component.adapter(INewLMSSiteCreatedEvent)
+def _update_stats_on_site_added(event):
     client = statsd_client()
     if client is not None:
+        lms_site = event.site
         client.incr('nti.onboarding.lms_site_count', len(lms_site.__parent__))
-        status_str = _get_stat_status_str(lms_site.status)
-        client.incr(status_str)
+        _update_site_status_stats(lms_site.__parent__)
 
 
 @component.adapter(ILMSSite, IObjectRemovedEvent)
@@ -130,30 +135,32 @@ def _update_stats_on_site_removed(lms_site, unused_event):
     client = statsd_client()
     if client is not None:
         client.decr('nti.onboarding.lms_site_count', len(lms_site.__parent__))
-        status_str = _get_stat_status_str(lms_site.status)
-        client.decr(status_str)
+        _update_site_status_stats(lms_site.__parent__)
 
 
 def _get_stat_status_str(status):
     return 'nti.onboarding.lms_%s_site_status_count' % status.lower()
 
 
-@component.adapter(ILMSSiteUpdatedEvent)
-def _update_stats_on_site_updated(event):
+def _update_site_status_stats(site_container):
     client = statsd_client()
     if client is not None:
-        try:
-            original_status = event.original_values['status']
-            new_status = event.external_values['status']
-        except KeyError:
-            return
-        else:
-            if original_status:
-                original_status_str = _get_stat_status_str(original_status)
-                client.decr(original_status_str)
-            if new_status:
-                new_status_str = _get_stat_status_str(new_status)
-                client.incr(new_status_str)
+        stat_to_count = {}
+        for lms_site in site_container.values():
+            if not lms_site.status:
+                continue
+            status_str = _get_stat_status_str(lms_site.status)
+            if status_str not in stat_to_count:
+                stat_to_count[status_str] = 0
+            stat_to_count[status_str] += 1
+        for key, val in stat_to_count.items():
+            client.gauge(key, val)
+
+
+@component.adapter(ILMSSite, IObjectModifiedFromExternalEvent)
+def _update_stats_on_site_updated(lms_site, event):
+    if 'status' in event.external_value:
+        _update_site_status_stats(lms_site.__parent__)
 
 
 def _update_customer_stats(customer):
@@ -269,7 +276,7 @@ def _maybe_setup_site(success, app, siteid, client_name, dns_name, name, email):
         logger.exception('Unable to queue site setup for %s' % siteid)
 
 
-@component.adapter(ILMSSiteCreatedEvent)
+@component.adapter(INewLMSSiteCreatedEvent)
 def _setup_newly_created_site(event):
     site = event.site
     if site.status != SITE_STATUS_PENDING:

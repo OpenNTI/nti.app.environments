@@ -31,11 +31,14 @@ from nti.app.environments.auth import is_admin_or_account_manager
 
 from nti.app.environments.interfaces import ISitesCollection
 
-from nti.app.environments.models.events import SiteCreatedEvent
+from nti.app.environments.models.events import CSVSiteCreatedEvent
+from nti.app.environments.models.events import TrialSiteCreatedEvent
+from nti.app.environments.models.events import SupportSiteCreatedEvent
 from nti.app.environments.models.events import SiteUpdatedEvent
 from nti.app.environments.models.events import SiteSetupFinishedEvent
 
 from nti.app.environments.models.hosts import PersistentHost
+
 from nti.app.environments.models.interfaces import IDedicatedEnvironment
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ILMSSitesContainer
@@ -145,12 +148,15 @@ class SiteCreationView(SiteBaseView, ObjectCreateUpdateViewMixin):
 
     def __call__(self):
         try:
-            site = self.createObjectWithExternal()
+            site = PersistentSite()
+            site.creator = self.request.authenticated_userid
             self.context.addSite(site)
+            site = self.updateObjectWithExternal(site, self.readInput())
             self.request.response.status = 201
             logger.info("%s created a new site, site id: %s.",
                         self.request.authenticated_userid,
                         site.id)
+            notify(SupportSiteCreatedEvent(site))
             return {}
         except InvalidItemType:
             raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid site type.")
@@ -187,7 +193,8 @@ class RequestTrialSiteView(SiteBaseView, ObjectCreateUpdateViewMixin):
         kwargs['client_name'] = self._get_value('client_name', required=True)
         kwargs['owner'] = self._get_owner(params)
 
-        is_admin_or_management = is_admin_or_account_manager(kwargs['owner'].email, self.request)
+        is_admin_or_management = is_admin_or_account_manager(kwargs['owner'].email,
+                                                             self.request)
 
         self._check_for_owner(kwargs['owner'], is_admin_or_management)
 
@@ -225,10 +232,10 @@ class RequestTrialSiteView(SiteBaseView, ObjectCreateUpdateViewMixin):
         try:
             site = PersistentSite()
             site.creator = self.request.authenticated_userid
-            site = self.updateObjectWithExternal(site, self.readInput())
             self.sites_folder.addSite(site)
+            site = self.updateObjectWithExternal(site, self.readInput())
             # send email, etc.
-            notify(SiteCreatedEvent(site))
+            notify(TrialSiteCreatedEvent(site))
 
             logger.info("%s has requested a new trial site be created, site id: %s.",
                         self.request.authenticated_userid,
@@ -522,10 +529,11 @@ class SitesUploadCSVView(SiteBaseView, ObjectCreateUpdateViewMixin):
                 site = PersistentSite()
                 site.createdTime = createdTime
                 site.creator = remoteUser or self.request.authenticated_userid
-                site = self.updateObjectWithExternal(site, kwargs)
                 self.context.addSite(site, siteId=siteId)
+                site = self.updateObjectWithExternal(site, kwargs)
                 self._get_or_update_dns_names(site)
                 self._get_or_update_parent_sites_ids(site)
+                notify(CSVSiteCreatedEvent(site))
             except KeyError as e:
                 raise ValueError("Existing site id: {}.".format(siteId))
         except KeyError as e:

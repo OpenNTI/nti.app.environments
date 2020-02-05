@@ -107,6 +107,11 @@ class TestSiteCreationView(BaseAppTest):
                                                            'client_name': 't1.nextthought.com'}))
         assert_that(site.created.strftime('%y-%m-%d %H:%M:%S'), '2019-11-26 06:00:00')
 
+        assert_that(self.statsd.metrics,
+                    has_items(is_counter('nti.onboarding.lms_site_count', '1'),
+                              is_gauge('nti.onboarding.lms_pending_site_status_count', '1'),
+                              is_gauge('nti.onboarding.customer_count', '1')))
+
         # edit
         site_url = '/onboarding/sites/%s' % (site.__name__,)
         params = {
@@ -116,6 +121,12 @@ class TestSiteCreationView(BaseAppTest):
         result = self.testapp.put_json(site_url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
         assert_that(site, has_properties({'status': 'ACTIVE',
                                           'dns_names': ['s@next.com']}))
+
+        assert_that(self.statsd.metrics,
+                    has_items(is_counter('nti.onboarding.lms_site_count', '1'),
+                              is_gauge('nti.onboarding.lms_pending_site_status_count', '1'),
+                              is_gauge('nti.onboarding.lms_active_site_status_count', '1'),
+                              is_gauge('nti.onboarding.customer_count', '1')))
 
         # delete
         self.testapp.delete(site_url, status=204, extra_environ=self._make_environ(username='admin001'))
@@ -132,6 +143,12 @@ class TestSiteCreationView(BaseAppTest):
             hosts = self._root().get('hosts')
             host = hosts.addHost(PersistentHost(host_name='okc.com', capacity=5))
             assert_that(host.current_load, is_(0))
+
+        assert_that(self.statsd.metrics,
+                    has_items(is_counter('nti.onboarding.lms_site_count', '0'),
+                              is_gauge('nti.onboarding.lms_pending_site_status_count', '0'),
+                              is_gauge('nti.onboarding.lms_active_site_status_count', '1'),
+                              is_gauge('nti.onboarding.customer_count', '1')))
 
         params['environment']['host'] = host.id
         self.testapp.post_json(url, params=params, status=201, extra_environ=self._make_environ(username='admin001'))
@@ -152,6 +169,8 @@ class TestSiteCreationView(BaseAppTest):
 
         assert_that(self.statsd.metrics,
                     has_items(is_counter('nti.onboarding.lms_site_count', '1'),
+                              is_gauge('nti.onboarding.lms_pending_site_status_count', '1'),
+                              is_gauge('nti.onboarding.lms_active_site_status_count', '0'),
                               is_gauge('nti.onboarding.customer_count', '1')))
 
 
@@ -835,7 +854,8 @@ class TestSitesUploadCSVView(BaseAppTest):
             host1 = hosts.addHost(PersistentHost(host_name='host3.4pp', capacity=5))
             host2 = hosts.addHost(PersistentHost(host_name='app1.4pp', capacity=5))
         result = self._upload_file(self.site_info, status=422)
-        assert_that(result.json_body['message'], is_("No customer found with email: 10@gmail.com."))
+        assert_that(result.json_body['message'],
+                    is_("No customer found with email: 10@gmail.com."))
 
         with ensure_free_txn():
             customers = self._root().get('customers')
@@ -844,7 +864,8 @@ class TestSitesUploadCSVView(BaseAppTest):
         self._upload_file(self.site_info)
 
         assert_that(sites, has_length(4))
-        assert_that(sites['S79b714e55864457388118892dc6df51b'].dns_names, is_(['intelligentedu.nextthought.com']))
+        assert_that(sites['S79b714e55864457388118892dc6df51b'].dns_names,
+                    is_(['intelligentedu.nextthought.com']))
 
         assert_that(host1.current_load, is_(0))
         assert_that(host2.current_load, is_(2))

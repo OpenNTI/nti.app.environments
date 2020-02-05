@@ -409,6 +409,31 @@ class ILMSSiteCreatedEvent(interface.Interface):
                   required=True)
 
 
+class ICSVLMSSiteCreatedEvent(ILMSSiteCreatedEvent):
+    """
+    Indicates a site was created via a csv file.
+    """
+
+
+class INewLMSSiteCreatedEvent(ILMSSiteCreatedEvent):
+    """
+    Indicates this site is newly created.
+    """
+
+
+class ITrialLMSSiteCreatedEvent(INewLMSSiteCreatedEvent):
+    """
+    Indicates a user created a trial site.
+    """
+
+
+class ISupportLMSSiteCreatedEvent(INewLMSSiteCreatedEvent):
+    """
+    Indicates a site was created for another party.
+    """
+
+
+
 class ILMSSiteUpdatedEvent(interface.Interface):
 
     site = interface.Attribute("The site object modified.")
