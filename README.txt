@@ -16,6 +16,10 @@ Getting Started
 
     env/bin/pip install --upgrade pip setuptools
 
+- Prerequisites for psycopg2 (MacOS)
+    brew install postgresql (including libpq-dev and python-dev, which may be installed in other ways.)
+    export DYLD_FALLBACK_LIBRARY_PATH=/Library/PostgreSQL/12/lib:$DYLD_FALLBACK_LIBRARY_PATH
+
 - Install the project in editable mode with its testing requirements.
 
     env/bin/pip install -e ".[testing]"

@@ -61,7 +61,8 @@ requires = [
     'pyramid_zope_request',
     'hubspot3',
     'z3c.rml',
-    'zope.cachedescriptors'
+    'zope.cachedescriptors',
+    'psycopg2'
 ]
 
 tests_require = [
@@ -69,6 +70,7 @@ tests_require = [
     'pytest >= 3.7.4',
     'pytest-cov',
     'pyhamcrest',
+    'fudge',
     'zope.testing',
     'zope.testrunner',
     'nti.testing'
