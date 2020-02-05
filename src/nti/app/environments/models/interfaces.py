@@ -364,7 +364,7 @@ class ILMSSite(IContained, IAttributeAnnotatable):
                          title=u'The environment this site is running out of',
                          required=False)
 
-    status = Choice(title=u'The style of the highlight',
+    status = Choice(title=u'The LMS site status',
                     values=SITE_STATUS_OPTIONS,
                     default=SITE_STATUS_PENDING)
 
