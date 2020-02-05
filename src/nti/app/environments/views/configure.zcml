@@ -35,6 +35,10 @@
 			for="nti.app.environments.models.interfaces.ILMSSite pyramid.interfaces.IRequest"
 			provides="nti.externalization.interfaces.IExternalObjectDecorator" />
 
+	<subscriber factory=".decorators.PollStatusLinkDecorator"
+			for="nti.app.environments.models.interfaces.ILMSSite pyramid.interfaces.IRequest"
+			provides="nti.externalization.interfaces.IExternalObjectDecorator" />
+
 	<!-- traversal -->
 	<adapter for="nti.app.environments.models.interfaces.ICustomer pyramid.interfaces.IRequest"
 			 factory="nti.traversal.traversal.DefaultAdapterTraversable"

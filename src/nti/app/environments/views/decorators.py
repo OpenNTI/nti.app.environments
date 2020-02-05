@@ -15,6 +15,7 @@ from nti.app.environments.auth import ACT_CREATE, is_admin_or_account_manager
 
 from nti.app.environments.models.interfaces import ICustomer, ILMSSite
 from nti.app.environments.models.interfaces import ISetupStateSuccess
+from nti.app.environments.models.interfaces import ISetupStatePending
 
 from nti.app.environments.models.externalization import SITE_FIELDS_EXTERNAL_FOR_ADMIN_ONLY
 
@@ -100,6 +101,27 @@ class ContinueLinkDecorator(AbstractRequestAwareDecorator):
 
         link = Link(context, elements=('@@continue_to_site', ), rel='setup.continue')
         links.append(link)
+
+@component.adapter(ILMSSite)
+@interface.implementer(IExternalObjectDecorator)
+class PollStatusLinkDecorator(AbstractRequestAwareDecorator):
+
+    def _is_pending(self, site):
+        return site.setup_state is None or ISetupStatePending.providedBy(site.setup_state)
+    
+    def _predicate(self, context, unused_result):
+        """
+        Only the owner of the site gets this link
+        """
+        return context.owner.email == self.request.authenticated_userid \
+            and self._is_pending(context)
+
+    def _do_decorate_external(self, context, external):
+        links = external.setdefault(StandardExternalFields.LINKS, [])
+
+        link = Link(context, elements=('@@query-setup-state', ), rel='setup.check-pending')
+        links.append(link)
+
 
     
 
