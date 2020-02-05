@@ -22,7 +22,6 @@ from nti.app.environments.models.interfaces import IOnboardingRoot
 from nti.environments.management import tests
 
 
-
 class BaseAppTest(unittest.TestCase):
 
     testapp = None

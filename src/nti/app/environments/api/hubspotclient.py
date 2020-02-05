@@ -10,7 +10,9 @@ from hubspot3.error import HubspotConflict
 from zope import component
 from zope import interface
 
-from nti.app.environments.api.interfaces import IHubspotClientFactory
+from zope.cachedescriptors.property import Lazy
+
+from nti.app.environments.api.interfaces import IHubspotClient
 
 from nti.app.environments.settings import HUBSPOT_API_KEY
 from nti.app.environments.settings import HUBSPOT_PORTAL_ID
@@ -18,10 +20,15 @@ from nti.app.environments.settings import HUBSPOT_PORTAL_ID
 logger = __import__('logging').getLogger(__name__)
 
 
+@interface.implementer(IHubspotClient)
 class HubspotClient(object):
 
     def __init__(self, apikey):
-        self._client = Hubspot3(api_key=apikey)
+        self.apikey = apikey
+
+    @Lazy
+    def _client(self):
+        return Hubspot3(api_key=self.apikey)
 
     def _call(self, _callable, *args, **kwargs):
         logger.info("Begin %s.", _callable.__name__)
@@ -141,6 +148,7 @@ class HubspotClient(object):
                 'value': prop_value}
 
 
+@interface.implementer(IHubspotClient)
 class DevModeHubspotClient(HubspotClient):
 
     def upsert_contact(self, email, name, product_interest='LMS'):
@@ -150,14 +158,14 @@ class DevModeHubspotClient(HubspotClient):
         return super(DevModeHubspotClient, self).upsert_contact(email, name, product_interest)
 
 
-@interface.implementer(IHubspotClientFactory)
+@interface.implementer(IHubspotClient)
 def _hubspot_client_factory():
-    return HubspotClient
+    return HubspotClient(HUBSPOT_API_KEY)
 
 
-@interface.implementer(IHubspotClientFactory)
+@interface.implementer(IHubspotClient)
 def _devmode_hubspot_client_factory():
-    return DevModeHubspotClient
+    return DevModeHubspotClient(HUBSPOT_API_KEY)
 
 
 def _split_name(name):
@@ -168,11 +176,7 @@ def _split_name(name):
 _hubspot_client =None
 
 def get_hubspot_client():
-    global _hubspot_client
-    if _hubspot_client is None:
-        factory = component.getUtility(IHubspotClientFactory)
-        _hubspot_client = factory(HUBSPOT_API_KEY)
-    return _hubspot_client
+    return component.getUtility(IHubspotClient)
 
 
 def get_hubspot_profile_url(contact_vid):

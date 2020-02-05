@@ -10,12 +10,12 @@
 
 	<configure zcml:condition="have devmode">
 		<utility factory=".hubspotclient._devmode_hubspot_client_factory"
-			 	 provides=".interfaces.IHubspotClientFactory" />
+			 	 provides=".interfaces.IHubspotClient" />
 	</configure>
 
 	<configure zcml:condition="not-have devmode">
 		<utility factory=".hubspotclient._hubspot_client_factory"
-			 	 provides=".interfaces.IHubspotClientFactory" />
+			 	 provides=".interfaces.IHubspotClient" />
 	</configure>
 
 

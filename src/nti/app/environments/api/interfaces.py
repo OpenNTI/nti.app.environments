@@ -1,7 +1,7 @@
 from zope import interface
 
 
-class IHubspotClientFactory(interface.Interface):
+class IHubspotClient(interface.Interface):
 
     def __call__():
         pass
