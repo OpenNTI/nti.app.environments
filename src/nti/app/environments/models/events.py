@@ -4,6 +4,7 @@ from zope.interface.interfaces import ObjectEvent
 
 from nti.app.environments.models.interfaces import ILMSSiteCreatedEvent
 from nti.app.environments.models.interfaces import ILMSSiteUpdatedEvent
+from nti.app.environments.models.interfaces import IHostLoadUpdatedEvent
 from nti.app.environments.models.interfaces import ILMSSiteSetupFinished
 from nti.app.environments.models.interfaces import ICustomerVerifiedEvent
 from nti.app.environments.models.interfaces import ICSVLMSSiteCreatedEvent
@@ -11,6 +12,13 @@ from nti.app.environments.models.interfaces import ITrialLMSSiteCreatedEvent
 from nti.app.environments.models.interfaces import ISupportLMSSiteCreatedEvent
 
 from nti.property.property import alias
+
+
+@interface.implementer(IHostLoadUpdatedEvent)
+class HostLoadUpdatedEvent(object):
+
+    def __init__(self, host):
+        self.host = host
 
 
 @interface.implementer(ILMSSiteCreatedEvent)

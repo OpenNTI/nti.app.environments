@@ -24,12 +24,12 @@ from nti.i18n.locales.interfaces import ICcTLDInformation
 
 from nti.schema.interfaces import InvalidValue
 
-from nti.schema.field import Choice
-from nti.schema.field import ValidTextLine
-from nti.schema.field import DateTime
-from nti.schema.field import Object
-from nti.schema.field import UniqueIterable
 from nti.schema.field import Int
+from nti.schema.field import Choice
+from nti.schema.field import Object
+from nti.schema.field import DateTime
+from nti.schema.field import ValidTextLine
+from nti.schema.field import UniqueIterable
 
 from nti.environments.management.interfaces import IInitializedSiteInfo
 
@@ -400,6 +400,13 @@ class ILMSSitesContainer(IContainer):
         """
         Remove site with given id.
         """
+
+
+class IHostLoadUpdatedEvent(interface.Interface):
+
+    host = Object(IHost,
+                  title="The host",
+                  required=True)
 
 
 class ILMSSiteCreatedEvent(interface.Interface):

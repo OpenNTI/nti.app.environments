@@ -7,6 +7,8 @@ from zope import interface
 
 from zope.container.contained import Contained
 
+from zope.event import notify
+
 from nti.property.property import alias
 from nti.property.property import LazyOnClass
 
@@ -19,14 +21,16 @@ from nti.traversal.traversal import find_interface
 from nti.schema.fieldproperty import createFieldProperties
 from nti.schema.schema import SchemaConfigured
 
-from nti.app.environments.auth import ADMIN_ROLE
 from nti.app.environments.auth import ACT_READ
+from nti.app.environments.auth import ADMIN_ROLE
 from nti.app.environments.auth import ACCOUNT_MANAGEMENT_ROLE
 
+from nti.app.environments.models.events import HostLoadUpdatedEvent
+
 from nti.app.environments.models.interfaces import IHost
+from nti.app.environments.models.interfaces import IOnboardingRoot
 from nti.app.environments.models.interfaces import IHostsContainer
 from nti.app.environments.models.interfaces import IDedicatedEnvironment
-from nti.app.environments.models.interfaces import IOnboardingRoot
 
 from nti.app.environments.models.utils import get_sites_folder
 
@@ -62,6 +66,7 @@ class PersistentHost(SchemaConfigured, PersistentCreatedModDateTrackingObject, C
                 _load += site.environment.load_factor
 
         self.set_current_load(_load)
+        notify(HostLoadUpdatedEvent(self))
         return _load
 
 

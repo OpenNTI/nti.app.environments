@@ -163,6 +163,8 @@ class TestSiteCreationView(BaseAppTest):
 
         assert_that(self.statsd.metrics,
                     has_items(is_gauge('nti.onboarding.lms_site_count', '1'),
+                              is_gauge('nti.onboarding.host_%s_okc.com_capacity' % host.id, '5'),
+                              is_gauge('nti.onboarding.host_%s_okc.com_current_load' % host.id, '1'),
                               is_gauge('nti.onboarding.lms_pending_site_status_count', '1')))
 
 
