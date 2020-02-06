@@ -1,5 +1,5 @@
-import datetime
 import os
+import datetime
 
 from unittest import mock
 from hamcrest import assert_that
@@ -20,29 +20,38 @@ from pyramid import httpexceptions as hexc
 from zope.interface.exceptions import Invalid
 
 from nti.externalization import to_external_object
+
 from nti.externalization.internalization.updater import update_from_external_object
 
 from nti.environments.management.tasks import SiteInfo
 from nti.environments.management.tasks import SetupTaskState
 
-from nti.app.environments.views.customers import getOrCreateCustomer
-from nti.app.environments.views.sites import SitesUploadCSVView,\
-    RequestTrialSiteView
-from nti.app.environments.views.tests import BaseAppTest
-from nti.app.environments.views.tests import with_test_app
-from nti.app.environments.views.tests import ensure_free_txn
 from nti.app.environments.models.customers import PersistentCustomer
+
 from nti.app.environments.models.hosts import PersistentHost
+
+from nti.app.environments.models.interfaces import ISiteUsage
+from nti.app.environments.models.interfaces import ITrialLicense
+from nti.app.environments.models.interfaces import ISharedEnvironment
+from nti.app.environments.models.interfaces import IEnterpriseLicense
+from nti.app.environments.models.interfaces import IDedicatedEnvironment
+
 from nti.app.environments.models.sites import TrialLicense
 from nti.app.environments.models.sites import EnterpriseLicense
 from nti.app.environments.models.sites import PersistentSite
 from nti.app.environments.models.sites import SharedEnvironment
 from nti.app.environments.models.sites import SetupStateSuccess
-from nti.app.environments.models.interfaces import ISiteUsage
-from nti.app.environments.models.interfaces import IEnterpriseLicense
-from nti.app.environments.models.interfaces import ITrialLicense
-from nti.app.environments.models.interfaces import ISharedEnvironment
-from nti.app.environments.models.interfaces import IDedicatedEnvironment
+
+from nti.app.environments.views.customers import getOrCreateCustomer
+
+from nti.app.environments.views.sites import SitesUploadCSVView
+from nti.app.environments.views.sites import RequestTrialSiteView
+
+from nti.app.environments.views.tests import BaseAppTest
+from nti.app.environments.views.tests import with_test_app
+from nti.app.environments.views.tests import ensure_free_txn
+
+from nti.fakestatsd.matchers import is_gauge
 
 
 def _absolute_path(filename):
@@ -55,14 +64,12 @@ class TestSiteCreationView(BaseAppTest):
                 env_type='application/vnd.nextthought.app.environments.sharedenvironment',
                 license_type="application/vnd.nextthought.app.environments.triallicense",
                 site_id=None):
-        env = {'name': 'assoc'} if env_type == 'application/vnd.nextthought.app.environments.sharedenvironment' else {'pod_id': 'xxx', 'host': 'okc.com'}
+        env_map = {'name': 'assoc'} if env_type == 'application/vnd.nextthought.app.environments.sharedenvironment' else {'pod_id': 'xxx', 'host': 'okc.com'}
+        env_map["MimeType"] = env_type
         return {
             'id': site_id,
             "owner": "test@gmail.com",
-            "environment": {
-                "MimeType": env_type,
-                **env,
-            },
+            "environment": env_map,
             "license": {
                 "MimeType": license_type,
                 'start_date': '2019-11-27T00:00:00',
@@ -104,6 +111,12 @@ class TestSiteCreationView(BaseAppTest):
                                                            'client_name': 't1.nextthought.com'}))
         assert_that(site.created.strftime('%y-%m-%d %H:%M:%S'), '2019-11-26 06:00:00')
 
+        assert_that(self.statsd.metrics,
+                    has_items(is_gauge('nti.onboarding.lms_site_count', '1'),
+                              is_gauge('nti.onboarding.lms_site_status_count.pending', '1'),
+                              is_gauge('nti.onboarding.customer_count', '1')))
+        self.statsd.clear()
+
         # edit
         site_url = '/onboarding/sites/%s' % (site.__name__,)
         params = {
@@ -113,6 +126,10 @@ class TestSiteCreationView(BaseAppTest):
         result = self.testapp.put_json(site_url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
         assert_that(site, has_properties({'status': 'ACTIVE',
                                           'dns_names': ['s@next.com']}))
+
+        assert_that(self.statsd.metrics,
+                    has_items(is_gauge('nti.onboarding.lms_site_status_count.active', '1')))
+        self.statsd.clear()
 
         # delete
         self.testapp.delete(site_url, status=204, extra_environ=self._make_environ(username='admin001'))
@@ -130,6 +147,10 @@ class TestSiteCreationView(BaseAppTest):
             host = hosts.addHost(PersistentHost(host_name='okc.com', capacity=5))
             assert_that(host.current_load, is_(0))
 
+        assert_that(self.statsd.metrics,
+                    has_items(is_gauge('nti.onboarding.lms_site_count', '0')))
+        self.statsd.clear()
+
         params['environment']['host'] = host.id
         self.testapp.post_json(url, params=params, status=201, extra_environ=self._make_environ(username='admin001'))
         with ensure_free_txn():
@@ -146,6 +167,12 @@ class TestSiteCreationView(BaseAppTest):
                                                                'dns_names': ['t1.nextthought.com', 't2.nextthought.com']}))
             external = to_external_object(site)
             assert_that(external, has_entries({'id': 'S1id'}))
+
+        assert_that(self.statsd.metrics,
+                    has_items(is_gauge('nti.onboarding.lms_site_count', '1'),
+                              is_gauge('nti.onboarding.host_capacity.okc.com', '5'),
+                              is_gauge('nti.onboarding.host_current_load.okc.com', '1'),
+                              is_gauge('nti.onboarding.lms_site_status_count.pending', '1')))
 
 
 class TestSitePutView(BaseAppTest):
@@ -226,6 +253,7 @@ class TestSitePutView(BaseAppTest):
         params = { 'dns_names': ['xxx', 'xxx'] }
         result = self.testapp.put_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
         assert_that(result.json_body, has_entries({'message': 'Existing duplicated xxx for dns_names.'}))
+
 
     @with_test_app()
     @mock.patch('nti.app.environments.models.utils.get_onboarding_root')
@@ -823,7 +851,8 @@ class TestSitesUploadCSVView(BaseAppTest):
             host1 = hosts.addHost(PersistentHost(host_name='host3.4pp', capacity=5))
             host2 = hosts.addHost(PersistentHost(host_name='app1.4pp', capacity=5))
         result = self._upload_file(self.site_info, status=422)
-        assert_that(result.json_body['message'], is_("No customer found with email: 10@gmail.com."))
+        assert_that(result.json_body['message'],
+                    is_("No customer found with email: 10@gmail.com."))
 
         with ensure_free_txn():
             customers = self._root().get('customers')
@@ -832,10 +861,16 @@ class TestSitesUploadCSVView(BaseAppTest):
         self._upload_file(self.site_info)
 
         assert_that(sites, has_length(4))
-        assert_that(sites['S79b714e55864457388118892dc6df51b'].dns_names, is_(['intelligentedu.nextthought.com']))
+        assert_that(sites['S79b714e55864457388118892dc6df51b'].dns_names,
+                    is_(['intelligentedu.nextthought.com']))
 
         assert_that(host1.current_load, is_(0))
         assert_that(host2.current_load, is_(2))
+
+        guages, unused_counters = self.sent_stats()
+        assert_that(guages, has_entries('nti.onboarding.lms_site_status_count.active', '4',
+                                        'nti.onboarding.lms_site_count', '4',
+                                        'nti.onboarding.customer_count', '3'))
 
 
 class TestSiteUsagesBulkUpdateView(BaseAppTest):

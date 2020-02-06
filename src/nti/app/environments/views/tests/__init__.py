@@ -8,6 +8,8 @@ from contextlib import contextmanager
 from zope import component
 from zope.testing.cleanup import cleanUp
 
+from perfmetrics import statsd_client_stack
+
 from pyramid import testing
 from pyramid.interfaces import IAuthenticationPolicy
 from pyramid.interfaces import IRootFactory
@@ -21,6 +23,7 @@ from nti.app.environments.models.interfaces import IOnboardingRoot
 
 from nti.environments.management import tests
 
+from nti.fakestatsd import FakeStatsDClient
 
 class BaseAppTest(unittest.TestCase):
 
@@ -39,10 +42,13 @@ class BaseAppTest(unittest.TestCase):
             'new_site_request_notification_email': 'test@example.com',
             'nti.environments.management.config': os.path.join(os.path.dirname(tests.__file__), 'test.ini')
         }
+        self.statsd = FakeStatsDClient()
+        statsd_client_stack.push(self.statsd)
 
     def tearDown(self):
         cleanUp()
         transaction.abort()
+        statsd_client_stack.pop()
 
     def _make_environ(self, username=None):
         result = { 'REMOTE_USER': username } if username else {}
@@ -50,6 +56,19 @@ class BaseAppTest(unittest.TestCase):
 
     def _root(self, request=None):
         return IOnboardingRoot(request or self.request)
+
+    def sent_stats(self):
+        """
+        Returns a tuple of gauge and counters that were sent
+        """
+        guages = {}
+        counters = {}
+        for metric in self.statsd:
+            if metric.kind == 'g':
+                guages[metric.name] = metric.value
+            elif metric.kind == 'c':
+                counters[metric.name] = int(metric.value)
+        return guages, counters
 
 
 class DummyCookieHelper(object):

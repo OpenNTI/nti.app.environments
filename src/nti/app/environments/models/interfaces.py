@@ -24,12 +24,12 @@ from nti.i18n.locales.interfaces import ICcTLDInformation
 
 from nti.schema.interfaces import InvalidValue
 
-from nti.schema.field import Choice
-from nti.schema.field import ValidTextLine
-from nti.schema.field import DateTime
-from nti.schema.field import Object
-from nti.schema.field import UniqueIterable
 from nti.schema.field import Int
+from nti.schema.field import Choice
+from nti.schema.field import Object
+from nti.schema.field import DateTime
+from nti.schema.field import ValidTextLine
+from nti.schema.field import UniqueIterable
 
 from nti.environments.management.interfaces import IInitializedSiteInfo
 
@@ -364,7 +364,7 @@ class ILMSSite(IContained, IAttributeAnnotatable):
                          title=u'The environment this site is running out of',
                          required=False)
 
-    status = Choice(title=u'The style of the highlight',
+    status = Choice(title=u'The LMS site status',
                     values=SITE_STATUS_OPTIONS,
                     default=SITE_STATUS_PENDING)
 
@@ -402,11 +402,43 @@ class ILMSSitesContainer(IContainer):
         """
 
 
+class IHostLoadUpdatedEvent(interface.Interface):
+
+    host = Object(IHost,
+                  title="The host",
+                  required=True)
+
+
 class ILMSSiteCreatedEvent(interface.Interface):
 
     site = Object(ILMSSite,
                   title="The site object created.",
                   required=True)
+
+
+class ICSVLMSSiteCreatedEvent(ILMSSiteCreatedEvent):
+    """
+    Indicates a site was created via a csv file.
+    """
+
+
+class INewLMSSiteCreatedEvent(ILMSSiteCreatedEvent):
+    """
+    Indicates this site is newly created.
+    """
+
+
+class ITrialLMSSiteCreatedEvent(INewLMSSiteCreatedEvent):
+    """
+    Indicates a user created a trial site.
+    """
+
+
+class ISupportLMSSiteCreatedEvent(INewLMSSiteCreatedEvent):
+    """
+    Indicates a site was created for another party.
+    """
+
 
 
 class ILMSSiteUpdatedEvent(interface.Interface):

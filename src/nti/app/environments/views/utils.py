@@ -53,6 +53,7 @@ def is_dns_name_available(dns_name, sites_folder=None):
     """
     sites_folder = get_sites_folder() if sites_folder is None else sites_folder
     for site in sites_folder.values():
-        if dns_name in site.dns_names or ():
+        dns_names = site.dns_names or ()
+        if dns_name in dns_names:
             return False
     return _is_dns_name_available(dns_name)
