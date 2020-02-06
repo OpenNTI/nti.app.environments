@@ -245,10 +245,6 @@ class TestSitePutView(BaseAppTest):
         result = self.testapp.put_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
         assert_that(result.json_body, has_entries({'message': 'Existing duplicated xxx for dns_names.'}))
 
-#         assert_that(statsd.metrics, has_items(is_counter('nti.analytics.events.received.malformed', '1'),
-#                                               is_counter('nti.analytics.events.received.total', '3')))
-
-
 
     @with_test_app()
     @mock.patch('nti.app.environments.models.utils.get_onboarding_root')
@@ -861,6 +857,11 @@ class TestSitesUploadCSVView(BaseAppTest):
 
         assert_that(host1.current_load, is_(0))
         assert_that(host2.current_load, is_(2))
+
+        guages, unused_counters = self.sent_stats()
+        assert_that(guages, has_entries('nti.onboarding.lms_active_site_status_count', '4',
+                                        'nti.onboarding.lms_site_count', '4',
+                                        'nti.onboarding.customer_count', '3'))
 
 
 class TestSiteUsagesBulkUpdateView(BaseAppTest):

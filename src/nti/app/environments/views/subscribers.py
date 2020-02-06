@@ -121,7 +121,7 @@ def _update_host_load_on_site_removed(site, unused_event):
         site.environment.host.recompute_current_load(exclusive_site=site)
 
 
-@component.adapter(INewLMSSiteCreatedEvent)
+@component.adapter(ILMSSiteCreatedEvent)
 def _update_stats_on_site_added(event):
     client = statsd_client()
     if client is not None:

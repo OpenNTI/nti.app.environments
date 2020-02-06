@@ -57,6 +57,19 @@ class BaseAppTest(unittest.TestCase):
     def _root(self, request=None):
         return IOnboardingRoot(request or self.request)
 
+    def sent_stats(self):
+        """
+        Returns a tuple of gauge and counters that were sent
+        """
+        guages = {}
+        counters = {}
+        for metric in self.statsd:
+            if metric.kind == 'g':
+                guages[metric.name] = metric.value
+            elif metric.kind == 'c':
+                counters[metric.name] = int(metric.value)
+        return guages, counters
+
 
 class DummyCookieHelper(object):
 
