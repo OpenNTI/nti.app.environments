@@ -16,6 +16,7 @@ from zope.securitypolicy.principalrole import AnnotationPrincipalRoleManager
 from nti.app.environments.models.interfaces import IOnboardingRoot
 
 from nti.app.environments.interfaces import IOnboardingRootPrincipalRoleManager
+from nti.app.environments.interfaces import ISiteDomainFactory
 from nti.app.environments.interfaces import ISiteLinks
 
 from nti.app.environments.models.interfaces import ISetupStateSuccess
@@ -143,3 +144,17 @@ class SiteLinks(object):
         params['success'] = account_creation
         parsed = parsed._replace(query=urlencode(params, doseq=True))
         return urlunparse(parsed)
+
+
+@interface.implementer(ISiteDomainFactory)
+class SiteDomainFactory(object):
+
+    def __call__(self):
+        return 'nextthought.io'
+
+
+@interface.implementer(ISiteDomainFactory)
+class DevmodeSiteDomainFactory(object):
+
+    def __call__(self):
+        return 'nextthot.com'
