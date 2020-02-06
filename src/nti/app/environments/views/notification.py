@@ -1,6 +1,9 @@
+from urllib.parse import urlunparse
 from urllib.parse import urljoin
 
 from zope import component
+
+from zope.cachedescriptors.property import Lazy
 
 from pyramid.threadlocal import get_current_request
 
@@ -10,10 +13,14 @@ from nti.app.environments.settings import NEW_SITE_REQUEST_NOTIFICATION_EMAIL
 
 from nti.app.environments.models.externalization import SITE_FIELDS_EXTERNAL_FOR_ADMIN_ONLY
 
+from nti.app.environments.models.interfaces import ICustomersContainer
+
 from nti.externalization import to_external_object
 from nti.externalization.interfaces import IExternalObjectRepresenter
 
 from nti.mailer.interfaces import ITemplatedMailer
+
+from nti.traversal.traversal import find_interface
 
 
 def _mailer():
@@ -102,5 +109,40 @@ class SiteSetupEmailNotifier(BaseEmailNotifier):
             'name': self.site.owner.email,
             'site_domain_link': "http://{dns_name}/".format(dns_name=self.site.dns_names[0]),
             'password_setup_link': urljoin(self.request.application_url, 'sites/{}'.format(self.site.id))
+        }
+        return template_args
+
+
+class SiteSetUpFinishedEmailNotifier(BaseEmailNotifier):
+
+    _template = 'nti.app.environments:email_templates/site_setup_success'
+    _subject = "Your site is set up successfully"
+
+    def __init__(self, context, request=None):
+        super(SiteSetUpFinishedEmailNotifier, self).__init__(context, request)
+        self.site = context
+
+    @Lazy
+    def _customers_folder(self):
+        return find_interface(self.site.owner, ICustomersContainer)
+
+    def _recipients(self):
+        return [self.site.creator]
+
+    def _name(self):
+        creator = self.site.creator
+        customer = self._customers_folder.getCustomer(creator)
+        return customer.name if customer is not None else creator
+
+    def _invite_href(self):
+        target_app_url = urlunparse(('https', self.site.dns_names[0], '/app', None, None, None))
+        return urljoin(target_app_url,
+                       self.site.setup_state.site_info.admin_invitation)
+
+    def _template_args(self):
+        template_args = {
+            'name': self._name(),
+            'site_details_link': self.request.resource_url(self.site, '@@details'),
+            'site_invite_link': self._invite_href()
         }
         return template_args
