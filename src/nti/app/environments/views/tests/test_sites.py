@@ -45,7 +45,6 @@ from nti.app.environments.models.interfaces import ISharedEnvironment
 from nti.app.environments.models.interfaces import IDedicatedEnvironment
 
 from nti.fakestatsd.matchers import is_gauge
-from nti.fakestatsd.matchers import is_counter
 
 
 def _absolute_path(filename):
@@ -58,14 +57,12 @@ class TestSiteCreationView(BaseAppTest):
                 env_type='application/vnd.nextthought.app.environments.sharedenvironment',
                 license_type="application/vnd.nextthought.app.environments.triallicense",
                 site_id=None):
-        env = {'name': 'assoc'} if env_type == 'application/vnd.nextthought.app.environments.sharedenvironment' else {'pod_id': 'xxx', 'host': 'okc.com'}
+        env_map = {'name': 'assoc'} if env_type == 'application/vnd.nextthought.app.environments.sharedenvironment' else {'pod_id': 'xxx', 'host': 'okc.com'}
+        env_map["MimeType"] = env_type
         return {
             'id': site_id,
             "owner": "test@gmail.com",
-            "environment": {
-                "MimeType": env_type,
-                **env,
-            },
+            "environment": env_map,
             "license": {
                 "MimeType": license_type,
                 'start_date': '2019-11-27T00:00:00',
@@ -108,9 +105,10 @@ class TestSiteCreationView(BaseAppTest):
         assert_that(site.created.strftime('%y-%m-%d %H:%M:%S'), '2019-11-26 06:00:00')
 
         assert_that(self.statsd.metrics,
-                    has_items(is_counter('nti.onboarding.lms_site_count', '1'),
+                    has_items(is_gauge('nti.onboarding.lms_site_count', '1'),
                               is_gauge('nti.onboarding.lms_pending_site_status_count', '1'),
                               is_gauge('nti.onboarding.customer_count', '1')))
+        self.statsd.clear()
 
         # edit
         site_url = '/onboarding/sites/%s' % (site.__name__,)
@@ -123,10 +121,8 @@ class TestSiteCreationView(BaseAppTest):
                                           'dns_names': ['s@next.com']}))
 
         assert_that(self.statsd.metrics,
-                    has_items(is_counter('nti.onboarding.lms_site_count', '1'),
-                              is_gauge('nti.onboarding.lms_pending_site_status_count', '1'),
-                              is_gauge('nti.onboarding.lms_active_site_status_count', '1'),
-                              is_gauge('nti.onboarding.customer_count', '1')))
+                    has_items(is_gauge('nti.onboarding.lms_active_site_status_count', '1')))
+        self.statsd.clear()
 
         # delete
         self.testapp.delete(site_url, status=204, extra_environ=self._make_environ(username='admin001'))
@@ -145,10 +141,8 @@ class TestSiteCreationView(BaseAppTest):
             assert_that(host.current_load, is_(0))
 
         assert_that(self.statsd.metrics,
-                    has_items(is_counter('nti.onboarding.lms_site_count', '0'),
-                              is_gauge('nti.onboarding.lms_pending_site_status_count', '0'),
-                              is_gauge('nti.onboarding.lms_active_site_status_count', '1'),
-                              is_gauge('nti.onboarding.customer_count', '1')))
+                    has_items(is_gauge('nti.onboarding.lms_site_count', '0')))
+        self.statsd.clear()
 
         params['environment']['host'] = host.id
         self.testapp.post_json(url, params=params, status=201, extra_environ=self._make_environ(username='admin001'))
@@ -168,10 +162,8 @@ class TestSiteCreationView(BaseAppTest):
             assert_that(external, has_entries({'id': 'S1id'}))
 
         assert_that(self.statsd.metrics,
-                    has_items(is_counter('nti.onboarding.lms_site_count', '1'),
-                              is_gauge('nti.onboarding.lms_pending_site_status_count', '1'),
-                              is_gauge('nti.onboarding.lms_active_site_status_count', '0'),
-                              is_gauge('nti.onboarding.customer_count', '1')))
+                    has_items(is_gauge('nti.onboarding.lms_site_count', '1'),
+                              is_gauge('nti.onboarding.lms_pending_site_status_count', '1')))
 
 
 class TestSitePutView(BaseAppTest):

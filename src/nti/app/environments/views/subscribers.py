@@ -126,27 +126,31 @@ def _update_stats_on_site_added(event):
     client = statsd_client()
     if client is not None:
         lms_site = event.site
-        client.incr('nti.onboarding.lms_site_count', len(lms_site.__parent__))
-        _update_site_status_stats(lms_site.__parent__)
+        client.gauge('nti.onboarding.lms_site_count',
+                     len(lms_site.__parent__))
+        _update_site_status_stats(lms_site.__parent__.values())
 
 
 @component.adapter(ILMSSite, IObjectRemovedEvent)
 def _update_stats_on_site_removed(lms_site, unused_event):
     client = statsd_client()
     if client is not None:
-        client.decr('nti.onboarding.lms_site_count', len(lms_site.__parent__))
-        _update_site_status_stats(lms_site.__parent__)
+        # This event is before removal
+        client.gauge('nti.onboarding.lms_site_count',
+                     len(lms_site.__parent__) - 1)
+        all_sites = (x for x in lms_site.__parent__.values() if x != lms_site)
+        _update_site_status_stats(all_sites)
 
 
 def _get_stat_status_str(status):
     return 'nti.onboarding.lms_%s_site_status_count' % status.lower()
 
 
-def _update_site_status_stats(site_container):
+def _update_site_status_stats(all_sites):
     client = statsd_client()
     if client is not None:
         stat_to_count = {}
-        for lms_site in site_container.values():
+        for lms_site in all_sites:
             if not lms_site.status:
                 continue
             status_str = _get_stat_status_str(lms_site.status)
@@ -160,7 +164,7 @@ def _update_site_status_stats(site_container):
 @component.adapter(ILMSSite, IObjectModifiedFromExternalEvent)
 def _update_stats_on_site_updated(lms_site, event):
     if 'status' in event.external_value:
-        _update_site_status_stats(lms_site.__parent__)
+        _update_site_status_stats(lms_site.__parent__.values())
 
 
 def _update_customer_stats(customer):
