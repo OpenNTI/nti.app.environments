@@ -10,12 +10,14 @@ from pyramid.threadlocal import get_current_request
 from pyramid_mailer.message import Attachment
 
 from nti.app.environments.settings import NEW_SITE_REQUEST_NOTIFICATION_EMAIL
+from nti.app.environments.settings import SITE_SETUP_FAILURE_NOTIFICATION_EMAIL
 
 from nti.app.environments.models.externalization import SITE_FIELDS_EXTERNAL_FOR_ADMIN_ONLY
 
 from nti.app.environments.models.interfaces import ICustomersContainer
 
 from nti.externalization import to_external_object
+
 from nti.externalization.interfaces import IExternalObjectRepresenter
 
 from nti.mailer.interfaces import ITemplatedMailer
@@ -144,5 +146,32 @@ class SiteSetUpFinishedEmailNotifier(BaseEmailNotifier):
             'name': self._name(),
             'site_details_link': self.request.resource_url(self.site, '@@details'),
             'site_invite_link': self._invite_href()
+        }
+        return template_args
+
+
+class SiteSetupFailureEmailNotifier(BaseEmailNotifier):
+
+    _template = 'nti.app.environments:email_templates/site_setup_failed'
+    _subject = "Site setup failed"
+
+    def __init__(self, context, request=None):
+        super(SiteSetupEmailNotifier, self).__init__(context, request)
+        self.site = context
+        self._subject = 'Site setup failed [%s]' % context.id
+
+    def _recipients(self):
+        return [SITE_SETUP_FAILURE_NOTIFICATION_EMAIL]
+
+    def _template_args(self):
+        state = self.site.setup_state
+        site_info = state.site_info
+        template_args = {
+            'name': self.site.owner.email,
+            'dns_name': site_info.dns_name,
+            'exception': state.exception,
+            'host': state.site_info.host,
+            'owner': self.site.owner,
+            'environment': self.site.environment
         }
         return template_args

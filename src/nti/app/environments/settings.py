@@ -3,6 +3,7 @@ GOOGLE_CLIENT_SECRET = None
 HUBSPOT_API_KEY = None
 HUBSPOT_PORTAL_ID = None
 NEW_SITE_REQUEST_NOTIFICATION_EMAIL = None
+SITE_SETUP_FAILURE_NOTIFICATION_EMAIL = None
 
 
 def init_app_settings(settings):
@@ -11,9 +12,11 @@ def init_app_settings(settings):
     global HUBSPOT_API_KEY
     global HUBSPOT_PORTAL_ID
     global NEW_SITE_REQUEST_NOTIFICATION_EMAIL
+    global SITE_SETUP_FAILURE_NOTIFICATION_EMAIL
 
     GOOGLE_CLIENT_ID = settings['google_client_id']
     GOOGLE_CLIENT_SECRET = settings['google_client_secret']
     HUBSPOT_API_KEY = settings['hubspot_api_key']
     HUBSPOT_PORTAL_ID = settings['hubspot_portal_id']
     NEW_SITE_REQUEST_NOTIFICATION_EMAIL = settings['new_site_request_notification_email']
+    SITE_SETUP_FAILURE_NOTIFICATION_EMAIL = settings['site_setup_failure_notification_email']

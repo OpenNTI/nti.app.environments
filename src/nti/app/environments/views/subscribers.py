@@ -2,15 +2,11 @@ import time
 import gevent
 import transaction
 
-from celery.exceptions import TimeoutError
-
 from datetime import datetime
 
 from perfmetrics import statsd_client
 
 from zope import component
-
-from zope.event import notify
 
 from zope.lifecycleevent import IObjectAddedEvent
 from zope.lifecycleevent import IObjectRemovedEvent
@@ -19,40 +15,38 @@ from nti.traversal.traversal import find_interface
 
 from nti.app.environments.api.hubspotclient import get_hubspot_client
 
+from nti.app.environments.interfaces import ITransactionRunner
+
+from nti.app.environments.models.interfaces import SITE_STATUS_PENDING
+
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ICustomer
 from nti.app.environments.models.interfaces import IOnboardingRoot
+from nti.app.environments.models.interfaces import ISetupStateSuccess
 from nti.app.environments.models.interfaces import ILMSSiteCreatedEvent
 from nti.app.environments.models.interfaces import ILMSSiteUpdatedEvent
 from nti.app.environments.models.interfaces import IDedicatedEnvironment
 from nti.app.environments.models.interfaces import ILMSSiteSetupFinished
+from nti.app.environments.models.interfaces import IHostLoadUpdatedEvent
 from nti.app.environments.models.interfaces import ICustomerVerifiedEvent
 from nti.app.environments.models.interfaces import INewLMSSiteCreatedEvent
 from nti.app.environments.models.interfaces import ITrialLMSSiteCreatedEvent
-
-from nti.app.environments.interfaces import ITransactionRunner
-
-from nti.app.environments.models.events import SiteSetupFinishedEvent
-
-from nti.app.environments.models.interfaces import SITE_STATUS_PENDING
-from nti.app.environments.models.interfaces import ISetupStatePending
-from nti.app.environments.models.interfaces import ISetupStateSuccess
-from nti.app.environments.models.interfaces import IHostLoadUpdatedEvent
 
 from nti.app.environments.models.customers import HubspotContact
 
 from nti.app.environments.models.hosts import get_or_create_host
 
-from nti.app.environments.models.sites import DedicatedEnvironment
 from nti.app.environments.models.sites import SetupStatePending
-from nti.app.environments.models.sites import SetupStateSuccess
-from nti.app.environments.models.sites import SetupStateFailure
+from nti.app.environments.models.sites import DedicatedEnvironment
 
 from nti.app.environments.models.utils import get_sites_folder
 from nti.app.environments.models.utils import get_hosts_folder
 
-from nti.app.environments.views.notification import SiteCreatedEmailNotifier
+from nti.app.environments.settings import SITE_SETUP_FAILURE_NOTIFICATION_EMAIL
+
 from nti.app.environments.views.notification import SiteSetupEmailNotifier
+from nti.app.environments.views.notification import SiteCreatedEmailNotifier
+from nti.app.environments.views.notification import SiteSetupFailureEmailNotifier
 from nti.app.environments.views.notification import SiteSetUpFinishedEmailNotifier
 
 from nti.environments.management.interfaces import ICeleryApp
@@ -313,10 +307,21 @@ def _setup_newly_created_site(event):
     )
 
 
+def _email_on_setup_error(site):
+    """
+    On site setup error, email a notification to configured entities.
+    """
+    if not SITE_SETUP_FAILURE_NOTIFICATION_EMAIL:
+        return
+    notifier = SiteSetupFailureEmailNotifier(site)
+    notifier.notify()
+
+
 @component.adapter(ILMSSiteSetupFinished)
 def _associate_site_to_host(event):
     site = event.site
     if not ISetupStateSuccess.providedBy(site.setup_state):
+        _email_on_setup_error(site)
         return
 
     setup_info = site.setup_state.site_info

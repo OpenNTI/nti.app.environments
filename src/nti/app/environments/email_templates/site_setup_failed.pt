@@ -1,0 +1,83 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:metal="http://xml.zope.org/namespaces/metal" xmlns:tal="http://xml.zope.org/namespaces/tal" xmlns:i18n="http://xml.zope.org/namespaces/i18n" i18n:domain="nti.app.environments" i18n:source="en">
+	<head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600" rel="stylesheet">
+		<title>
+			Confirm Your Email Address
+		</title>
+		<style>
+			body {
+				background-color: #F9F9F9;
+				color: #494949;
+				font-family: 'Open Sans', sans-serif, Helvetica, Arial;
+				padding-top: 20px;
+				padding-bottom: 20px;
+			}
+			.container {
+				max-width: 610px;
+				margin: 0 auto;
+				padding: 47px 60px 50px 60px;
+				font-size: 17px;
+				background-color: #FFFFFF;
+				border-top: 3px solid #3FB34F;
+			}
+			.title {
+				margin-top: 20px;
+				font-size: 26px;
+				font-weight: 600;
+				letter-spacing: -0.5px;
+				line-height: 36px;
+			}
+			.content {
+				font-size: 16px;
+				line-height: 24px;
+			}
+
+			.btn-link {
+                width: 150px;
+                padding: 10px 25px;
+                font-size: 18px;
+                font-weight: 600;
+                line-height: 24px;
+                color: #FFFFFF;
+                background-color: #3FB34F;
+				border-radius: 4px;
+                display: block;
+                text-decoration: none;
+			}
+
+
+		</style>
+	</head>
+	<body>
+		<div class="container">
+		        <img src="${request.static_url('nti.app.environments:static/image/email_logo.png')}" width="41.87" height="40"/>
+			<div class="title">It's time to setup your password!</div>
+			<div i18n:translate="" class="content" style="margin-top: 12px;">
+				The next step to set up your new site is choosing a password.
+			</div>
+			<div i18n:translate="" class="content" style="margin-top: 17px;">
+				Please follow the link below to continue setting up your account.
+                Your new site is waiting for you!
+			</div>
+            <div style="margin-top:30px; padding: 0 auto;">
+                <a href="${password_setup_link}" class="btn-link" target="_blank">Set my Password</a>
+            </div>
+            <div class="content" style="margin-top: 15px;font-size: 14px;line-height: 20px;">
+                You may copy/paste this link into your browser:<br/>
+                <a href="${password_setup_link}" style="text-decoration: none;color: #3FB3F6;" target="_blank">${password_setup_link}</a>
+            </div>
+			<div class="content" style="margin-top: 30px;">
+                Your Site's domain:<br/>
+                <a href="${site_domain_link}" style="text-decoration: none;color: #3FB3F6;" target="_blank">${site_domain_link}</a>
+			</div>
+			<hr style="margin-top: 46px;border:1px solid rgba(0,0,0,0.07);border-bottom: 0;"/>
+			<div style="margin-top: 18px;font-size: 12px;line-height: 17px;">
+				If you feel this email was sent in error, or this account was created without your consent,<br/>you may email 
+				<a href="mailto:support@nextthought.com" tal:content="support_email|default" tal:attributes="href string:mailto:${support_email|default}" style="color: #494949;">
+					support@nextthought.com</a>.
+			</div>
+		</div>
+	</body>
+</html>
