@@ -1,5 +1,5 @@
-import datetime
 import os
+import datetime
 
 from unittest import mock
 from hamcrest import assert_that
@@ -20,29 +20,36 @@ from pyramid import httpexceptions as hexc
 from zope.interface.exceptions import Invalid
 
 from nti.externalization import to_external_object
+
 from nti.externalization.internalization.updater import update_from_external_object
 
 from nti.environments.management.tasks import SiteInfo
 from nti.environments.management.tasks import SetupTaskState
 
-from nti.app.environments.views.customers import getOrCreateCustomer
-from nti.app.environments.views.sites import SitesUploadCSVView,\
-    RequestTrialSiteView
-from nti.app.environments.views.tests import BaseAppTest
-from nti.app.environments.views.tests import with_test_app
-from nti.app.environments.views.tests import ensure_free_txn
 from nti.app.environments.models.customers import PersistentCustomer
+
 from nti.app.environments.models.hosts import PersistentHost
+
+from nti.app.environments.models.interfaces import ISiteUsage
+from nti.app.environments.models.interfaces import ITrialLicense
+from nti.app.environments.models.interfaces import ISharedEnvironment
+from nti.app.environments.models.interfaces import IEnterpriseLicense
+from nti.app.environments.models.interfaces import IDedicatedEnvironment
+
 from nti.app.environments.models.sites import TrialLicense
 from nti.app.environments.models.sites import EnterpriseLicense
 from nti.app.environments.models.sites import PersistentSite
 from nti.app.environments.models.sites import SharedEnvironment
 from nti.app.environments.models.sites import SetupStateSuccess
-from nti.app.environments.models.interfaces import ISiteUsage
-from nti.app.environments.models.interfaces import IEnterpriseLicense
-from nti.app.environments.models.interfaces import ITrialLicense
-from nti.app.environments.models.interfaces import ISharedEnvironment
-from nti.app.environments.models.interfaces import IDedicatedEnvironment
+
+from nti.app.environments.views.customers import getOrCreateCustomer
+
+from nti.app.environments.views.sites import SitesUploadCSVView
+from nti.app.environments.views.sites import RequestTrialSiteView
+
+from nti.app.environments.views.tests import BaseAppTest
+from nti.app.environments.views.tests import with_test_app
+from nti.app.environments.views.tests import ensure_free_txn
 
 from nti.fakestatsd.matchers import is_gauge
 
@@ -106,7 +113,7 @@ class TestSiteCreationView(BaseAppTest):
 
         assert_that(self.statsd.metrics,
                     has_items(is_gauge('nti.onboarding.lms_site_count', '1'),
-                              is_gauge('nti.onboarding.lms_pending_site_status_count', '1'),
+                              is_gauge('nti.onboarding.lms_site_status_count.pending', '1'),
                               is_gauge('nti.onboarding.customer_count', '1')))
         self.statsd.clear()
 
@@ -121,7 +128,7 @@ class TestSiteCreationView(BaseAppTest):
                                           'dns_names': ['s@next.com']}))
 
         assert_that(self.statsd.metrics,
-                    has_items(is_gauge('nti.onboarding.lms_active_site_status_count', '1')))
+                    has_items(is_gauge('nti.onboarding.lms_site_status_count.active', '1')))
         self.statsd.clear()
 
         # delete
@@ -163,9 +170,9 @@ class TestSiteCreationView(BaseAppTest):
 
         assert_that(self.statsd.metrics,
                     has_items(is_gauge('nti.onboarding.lms_site_count', '1'),
-                              is_gauge('nti.onboarding.host_%s_okc.com_capacity' % host.id, '5'),
-                              is_gauge('nti.onboarding.host_%s_okc.com_current_load' % host.id, '1'),
-                              is_gauge('nti.onboarding.lms_pending_site_status_count', '1')))
+                              is_gauge('nti.onboarding.host_capacity.okc.com', '5'),
+                              is_gauge('nti.onboarding.host_current_load.okc.com', '1'),
+                              is_gauge('nti.onboarding.lms_site_status_count.pending', '1')))
 
 
 class TestSitePutView(BaseAppTest):
@@ -861,7 +868,7 @@ class TestSitesUploadCSVView(BaseAppTest):
         assert_that(host2.current_load, is_(2))
 
         guages, unused_counters = self.sent_stats()
-        assert_that(guages, has_entries('nti.onboarding.lms_active_site_status_count', '4',
+        assert_that(guages, has_entries('nti.onboarding.lms_site_status_count.active', '4',
                                         'nti.onboarding.lms_site_count', '4',
                                         'nti.onboarding.customer_count', '3'))
 

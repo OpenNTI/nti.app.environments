@@ -144,7 +144,7 @@ def _update_stats_on_site_removed(lms_site, unused_event):
 
 
 def _get_stat_status_str(status):
-    return 'nti.onboarding.lms_%s_site_status_count' % status.lower()
+    return 'nti.onboarding.lms_site_status_count.%s' % status.lower()
 
 
 def _update_site_status_stats(all_sites):
@@ -210,10 +210,9 @@ def _update_host_load_stats(host_load_event):
     client = statsd_client()
     if client is not None:
         host = host_load_event.host
-        host_str = '%s_%s' % (host.id, host.host_name)
-        client.gauge('nti.onboarding.host_%s_capacity' % host_str,
+        client.gauge('nti.onboarding.host_capacity.%s' % host.host_name,
                      host.capacity)
-        client.gauge('nti.onboarding.host_%s_current_load' % host_str,
+        client.gauge('nti.onboarding.host_current_load.%s' % host.host_name,
                      host.current_load)
 
 
