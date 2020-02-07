@@ -21,9 +21,12 @@ from nti.app.environments.interfaces import ISiteLinks
 
 from nti.app.environments.models.interfaces import ISetupStateSuccess
 
+from nti.environments.management.interfaces import ISettings
+
 from nti.externalization.interfaces import IExternalObject
 
 logger = __import__('logging').getLogger(__name__)
+
 
 @interface.implementer(IOnboardingRootPrincipalRoleManager)
 class OnboardingRootPrincipalRoleManager(AnnotationPrincipalRoleManager):
@@ -70,7 +73,7 @@ class SiteLinks(object):
     @Lazy
     def preferred_dns(self):
         return self.site.dns_names[0] if self.site.dns_names else None
-        
+
     @Lazy
     def application_url(self):
         host = self.preferred_dns
@@ -83,7 +86,7 @@ class SiteLinks(object):
         functionality together to make this work. The user finishes
         creating their account by accepting a site invitation which
         was generated as part of setup and can be found on the ILMSSite.setup_state
-        object. The typical invitation flow is to hit the 
+        object. The typical invitation flow is to hit the
         dataserver2 accept link, which sends the user to the normal login/account creation
         flow. In our case we have a slightly custom account creation page[1] we want to hit
         so we have to tell the accept invitation where to take us on success.
@@ -124,7 +127,7 @@ class SiteLinks(object):
         if rfstate:
             query['state'] = rfstate
         # See nti.app.environments.views.sites.ContinueToSite
-        
+
         ping_back = self.request.resource_url(self.site, '@@mark_invite_accepted',
                                               query=query)
 
@@ -150,11 +153,10 @@ class SiteLinks(object):
 class SiteDomainFactory(object):
 
     def __call__(self):
-        return 'nextthought.io'
-
-
-@interface.implementer(ISiteDomainFactory)
-class DevmodeSiteDomainFactory(object):
-
-    def __call__(self):
-        return 'nextthot.com'
+        settings = component.getUtility(ISettings)
+        result = 'nextthought.io'
+        try:
+            result = settings['dns']['base_domain']
+        except KeyError:
+            pass
+        return result
