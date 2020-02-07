@@ -12,7 +12,7 @@ from nti.externalization.interfaces import LocatedExternalDict\
 
 from nti.app.environments.auth import is_admin_or_account_manager
 
-from nti.app.environments.interfaces import ISiteDomainFactory
+from nti.app.environments.interfaces import ISiteDomainPolicy
 
 from nti.app.environments.models.interfaces import IOnboardingRoot
 
@@ -48,12 +48,10 @@ class CheckDNSNameAvailableView(BaseView):
         # Expect all dns names should be lower case. and belongs to expected domain.
         dns_name = dns_name.lower()
 
-        # Skip checking for admin and management roles.
-        if not is_admin_or_account_manager(userid, self.request):
-            domain = component.getUtility(ISiteDomainFactory)()
-            if not dns_name.endswith(domain):
-                raise_json_error(hexc.HTTPUnprocessableEntity,
-                                 "Invalid dns name.")
+        policy = component.getUtility(ISiteDomainPolicy)
+        if not policy.check_dns_name(dns_name, userid, self.request):
+            raise_json_error(hexc.HTTPUnprocessableEntity,
+                             "Invalid dns name.")
 
         sites_folder = get_sites_folder(self.context, self.request)
         is_available = is_dns_name_available(dns_name, sites_folder)
@@ -110,7 +108,7 @@ class ValidDomainView(BaseView):
             raise hexc.HTTPForbidden()
 
         subdomain = self._get_param('subdomain').lower()
-        domain = component.getUtility(ISiteDomainFactory)()
+        domain = component.getUtility(ISiteDomainPolicy).base_domain
 
         result = LocatedExternalDict()
         result.__parent__ = self.context.__parent__

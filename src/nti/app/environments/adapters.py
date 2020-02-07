@@ -1,3 +1,5 @@
+from pyramid.threadlocal import get_current_request
+
 from urllib.parse import urlunparse
 from urllib.parse import urlparse
 from urllib.parse import urljoin
@@ -13,10 +15,12 @@ from ZODB.interfaces import IBroken
 
 from zope.securitypolicy.principalrole import AnnotationPrincipalRoleManager
 
+from nti.app.environments.auth import is_admin_or_account_manager
+
 from nti.app.environments.models.interfaces import IOnboardingRoot
 
 from nti.app.environments.interfaces import IOnboardingRootPrincipalRoleManager
-from nti.app.environments.interfaces import ISiteDomainFactory
+from nti.app.environments.interfaces import ISiteDomainPolicy
 from nti.app.environments.interfaces import ISiteLinks
 
 from nti.app.environments.models.interfaces import ISetupStateSuccess
@@ -149,10 +153,11 @@ class SiteLinks(object):
         return urlunparse(parsed)
 
 
-@interface.implementer(ISiteDomainFactory)
-class SiteDomainFactory(object):
+@interface.implementer(ISiteDomainPolicy)
+class SiteDomainPolicy(object):
 
-    def __call__(self):
+    @Lazy
+    def base_domain(self):
         settings = component.getUtility(ISettings)
         result = 'nextthought.io'
         try:
@@ -160,3 +165,12 @@ class SiteDomainFactory(object):
         except KeyError:
             pass
         return result
+
+    def check_dns_name(self, dns_name, userid=None, request=None, is_admin_or_management=None):
+        # If user is not admin/management,
+        # check if the given dns_name ends with base domain.
+        if is_admin_or_management is None:
+            assert userid, 'userid is required.'
+            request = request or get_current_request()
+            is_admin_or_management = is_admin_or_account_manager(userid, request)
+        return bool(is_admin_or_management or dns_name.endswith(self.base_domain))

@@ -45,8 +45,8 @@
 
 	<include package="nti.environments.management" />
 
-    <utility factory=".adapters.SiteDomainFactory"
-             provides=".interfaces.ISiteDomainFactory"/>
+    <utility factory=".adapters.SiteDomainPolicy"
+             provides=".interfaces.ISiteDomainPolicy"/>
 
     <configure zcml:condition="not-have devmode">
     	<utility

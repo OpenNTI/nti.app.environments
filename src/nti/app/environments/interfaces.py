@@ -82,8 +82,7 @@ class ISiteLinks(interface.Interface):
     complete_account_url = ValidTextLine(title='The url to follow to finish setting up an account.')
 
     
-class ISiteDomainFactory(interface.Interface):
+class ISiteDomainPolicy(interface.Interface):
     """
-    An object capable of generating a a domain for a site,
-    like 'nextthought.io' or 'nextthot.com'
+    An object that provides base domain, and dns_name checking.
     """
