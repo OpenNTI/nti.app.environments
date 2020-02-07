@@ -45,13 +45,13 @@ class CheckDNSNameAvailableView(BaseView):
         params = self.request.params
         dns_name = self._get_param('dns_name', params)
 
-        # Expect all dns names should be lower case.
-        # and ends with 'nextthought.io'
+        # Expect all dns names should be lower case. and belongs to expected domain.
         dns_name = dns_name.lower()
 
         # Skip checking for admin and management roles.
         if not is_admin_or_account_manager(userid, self.request):
-            if not dns_name.endswith('nextthought.io'):
+            domain = component.getUtility(ISiteDomainFactory)()
+            if not dns_name.endswith(domain):
                 raise_json_error(hexc.HTTPUnprocessableEntity,
                                  "Invalid dns name.")
 

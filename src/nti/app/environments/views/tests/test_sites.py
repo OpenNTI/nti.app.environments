@@ -459,16 +459,8 @@ class TestRequestTrialSiteView(BaseAppTest):
         result = self.testapp.post_json(url, params=params, status=201, extra_environ=self._make_environ(username='admin001')).json_body
         assert_that(result['redirect_url'], starts_with('http://localhost/onboarding/sites/'))
 
-        assert_that(_result, has_length(2))
-        assert_that([x[0] for x in _result], has_items(('nti.app.environments:email_templates/new_site_request',),
-                                                       ('nti.app.environments:email_templates/site_setup_completed',)))
-        assert_that([x[1] for x in _result], has_items(has_entries({'subject': "It's time to setup your password!",
-                                                                    'recipients': ['123@gmail.com'],
-                                                                    'template_args': has_entries({'name': '123@gmail.com',
-                                                                                     'site_domain_link': 'http://xxx/',
-                                                                                     'password_setup_link': starts_with('http://localhost/sites/S')}),
-                                                                    'attachments': None,
-                                                                    'text_template_extension': '.mak'})))
+        assert_that(_result, has_length(1))
+        assert_that([x[0] for x in _result], has_items(('nti.app.environments:email_templates/new_site_request',),))
 
         params = {'owner': '1234@gmail.com', 'dns_names': ['yyy', 'zzz'], 'client_name': 'xyz'}
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001')).json_body
