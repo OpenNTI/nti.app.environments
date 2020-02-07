@@ -17,8 +17,6 @@ from hamcrest import not_none
 
 from pyramid import httpexceptions as hexc
 
-from zope.event import notify
-
 from zope.interface.exceptions import Invalid
 
 from nti.externalization import to_external_object
@@ -30,8 +28,6 @@ from nti.environments.management.tasks import SetupTaskState
 
 from nti.app.environments.models.customers import PersistentCustomer
 
-from nti.app.environments.models.events import SiteSetupFinishedEvent
-
 from nti.app.environments.models.hosts import PersistentHost
 
 from nti.app.environments.models.interfaces import ISiteUsage
@@ -41,12 +37,11 @@ from nti.app.environments.models.interfaces import IEnterpriseLicense
 from nti.app.environments.models.interfaces import IDedicatedEnvironment
 
 from nti.app.environments.models.sites import TrialLicense
-from nti.app.environments.models.sites import EnterpriseLicense
 from nti.app.environments.models.sites import PersistentSite
+from nti.app.environments.models.sites import EnterpriseLicense
 from nti.app.environments.models.sites import SharedEnvironment
 from nti.app.environments.models.sites import SetupStateSuccess
-from nti.app.environments.models.sites import SetupStateFailure
-from nti.app.environments.models.sites import DedicatedEnvironment
+from nti.app.environments.models.sites import SetupStatePending
 
 from nti.app.environments.views.customers import getOrCreateCustomer
 
@@ -58,7 +53,6 @@ from nti.app.environments.views.tests import with_test_app
 from nti.app.environments.views.tests import ensure_free_txn
 
 from nti.fakestatsd.matchers import is_gauge
-from nti.app.environments.settings import SITE_SETUP_FAILURE_NOTIFICATION_EMAIL
 
 
 def _absolute_path(filename):
@@ -1018,41 +1012,64 @@ class TestContinueToSite(BaseAppTest):
 class TestSetupFailure(BaseAppTest):
 
     @with_test_app()
+    @mock.patch('nti.app.environments.views.sites.QuerySetupState._get_async_result')
     @mock.patch('nti.app.environments.views.notification._mailer')
-    @mock.patch('nti.app.environments.views.notification.get_current_request')
-    def test_setup_failed(self, mock_get_request, mock_mailer):
+    @mock.patch('nti.app.environments.views.utils._is_dns_name_available')
+    @mock.patch('nti.app.environments.views.sites.get_hubspot_client')
+    @mock.patch('nti.app.environments.views.sites.is_admin_or_account_manager')
+    def test_setup_failed(self, mock_admin, mock_client, mock_dns_available, mock_mailer, mock_async_result):
         _result = []
-        mock_get_request.return_value = self.request
+        mock_async_result.return_value = ValueError("this setup failed")
+        mock_dns_available.return_value = True
+        _client = mock.MagicMock()
+        _client.fetch_contact_by_email = lambda email: None
+        mock_client.return_value = _client
+        mock_admin.return_value = True
         mock_mailer.return_value = _mailer = mock.MagicMock()
         import nti.app.environments.views.subscribers
         nti.app.environments.views.subscribers.SITE_SETUP_FAILURE_NOTIFICATION_EMAIL = 'test@nextthought.com'
         _mailer.queue_simple_html_text_email = lambda *args, **kwargs: _result.append((args, kwargs))
-        with ensure_free_txn():
-            with mock.patch('nti.app.environments.models.utils.get_onboarding_root') as mock_get_onboarding_root:
-                mock_get_onboarding_root.return_value = self._root()
-                host = PersistentHost(host_name='okc2', capacity=5)
-                host.id = 'hostid'
-                new_site = PersistentSite(dns_names=['xx.nextthought.io'],
-                                          owner=PersistentCustomer(email='user001@example.com', name="testname"),
-                                          environment=DedicatedEnvironment(pod_id='pod_id',
-                                                                           host=host),
-                                          license=TrialLicense(start_date=datetime.datetime(2020, 1, 28),
-                                                               end_date=datetime.datetime(2020, 1, 9)))
-                new_site.id = 'test site id'
-                site_info = SiteInfo(site_id='S001', dns_name='xx.nextthought.io')
-                site_info.admin_invitation = '/dataserver2/@@accept-site-invitation?code=mockcode'
-                site_info.host = 'test.host'
-                new_site.setup_state = SetupStateFailure(task_state=SetupTaskState('task1', 'group1'))
-                new_site.setup_state.exception = "this is an exception"
-                event = SiteSetupFinishedEvent(new_site)
-                notify(event)
 
-        assert_that(_result, has_length(1))
-        msg = _result[0][1]
-        assert_that([x[1] for x in _result], has_items(has_entries({'subject': "It's time to setup your password!",
-                                                                    'recipients': ['123@gmail.com'],
-                                                                    'template_args': has_entries({'name': '123@gmail.com',
-                                                                                     'site_domain_link': 'http://xxx/',
-                                                                                     'password_setup_link': starts_with('http://localhost/sites/S')}),
-                                                                    'attachments': None,
-                                                                    'text_template_extension': '.mak'})))
+        url = '/onboarding/customers/user001@example.com/sites'
+        with ensure_free_txn():
+            sites = self._root().get('sites')
+            assert_that(sites, has_length(0))
+            customers = self._root().get('customers')
+            customers.addCustomer(PersistentCustomer(email='user001@example.com', name="testname"))
+            assert_that(customers, has_length(1))
+
+        environ = self._make_environ(username='user001@example.com')
+        params = {'dns_names': ['xxx.nextthought.io'], 'client_name': 'xyz'}
+        result = self.testapp.post_json(url, params=params,
+                                        extra_environ=environ)
+        result = result.json_body
+        site_href = result.get('href')
+        assert_that(site_href, not_none())
+        query_href = '%s/%s' % (site_href, '@@query-setup-state')
+
+        # Set a setup state
+        # XXX: Why do we need to do this?
+        with ensure_free_txn():
+            sites = self._root().get('sites')
+            assert_that(sites, has_length(1))
+            new_site = tuple(sites.values())[0]
+            pending = SetupStatePending()
+            pending.task_state = 'FAILED'
+            new_site.setup_state = pending
+
+        self.testapp.get(query_href, extra_environ=environ)
+        # XXX: Could check result here.
+
+        # Check emails
+        assert_that(_result, has_length(3))
+        assert_that([x[0][0] for x in _result], has_items('nti.app.environments:email_templates/new_site_request',
+                                                          'nti.app.environments:email_templates/site_setup_failed',
+                                                          'nti.app.environments:email_templates/site_setup_completed'))
+        failed_msg = next((x for x in _result if x[0][0] == 'nti.app.environments:email_templates/site_setup_failed'))
+        failed_msg = failed_msg[1]
+        assert_that(failed_msg, has_items(has_entries({'subject': starts_with("Site setup failed"),
+                                                       'template_args': has_entries({'site_details_link': starts_with('http://localhost/onboarding/sites'),
+                                                                                     'dns_names': 'xxx.nextthought.io',
+                                                                                     'owner_email': 'user001@example.com',
+                                                                                     'env_info': '',
+                                                                                     'exception': "ValueError('this setup failed')"}),})))
