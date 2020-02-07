@@ -53,6 +53,7 @@ from nti.app.environments.models.utils import get_hosts_folder
 
 from nti.app.environments.views.notification import SiteCreatedEmailNotifier
 from nti.app.environments.views.notification import SiteSetupEmailNotifier
+from nti.app.environments.views.notification import SiteSetUpFinishedEmailNotifier
 
 from nti.environments.management.interfaces import ICeleryApp
 from nti.environments.management.interfaces import ISetupEnvironmentTask
@@ -101,6 +102,9 @@ def _site_created_event(event):
 def _notify_owner_on_site_created(event):
     site = event.site
     if not site.owner or not site.dns_names:
+        return
+
+    if site.creator != site.owner.email:
         return
 
     logger.info("Notifying user to set up password for site : %s", site.dns_names[0])
@@ -338,3 +342,21 @@ def _associate_site_to_host(event):
                                load_factor=1)
     site.environment = env
     host.recompute_current_load()
+
+
+@component.adapter(ILMSSiteSetupFinished)
+def _notify_user_for_site_setup_finished(event):
+    site = event.site
+    if not ISetupStateSuccess.providedBy(site.setup_state):
+        return
+
+    if not site.setup_state.site_info.admin_invitation:
+        return
+
+    if not site.owner or site.owner.email == site.creator:
+        return
+
+    logger.info("Notifying user to accept site invitation: %s.", site.creator)
+
+    notifier = SiteSetUpFinishedEmailNotifier(site)
+    notifier.notify()
