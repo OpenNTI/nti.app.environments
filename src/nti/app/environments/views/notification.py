@@ -14,7 +14,9 @@ from nti.app.environments.settings import SITE_SETUP_FAILURE_NOTIFICATION_EMAIL
 
 from nti.app.environments.models.externalization import SITE_FIELDS_EXTERNAL_FOR_ADMIN_ONLY
 
+from nti.app.environments.models.interfaces import ISharedEnvironment
 from nti.app.environments.models.interfaces import ICustomersContainer
+from nti.app.environments.models.interfaces import IDedicatedEnvironment
 
 from nti.externalization import to_external_object
 
@@ -163,15 +165,22 @@ class SiteSetupFailureEmailNotifier(BaseEmailNotifier):
     def _recipients(self):
         return [SITE_SETUP_FAILURE_NOTIFICATION_EMAIL]
 
+    def _get_env_info(self, env):
+        result = ''
+        if IDedicatedEnvironment.providedBy(env):
+            result = '[pod=%s] (id=%s) %s' % (env.pod_id, env.host.id, env.host.host_name)
+        elif ISharedEnvironment.providedBy(env):
+            result = env.name
+        return result
+
     def _template_args(self):
         state = self.site.setup_state
-        site_info = state.site_info
+        env_info = self._get_env_info(self.site.environment)
         template_args = {
-            'name': self.site.owner.email,
-            'dns_name': site_info.dns_name,
+            'site_id': self.site.id,
+            'dns_names': ','.join(self.site.dns_names),
             'exception': state.exception,
-            'host': state.site_info.host,
-            'owner': self.site.owner,
-            'environment': self.site.environment
+            'owner_email': self.site.owner.email,
+            'env_info': env_info
         }
         return template_args

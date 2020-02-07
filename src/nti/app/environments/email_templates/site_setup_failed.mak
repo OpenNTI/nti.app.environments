@@ -1,20 +1,8 @@
-Dear ${name},
+Site setup failed.
 
-It’s time to setup your password!
+Site id: ${site_id}
+DNS names: ${dns_names}
+Owner: ${owner_email}
+Env info: ${env_info}
 
-The next step to set up your new site is choosing a password.
-
-Please follow the link below to continue setting up your account.
-Your new site is waiting for you!
-
-Copy/paste this link into your browser:
-${password_setup_link}
-
-Your Site’s Domain:
-${site_domain_link}
-
-Thanks,
-
-NextThought
-
-If you did not request this email it is safe to ignore.
+${exception}
