@@ -180,7 +180,7 @@ class SiteSetupFailureEmailNotifier(BaseEmailNotifier):
             'site_details_link': self.request.resource_url(self.site, '@@details'),
             'site_id': self.site.id,
             'dns_names': ','.join(self.site.dns_names),
-            'exception': state.exception,
+            'exception': repr(state.exception),
             'owner_email': self.site.owner.email,
             'env_info': env_info
         }
