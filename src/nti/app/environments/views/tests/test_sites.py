@@ -1,6 +1,7 @@
 import os
 import datetime
 
+from hamcrest import is_
 from unittest import mock
 from hamcrest import assert_that
 from hamcrest import has_length
@@ -13,9 +14,10 @@ from hamcrest import starts_with
 from hamcrest import calling
 from hamcrest import raises
 from hamcrest import not_none
-from hamcrest import is_
 
 from pyramid import httpexceptions as hexc
+
+from zope.event import notify
 
 from zope.interface.exceptions import Invalid
 
@@ -27,6 +29,8 @@ from nti.environments.management.tasks import SiteInfo
 from nti.environments.management.tasks import SetupTaskState
 
 from nti.app.environments.models.customers import PersistentCustomer
+
+from nti.app.environments.models.events import SiteSetupFinishedEvent
 
 from nti.app.environments.models.hosts import PersistentHost
 
@@ -41,6 +45,8 @@ from nti.app.environments.models.sites import EnterpriseLicense
 from nti.app.environments.models.sites import PersistentSite
 from nti.app.environments.models.sites import SharedEnvironment
 from nti.app.environments.models.sites import SetupStateSuccess
+from nti.app.environments.models.sites import SetupStateFailure
+from nti.app.environments.models.sites import DedicatedEnvironment
 
 from nti.app.environments.views.customers import getOrCreateCustomer
 
@@ -52,6 +58,7 @@ from nti.app.environments.views.tests import with_test_app
 from nti.app.environments.views.tests import ensure_free_txn
 
 from nti.fakestatsd.matchers import is_gauge
+from nti.app.environments.settings import SITE_SETUP_FAILURE_NOTIFICATION_EMAIL
 
 
 def _absolute_path(filename):
@@ -1006,3 +1013,46 @@ class TestContinueToSite(BaseAppTest):
                                                           site_info=site_info)
 
         self.testapp.get(url, status=303, extra_environ=self._make_environ(username='user001@example.com'))
+
+
+class TestSetupFailure(BaseAppTest):
+
+    @with_test_app()
+    @mock.patch('nti.app.environments.views.notification._mailer')
+    @mock.patch('nti.app.environments.views.notification.get_current_request')
+    def test_setup_failed(self, mock_get_request, mock_mailer):
+        _result = []
+        mock_get_request.return_value = self.request
+        mock_mailer.return_value = _mailer = mock.MagicMock()
+        import nti.app.environments.views.subscribers
+        nti.app.environments.views.subscribers.SITE_SETUP_FAILURE_NOTIFICATION_EMAIL = 'test@nextthought.com'
+        _mailer.queue_simple_html_text_email = lambda *args, **kwargs: _result.append((args, kwargs))
+        with ensure_free_txn():
+            with mock.patch('nti.app.environments.models.utils.get_onboarding_root') as mock_get_onboarding_root:
+                mock_get_onboarding_root.return_value = self._root()
+                host = PersistentHost(host_name='okc2', capacity=5)
+                host.id = 'hostid'
+                new_site = PersistentSite(dns_names=['xx.nextthought.io'],
+                                          owner=PersistentCustomer(email='user001@example.com', name="testname"),
+                                          environment=DedicatedEnvironment(pod_id='pod_id',
+                                                                           host=host),
+                                          license=TrialLicense(start_date=datetime.datetime(2020, 1, 28),
+                                                               end_date=datetime.datetime(2020, 1, 9)))
+                new_site.id = 'test site id'
+                site_info = SiteInfo(site_id='S001', dns_name='xx.nextthought.io')
+                site_info.admin_invitation = '/dataserver2/@@accept-site-invitation?code=mockcode'
+                site_info.host = 'test.host'
+                new_site.setup_state = SetupStateFailure(task_state=SetupTaskState('task1', 'group1'))
+                new_site.setup_state.exception = "this is an exception"
+                event = SiteSetupFinishedEvent(new_site)
+                notify(event)
+
+        assert_that(_result, has_length(1))
+        msg = _result[0][1]
+        assert_that([x[1] for x in _result], has_items(has_entries({'subject': "It's time to setup your password!",
+                                                                    'recipients': ['123@gmail.com'],
+                                                                    'template_args': has_entries({'name': '123@gmail.com',
+                                                                                     'site_domain_link': 'http://xxx/',
+                                                                                     'password_setup_link': starts_with('http://localhost/sites/S')}),
+                                                                    'attachments': None,
+                                                                    'text_template_extension': '.mak'})))

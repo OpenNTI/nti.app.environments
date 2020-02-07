@@ -698,14 +698,10 @@ class QuerySetupState(BaseView):
     This view returns the site object
     """
 
-
-    def __call__(self):
-        if self.context.owner.email != self.request.authenticated_userid:
-            raise hexc.HTTPForbidden()
-
+    def _get_async_result(self):
         setup_state = self.context.setup_state
 
-        # Finsihed already, return immediately
+        # Finished already, return immediately
         if not ISetupStatePending.providedBy(setup_state):
             return self.context
 
@@ -719,12 +715,15 @@ class QuerySetupState(BaseView):
         if not async_result.ready():
             return self.context
 
-        result = async_result.result
+        return async_result.result
 
-        failed = isinstance(result, Exception)
 
-        state = None
-        if failed:
+    def __call__(self):
+        if self.context.owner.email != self.request.authenticated_userid:
+            raise hexc.HTTPForbidden()
+        result = self._get_async_result()
+
+        if isinstance(result, Exception):
             state = SetupStateFailure()
             state.exception = result
         else:

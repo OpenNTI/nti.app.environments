@@ -158,7 +158,7 @@ class SiteSetupFailureEmailNotifier(BaseEmailNotifier):
     _subject = "Site setup failed"
 
     def __init__(self, context, request=None):
-        super(SiteSetupEmailNotifier, self).__init__(context, request)
+        super(SiteSetupFailureEmailNotifier, self).__init__(context, request)
         self.site = context
         self._subject = 'Site setup failed [%s]' % context.id
 
@@ -177,6 +177,7 @@ class SiteSetupFailureEmailNotifier(BaseEmailNotifier):
         state = self.site.setup_state
         env_info = self._get_env_info(self.site.environment)
         template_args = {
+            'site_details_link': self.request.resource_url(self.site, '@@details'),
             'site_id': self.site.id,
             'dns_names': ','.join(self.site.dns_names),
             'exception': state.exception,

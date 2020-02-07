@@ -11,7 +11,6 @@ from zope import component
 from zope.lifecycleevent import IObjectAddedEvent
 from zope.lifecycleevent import IObjectRemovedEvent
 
-from nti.traversal.traversal import find_interface
 
 from nti.app.environments.api.hubspotclient import get_hubspot_client
 
@@ -21,7 +20,6 @@ from nti.app.environments.models.interfaces import SITE_STATUS_PENDING
 
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ICustomer
-from nti.app.environments.models.interfaces import IOnboardingRoot
 from nti.app.environments.models.interfaces import ISetupStateSuccess
 from nti.app.environments.models.interfaces import ILMSSiteCreatedEvent
 from nti.app.environments.models.interfaces import ILMSSiteUpdatedEvent
@@ -41,6 +39,7 @@ from nti.app.environments.models.sites import DedicatedEnvironment
 
 from nti.app.environments.models.utils import get_sites_folder
 from nti.app.environments.models.utils import get_hosts_folder
+from nti.app.environments.models.utils import get_onboarding_root
 
 from nti.app.environments.settings import SITE_SETUP_FAILURE_NOTIFICATION_EMAIL
 
@@ -318,7 +317,7 @@ def _email_on_setup_error(site):
 
 
 @component.adapter(ILMSSiteSetupFinished)
-def _associate_site_to_host(event):
+def _on_site_setup_finished(event):
     site = event.site
     if not ISetupStateSuccess.providedBy(site.setup_state):
         _email_on_setup_error(site)
@@ -330,10 +329,7 @@ def _associate_site_to_host(event):
 
     logger.info('Associating site %s with host %s', site.id, setup_info.host)
 
-    # We have to be careful here b/c we may not be running in a request. Typically
-    # when we get the hosts folder we do so with the onboarding root, via the request.
-    # we have no request here.
-    root = find_interface(site, IOnboardingRoot)
+    root = get_onboarding_root()
     assert root
 
     hosts_folder = get_hosts_folder(onboarding_root=root)

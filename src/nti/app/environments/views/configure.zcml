@@ -26,7 +26,7 @@
 	<subscriber handler=".subscribers._update_host_load_on_site_environment_updated" />
 
 	<subscriber handler=".subscribers._setup_newly_created_site" />
-	<subscriber handler=".subscribers._associate_site_to_host" />
+	<subscriber handler=".subscribers._on_site_setup_finished" />
 
 	<!-- decorators -->
 	<subscriber factory=".decorators.CustomerSitesLinkDecorator"

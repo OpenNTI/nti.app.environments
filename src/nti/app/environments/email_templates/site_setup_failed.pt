@@ -58,10 +58,12 @@
 			</div>
 
     		<table>
+    		    <tr><td>Site admin url:</td><td><a href="site_url" tal:content="options/site_details_link" tal:attributes="href options/site_details_link" style="color: #494949;">
+                    site details url</a></td></tr>
     		    <tr><td>Site id:</td><td tal:content="options/site_id"></td></tr>
                 <tr><td>DNS names:</td><td tal:content="options/dns_names"></td></tr>
                 <tr><td>Owner:</td><td tal:content="options/owner_email"></td></tr>
-                <tr><td>Env info:</td><td tal:content="options/environment/env_info"></td></tr>
+                <tr><td>Env info:</td><td tal:content="options/env_info"></td></tr>
             </table>
 
             <div class="content" tal:content="options/exception" style="margin-top: 12px;">
