@@ -30,6 +30,7 @@ from nti.app.environments.auth import ACT_UPDATE
 from nti.app.environments.auth import is_admin_or_account_manager
 
 from nti.app.environments.interfaces import ISitesCollection
+from nti.app.environments.interfaces import ISiteDomainFactory
 
 from nti.app.environments.models.events import CSVSiteCreatedEvent
 from nti.app.environments.models.events import TrialSiteCreatedEvent
@@ -210,9 +211,11 @@ class RequestTrialSiteView(SiteBaseView, ObjectCreateUpdateViewMixin):
 
         names = [x.strip().lower() if isinstance(x, str) else x for x in names]
 
+        domain = component.getUtility(ISiteDomainFactory)()
+
         for name in names:
             if not isinstance(name, str) \
-                or (not is_owner_admin_or_management and not name.endswith('nextthought.io')):
+                or (not is_owner_admin_or_management and not name.endswith(domain)):
                 raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid site url: {}.".format(name))
 
         for name in names:

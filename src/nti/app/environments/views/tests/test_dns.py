@@ -135,18 +135,18 @@ class TestValidDomainView(BaseAppTest):
         params = {'subdomain': 'okc'}
         result = self.testapp.get(url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
         assert_that(result.json_body, has_entries({'is_available': True,
-                                                   'dns_name': 'okc.test_ntdomain.com',
+                                                   'dns_name': 'okc.nextthought.io',
                                                    'subdomain': 'okc',
-                                                   'domain': 'test_ntdomain.com'}))
+                                                   'domain': 'nextthought.io'}))
 
         mock_admin.return_value = True
         mock_available.return_value = False
         params = {'subdomain': 'okc'}
         result = self.testapp.get(url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
         assert_that(result.json_body, has_entries({'is_available': False,
-                                                   'dns_name': 'okc.test_ntdomain.com',
+                                                   'dns_name': 'okc.nextthought.io',
                                                    'subdomain': 'okc',
-                                                   'domain': 'test_ntdomain.com'}))
+                                                   'domain': 'nextthought.io'}))
 
         mock_admin.return_value = False
         mock_generate_dns.return_value = 'okc-1234.test_ntdomain.com'
@@ -155,7 +155,7 @@ class TestValidDomainView(BaseAppTest):
         assert_that(result.json_body, has_entries({'is_available': True,
                                                    'dns_name': 'okc-1234.test_ntdomain.com',
                                                    'subdomain': 'okc',
-                                                   'domain': 'test_ntdomain.com'}))
+                                                   'domain': 'nextthought.io'}))
 
         mock_admin.return_value = False
         mock_generate_dns.return_value = None
@@ -164,4 +164,4 @@ class TestValidDomainView(BaseAppTest):
         assert_that(result.json_body, has_entries({'is_available': False,
                                                    'dns_name': None,
                                                    'subdomain': 'okc',
-                                                   'domain': 'test_ntdomain.com'}))
+                                                   'domain': 'nextthought.io'}))
