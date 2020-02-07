@@ -323,7 +323,7 @@ class ISetupStatePending(ISetupState):
 
 class ISetupStateSuccess(ISetupState):
     """
-    A site that has succesfully gone through the setup process
+    A site that has successfully gone through the setup process
     """
 
     site_info = Object(IInitializedSiteInfo, title='Information about the site that was succesfull created')

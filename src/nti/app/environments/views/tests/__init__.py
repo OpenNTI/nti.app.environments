@@ -24,6 +24,7 @@ from nti.app.environments.models.interfaces import IOnboardingRoot
 from nti.environments.management import tests
 
 from nti.fakestatsd import FakeStatsDClient
+from nti.app.environments.settings import init_app_settings
 
 class BaseAppTest(unittest.TestCase):
 
@@ -40,6 +41,7 @@ class BaseAppTest(unittest.TestCase):
             'hubspot_api_key': 'zzz',
             'hubspot_portal_id': 'kkk',
             'new_site_request_notification_email': 'test@example.com',
+            'site_setup_failure_notification_email': 'test@example.com',
             'nti.environments.management.config': os.path.join(os.path.dirname(tests.__file__), 'test.ini')
         }
         self.statsd = FakeStatsDClient()

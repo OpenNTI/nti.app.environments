@@ -702,16 +702,15 @@ class QuerySetupState(BaseView):
     This view returns the site object
     """
 
-
-    def __call__(self):
-        if self.context.owner.email != self.request.authenticated_userid:
-            raise hexc.HTTPForbidden()
-
+    def _get_async_result(self):
+        """
+        Return the celery task async result or None
+        """
         setup_state = self.context.setup_state
 
-        # Finsihed already, return immediately
+        # Finished already, return immediately
         if not ISetupStatePending.providedBy(setup_state):
-            return self.context
+            return None
 
         app = component.getUtility(ICeleryApp)
         task = ISetupEnvironmentTask(app)
@@ -721,14 +720,20 @@ class QuerySetupState(BaseView):
         async_result = task.restore_task(setup_state.task_state)
 
         if not async_result.ready():
+            return None
+
+        return async_result.result
+
+
+    def __call__(self):
+        if self.context.owner.email != self.request.authenticated_userid:
+            raise hexc.HTTPForbidden()
+
+        result = self._get_async_result()
+        if result is None:
             return self.context
 
-        result = async_result.result
-
-        failed = isinstance(result, Exception)
-
-        state = None
-        if failed:
+        if isinstance(result, Exception):
             state = SetupStateFailure()
             state.exception = result
         else:

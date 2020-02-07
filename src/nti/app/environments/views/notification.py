@@ -10,12 +10,16 @@ from pyramid.threadlocal import get_current_request
 from pyramid_mailer.message import Attachment
 
 from nti.app.environments.settings import NEW_SITE_REQUEST_NOTIFICATION_EMAIL
+from nti.app.environments.settings import SITE_SETUP_FAILURE_NOTIFICATION_EMAIL
 
 from nti.app.environments.models.externalization import SITE_FIELDS_EXTERNAL_FOR_ADMIN_ONLY
 
+from nti.app.environments.models.interfaces import ISharedEnvironment
 from nti.app.environments.models.interfaces import ICustomersContainer
+from nti.app.environments.models.interfaces import IDedicatedEnvironment
 
 from nti.externalization import to_external_object
+
 from nti.externalization.interfaces import IExternalObjectRepresenter
 
 from nti.mailer.interfaces import ITemplatedMailer
@@ -144,5 +148,40 @@ class SiteSetUpFinishedEmailNotifier(BaseEmailNotifier):
             'name': self._name(),
             'site_details_link': self.request.resource_url(self.site, '@@details'),
             'site_invite_link': self._invite_href()
+        }
+        return template_args
+
+
+class SiteSetupFailureEmailNotifier(BaseEmailNotifier):
+
+    _template = 'nti.app.environments:email_templates/site_setup_failed'
+    _subject = "Site setup failed"
+
+    def __init__(self, context, request=None):
+        super(SiteSetupFailureEmailNotifier, self).__init__(context, request)
+        self.site = context
+        self._subject = 'Site setup failed [%s]' % context.id
+
+    def _recipients(self):
+        return [SITE_SETUP_FAILURE_NOTIFICATION_EMAIL]
+
+    def _get_env_info(self, env):
+        result = ''
+        if IDedicatedEnvironment.providedBy(env):
+            result = '[pod=%s] (id=%s) %s' % (env.pod_id, env.host.id, env.host.host_name)
+        elif ISharedEnvironment.providedBy(env):
+            result = env.name
+        return result
+
+    def _template_args(self):
+        state = self.site.setup_state
+        env_info = self._get_env_info(self.site.environment)
+        template_args = {
+            'site_details_link': self.request.resource_url(self.site, '@@details'),
+            'site_id': self.site.id,
+            'dns_names': ','.join(self.site.dns_names),
+            'exception': repr(state.exception),
+            'owner_email': self.site.owner.email,
+            'env_info': env_info
         }
         return template_args

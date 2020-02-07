@@ -1,0 +1,74 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:metal="http://xml.zope.org/namespaces/metal" xmlns:tal="http://xml.zope.org/namespaces/tal" xmlns:i18n="http://xml.zope.org/namespaces/i18n" i18n:domain="nti.app.environments" i18n:source="en">
+	<head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600" rel="stylesheet">
+		<title>
+			Site setup failed
+		</title>
+		<style>
+			body {
+				background-color: #F9F9F9;
+				color: #494949;
+				font-family: 'Open Sans', sans-serif, Helvetica, Arial;
+				padding-top: 20px;
+				padding-bottom: 20px;
+			}
+			.container {
+				max-width: 610px;
+				margin: 0 auto;
+				padding: 47px 60px 50px 60px;
+				font-size: 17px;
+				background-color: #FFFFFF;
+				border-top: 3px solid #3FB34F;
+			}
+			.title {
+				margin-top: 20px;
+				font-size: 26px;
+				font-weight: 600;
+				letter-spacing: -0.5px;
+				line-height: 36px;
+			}
+			.content {
+				font-size: 16px;
+				line-height: 24px;
+			}
+
+			.btn-link {
+                width: 150px;
+                padding: 10px 25px;
+                font-size: 18px;
+                font-weight: 600;
+                line-height: 24px;
+                color: #FFFFFF;
+                background-color: #3FB34F;
+				border-radius: 4px;
+                display: block;
+                text-decoration: none;
+			}
+
+
+		</style>
+	</head>
+	<body>
+		<div class="container">
+		        <img src="${request.static_url('nti.app.environments:static/image/email_logo.png')}" width="41.87" height="40"/>
+			<div class="content" style="margin-top: 12px;">
+				A site setup has failed.
+			</div>
+
+    		<table>
+    		    <tr><td>Site admin url:</td><td><a href="site_url" tal:content="options/site_details_link" tal:attributes="href options/site_details_link" style="color: #494949;">
+                    site details url</a></td></tr>
+    		    <tr><td>Site id:</td><td tal:content="options/site_id"></td></tr>
+                <tr><td>DNS names:</td><td tal:content="options/dns_names"></td></tr>
+                <tr><td>Owner:</td><td tal:content="options/owner_email"></td></tr>
+                <tr><td>Env info:</td><td tal:content="options/env_info"></td></tr>
+            </table>
+
+            <div class="content" tal:content="options/exception" style="margin-top: 12px;">
+                Exception
+            </div>
+		</div>
+	</body>
+</html>
