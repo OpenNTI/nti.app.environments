@@ -174,9 +174,3 @@ class SiteDomainPolicy(object):
             request = request or get_current_request()
             is_admin_or_management = is_admin_or_account_manager(userid, request)
         return bool(is_admin_or_management or dns_name.endswith(self.base_domain))
-
-
-
-@interface.implementer(ISiteDomainPolicy)
-def _site_domain_policy():
-    return SiteDomainPolicy()
