@@ -21,7 +21,7 @@ class TestCheckDNSNameAvailableView(BaseAppTest):
 
     @with_test_app()
     @mock.patch('nti.app.environments.views.utils._is_dns_name_available')
-    @mock.patch('nti.app.environments.views.dns.is_admin_or_account_manager')
+    @mock.patch('nti.app.environments.adapters.is_admin_or_account_manager')
     def test_dns(self, mock_admin, mock_available):
         url = '/onboarding/@@check_dns_name'
         params = {}

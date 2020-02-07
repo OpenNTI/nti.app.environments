@@ -30,7 +30,7 @@ from nti.app.environments.auth import ACT_UPDATE
 from nti.app.environments.auth import is_admin_or_account_manager
 
 from nti.app.environments.interfaces import ISitesCollection
-from nti.app.environments.interfaces import ISiteDomainFactory
+from nti.app.environments.interfaces import ISiteDomainPolicy
 
 from nti.app.environments.models.events import CSVSiteCreatedEvent
 from nti.app.environments.models.events import TrialSiteCreatedEvent
@@ -204,19 +204,20 @@ class RequestTrialSiteView(SiteBaseView, ObjectCreateUpdateViewMixin):
         kwargs['status'] = SITE_STATUS_PENDING
         return kwargs
 
-    def _handle_dns_names(self, params, is_owner_admin_or_management):
+    def _handle_dns_names(self, params, is_admin_or_management):
         names = params.get('dns_names') or []
         if not isinstance(names, list) or not names or len(names) != 1:
             raise_json_error(hexc.HTTPUnprocessableEntity, 'Please provide one site url.')
 
         names = [x.strip().lower() if isinstance(x, str) else x for x in names]
 
-        domain = component.getUtility(ISiteDomainFactory)()
+        policy = component.getUtility(ISiteDomainPolicy)
 
         for name in names:
             if not isinstance(name, str) \
-                or (not is_owner_admin_or_management and not name.endswith(domain)):
-                raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid site url: {}.".format(name))
+                or not policy.check_dns_name(name, is_admin_or_management=is_admin_or_management):
+                raise_json_error(hexc.HTTPUnprocessableEntity,
+                                 "Invalid site url: {}.".format(name))
 
         for name in names:
             if not is_dns_name_available(name, self.sites_folder):
@@ -224,10 +225,10 @@ class RequestTrialSiteView(SiteBaseView, ObjectCreateUpdateViewMixin):
 
         return names
 
-    def _create_license(self, is_owner_admin_or_manager):
+    def _create_license(self, is_admin_or_management):
         # Trial days is 90 if owner is admin/management, else 30.
         start_date = datetime.datetime.utcnow()
-        days = 90 if is_owner_admin_or_manager else 30
+        days = 90 if is_admin_or_management else 30
         return TrialLicense(start_date=start_date,
                             end_date=start_date + datetime.timedelta(days=days))
 
