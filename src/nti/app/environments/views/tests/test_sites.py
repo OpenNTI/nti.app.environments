@@ -1067,7 +1067,7 @@ class TestSetupFailure(BaseAppTest):
                                                           'nti.app.environments:email_templates/site_setup_completed'))
         failed_msg = next((x for x in _result if x[0][0] == 'nti.app.environments:email_templates/site_setup_failed'))
         failed_msg = failed_msg[1]
-        assert_that(failed_msg, has_entries({'subject': starts_with("Site setup failed"),
+        assert_that(failed_msg, has_entries({'subject': starts_with("[test] Site setup failed"),
                                              'template_args': has_entries({'site_details_link': starts_with('http://localhost/onboarding/sites'),
                                                                            'dns_names': 'xxx.nextthought.io',
                                                                            'owner_email': 'user001@example.com',
