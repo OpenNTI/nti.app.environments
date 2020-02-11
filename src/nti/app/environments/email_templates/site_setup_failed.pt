@@ -47,26 +47,44 @@
                 text-decoration: none;
 			}
 
+			td {
+			    white-space: pre-wrap; /* css-3 */
+			    white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+			    white-space: -pre-wrap; /* Opera 4-6 */
+			    white-space: -o-pre-wrap; /* Opera 7 */
+			    word-wrap: break-word; /* Internet Explorer 5.5+ */
+			    word-break: break-all;
+			}
+
+			td:first-child {
+				width: 130px;
+			}
+
+			td:last-child {
+				width: 500px;
+				padding: 2px;
+			}
+
 
 		</style>
 	</head>
 	<body>
 		<div class="container">
 		        <img src="${request.static_url('nti.app.environments:static/image/email_logo.png')}" width="41.87" height="40"/>
-			<div class="content" style="margin-top: 12px;">
+			<div class="title" style="margin-top: 12px;">
 				A site setup has failed.
 			</div>
 
     		<table>
-    		    <tr><td>Site admin url:</td><td><a href="site_url" tal:content="options/site_details_link" tal:attributes="href options/site_details_link" style="color: #494949;">
+    		    <tr><td>Site admin url:</td><td><a href="site_url" tal:content="site_details_link" tal:attributes="href site_details_link" style="color: #494949;">
                     site details url</a></td></tr>
-    		    <tr><td>Site id:</td><td tal:content="options/site_id"></td></tr>
-                <tr><td>DNS names:</td><td tal:content="options/dns_names"></td></tr>
-                <tr><td>Owner:</td><td tal:content="options/owner_email"></td></tr>
-                <tr><td>Env info:</td><td tal:content="options/env_info"></td></tr>
+    		    <tr><td>Site id:</td><td tal:content="site_id"></td></tr>
+                <tr><td>DNS names:</td><td tal:content="dns_names"></td></tr>
+                <tr><td>Owner:</td><td tal:content="owner_email"></td></tr>
+                <tr><td>Env info:</td><td tal:content="env_info"></td></tr>
             </table>
 
-            <div class="content" tal:content="options/exception" style="margin-top: 12px;">
+            <div class="content" tal:content="exception" style="margin-top: 12px;">
                 Exception
             </div>
 		</div>
