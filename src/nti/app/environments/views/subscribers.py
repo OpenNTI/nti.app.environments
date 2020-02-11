@@ -57,16 +57,18 @@ logger = __import__('logging').getLogger(__name__)
 
 
 @component.adapter(ICustomerVerifiedEvent)
-def _update_customer_verified(event):
-    _now = time.time()
-    event.customer.last_verified = datetime.utcfromtimestamp(_now)
-    event.customer.updateLastModIfGreater(_now)
-
-
-@component.adapter(ICustomerVerifiedEvent)
-def _upload_customer_to_hubspot(event):
-    client = get_hubspot_client()
+def _customer_verified_event(event):
     customer = event.customer
+    if customer.last_verified is not None:
+        return
+
+    # update last_verified
+    _now = time.time()
+    customer.last_verified = datetime.utcfromtimestamp(_now)
+    customer.updateLastModIfGreater(_now)
+
+    # upsert contact to hubspot
+    client = get_hubspot_client()
     result = client.upsert_contact(customer.email,
                                    customer.name)
     if result is None:

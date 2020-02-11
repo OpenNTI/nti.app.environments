@@ -1,6 +1,6 @@
 Dear ${name},
 
-Thank you for signing up for NextThought!
+${subtitle}
 
 Enter the following code in the window where you began creating your new site. 
 This confirmation code will expire soon.

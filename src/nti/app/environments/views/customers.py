@@ -35,6 +35,7 @@ from .base import getOrCreateCustomer
 from .base import createCustomer
 from .utils import raise_json_error
 
+logger = __import__('logging').getLogger(__name__)
 
 EMAIL_CHALLENGE_VIEW = 'email_challenge'
 EMAIL_CHALLENGE_VERIFY_VIEW = 'email_challenge_verify'
@@ -49,9 +50,18 @@ RECOVERY_CHALLENGE_VERIFY_VIEW = 'recovery_challenge_verify'
 class EmailChallengeView(BaseView):
 
     _email_template = 'nti.app.environments:email_templates/verify_customer'
+    _email_subtitle = 'Thank you for signing up for NextThought!'
 
     def _mailer(self):
         return component.getUtility(ITemplatedMailer, name='default')
+
+    def _send_mail(self, template, subject, recipients, template_args):
+        mailer = self._mailer()
+        mailer.queue_simple_html_text_email(template,
+                                            subject=subject,
+                                            recipients=recipients,
+                                            template_args=template_args,
+                                            text_template_extension='.mak')
 
     def _get_or_create_customer(self, params):
         name = self._get_value('name', params, required=True)
@@ -72,6 +82,8 @@ class EmailChallengeView(BaseView):
         forget(self.request)
 
         customer = self._get_or_create_customer(params)
+        if customer is None:
+            return None
 
         # Setup the customer object to be challenged
         code = setup_challenge_for_customer(customer)
@@ -82,15 +94,15 @@ class EmailChallengeView(BaseView):
             'name': customer.name,
             'email': customer.email,
             'organization': customer.organization,
-            'code_suffix': code_suffix
+            'code_suffix': code_suffix,
+            'subtitle': self._email_subtitle
         }
 
-        mailer = self._mailer()
-        mailer.queue_simple_html_text_email(self._email_template,
-                                            subject="NextThought Confirmation Code: {}".format(code_suffix),
-                                            recipients=[customer.email],
-                                            template_args=template_args,
-                                            text_template_extension='.mak')
+        self._send_mail(self._email_template,
+                        subject="NextThought Confirmation Code: {}".format(code_suffix),
+                        recipients=[customer.email],
+                        template_args=template_args)
+
         return {'name': customer.name,
                 'email': customer.email,
                 'organization': customer.organization,
@@ -98,6 +110,8 @@ class EmailChallengeView(BaseView):
 
     def __call__(self):
         data = self._do_call(self.body_params)
+        if data is None:
+            return hexc.HTTPNoContent()
 
         result = LocatedExternalDict()
         result.__name__ = self.context.__name__
@@ -112,7 +126,7 @@ class EmailChallengeView(BaseView):
              name=RECOVERY_CHALLENGE_VIEW)
 class RecoveryEmailChallengeView(EmailChallengeView):
 
-    _email_template = 'nti.app.environments:email_templates/verify_recovery'
+    _email_subtitle = 'Welcome back to NextThought!'
 
     def _get_or_create_customer(self, params):
         email = self._get_value('email', params, required=True)
@@ -120,20 +134,25 @@ class RecoveryEmailChallengeView(EmailChallengeView):
             raise_json_error(hexc.HTTPUnprocessableEntity,
                              'Invalid email.')
 
-        if email not in self.context:
-            raise_json_error(hexc.HTTPUnprocessableEntity,
-                             'No customer found with email: %s.' % email)
+        customer = self.context.getCustomer(email)
+        if customer is None:
+            logger.info("Notifying user that account doesn't exist: %s.", email)
+            self._send_mail('nti.app.environments:email_templates/customer_not_found',
+                            subject="Your account is not found: {}".format(email),
+                            recipients=[email],
+                            template_args={'email': email,
+                                           'app_link': self.request.application_url})
+        return customer
 
-        return self.context.getCustomer(email)
 
-
-@view_config(renderer='rest',
-             context=ICustomersContainer,
-             request_method='POST',
-             name=EMAIL_CHALLENGE_VERIFY_VIEW)
+@view_defaults(renderer='rest',
+               context=ICustomersContainer,
+               request_method='POST')
+@view_config(name=EMAIL_CHALLENGE_VERIFY_VIEW)
+@view_config(name=RECOVERY_CHALLENGE_VERIFY_VIEW)
 class EmailChallengeVerifyView(BaseView):
 
-    def do_verify(self, params, _do_notify=True):
+    def do_verify(self, params):
         email = self._get_value('email', params, required=True)
         code = self._get_value('code', params, required=True)
 
@@ -153,8 +172,8 @@ class EmailChallengeVerifyView(BaseView):
 
         # remember the user
         remember(self.request, email)
-        if _do_notify:
-            notify(CustomerVerifiedEvent(customer))
+
+        notify(CustomerVerifiedEvent(customer))
 
         # See other the user to the create site form
         return {'email': email,
@@ -163,22 +182,6 @@ class EmailChallengeVerifyView(BaseView):
     def __call__(self):
         data = self.do_verify(self.body_params)
 
-        result = LocatedExternalDict()
-        result.__name__ = self.context.__name__
-        result.__parent__ = self.context.__parent__
-        result.update(data)
-        return result
-
-
-@view_config(renderer='rest',
-             context=ICustomersContainer,
-             request_method='POST',
-             name=RECOVERY_CHALLENGE_VERIFY_VIEW)
-class RecoveryEmailChallengeVerifyView(EmailChallengeVerifyView):
-
-    def __call__(self):
-        # should we update the last_verify field?
-        data = self.do_verify(self.body_params, _do_notify=False)
         result = LocatedExternalDict()
         result.__name__ = self.context.__name__
         result.__parent__ = self.context.__parent__

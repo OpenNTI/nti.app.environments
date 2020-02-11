@@ -1064,4 +1064,4 @@ class TestSetupFailure(BaseAppTest):
                                                                            'dns_names': 'xxx.nextthought.io',
                                                                            'owner_email': 'user001@example.com',
                                                                            'env_info': '',
-                                                                           'exception': "ValueError('this setup failed')"}),}))
+                                                                           'exception': "ValueError('this setup failed',)"}),}))

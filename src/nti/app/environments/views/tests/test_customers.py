@@ -87,11 +87,19 @@ class TestChallengeView(BaseAppTest):
         assert_that(result, has_entries({'message': 'Invalid email.'}))
 
         params = {'email': 'test@example.com'}
-        result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username=None)).json_body
-        assert_that(result, has_entries({'message': 'No customer found with email: test@example.com.'}))
+        self.testapp.post_json(url, params=params, status=204, extra_environ=self._make_environ(username=None))
+
+        assert_that(_result, has_length(1))
+        assert_that(_result[0][0], is_(('nti.app.environments:email_templates/customer_not_found',)))
+        assert_that(_result[0][1], has_entries({'subject': 'Your account is not found: test@example.com',
+                                                'recipients': ['test@example.com'],
+                                                'template_args': has_entries({'email': 'test@example.com', 'app_link': 'http://localhost'}),
+                                                'text_template_extension': '.mak'}))
+        _result.clear()
 
         with ensure_free_txn():
             customers = self._root().get('customers')
+            assert_that(customers, has_length(0))
             customers.addCustomer(PersistentCustomer(email='test@example.com', name="Test User"))
 
         params = {'email': 'test@example.com'}
@@ -101,7 +109,7 @@ class TestChallengeView(BaseAppTest):
                                          'code_prefix': has_length(6)}))
 
         assert_that(customers['test@example.com'], has_properties({'email': 'test@example.com'}))
-        assert_that(_result[0][0], is_(('nti.app.environments:email_templates/verify_recovery',)))
+        assert_that(_result[0][0], is_(('nti.app.environments:email_templates/verify_customer',)))
         assert_that(_result[0][1], has_entries({'subject': starts_with('NextThought Confirmation Code: '),
                                                 'recipients': ['test@example.com'],
                                                 'template_args': has_entries({'name': 'Test User',
@@ -183,7 +191,7 @@ class TestChallengerVerification(BaseAppTest):
         result = self.testapp.post_json(url, params=params, status=200, extra_environ=self._make_environ(username=None)).json_body
         assert_that(result, has_entries({'email': 'test@g.com',
                                          'customer': has_entries({'email': 'test@g.com',
-                                                                  'hubspot_contact': None})}))
+                                                                  'hubspot_contact': has_entries({'contact_vid': '123'})})}))
 
 
 class TestCustomersViews(BaseAppTest):
