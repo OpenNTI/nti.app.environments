@@ -4,7 +4,7 @@
         <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600" rel="stylesheet">
 		<title>
-			Confirm Your Email Address
+			Welcome back to NextThought
 		</title>
 		<style>
 			body {
@@ -33,15 +33,17 @@
 				font-size: 16px;
 				line-height: 24px;
 			}
-			.code {
-				margin-top: 33px;
-				text-align:center;
-				background-color:#f4f4f4;
-				padding: 20px 0;
-				font-size: 24px;
-				letter-spacing: 2px;
-				line-height: 33px;
+			.btn-link {
+                width: 180px;
+                padding: 10px 25px;
+                font-size: 18px;
+                font-weight: 600;
+                line-height: 24px;
+                color: #FFFFFF;
+                background-color: #3FB34F;
 				border-radius: 4px;
+                display: block;
+                text-decoration: none;
 			}
 			hr {
 				margin-top: 120px;
@@ -58,17 +60,17 @@
 	<body>
 		<div class="container">
 			<img src="${request.static_url('nti.app.environments:static/image/email_logo.png')}" width="41.87" height="40"/>
-			<div class="title">Confirm Your Email Address</div>
+			<div class="title">Welcome back to NextThought!</div>
 			<div i18n:translate="" class="content" style="margin-top: 12px;">
-				Thank you for signing up for NextThought!
+				Please verify your account, this link will expire soon.
 			</div>
-			<div i18n:translate="" class="content" style="margin-top: 17px;">
-				Enter the following code in the window where you began creating your new site. 
-				This confirmation code will expire soon.
-			</div>
-			<div class="code">
-				${code_suffix}
-			</div>
+            <div style="margin-top:30px; padding: 0 auto;">
+                <a href="${verify_url}" class="btn-link" target="_blank">Verify Your Account</a>
+            </div>
+            <div class="content" style="margin-top: 15px;font-size: 14px;line-height: 20px;">
+                You may copy/paste this link into your browser:<br/>
+                <a href="${verify_url}" style="text-decoration: none;color: #3FB3F6;" target="_blank">${verify_url}</a>
+            </div>
 			<div class="content" style="margin-top: 34px;">
 				<span i18n:translate="">
 					This email contains private information for your account - please don't forward it.

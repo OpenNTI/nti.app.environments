@@ -103,14 +103,12 @@ class TestChallengeView(BaseAppTest):
             customers.addCustomer(PersistentCustomer(email='test@example.com', name="Test User"))
 
         params = {'email': 'test@example.com'}
-        result = self.testapp.post_json(url, params=params, status=200, extra_environ=self._make_environ(username=None)).json_body
-        assert_that(result, has_entries({'name': 'Test User',
-                                         'email': 'test@example.com',
-                                         'code_prefix': has_length(6)}))
+        self.testapp.post_json(url, params=params, status=204, extra_environ=self._make_environ(username=None))
+
 
         assert_that(customers['test@example.com'], has_properties({'email': 'test@example.com'}))
-        assert_that(_result[0][0], is_(('nti.app.environments:email_templates/verify_customer',)))
-        assert_that(_result[0][1], has_entries({'subject': starts_with('NextThought Confirmation Code: '),
+        assert_that(_result[0][0], is_(('nti.app.environments:email_templates/verify_recovery',)))
+        assert_that(_result[0][1], has_entries({'subject': starts_with('Welcome back to NextThought!'),
                                                 'recipients': ['test@example.com'],
                                                 'template_args': has_entries({'name': 'Test User',
                                                                               'email': 'test@example.com',
@@ -192,6 +190,41 @@ class TestChallengerVerification(BaseAppTest):
         assert_that(result, has_entries({'email': 'test@g.com',
                                          'customer': has_entries({'email': 'test@g.com',
                                                                   'hubspot_contact': has_entries({'contact_vid': '123'})})}))
+
+    @with_test_app()
+    @mock.patch('nti.app.environments.views.subscribers.get_hubspot_client')
+    @mock.patch('nti.app.environments.views.customers.validate_challenge_for_customer')
+    def test_recovery_challenge_verify_from_link(self, mock_validate, mock_client):
+        url = '/onboarding/customers/@@recovery_challenge_verify'
+        params = {}
+        result = self.testapp.get(url, params=params, status=422, extra_environ=self._make_environ(username=None)).json_body
+        assert_that(result['message'], is_('Missing required field: email.'))
+
+        params = {'email': 'test@g.com'}
+        result = self.testapp.get(url, params=params, status=422, extra_environ=self._make_environ(username=None)).json_body
+        assert_that(result['message'], is_('Missing required field: code.'))
+
+        params = {'email': 'test@g.com', 'code': 'xxxxxx'}
+        result = self.testapp.get(url, params=params, status=400, extra_environ=self._make_environ(username=None)).json_body
+        assert_that(result['message'], is_('Bad request.'))
+
+        with ensure_free_txn():
+            customers = self._root().get('customers')
+            customers.addCustomer(PersistentCustomer(email='test@g.com'))
+
+        mock_validate.return_value = False
+        params = {'email': 'test@g.com', 'code': 'xxxxxx'}
+        result = self.testapp.get(url, params=params, status=400, extra_environ=self._make_environ(username=None)).json_body
+        assert_that(result['message'], is_("That code wasn't valid. Give it another go!"))
+
+        mock_validate.return_value = True
+        mock_client.return_value = _client = mock.MagicMock()
+        _client.upsert_contact = lambda email, name: {'contact_vid': '123'}
+
+        params = {'email': 'test@g.com', 'code': 'xxxxxx', 'name': "okc"}
+        result = self.testapp.get(url, params=params, status=302, extra_environ=self._make_environ(username=None))
+        assert_that(result.location, is_('http://localhost'))
+        assert_that(customers['test@g.com'].hubspot_contact, has_properties({'contact_vid': '123'}))
 
 
 class TestCustomersViews(BaseAppTest):

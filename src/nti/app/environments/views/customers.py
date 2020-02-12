@@ -50,7 +50,9 @@ RECOVERY_CHALLENGE_VERIFY_VIEW = 'recovery_challenge_verify'
 class EmailChallengeView(BaseView):
 
     _email_template = 'nti.app.environments:email_templates/verify_customer'
-    _email_subtitle = 'Thank you for signing up for NextThought!'
+
+    def _email_subject(self, code_suffix):
+        return "NextThought Confirmation Code: {}".format(code_suffix)
 
     def _mailer(self):
         return component.getUtility(ITemplatedMailer, name='default')
@@ -77,7 +79,7 @@ class EmailChallengeView(BaseView):
             raise_json_error(hexc.HTTPBadRequest,
                              'Invalid {}.'.format(e.field.__name__))
 
-    def _do_call(self, params):
+    def _do_call(self, params, _generate_verify_url=None):
         # forget any user information we may have
         forget(self.request)
 
@@ -94,12 +96,14 @@ class EmailChallengeView(BaseView):
             'name': customer.name,
             'email': customer.email,
             'organization': customer.organization,
-            'code_suffix': code_suffix,
-            'subtitle': self._email_subtitle
+            'code_suffix': code_suffix
         }
 
+        if _generate_verify_url:
+            template_args['verify_url'] = _generate_verify_url(customer.email, code)
+
         self._send_mail(self._email_template,
-                        subject="NextThought Confirmation Code: {}".format(code_suffix),
+                        subject=self._email_subject(code_suffix),
                         recipients=[customer.email],
                         template_args=template_args)
 
@@ -126,7 +130,10 @@ class EmailChallengeView(BaseView):
              name=RECOVERY_CHALLENGE_VIEW)
 class RecoveryEmailChallengeView(EmailChallengeView):
 
-    _email_subtitle = 'Welcome back to NextThought!'
+    _email_template = 'nti.app.environments:email_templates/verify_recovery'
+
+    def _email_subject(self, code_suffix):
+        return 'Welcome back to NextThought!'
 
     def _get_or_create_customer(self, params):
         email = self._get_value('email', params, required=True)
@@ -144,12 +151,19 @@ class RecoveryEmailChallengeView(EmailChallengeView):
                                            'app_link': self.request.application_url})
         return customer
 
+    def _generate_verify_url(self, email, code):
+        return self.request.resource_url(self.context,
+                                         '@@' + RECOVERY_CHALLENGE_VERIFY_VIEW,
+                                         query={'email': email,
+                                                'code': code})
+
+    def __call__(self):
+        self._do_call(self.body_params, _generate_verify_url=self._generate_verify_url)
+        return hexc.HTTPNoContent()
+
 
 @view_defaults(renderer='rest',
-               context=ICustomersContainer,
-               request_method='POST')
-@view_config(name=EMAIL_CHALLENGE_VERIFY_VIEW)
-@view_config(name=RECOVERY_CHALLENGE_VERIFY_VIEW)
+               context=ICustomersContainer)
 class EmailChallengeVerifyView(BaseView):
 
     def do_verify(self, params):
@@ -179,7 +193,22 @@ class EmailChallengeVerifyView(BaseView):
         return {'email': email,
                 'customer': customer}
 
-    def __call__(self):
+    @view_config(name=EMAIL_CHALLENGE_VERIFY_VIEW, request_method='GET')
+    @view_config(name=RECOVERY_CHALLENGE_VERIFY_VIEW, request_method='GET')
+    def verify_from_link(self):
+        params = self.request.params
+        self.do_verify(params)
+
+        # we have side effects
+        self.request.environ['nti.request_had_transaction_side_effects'] = True
+
+        # once verified, redirect to home page.
+        return hexc.HTTPFound(location=self.request.application_url,
+                              headers=self.request.response.headers)
+
+    @view_config(name=EMAIL_CHALLENGE_VERIFY_VIEW, request_method='POST')
+    @view_config(name=RECOVERY_CHALLENGE_VERIFY_VIEW, request_method='POST')
+    def verify_from_api(self):
         data = self.do_verify(self.body_params)
 
         result = LocatedExternalDict()
