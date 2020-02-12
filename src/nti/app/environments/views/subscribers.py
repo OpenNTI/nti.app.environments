@@ -17,7 +17,7 @@ from nti.app.environments.api.hubspotclient import get_hubspot_client
 from nti.app.environments.interfaces import ITransactionRunner
 
 from nti.app.environments.models.interfaces import SITE_STATUS_PENDING
-
+from nti.app.environments.models.interfaces import SITE_STATUS_ACTIVE
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ICustomer
 from nti.app.environments.models.interfaces import ISetupStateSuccess
@@ -324,6 +324,9 @@ def _on_site_setup_finished(event):
     if not ISetupStateSuccess.providedBy(site.setup_state):
         _email_on_setup_error(site)
         return
+
+    if site.status == SITE_STATUS_PENDING:
+        site.status = SITE_STATUS_ACTIVE
 
     setup_info = site.setup_state.site_info
     if not setup_info.host:

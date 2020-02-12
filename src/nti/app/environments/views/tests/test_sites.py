@@ -47,6 +47,7 @@ from nti.app.environments.views.customers import getOrCreateCustomer
 
 from nti.app.environments.views.sites import SitesUploadCSVView
 from nti.app.environments.views.sites import RequestTrialSiteView
+from nti.app.environments.views.sites import QuerySetupState
 
 from nti.app.environments.views.tests import BaseAppTest
 from nti.app.environments.views.tests import with_test_app
@@ -967,6 +968,80 @@ class TestSitesListForCustomerView(BaseAppTest):
         assert_that(result.json_body, has_entries({'id': 'S001', 'owner': has_entries({'email': 'user001@example.com'})}))
         result = self.testapp.get(url, status=200, extra_environ=self._make_environ(username='admin001'))
         assert_that(result.json_body, has_entries({'id': 'S001', 'owner': has_entries({'email': 'user001@example.com'})}))
+
+
+class TestQuerySetupState(BaseAppTest):
+
+    @with_test_app()
+    @mock.patch('nti.app.environments.views.sites.QuerySetupState._get_async_result')
+    @mock.patch('nti.app.environments.views.notification._mailer')
+    def testQuerySetupState(self, mock_mailer, mock_async_result):
+        mock_mailer = mock.MagicMock()
+        mock_mailer.queue_simple_html_text_email = lambda *args, **kwargs: None
+
+        with ensure_free_txn():
+            with mock.patch('nti.app.environments.models.utils.get_onboarding_root') as mock_get_onboarding_root:
+                mock_get_onboarding_root.return_value = self._root()
+                customers = self._root().get('customers')
+                customers.addCustomer(PersistentCustomer(email='user001@example.com', name="testname"))
+                sites = self._root().get('sites')
+                for email, siteId in (('user001@example.com', 'S001'),):
+                    sites.addSite(PersistentSite(dns_names=['xx.nextthought.io'],
+                                                 owner = customers.getCustomer(email),
+                                                 license=TrialLicense(start_date=datetime.datetime(2020, 1, 28),
+                                                                      end_date=datetime.datetime(2020, 1, 9))), siteId=siteId)
+
+        url = '/onboarding/sites/S001/@@query-setup-state'
+
+        mock_async_result.return_value = None
+        result = self.testapp.get(url, status=200, extra_environ=self._make_environ(username='user001@example.com')).json_body
+        assert_that(result, has_entries({'id': 'S001', 'status': 'PENDING'}))
+
+        mock_async_result.return_value = ValueError("Bad")
+        with ensure_free_txn():
+            sites['S001'].setup_state = SetupStatePending(task_state='okc')
+
+        result = self.testapp.get(url, status=200, extra_environ=self._make_environ(username='user001@example.com')).json_body
+        assert_that(result, has_entries({'id': 'S001', 'status': 'PENDING',
+                                         'setup_state': has_entries({'MimeType': 'application/vnd.nextthought.app.environments.setupstatefailure'})}))
+
+        mock_async_result.return_value = SiteInfo(site_id='S001', dns_name='xx.nextthought.io')
+        result = self.testapp.get(url, status=200, extra_environ=self._make_environ(username='user001@example.com')).json_body
+        assert_that(result, has_entries({'id': 'S001', 'status': 'ACTIVE',
+                                         'setup_state': has_entries({'MimeType': 'application/vnd.nextthought.app.environments.setupstatesuccess'})}))
+
+    @with_test_app()
+    @mock.patch('nti.environments.management.tasks.SetupEnvironmentTask.restore_task')
+    def test_get_async_result(self, mock_restore_task):
+        with ensure_free_txn():
+            with mock.patch('nti.app.environments.models.utils.get_onboarding_root') as mock_get_onboarding_root:
+                mock_get_onboarding_root.return_value = self._root()
+                customers = self._root().get('customers')
+                customers.addCustomer(PersistentCustomer(email='user001@example.com', name="testname"))
+                sites = self._root().get('sites')
+                for email, siteId in (('user001@example.com', 'S001'),):
+                    sites.addSite(PersistentSite(dns_names=['xx.nextthought.io'],
+                                                 owner = customers.getCustomer(email),
+                                                 license=TrialLicense(start_date=datetime.datetime(2020, 1, 28),
+                                                                      end_date=datetime.datetime(2020, 1, 9))), siteId=siteId)
+        site = sites['S001']
+
+        view = QuerySetupState(site, self.request)
+        assert_that(site.setup_state, is_(None))
+        assert_that(view._get_async_result(), is_(None))
+
+        site.setup_state = SetupStatePending(task_state='ok')
+
+        # mock async result
+        mock_restore_task.return_value = async_result = mock.MagicMock(result="success")
+        async_result.ready.return_value = None
+        assert_that(view._get_async_result(), is_(None))
+
+        async_result.ready.return_value = True
+        assert_that(view._get_async_result(), is_('success'))
+
+        site.setup_state = SetupStateSuccess(task_state='ok', site_info=SiteInfo(site_id='S001', dns_name='xx.nextthought.io'))
+        assert_that(view._get_async_result(), is_(None))
 
 
 class TestContinueToSite(BaseAppTest):
