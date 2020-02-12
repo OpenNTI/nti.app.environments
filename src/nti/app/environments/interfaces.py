@@ -15,6 +15,7 @@ class IOTPGenerator(interface.Interface):
         Returns an appropriate passphrase or one time challenge
         """
 
+
 class IOnboardingServer(interface.Interface):
     pass
 
@@ -81,7 +82,7 @@ class ISiteLinks(interface.Interface):
 
     complete_account_url = ValidTextLine(title='The url to follow to finish setting up an account.')
 
-    
+
 class ISiteDomainPolicy(interface.Interface):
     """
     An object that provides base domain, and dns_name checking.

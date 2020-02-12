@@ -42,6 +42,7 @@ class OnboardingRootPrincipalRoleManager(AnnotationPrincipalRoleManager):
 def _principal_role_manager(onboarding_root):
     return OnboardingRootPrincipalRoleManager(onboarding_root)
 
+
 @component.adapter(IBroken)
 @interface.implementer(IExternalObject)
 class BrokenExternalObject(object):
