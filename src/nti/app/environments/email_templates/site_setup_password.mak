@@ -10,9 +10,6 @@ Your new site is waiting for you!
 Copy/paste this link into your browser:
 ${password_setup_link}
 
-Your Site’s Domain:
-${site_domain_link}
-
 Thanks,
 
 NextThought
