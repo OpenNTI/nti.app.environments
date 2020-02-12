@@ -100,7 +100,7 @@ class SiteCreatedEmailNotifier(BaseEmailNotifier):
 
 class SiteSetupEmailNotifier(BaseEmailNotifier):
 
-    _template = 'nti.app.environments:email_templates/site_setup_completed'
+    _template = 'nti.app.environments:email_templates/site_setup_password'
     _subject = "It's time to setup your password!"
 
     def __init__(self, context, request=None):
@@ -113,7 +113,6 @@ class SiteSetupEmailNotifier(BaseEmailNotifier):
     def _template_args(self):
         template_args = {
             'name': self.site.owner.email,
-            'site_domain_link': "http://{dns_name}/".format(dns_name=self.site.dns_names[0]),
             'password_setup_link': urljoin(self.request.application_url, 'sites/{}'.format(self.site.id))
         }
         return template_args
