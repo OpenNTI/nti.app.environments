@@ -12,7 +12,8 @@ from zope import interface
 
 from zope.annotation.interfaces import IAnnotations
 
-from nti.app.environments.models.interfaces import ISiteAuthToken
+from nti.app.environments.models.customers import SiteAuthToken
+
 from nti.app.environments.models.interfaces import ISiteAuthTokenContainer
 
 from .interfaces import IOTPGenerator
@@ -114,6 +115,7 @@ def remember(request, userid, **kwargs):
     response.headerlist.extend(headers)
     return response
 
+
 def forget(request):
     headers = p_forget(request)
     response = request.response
@@ -125,9 +127,9 @@ def create_auth_token_for_site(customer, site):
     """
     Creates an `ISiteAuthToken` for this customer and site.
     """
-    token_val = str(uuid.uuid4())
+    token_val = str(uuid.uuid4()).encode('utf-8')
     token_container = ISiteAuthTokenContainer(customer)
-    token = ISiteAuthToken(token=token_val)
+    token = SiteAuthToken(token=token_val)
     token_container[site.id] = token
     return token
 

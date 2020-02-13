@@ -134,7 +134,7 @@ class SiteSetupEmailNotifier(BaseEmailNotifier):
         auth_token = create_auth_token_for_site(self.site.owner, self.site)
         site_url = urljoin(request.application_url, 'sites/{}'.format(self.site.id))
         link = Link(self.site.owner,
-                    elements=('@@%' % AUTH_TOKEN_VIEW,),
+                    elements=('@@%s' % AUTH_TOKEN_VIEW,),
                     params={'token': auth_token.token,
                             'success': site_url,
                             'site': self.site.id})

@@ -498,22 +498,25 @@ class TestRequestTrialSiteView(BaseAppTest):
                     raises(hexc.HTTPUnprocessableEntity, pattern="Please provide one site url."))
 
         params = {'dns_names': ['xx']}
-        assert_that(calling(view._handle_dns_names).with_args(params, False), raises(hexc.HTTPUnprocessableEntity, pattern="Invalid site url: xx."))
+        assert_that(calling(view._handle_dns_names).with_args(params, False),
+                    raises(hexc.HTTPUnprocessableEntity, pattern="Invalid site url: xx."))
         assert_that(view._handle_dns_names(params, True), is_(['xx']))
 
         params = {'dns_names': [True]}
-        assert_that(calling(view._handle_dns_names).with_args(params, False), raises(hexc.HTTPUnprocessableEntity, pattern="Invalid site url: True."))
-        assert_that(calling(view._handle_dns_names).with_args(params, True), raises(hexc.HTTPUnprocessableEntity, pattern="Invalid site url: True."))
+        assert_that(calling(view._handle_dns_names).with_args(params, False),
+                    raises(hexc.HTTPUnprocessableEntity, pattern="Invalid site url: True."))
+        assert_that(calling(view._handle_dns_names).with_args(params, True),
+                    raises(hexc.HTTPUnprocessableEntity, pattern="Invalid site url: True."))
 
-        params = {'dns_names': [' XX.nextthought.IO ']}
-        assert_that(view._handle_dns_names(params, False), is_(['xx.nextthought.io']))
-        assert_that(view._handle_dns_names(params, True), is_(['xx.nextthought.io']))
+        params = {'dns_names': [' XX.test_ntdomain.COM ']}
+        assert_that(view._handle_dns_names(params, False), is_(['xx.test_ntdomain.com']))
+        assert_that(view._handle_dns_names(params, True), is_(['xx.test_ntdomain.com']))
 
         mock_dns_name_available.return_value = False
         assert_that(calling(view._handle_dns_names).with_args(params, False),
-                    raises(hexc.HTTPUnprocessableEntity, pattern="Site url is not available: xx.nextthought.io."))
+                    raises(hexc.HTTPUnprocessableEntity, pattern="Site url is not available: xx.test_ntdomain.com."))
         assert_that(calling(view._handle_dns_names).with_args(params, True),
-                    raises(hexc.HTTPUnprocessableEntity, pattern="Site url is not available: xx.nextthought.io."))
+                    raises(hexc.HTTPUnprocessableEntity, pattern="Site url is not available: xx.test_ntdomain.com."))
 
 
 class TestCreateNewTrialSiteView(BaseAppTest):
@@ -525,7 +528,7 @@ class TestCreateNewTrialSiteView(BaseAppTest):
     @mock.patch('nti.app.environments.views.utils._is_dns_name_available')
     def testCreateNewTrialSiteView(self, mock_dns_available, mock_admin, mock_client, mock_mailer):
         _client = mock.MagicMock()
-        _client.fetch_contact_by_email = lambda email: None
+        _client.fetch_contact_by_email = lambda unused_email: None
         mock_client.return_value = _client
         mock_admin.return_value = False
 
@@ -546,22 +549,27 @@ class TestCreateNewTrialSiteView(BaseAppTest):
         self.testapp.post_json(url, params=params, status=302, extra_environ=self._make_environ(username=None))
         self.testapp.post_json(url, params=params, status=403, extra_environ=self._make_environ(username='user002@example.com'))
 
-        result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='user001@example.com')).json_body
+        env = self._make_environ(username='user001@example.com')
+        result = self.testapp.post_json(url, params=params, status=422,
+                                        extra_environ=env).json_body
         assert_that(result, has_entries({'message': 'Please provide one site url.'}))
 
         params = {'dns_names': ['xxx'], 'client_name': 'xyz'}
-        result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='user001@example.com')).json_body
+        result = self.testapp.post_json(url, params=params, status=422,
+                                        extra_environ=env).json_body
         assert_that(result, has_entries({'message': 'Invalid site url: xxx.'}))
 
         mock_dns_available.return_value = True
-        params = {'dns_names': ['xxx.nextthought.io'], 'client_name': 'xyz'}
-        result = self.testapp.post_json(url, params=params, status=201, extra_environ=self._make_environ(username='user001@example.com')).json_body
+        params = {'dns_names': ['xxx.test_ntdomain.com'], 'client_name': 'xyz'}
+        result = self.testapp.post_json(url, params=params, status=201,
+                                         extra_environ=env).json_body
         assert_that(result, has_entries({'client_name': 'xyz',
-                                         'dns_names': ['xxx.nextthought.io'],
+                                         'dns_names': ['xxx.test_ntdomain.com'],
                                          'owner': has_entries({'email': 'user001@example.com'})}))
 
-        params = {'dns_names': ['yyy.nextthought.io']}
-        self.testapp.post_json(url, params=params, status=403, extra_environ=self._make_environ(username='user001@example.com'))
+        params = {'dns_names': ['yyy.test_ntdomain.com']}
+        self.testapp.post_json(url, params=params, status=403,
+                               extra_environ=env)
 
 
 class TestSitesUploadCSVView(BaseAppTest):
@@ -1089,7 +1097,7 @@ class TestSetupFailure(BaseAppTest):
         mock_async_result.return_value = ValueError("this setup failed")
         mock_dns_available.return_value = True
         _client = mock.MagicMock()
-        _client.fetch_contact_by_email = lambda email: None
+        _client.fetch_contact_by_email = lambda unused_email: None
         mock_client.return_value = _client
         mock_admin.return_value = True
         mock_mailer.return_value = _mailer = mock.MagicMock()
@@ -1131,12 +1139,12 @@ class TestSetupFailure(BaseAppTest):
         assert_that(_result, has_length(3))
         assert_that([x[0][0] for x in _result], has_items('nti.app.environments:email_templates/new_site_request',
                                                           'nti.app.environments:email_templates/site_setup_failed',
-                                                          'nti.app.environments:email_templates/site_setup_completed'))
+                                                          'nti.app.environments:email_templates/site_setup_password'))
         failed_msg = next((x for x in _result if x[0][0] == 'nti.app.environments:email_templates/site_setup_failed'))
         failed_msg = failed_msg[1]
-        assert_that(failed_msg, has_entries({'subject': starts_with("Site setup failed"),
+        assert_that(failed_msg, has_entries({'subject': starts_with("[test] Site setup failed"),
                                              'template_args': has_entries({'site_details_link': starts_with('http://localhost/onboarding/sites'),
                                                                            'dns_names': 'xxx.nextthought.io',
                                                                            'owner_email': 'user001@example.com',
                                                                            'env_info': '',
-                                                                           'exception': "ValueError('this setup failed',)"}),}))
+                                                                           'exception': "ValueError('this setup failed')"}),}))

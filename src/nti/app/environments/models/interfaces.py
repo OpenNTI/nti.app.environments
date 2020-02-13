@@ -22,6 +22,8 @@ from zope.interface.interfaces import IObjectEvent
 
 from nti.i18n.locales.interfaces import ICcTLDInformation
 
+from nti.base.interfaces import ICreatedTime
+
 from nti.schema.interfaces import InvalidValue
 
 from nti.schema.field import Int
