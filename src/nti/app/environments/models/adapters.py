@@ -6,15 +6,19 @@ from zope.annotation.interfaces import IAnnotations
 from nti.externalization.interfaces import IExternalReferenceResolver
 
 from nti.app.environments.models.interfaces import ILMSSite
+from nti.app.environments.models.interfaces import ICustomer
 from nti.app.environments.models.interfaces import ISiteUsage
 from nti.app.environments.models.interfaces import InvalidSiteError
+from nti.app.environments.models.interfaces import ISiteAuthTokenContainer
 
 from nti.app.environments.models.sites import SiteUsage
 
 from nti.app.environments.models.utils import get_sites_folder
 from nti.app.environments.models.utils import get_hosts_folder
+from nti.app.environments.models.customers import SiteAuthTokenContainer
 
 SITE_USAGE_ANNOTATION_KEY = 'SiteUsage'
+SITE_AUTHTOKEN_CONTAINER_ANNOTATION_KEY = 'SiteAuthTokenContainer'
 
 
 @interface.implementer(IExternalReferenceResolver)
@@ -65,3 +69,19 @@ def site_usage_factory(site, create=True):
 
 def get_site_usage(site):
     return site_usage_factory(site, create=False)
+
+
+@component.adapter(ICustomer)
+@interface.implementer(ISiteAuthTokenContainer)
+def auth_token_container_factory(customer, create=True):
+    result = None
+    annotations = IAnnotations(customer)
+    try:
+        result = annotations[SITE_AUTHTOKEN_CONTAINER_ANNOTATION_KEY]
+    except KeyError:
+        if create:
+            result = SiteAuthTokenContainer()
+            annotations[SITE_AUTHTOKEN_CONTAINER_ANNOTATION_KEY] = result
+            result.__name__ = SITE_AUTHTOKEN_CONTAINER_ANNOTATION_KEY
+            result.__parent__ = customer
+    return result

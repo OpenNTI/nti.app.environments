@@ -22,14 +22,18 @@ from zope.interface.interfaces import IObjectEvent
 
 from nti.i18n.locales.interfaces import ICcTLDInformation
 
+from nti.base.interfaces import ICreatedTime
+
 from nti.schema.interfaces import InvalidValue
 
 from nti.schema.field import Int
 from nti.schema.field import Choice
 from nti.schema.field import Object
 from nti.schema.field import DateTime
+from nti.schema.field import ValidDatetime
 from nti.schema.field import ValidTextLine
 from nti.schema.field import UniqueIterable
+from nti.schema.field import ValidBytesLine
 
 from nti.environments.management.interfaces import IInitializedSiteInfo
 
@@ -208,6 +212,25 @@ class ICustomersContainer(IContainer):
         """
         Return a customer object or None.
         """
+
+
+class ISiteAuthToken(ICreatedTime, IContained):
+    """
+    An authentication token for a particular site. Used in the "setup password"
+    flow to validate a user and allow them to acces their site.
+    """
+
+    token = ValidBytesLine(title=u"The token value",
+                           required=True)
+
+
+class ISiteAuthTokenContainer(IContainer):
+    """
+    A container mapping a site_id to a possible :class:`ISiteAuthToken` for a
+    user.
+    """
+
+    contains(ISiteAuthToken)
 
 
 class IHost(IContained):

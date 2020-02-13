@@ -19,8 +19,10 @@ from nti.app.environments.auth import ACCOUNT_MANAGEMENT_ROLE
 from nti.app.environments.auth import ACT_READ
 
 from nti.app.environments.models.interfaces import ICustomer
-from nti.app.environments.models.interfaces import ICustomersContainer
+from nti.app.environments.models.interfaces import ISiteAuthToken
 from nti.app.environments.models.interfaces import IHubspotContact
+from nti.app.environments.models.interfaces import ICustomersContainer
+from nti.app.environments.models.interfaces import ISiteAuthTokenContainer
 
 
 @interface.implementer(IHubspotContact)
@@ -33,6 +35,23 @@ class HubspotContact(SchemaConfigured, PersistentCreatedModDateTrackingObject, C
     def __init__(self, *args, **kwargs):
         SchemaConfigured.__init__(self, *args, **kwargs)
         PersistentCreatedModDateTrackingObject.__init__(self)
+
+
+@interface.implementer(ISiteAuthToken)
+class SiteAuthToken(SchemaConfigured, PersistentCreatedModDateTrackingObject, Contained):
+
+    createFieldProperties(ISiteAuthToken)
+
+    mimeType = mime_type = 'application/vnd.nextthought.app.environments.siteauthtoken'
+
+    def __init__(self, *args, **kwargs):
+        SchemaConfigured.__init__(self, *args, **kwargs)
+        PersistentCreatedModDateTrackingObject.__init__(self)
+
+
+@interface.implementer(ISiteAuthTokenContainer)
+class SiteAuthTokenContainer(CaseInsensitiveCheckingLastModifiedBTreeContainer):
+    pass
 
 
 @interface.implementer(ICustomersContainer)

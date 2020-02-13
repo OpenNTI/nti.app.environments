@@ -2,6 +2,7 @@ import datetime
 
 from zope import component
 
+import uuid
 import random
 
 from pyramid.security import forget as p_forget
@@ -11,10 +12,15 @@ from zope import interface
 
 from zope.annotation.interfaces import IAnnotations
 
+from nti.app.environments.models.customers import SiteAuthToken
+
+from nti.app.environments.models.interfaces import ISiteAuthTokenContainer
+
 from .interfaces import IOTPGenerator
 
 _Z_BASE_32_ALPHABET = "13456789abcdefghijkmnopqrstuwxyz"
 _EMAIL_OTP_PASS_LENGTH = 12
+
 
 @interface.implementer(IOTPGenerator)
 class EmailChallengeOTPGenerator(object):
@@ -76,7 +82,7 @@ def validate_challenge_for_customer(customer, code):
     we bump the number of attempts. Call this only once per challenge
     validation.
 
-    Becareful not to leak information here
+    Be careful not to leak information here.
     """
     annotations = IAnnotations(customer)
 
@@ -109,8 +115,45 @@ def remember(request, userid, **kwargs):
     response.headerlist.extend(headers)
     return response
 
+
 def forget(request):
     headers = p_forget(request)
     response = request.response
     response.headerlist.extend(headers)
     return response
+
+
+def create_auth_token_for_site(customer, site):
+    """
+    Creates an `ISiteAuthToken` for this customer and site.
+    """
+    token_val = str(uuid.uuid4()).encode('utf-8')
+    token_container = ISiteAuthTokenContainer(customer)
+    token = SiteAuthToken(token=token_val)
+    token_container[site.id] = token
+    return token
+
+
+AUTH_TOKEN_EXPIRATION_DAYS = 30
+
+
+def validate_auth_token(customer, token_val, site_id):
+    """
+    Validates the token_val for the customer and site.
+    """
+    result = False
+    token_container = ISiteAuthTokenContainer(customer)
+    try:
+        auth_token = token_container[site_id]
+    except KeyError:
+        pass
+    else:
+        try:
+            token_val = token_val.encode('utf-8')
+        except UnicodeEncodeError:
+            return result
+        if auth_token.token == token_val:
+            now = datetime.datetime.utcnow()
+            age = now - auth_token.created
+            result = age.days < AUTH_TOKEN_EXPIRATION_DAYS
+    return result

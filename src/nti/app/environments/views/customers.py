@@ -3,6 +3,8 @@ from pyramid import httpexceptions as hexc
 from pyramid.view import view_config
 from pyramid.view import view_defaults
 
+from urllib.parse import urljoin
+
 from zope import component
 
 from zope.event import notify
@@ -19,12 +21,14 @@ from nti.app.environments.auth import ACT_CREATE
 from nti.app.environments.auth import ACT_DELETE
 from nti.app.environments.auth import ACT_READ
 
-from nti.app.environments.authentication import forget
+from nti.app.environments.authentication import forget, validate_auth_token
 from nti.app.environments.authentication import remember
 from nti.app.environments.authentication import setup_challenge_for_customer
 from nti.app.environments.authentication import validate_challenge_for_customer
 
 from nti.app.environments.models.events import CustomerVerifiedEvent
+
+from nti.app.environments.views import AUTH_TOKEN_VIEW
 
 from nti.externalization.interfaces import LocatedExternalDict
 
@@ -215,6 +219,57 @@ class EmailChallengeVerifyView(BaseView):
         result.__name__ = self.context.__name__
         result.__parent__ = self.context.__parent__
         result.update(data)
+        return result
+
+    def __call__(self):
+        self._do_call(self.body_params, _generate_verify_url=self._generate_verify_url)
+        return hexc.HTTPNoContent()
+
+
+@view_config(renderer='rest',
+             name=AUTH_TOKEN_VIEW,
+             request_method='GET',
+             context=ICustomer)
+class CustomerAuthTokenVerifyView(BaseView):
+    """
+    An authentication view that validates the customer's auth token for a site.
+    This endpoint is accessed via the link we generate for the "Set My Password"
+    email during site setup.
+
+    On success, this will authenticate the user and redirect them to the success
+    url (the app site).
+
+    On failure, if the token does not exist or if expired, we will we send
+    the user to the app recovery page.
+
+    If authenticated as a different user, we will forget and return to recovery.
+
+    On failure, if authenticated, we will (?).
+    """
+
+
+    def __call__(self):
+        params = self.request.params
+        site_id = self._get_value('site', params, required=True)
+        success_url = self._get_value('success', params, required=True)
+        token_val = self._get_value('token', params, required=True)
+        # What do we do for authenticated users? Do we allow users to have
+        # multiple accounts? If the auth user is our context, do we
+        # automatically redirect?
+        auth_email = self.request.authenticated_userid or ''
+        if     self.context.email == auth_email \
+            or (    not auth_email \
+                and validate_auth_token(self.context, token_val, site_id)):
+            # Validated, authenticate and forward.
+            forget(self.request)
+            remember(self.request, self.context.email)
+            result = hexc.HTTPFound(location=success_url,
+                                    headers=self.request.response.headers)
+        else:
+            forget(self.request)
+            # Invalid or expired, send to recovery app page.
+            recovery_url = urljoin(self.request.application_url, 'recovery')
+            result = hexc.HTTPFound(location=recovery_url)
         return result
 
 

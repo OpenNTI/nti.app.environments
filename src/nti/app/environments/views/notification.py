@@ -2,12 +2,19 @@ from urllib.parse import urlunparse
 from urllib.parse import urljoin
 
 from zope import component
+from zope import interface
 
 from zope.cachedescriptors.property import Lazy
 
 from pyramid.threadlocal import get_current_request
 
 from pyramid_mailer.message import Attachment
+
+from six.moves import urllib_parse
+
+from nti.app.environments.authentication import create_auth_token_for_site
+
+from nti.app.environments.views import AUTH_TOKEN_VIEW
 
 from nti.app.environments.settings import NEW_SITE_REQUEST_NOTIFICATION_EMAIL
 from nti.app.environments.settings import SITE_SETUP_FAILURE_NOTIFICATION_EMAIL
@@ -23,6 +30,12 @@ from nti.environments.management.interfaces import ISettings
 from nti.externalization import to_external_object
 
 from nti.externalization.interfaces import IExternalObjectRepresenter
+
+from nti.links.externalization import render_link
+
+from nti.links.interfaces import ILinkExternalHrefOnly
+
+from nti.links.links import Link
 
 from nti.mailer.interfaces import ITemplatedMailer
 
@@ -99,6 +112,12 @@ class SiteCreatedEmailNotifier(BaseEmailNotifier):
 
 
 class SiteSetupEmailNotifier(BaseEmailNotifier):
+    """
+    Send a setup password email email to the owner in order to finish
+    site setup. This will link to an `AuthToken` redemption url that will
+    validate (authenticate) the token and allow the user to continue site
+    setup.
+    """
 
     _template = 'nti.app.environments:email_templates/site_setup_password'
     _subject = "It's time to setup your password!"
@@ -110,10 +129,24 @@ class SiteSetupEmailNotifier(BaseEmailNotifier):
     def _recipients(self):
         return [self.site.owner.email]
 
+    def _get_auth_link(self):
+        request = self.request
+        auth_token = create_auth_token_for_site(self.site.owner, self.site)
+        site_url = urljoin(request.application_url, 'sites/{}'.format(self.site.id))
+        link = Link(self.site.owner,
+                    elements=('@@%s' % AUTH_TOKEN_VIEW,),
+                    params={'token': auth_token.token,
+                            'success': site_url,
+                            'site': self.site.id})
+        interface.alsoProvides(link, ILinkExternalHrefOnly)
+        auth_token_url = render_link(link)
+        return urllib_parse.urljoin(request.application_url, auth_token_url)
+
     def _template_args(self):
+        auth_link = self._get_auth_link()
         template_args = {
             'name': self.site.owner.email,
-            'password_setup_link': urljoin(self.request.application_url, 'sites/{}'.format(self.site.id))
+            'password_setup_link': auth_link
         }
         return template_args
 

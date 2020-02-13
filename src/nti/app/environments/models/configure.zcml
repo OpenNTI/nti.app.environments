@@ -27,6 +27,10 @@
 			 for=".interfaces.ILMSSite"
 			 provides=".interfaces.ISiteUsage" />
 
+	<adapter factory=".adapters.auth_token_container_factory"
+             for=".interfaces.ICustomer"
+             provides=".interfaces.ISiteAuthTokenContainer" />
+
     <include package="nti.externalization" file="meta.zcml" />
     <include package="nti.externalization" />
 
