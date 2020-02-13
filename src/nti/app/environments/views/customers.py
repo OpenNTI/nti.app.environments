@@ -226,10 +226,10 @@ class EmailChallengeVerifyView(BaseView):
         return hexc.HTTPNoContent()
 
 
-@view_defaults(renderer='rest',
-               name=AUTH_TOKEN_VIEW,
-               request_method='GET',
-               context=ICustomer)
+@view_config(renderer='rest',
+             name=AUTH_TOKEN_VIEW,
+             request_method='GET',
+             context=ICustomer)
 class CustomerAuthTokenVerifyView(BaseView):
     """
     An authentication view that validates the customer's auth token for a site.
@@ -241,6 +241,8 @@ class CustomerAuthTokenVerifyView(BaseView):
 
     On failure, if the token does not exist or if expired, we will we send
     the user to the app recovery page.
+
+    If authenticated as a different user, we will forget and return to recovery.
 
     On failure, if authenticated, we will (?).
     """
@@ -256,7 +258,8 @@ class CustomerAuthTokenVerifyView(BaseView):
         # automatically redirect?
         auth_email = self.request.authenticated_userid or ''
         if     self.context.email == auth_email \
-            or validate_auth_token(self.context, token_val, site_id):
+            or (    not auth_email \
+                and validate_auth_token(self.context, token_val, site_id)):
             # Validated, authenticate and forward.
             forget(self.request)
             remember(self.request, self.context.email)

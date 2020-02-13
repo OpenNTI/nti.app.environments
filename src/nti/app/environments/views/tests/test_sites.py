@@ -35,6 +35,7 @@ from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import ISharedEnvironment
 from nti.app.environments.models.interfaces import IEnterpriseLicense
 from nti.app.environments.models.interfaces import IDedicatedEnvironment
+from nti.app.environments.models.interfaces import ISiteAuthTokenContainer
 
 from nti.app.environments.models.sites import TrialLicense
 from nti.app.environments.models.sites import PersistentSite
@@ -42,6 +43,8 @@ from nti.app.environments.models.sites import EnterpriseLicense
 from nti.app.environments.models.sites import SharedEnvironment
 from nti.app.environments.models.sites import SetupStateSuccess
 from nti.app.environments.models.sites import SetupStatePending
+
+from nti.app.environments.views import AUTH_TOKEN_VIEW
 
 from nti.app.environments.views.customers import getOrCreateCustomer
 
@@ -1092,7 +1095,7 @@ class TestSetupFailure(BaseAppTest):
     @mock.patch('nti.app.environments.views.utils._is_dns_name_available')
     @mock.patch('nti.app.environments.views.sites.get_hubspot_client')
     @mock.patch('nti.app.environments.views.sites.is_admin_or_account_manager')
-    def test_setup_failed(self, mock_admin, mock_client, mock_dns_available, mock_mailer, mock_async_result):
+    def test_setup_failed_and_setup_password(self, mock_admin, mock_client, mock_dns_available, mock_mailer, mock_async_result):
         _result = []
         mock_async_result.return_value = ValueError("this setup failed")
         mock_dns_available.return_value = True
@@ -1128,6 +1131,7 @@ class TestSetupFailure(BaseAppTest):
             sites = self._root().get('sites')
             assert_that(sites, has_length(1))
             new_site = tuple(sites.values())[0]
+            new_site_id = new_site.id
             pending = SetupStatePending()
             pending.task_state = 'FAILED'
             new_site.setup_state = pending
@@ -1148,3 +1152,43 @@ class TestSetupFailure(BaseAppTest):
                                                                            'owner_email': 'user001@example.com',
                                                                            'env_info': '',
                                                                            'exception': "ValueError('this setup failed')"}),}))
+
+        # Setup password
+        setup_msg = next((x for x in _result if x[0][0] == 'nti.app.environments:email_templates/site_setup_password'))
+        setup_msg = setup_msg[1]
+        assert_that(setup_msg, has_entries({'subject': starts_with("It's time to setup your password"),
+                                            'template_args': has_entries({'password_setup_link': starts_with('http://localhost/onboarding/customers/user001@example.com/@@%s' % AUTH_TOKEN_VIEW),
+                                                                          'name': 'user001@example.com'}),}))
+        auth_rel = setup_msg['template_args']['password_setup_link']
+
+        # Already authenticated works, even if the token/url/etc is mangled or missing
+        res = self.testapp.get(auth_rel, status=302)
+        assert_that(res.location, is_('http://localhost/sites/%s' % new_site_id))
+        mangled_token = auth_rel.replace('token=', 'token=111')
+        res = self.testapp.get(mangled_token, extra_environ=environ, status=302)
+        assert_that(res.location, is_('http://localhost/sites/%s' % new_site_id))
+
+        # Unauthenticated works if the token is valid
+        res = self.testapp.get(auth_rel, status=302)
+        assert_that(res.location, is_('http://localhost/sites/%s' % new_site_id))
+
+        # Bad token takes us to app recovery
+        mangled_token = auth_rel.replace('token=', 'token=111')
+        res = self.testapp.get(mangled_token, status=302)
+        assert_that(res.location, is_('http://localhost/recovery'))
+
+        # Bad site_id takes us to app recovery
+        mangled_site = auth_rel.replace('site=', 'site=111')
+        res = self.testapp.get(mangled_site, status=302)
+        assert_that(res.location, is_('http://localhost/recovery'))
+
+        # Expired token sends us to recovery
+        with ensure_free_txn():
+            customers = self._root().get('customers')
+            customer = customers['user001@example.com']
+            token_container = ISiteAuthTokenContainer(customer)
+            assert_that(token_container, has_length(1))
+            token = token_container.get(new_site_id)
+            token.created = datetime.datetime.utcnow() - datetime.timedelta(days=30)
+        res = self.testapp.get(auth_rel, status=302)
+        assert_that(res.location, is_('http://localhost/recovery'))

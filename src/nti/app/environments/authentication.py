@@ -148,6 +148,10 @@ def validate_auth_token(customer, token_val, site_id):
     except KeyError:
         pass
     else:
+        try:
+            token_val = token_val.encode('utf-8')
+        except UnicodeEncodeError:
+            return result
         if auth_token.token == token_val:
             now = datetime.datetime.utcnow()
             age = now - auth_token.created
