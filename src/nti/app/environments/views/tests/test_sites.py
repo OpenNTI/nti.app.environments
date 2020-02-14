@@ -1172,15 +1172,15 @@ class TestSetupFailure(BaseAppTest):
         res = self.testapp.get(auth_rel, status=302)
         assert_that(res.location, is_('http://localhost/sites/%s' % new_site_id))
 
-        # Bad token takes us to app recovery
+        # Bad token takes us to app recover
         mangled_token = auth_rel.replace('token=', 'token=111')
         res = self.testapp.get(mangled_token, status=302)
-        assert_that(res.location, is_('http://localhost/recovery'))
+        assert_that(res.location, is_('http://localhost/recover'))
 
         # Bad site_id takes us to app recovery
         mangled_site = auth_rel.replace('site=', 'site=111')
         res = self.testapp.get(mangled_site, status=302)
-        assert_that(res.location, is_('http://localhost/recovery'))
+        assert_that(res.location, is_('http://localhost/recover'))
 
         # Expired token sends us to recovery
         with ensure_free_txn():
@@ -1191,4 +1191,4 @@ class TestSetupFailure(BaseAppTest):
             token = token_container.get(new_site_id)
             token.created = datetime.datetime.utcnow() - datetime.timedelta(days=30)
         res = self.testapp.get(auth_rel, status=302)
-        assert_that(res.location, is_('http://localhost/recovery'))
+        assert_that(res.location, is_('http://localhost/recover'))
