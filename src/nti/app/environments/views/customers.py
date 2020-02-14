@@ -268,8 +268,9 @@ class CustomerAuthTokenVerifyView(BaseView):
         else:
             forget(self.request)
             # Invalid or expired, send to recovery app page.
-            recovery_url = urljoin(self.request.application_url, 'recovery')
-            result = hexc.HTTPFound(location=recovery_url)
+            recovery_url = urljoin(self.request.application_url, 'recover')
+            result = hexc.HTTPFound(location=recovery_url,
+                                    headers=self.request.response.headers)
         return result
 
 
