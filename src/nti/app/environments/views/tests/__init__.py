@@ -24,7 +24,7 @@ from nti.app.environments.models.interfaces import IOnboardingRoot
 from nti.environments.management import tests
 
 from nti.fakestatsd import FakeStatsDClient
-from nti.app.environments.settings import init_app_settings
+
 
 class BaseAppTest(unittest.TestCase):
 

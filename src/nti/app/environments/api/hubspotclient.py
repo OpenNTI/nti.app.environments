@@ -14,8 +14,7 @@ from zope.cachedescriptors.property import Lazy
 
 from nti.app.environments.api.interfaces import IHubspotClient
 
-from nti.app.environments.settings import HUBSPOT_API_KEY
-from nti.app.environments.settings import HUBSPOT_PORTAL_ID
+from nti.app.environments.interfaces import IOnboardingSettings
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -160,12 +159,14 @@ class DevModeHubspotClient(HubspotClient):
 
 @interface.implementer(IHubspotClient)
 def _hubspot_client_factory():
-    return HubspotClient(HUBSPOT_API_KEY)
+    settings = component.getUtility(IOnboardingSettings)
+    return HubspotClient(settings['hubspot_api_key'])
 
 
 @interface.implementer(IHubspotClient)
 def _devmode_hubspot_client_factory():
-    return DevModeHubspotClient(HUBSPOT_API_KEY)
+    settings = component.getUtility(IOnboardingSettings)
+    return DevModeHubspotClient(settings['hubspot_api_key'])
 
 
 def _split_name(name):
@@ -178,5 +179,6 @@ def get_hubspot_client():
 
 
 def get_hubspot_profile_url(contact_vid):
-    return "https://app.hubspot.com/contacts/{portal_id}/contact/{vid}".format(portal_id=HUBSPOT_PORTAL_ID,
+    settings = component.getUtility(IOnboardingSettings)
+    return "https://app.hubspot.com/contacts/{portal_id}/contact/{vid}".format(portal_id=settings['hubspot_portal_id'],
                                                                                vid=contact_vid)

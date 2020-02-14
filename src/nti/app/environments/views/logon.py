@@ -11,8 +11,9 @@ from pyramid.view import view_config
 
 from six.moves import urllib_parse
 
-from nti.app.environments.settings import GOOGLE_CLIENT_ID
-from nti.app.environments.settings import GOOGLE_CLIENT_SECRET
+from zope import component
+
+from nti.app.environments.interfaces import IOnboardingSettings
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -64,11 +65,13 @@ def google_oauth1(context, request):
     request.session['google.state'] = state
     request.session['google.success'] = success
 
+    settings = component.getUtility(IOnboardingSettings)
+
     params = {
         "state" : state,
         "response_type" : "code",
         "scope" : "openid email profile",
-        "client_id" : GOOGLE_CLIENT_ID,
+        "client_id" : settings['google_client_id'],
         "redirect_uri" : _get_redirect_uri(request)
     }
 
@@ -101,11 +104,13 @@ def google_oauth2(context, request):
     config = get_openid_configuration()
     token_url = config.get('token_endpoint', DEFAULT_TOKEN_URL)
 
+    settings = component.getUtility(IOnboardingSettings)
+
     try:
         data = {'code': code,
-                'client_id': GOOGLE_CLIENT_ID,
+                'client_id': settings['google_client_id'],
                 'grant_type': 'authorization_code',
-                'client_secret': GOOGLE_CLIENT_SECRET,
+                'client_secret': settings['google_client_secret'],
                 'redirect_uri': _get_redirect_uri(request)}
         response = requests.post(token_url, data)
         if response.status_code != 200:

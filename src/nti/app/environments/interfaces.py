@@ -24,6 +24,12 @@ class IOnboardingRootPrincipalRoleManager(IPrincipalRoleManager):
     pass
 
 
+class IOnboardingSettings(interface.Interface):
+    """
+    A dictionary like object providing configuration
+    """
+
+
 class ITransactionRunner(interface.Interface):
     """
     Something that runs code within a transaction, properly setting up

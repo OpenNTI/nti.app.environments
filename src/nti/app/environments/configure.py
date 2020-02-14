@@ -12,6 +12,8 @@ from pyramid.tweens import EXCVIEW
 
 from zope.component import getGlobalSiteManager
 
+from nti.app.environments.interfaces import IOnboardingSettings
+
 from nti.app.pyramid_zope.traversal import ZopeResourceTreeTraverser
 
 from nti.environments.management.config import configure_settings
@@ -20,7 +22,6 @@ from .auth import AuthenticationPolicy
 
 from .models.interfaces import IOnboardingRoot
 
-from .settings import init_app_settings
 
 def root_factory(request):
     return IOnboardingRoot(request).__parent__
@@ -36,8 +37,8 @@ def configure(settings=None, registry=None):
     with Configurator(registry=registry) as config:
         config.setup_registry(settings=settings)
 
-        # initialize global constants
-        init_app_settings(settings)
+        # register onboarding settings
+        getGlobalSiteManager().registerUtility(settings, IOnboardingSettings)
 
         # initialize env mgmt settings
         configure_settings(settings)

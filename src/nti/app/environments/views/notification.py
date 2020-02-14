@@ -16,8 +16,7 @@ from nti.app.environments.authentication import create_auth_token_for_site
 
 from nti.app.environments.views import AUTH_TOKEN_VIEW
 
-from nti.app.environments.settings import NEW_SITE_REQUEST_NOTIFICATION_EMAIL
-from nti.app.environments.settings import SITE_SETUP_FAILURE_NOTIFICATION_EMAIL
+from nti.app.environments.interfaces import IOnboardingSettings
 
 from nti.app.environments.models.externalization import SITE_FIELDS_EXTERNAL_FOR_ADMIN_ONLY
 
@@ -84,7 +83,8 @@ class SiteCreatedEmailNotifier(BaseEmailNotifier):
         self.site = context
 
     def _recipients(self):
-        return [NEW_SITE_REQUEST_NOTIFICATION_EMAIL]
+        settings = component.getUtility(IOnboardingSettings)
+        return [settings['new_site_request_notification_email']]
 
     def _template_args(self):
         template_args = {
@@ -208,7 +208,8 @@ class SiteSetupFailureEmailNotifier(BaseEmailNotifier):
         return result
 
     def _recipients(self):
-        return [SITE_SETUP_FAILURE_NOTIFICATION_EMAIL]
+        settings = component.getUtility(IOnboardingSettings)
+        return [settings['site_setup_failure_notification_email']]
 
     def _get_env_info(self, env):
         result = ''
