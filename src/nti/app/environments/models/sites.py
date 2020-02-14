@@ -89,46 +89,44 @@ class EnterpriseLicense(SchemaConfigured, PersistentCreatedModDateTrackingObject
         PersistentCreatedModDateTrackingObject.__init__(self)
 
 
+class AbstractSetupState(SchemaConfigured,
+                         PersistentCreatedModDateTrackingObject,
+                         Contained):
+
+    def __init__(self, *args, **kwargs):
+        SchemaConfigured.__init__(self, *args, **kwargs)
+        PersistentCreatedModDateTrackingObject.__init__(self)
+
+    @property
+    def elapsed_time(self):
+        result = -1
+        if self.start_time and self.end_time:
+            result = (self.end_time - self.start_time).total_seconds()
+        return result
+
+
 @interface.implementer(ISetupStatePending)
-class SetupStatePending(SchemaConfigured, PersistentCreatedModDateTrackingObject, Contained):
+class SetupStatePending(AbstractSetupState):
 
     createFieldProperties(ISetupStatePending)
 
     mimeType = mime_type = 'application/vnd.nextthought.app.environments.setupstatepending'
 
-    __external_can_create__ = False
-
-    def __init__(self, *args, **kwargs):
-        SchemaConfigured.__init__(self, *args, **kwargs)
-        PersistentCreatedModDateTrackingObject.__init__(self)
-
 
 @interface.implementer(ISetupStateSuccess)
-class SetupStateSuccess(SchemaConfigured, PersistentCreatedModDateTrackingObject, Contained):
+class SetupStateSuccess(AbstractSetupState):
 
     createFieldProperties(ISetupStateSuccess)
 
     mimeType = mime_type = 'application/vnd.nextthought.app.environments.setupstatesuccess'
 
-    __external_can_create__ = False
-
-    def __init__(self, *args, **kwargs):
-        SchemaConfigured.__init__(self, *args, **kwargs)
-        PersistentCreatedModDateTrackingObject.__init__(self)
-
 
 @interface.implementer(ISetupStateFailure)
-class SetupStateFailure(SchemaConfigured, PersistentCreatedModDateTrackingObject, Contained):
+class SetupStateFailure(AbstractSetupState):
 
     createFieldProperties(ISetupStateFailure)
 
     mimeType = mime_type = 'application/vnd.nextthought.app.environments.setupstatefailure'
-
-    __external_can_create__ = False
-
-    def __init__(self, *args, **kwargs):
-        SchemaConfigured.__init__(self, *args, **kwargs)
-        PersistentCreatedModDateTrackingObject.__init__(self)
 
 
 @interface.implementer(ILMSSite)
@@ -139,6 +137,7 @@ class PersistentSite(SchemaConfigured, PersistentCreatedModDateTrackingObject, C
     mimeType = mime_type = 'application/vnd.nextthought.app.environments.site'
 
     id = alias('__name__')
+    site_id = alias('id')
 
     def __acl__(self):
         result = [(Allow, ADMIN_ROLE, ALL_PERMISSIONS),

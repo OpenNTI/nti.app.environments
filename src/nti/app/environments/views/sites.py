@@ -724,6 +724,15 @@ class QuerySetupState(BaseView):
 
         return async_result.result
 
+    def _create_setup_state(self, factory, pending_state):
+        """
+        Create a new end state based on pending state.
+        """
+        result = factory()
+        result.start_time = pending_state.start_time
+        result.end_time = datetime.datetime.utcnow()
+        result.task_state = pending_state.task_state
+        return result
 
     def __call__(self):
         if self.context.owner.email != self.request.authenticated_userid:
@@ -734,14 +743,18 @@ class QuerySetupState(BaseView):
             return self.context
 
         if isinstance(result, Exception):
-            state = SetupStateFailure()
+            state = self._create_setup_state(SetupStateFailure,
+                                             self.context.setup_state)
             state.exception = result
         else:
-            state = SetupStateSuccess()
+            state = self._create_setup_state(SetupStateSuccess,
+                                             self.context.setup_state)
             state.site_info = result
-
-        state.task_state = self.context.setup_state.task_state
-
+            logger.info('Site setup complete (id=%s) (task_time=%.2f) (duration=%.2f) (successfully=True)',
+                        self.context.id,
+                        result.elapsed_time(),
+                        state.elapsed_time())
+        # Overwrite with our new state
         self.context.setup_state = state
 
         notify(SiteSetupFinishedEvent(self.context))
@@ -769,7 +782,8 @@ class ContinueToSite(BaseView):
 
         setup_state = self.context.setup_state
         if not ISetupStateSuccess.providedBy(setup_state):
-            logger.warn('Asked to continute but no site %s is not in setup_status succesful', self.context.id)
+            logger.warn('Asked to continue but no site %s is not in setup_status successful',
+                        self.context.id)
             raise hexc.HTTPBadRequest()
 
         links = component.getMultiAdapter((self.context, self.request))

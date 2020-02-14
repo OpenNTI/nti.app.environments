@@ -30,7 +30,6 @@ from nti.schema.field import Int
 from nti.schema.field import Choice
 from nti.schema.field import Object
 from nti.schema.field import DateTime
-from nti.schema.field import ValidDatetime
 from nti.schema.field import ValidTextLine
 from nti.schema.field import UniqueIterable
 from nti.schema.field import ValidBytesLine
@@ -192,7 +191,7 @@ class ICustomer(IContained):
                              default=None)
 
     last_verified = DateTime(title=u'The datetime this customer was verified via email',
-                        required=False)
+                             required=False)
 
     organization = ValidTextLine(title="The organization name this customer belongs to",
                                  min_length=1,
@@ -337,6 +336,12 @@ class ISetupState(IContained):
                         title='The task serialization information')
     task_state.setTaggedValue('_ext_excluded_out', True)
 
+    start_time = DateTime(title=u'The datetime this setup state was created',
+                          required=False)
+
+    end_time = DateTime(title=u'The datetime the site transitioned to a finished state',
+                        required=False)
+
 
 class ISetupStatePending(ISetupState):
     """
@@ -349,11 +354,13 @@ class ISetupStateSuccess(ISetupState):
     A site that has successfully gone through the setup process
     """
 
-    site_info = Object(IInitializedSiteInfo, title='Information about the site that was succesfull created')
+    site_info = Object(IInitializedSiteInfo,
+                       title='Information about the site that was succesfull created')
     site_info.setTaggedValue('_ext_excluded_out', True)
 
     invite_accepted_date = DateTime(title=u'The datetime the inital invite was accepted',
                                     required=False)
+
 
 class ISetupStateFailure(ISetupState):
     """
