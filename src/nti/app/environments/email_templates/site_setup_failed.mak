@@ -1,4 +1,4 @@
-Site setup failed.
+Site set up failed.
 
 Site admin url: ${site_details_link}
 Site id: ${site_id}

@@ -1,6 +1,6 @@
 Dear ${name},
 
-It’s time to setup your password!
+It's time to set up your password!
 
 The next step to set up your new site is choosing a password.
 

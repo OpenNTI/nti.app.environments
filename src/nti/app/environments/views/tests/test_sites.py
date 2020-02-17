@@ -24,7 +24,6 @@ from nti.externalization import to_external_object
 from nti.externalization.internalization.updater import update_from_external_object
 
 from nti.environments.management.tasks import SiteInfo
-from nti.environments.management.tasks import SetupTaskState
 
 from nti.app.environments.models.customers import PersistentCustomer
 
@@ -1081,7 +1080,7 @@ class TestContinueToSite(BaseAppTest):
             site_info = SiteInfo(site_id='S001', dns_name='xx.nextthought.io')
             site_info.admin_invitation = '/dataserver2/@@accept-site-invitation?code=mockcode'
             site_info.host = 'test.host'
-            sites['S001'].setup_state = SetupStateSuccess(task_state=SetupTaskState('task1', 'group1'),
+            sites['S001'].setup_state = SetupStateSuccess(task_state=object(),
                                                           site_info=site_info)
 
         self.testapp.get(url, status=303, extra_environ=self._make_environ(username='user001@example.com'))
