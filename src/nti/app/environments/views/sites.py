@@ -739,8 +739,6 @@ class ContinueToSite(BaseView):
         return hexc.HTTPSeeOther(links.complete_account_url)
 
 
-
-
 @view_config(renderer='rest',
              context=ILMSSite,
              request_method='GET',

@@ -100,7 +100,7 @@ def query_setup_async_result(site, app_task=None):
     return async_result.result
 
 
-def _create_setup_state(self, factory, pending_state):
+def _create_setup_state(factory, pending_state):
     """
     Create a new end state based on pending state.
     """
@@ -112,6 +112,9 @@ def _create_setup_state(self, factory, pending_state):
 
 
 def _mark_site_setup_finished(site, result):
+    """
+    Mark site finished once we get result from celery.
+    """
     if isinstance(result, Exception):
         state = _create_setup_state(SetupStateFailure,
                                     site.setup_state)
