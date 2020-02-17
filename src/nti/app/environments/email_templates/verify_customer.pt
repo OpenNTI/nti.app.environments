@@ -63,7 +63,7 @@
 				Thank you for signing up for NextThought!
 			</div>
 			<div i18n:translate="" class="content" style="margin-top: 17px;">
-				Enter the following code in the window where you began creating your new site. 
+				Enter the following code in the window where you began creating your new site.
 				This confirmation code will expire soon.
 			</div>
 			<div class="code">
@@ -72,14 +72,14 @@
 			<div class="content" style="margin-top: 34px;">
 				<span i18n:translate="">
 					This email contains private information for your account - please don't forward it.
-					Questions about setting up NextThought? Email us at
+					Questions about setting up your new NextThought site? Email us at
 					<a href="mailto:support@nextthought.com" tal:content="support_email|default" tal:attributes="href string:mailto:${support_email|default}" style="text-decoration: none;color: #3FB34F;">
 						support@nextthought.com</a>.
 				</span>
 			</div>
 			<hr />
 			<div class="footer">
-				If you feel this email was sent in error, or this account was created without your consent,<br/>you may email 
+				If you feel this email was sent in error, or this account was created without your consent,<br/>you may email
 				<a href="mailto:support@nextthought.com" tal:content="support_email|default" tal:attributes="href string:mailto:${support_email|default}" style="color: #494949;">
 					support@nextthought.com</a>.
 			</div>
