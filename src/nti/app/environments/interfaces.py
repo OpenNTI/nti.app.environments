@@ -26,7 +26,12 @@ class IOnboardingRootPrincipalRoleManager(IPrincipalRoleManager):
 
 class IOnboardingSettings(interface.Interface):
     """
-    A dictionary like object providing configuration
+    A dictionary like object providing configuration that includes basic settings for pyramid and below extra settings:
+      1) Google OAuth: google_client_id / google_client_secret.
+      2) HubSpot: hubspot_api_key / hubspot_portal_id.
+      3) Email related:
+          a) new_site_request_notification_email, who an email should be sent to when a new site is created.
+          b) site_setup_failure_notification_email, who an email should be sent to when a site setup failed.
     """
 
 
