@@ -17,6 +17,8 @@ from nti.property.property import alias
 from nti.property.property import LazyOnClass
 
 from nti.schema.fieldproperty import createFieldProperties
+from nti.schema.fieldproperty import createDirectFieldProperties
+
 from nti.schema.schema import SchemaConfigured
 
 from nti.wref.interfaces import IWeakRef
@@ -26,14 +28,15 @@ from nti.app.environments.auth import ACCOUNT_MANAGEMENT_ROLE
 from nti.app.environments.auth import ACT_READ
 from nti.app.environments.auth import ACT_REQUEST_TRIAL_SITE
 
+from nti.app.environments.models.interfaces import ILMSSite
+from nti.app.environments.models.interfaces import ISiteUsage
+from nti.app.environments.models.interfaces import ISetupState
 from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import ICustomersContainer
 from nti.app.environments.models.interfaces import IEnterpriseLicense
 from nti.app.environments.models.interfaces import ISharedEnvironment
 from nti.app.environments.models.interfaces import IDedicatedEnvironment
-from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ILMSSitesContainer
-from nti.app.environments.models.interfaces import ISiteUsage
 from nti.app.environments.models.interfaces import ISetupStatePending
 from nti.app.environments.models.interfaces import ISetupStateSuccess
 from nti.app.environments.models.interfaces import ISetupStateFailure
@@ -89,9 +92,14 @@ class EnterpriseLicense(SchemaConfigured, PersistentCreatedModDateTrackingObject
         PersistentCreatedModDateTrackingObject.__init__(self)
 
 
+@interface.implementer(ISetupState)
 class AbstractSetupState(SchemaConfigured,
                          PersistentCreatedModDateTrackingObject,
                          Contained):
+
+    createDirectFieldProperties(ISetupState)
+
+    __external_can_create__ = False
 
     def __init__(self, *args, **kwargs):
         SchemaConfigured.__init__(self, *args, **kwargs)
@@ -99,7 +107,7 @@ class AbstractSetupState(SchemaConfigured,
 
     @property
     def elapsed_time(self):
-        result = -1
+        result = None
         if self.start_time and self.end_time:
             result = (self.end_time - self.start_time).total_seconds()
         return result
@@ -108,7 +116,7 @@ class AbstractSetupState(SchemaConfigured,
 @interface.implementer(ISetupStatePending)
 class SetupStatePending(AbstractSetupState):
 
-    createFieldProperties(ISetupStatePending)
+    createDirectFieldProperties(ISetupStatePending)
 
     mimeType = mime_type = 'application/vnd.nextthought.app.environments.setupstatepending'
 
@@ -116,7 +124,7 @@ class SetupStatePending(AbstractSetupState):
 @interface.implementer(ISetupStateSuccess)
 class SetupStateSuccess(AbstractSetupState):
 
-    createFieldProperties(ISetupStateSuccess)
+    createDirectFieldProperties(ISetupStateSuccess)
 
     mimeType = mime_type = 'application/vnd.nextthought.app.environments.setupstatesuccess'
 
@@ -124,7 +132,7 @@ class SetupStateSuccess(AbstractSetupState):
 @interface.implementer(ISetupStateFailure)
 class SetupStateFailure(AbstractSetupState):
 
-    createFieldProperties(ISetupStateFailure)
+    createDirectFieldProperties(ISetupStateFailure)
 
     mimeType = mime_type = 'application/vnd.nextthought.app.environments.setupstatefailure'
 

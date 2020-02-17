@@ -752,8 +752,8 @@ class QuerySetupState(BaseView):
             state.site_info = result
             logger.info('Site setup complete (id=%s) (task_time=%.2f) (duration=%.2f) (successfully=True)',
                         self.context.id,
-                        result.elapsed_time(),
-                        state.elapsed_time())
+                        result.elapsed_time or -1,
+                        state.elapsed_time or -1)
         # Overwrite with our new state
         self.context.setup_state = state
 
