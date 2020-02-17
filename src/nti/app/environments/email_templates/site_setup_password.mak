@@ -10,6 +10,9 @@ Your new site is waiting for you!
 Copy/paste this link into your browser:
 ${password_setup_link}
 
+This email contains private information for your account - please don't forward it.
+Questions about setting up your new NextThought site? Email us at support@nextthought.com.
+
 Thanks,
 
 NextThought

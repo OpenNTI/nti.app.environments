@@ -237,14 +237,11 @@ class CustomerAuthTokenVerifyView(BaseView):
     email during site setup.
 
     On success, this will authenticate the user and redirect them to the success
-    url (the app site).
+    url (the app site). This will occur regardless of the current user's auth
+    status.
 
     On failure, if the token does not exist or if expired, we will we send
     the user to the app recovery page.
-
-    If authenticated as a different user, we will forget and return to recovery.
-
-    On failure, if authenticated, we will (?).
     """
 
 
@@ -253,13 +250,7 @@ class CustomerAuthTokenVerifyView(BaseView):
         site_id = self._get_value('site', params, required=True)
         success_url = self._get_value('success', params, required=True)
         token_val = self._get_value('token', params, required=True)
-        # What do we do for authenticated users? Do we allow users to have
-        # multiple accounts? If the auth user is our context, do we
-        # automatically redirect?
-        auth_email = self.request.authenticated_userid or ''
-        if     self.context.email == auth_email \
-            or (    not auth_email \
-                and validate_auth_token(self.context, token_val, site_id)):
+        if validate_auth_token(self.context, token_val, site_id):
             # Validated, authenticate and forward.
             forget(self.request)
             remember(self.request, self.context.email)
