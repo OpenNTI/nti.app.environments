@@ -261,6 +261,9 @@
             <button class="btn btnCustom" onclick="window.location='${sites_list_link}';">
                 Back To Sites
             </button>
+            <button class="btn btnCustom" onclick="window.location.reload();">
+                Refresh
+            </button>
         </div>
     </metal:block>
     <metal:block metal:fill-slot="script">

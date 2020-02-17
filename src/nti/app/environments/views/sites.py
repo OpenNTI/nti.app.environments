@@ -15,9 +15,6 @@ from zope.container.interfaces import InvalidItemType
 
 from zope.event import notify
 
-from nti.environments.management.interfaces import ICeleryApp
-from nti.environments.management.interfaces import ISetupEnvironmentTask
-
 from nti.app.environments.api.hubspotclient import get_hubspot_client
 
 from nti.app.environments.auth import ACT_CREATE
@@ -36,7 +33,6 @@ from nti.app.environments.models.events import CSVSiteCreatedEvent
 from nti.app.environments.models.events import TrialSiteCreatedEvent
 from nti.app.environments.models.events import SupportSiteCreatedEvent
 from nti.app.environments.models.events import SiteUpdatedEvent
-from nti.app.environments.models.events import SiteSetupFinishedEvent
 
 from nti.app.environments.models.hosts import PersistentHost
 
@@ -51,15 +47,12 @@ from nti.app.environments.models.interfaces import SITE_STATUS_PENDING
 from nti.app.environments.models.interfaces import SITE_STATUS_UNKNOWN
 from nti.app.environments.models.interfaces import checkEmailAddress
 from nti.app.environments.models.interfaces import ISetupStateSuccess
-from nti.app.environments.models.interfaces import ISetupStatePending
 
 from nti.app.environments.models.sites import DedicatedEnvironment
 from nti.app.environments.models.sites import EnterpriseLicense
 from nti.app.environments.models.sites import PersistentSite
 from nti.app.environments.models.sites import SharedEnvironment
 from nti.app.environments.models.sites import TrialLicense
-from nti.app.environments.models.sites import SetupStateSuccess
-from nti.app.environments.models.sites import SetupStateFailure
 
 from nti.app.environments.models.utils import get_customers_folder
 from nti.app.environments.models.utils import get_sites_with_owner
@@ -74,6 +67,7 @@ from nti.app.environments.utils import parseDate
 
 from nti.app.environments.views.utils import raise_json_error
 from nti.app.environments.views.utils import is_dns_name_available
+from nti.app.environments.views.utils import query_setup_state
 
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
@@ -606,7 +600,7 @@ class SiteCSVExportView(CSVBaseView):
                 'License Start Date': formatDateToLocal(record.license.start_date),
                 'License End Date': formatDateToLocal(record.license.end_date),
                 'Environment': self._format_env(record.environment),
-                'Host Machine': record.environment.host.host_id if IDedicatedEnvironment.providedBy(record.environment) else '',
+                'Host Machine': record.environment.host.host_name if IDedicatedEnvironment.providedBy(record.environment) else '',
                 'Status': record.status,
                 'DNS Names': ','.join(record.dns_names),
                 'Created Time': formatDateToLocal(record.created),
@@ -701,66 +695,12 @@ class QuerySetupState(BaseView):
     A long polling style view to query site setup state.
     This view returns the site object
     """
-
-    def _get_async_result(self):
-        """
-        Return the celery task async result or None
-        """
-        setup_state = self.context.setup_state
-
-        # Finished already, return immediately
-        if not ISetupStatePending.providedBy(setup_state):
-            return None
-
-        app = component.getUtility(ICeleryApp)
-        task = ISetupEnvironmentTask(app)
-
-        assert setup_state.task_state
-
-        async_result = task.restore_task(setup_state.task_state)
-
-        if not async_result.ready():
-            return None
-
-        return async_result.result
-
-    def _create_setup_state(self, factory, pending_state):
-        """
-        Create a new end state based on pending state.
-        """
-        result = factory()
-        result.start_time = pending_state.start_time
-        result.end_time = datetime.datetime.utcnow()
-        result.task_state = pending_state.task_state
-        return result
-
     def __call__(self):
         if self.context.owner.email != self.request.authenticated_userid:
             raise hexc.HTTPForbidden()
 
-        result = self._get_async_result()
-        if result is None:
-            return self.context
-
-        if isinstance(result, Exception):
-            state = self._create_setup_state(SetupStateFailure,
-                                             self.context.setup_state)
-            state.exception = result
-        else:
-            state = self._create_setup_state(SetupStateSuccess,
-                                             self.context.setup_state)
-            state.site_info = result
-            logger.info('Site setup complete (id=%s) (task_time=%.2f) (duration=%.2f) (successfully=True)',
-                        self.context.id,
-                        result.elapsed_time or -1,
-                        state.elapsed_time or -1)
-        # Overwrite with our new state
-        self.context.setup_state = state
-
-        notify(SiteSetupFinishedEvent(self.context))
-
-        # we have side effects
-        self.request.environ['nti.request_had_transaction_side_effects'] = True
+        # may have site effects
+        query_setup_state([self.context], self.request, side_effects=True)
         return self.context
 
 
@@ -797,8 +737,6 @@ class ContinueToSite(BaseView):
         self.request.session['onboarding.continue_to_site.state'] = state
 
         return hexc.HTTPSeeOther(links.complete_account_url)
-
-
 
 
 @view_config(renderer='rest',
