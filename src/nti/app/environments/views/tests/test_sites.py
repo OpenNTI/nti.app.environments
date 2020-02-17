@@ -1024,7 +1024,7 @@ class TestQuerySetupState(BaseAppTest):
                                          'setup_state': has_entries({'MimeType': 'application/vnd.nextthought.app.environments.setupstatefailure'})}))
 
         assert_that(self.statsd.metrics,
-                    has_item(is_timer('nti.onboarding.lms_site_setup_time_failed', not_none())))
+                    has_item(is_timer('nti.onboarding.lms_site_setup_time.failed', not_none())))
         self.statsd.clear()
 
         mock_async_result.return_value = site_info = SiteInfo(site_id='S001',
@@ -1035,8 +1035,8 @@ class TestQuerySetupState(BaseAppTest):
         assert_that(result, has_entries({'id': 'S001', 'status': 'ACTIVE',
                                          'setup_state': has_entries({'MimeType': 'application/vnd.nextthought.app.environments.setupstatesuccess'})}))
         assert_that(self.statsd.metrics,
-                    has_items(is_timer('nti.onboarding.lms_site_setup_time_success', not_none()),
-                              is_timer('nti.onboarding.lms_site_task_setup_time_success', not_none())))
+                    has_items(is_timer('nti.onboarding.lms_site_setup_time.success', not_none()),
+                              is_timer('nti.onboarding.lms_site_task_setup_time.success', not_none())))
         self.statsd.clear()
 
     @with_test_app()

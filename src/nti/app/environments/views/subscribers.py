@@ -330,11 +330,11 @@ def _store_site_setup_stats(setup_state):
         else:
             state = 'failed'
         time_in_ms = setup_state.elapsed_time * 1000
-        client.timing('nti.onboarding.lms_site_setup_time_%s' % state,
+        client.timing('nti.onboarding.lms_site_setup_time.%s' % state,
                       time_in_ms)
         try:
             time_in_ms = setup_state.site_info.elapsed_time * 1000
-            client.timing('nti.onboarding.lms_site_task_setup_time_%s' % state,
+            client.timing('nti.onboarding.lms_site_task_setup_time.%s' % state,
                           time_in_ms)
         except (AttributeError, TypeError):
             pass
