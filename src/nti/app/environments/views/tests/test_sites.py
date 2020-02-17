@@ -39,6 +39,7 @@ from nti.app.environments.models.interfaces import ISiteAuthTokenContainer
 from nti.app.environments.models.sites import TrialLicense
 from nti.app.environments.models.sites import PersistentSite
 from nti.app.environments.models.sites import EnterpriseLicense
+from nti.app.environments.models.sites import DedicatedEnvironment
 from nti.app.environments.models.sites import SharedEnvironment
 from nti.app.environments.models.sites import SetupStateSuccess
 from nti.app.environments.models.sites import SetupStatePending
@@ -874,6 +875,28 @@ class TestSitesUploadCSVView(BaseAppTest):
         assert_that(guages, has_entries('nti.onboarding.lms_site_status_count.active', '4',
                                         'nti.onboarding.lms_site_count', '4',
                                         'nti.onboarding.customer_count', '3'))
+
+
+class TestSiteCSVExportView(BaseAppTest):
+
+    @with_test_app()
+    def testSiteCSVExportView(self):
+        with ensure_free_txn():
+            with mock.patch('nti.app.environments.models.utils.get_onboarding_root') as mock_get_onboarding_root:
+                mock_get_onboarding_root.return_value = self._root()
+                customers = self._root().get('customers')
+                customers.addCustomer(PersistentCustomer(email='user001@example.com', name="testname"))
+                sites = self._root().get('sites')
+                for siteId, env, policy_factory in (('S001', DedicatedEnvironment(pod_id="S001", load_factor=2, host=PersistentHost(host_name="okc", capacity=100)), TrialLicense),
+                                                    ('S002', SharedEnvironment(name="alpha"), EnterpriseLicense)):
+                    sites.addSite(PersistentSite(dns_names=['xx.nextthought.io'],
+                                                 owner = customers.getCustomer('user001@example.com'),
+                                                 environment = env,
+                                                 license=policy_factory(start_date=datetime.datetime(2020, 1, 28),
+                                                                        end_date=datetime.datetime(2020, 1, 9))), siteId=siteId,)
+        url = '/onboarding/sites/@@export_sites'
+        result = self.testapp.get(url, status=200, extra_environ=self._make_environ(username='admin001'))
+        assert_that(result.body.splitlines(), has_length(3))
 
 
 class TestSiteUsagesBulkUpdateView(BaseAppTest):

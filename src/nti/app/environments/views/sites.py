@@ -600,7 +600,7 @@ class SiteCSVExportView(CSVBaseView):
                 'License Start Date': formatDateToLocal(record.license.start_date),
                 'License End Date': formatDateToLocal(record.license.end_date),
                 'Environment': self._format_env(record.environment),
-                'Host Machine': record.environment.host.host_id if IDedicatedEnvironment.providedBy(record.environment) else '',
+                'Host Machine': record.environment.host.host_name if IDedicatedEnvironment.providedBy(record.environment) else '',
                 'Status': record.status,
                 'DNS Names': ','.join(record.dns_names),
                 'Created Time': formatDateToLocal(record.created),
