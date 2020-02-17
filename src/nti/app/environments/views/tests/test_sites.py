@@ -991,6 +991,7 @@ class TestQuerySetupState(BaseAppTest):
     def testQuerySetupState(self, mock_mailer, mock_async_result):
         mock_mailer = mock.MagicMock()
         mock_mailer.queue_simple_html_text_email = lambda *args, **kwargs: None
+        now = datetime.datetime.utcnow()
 
         with ensure_free_txn():
             with mock.patch('nti.app.environments.models.utils.get_onboarding_root') as mock_get_onboarding_root:
@@ -1014,7 +1015,7 @@ class TestQuerySetupState(BaseAppTest):
         mock_async_result.return_value = ValueError("Bad")
         with ensure_free_txn():
             sites['S001'].setup_state = SetupStatePending(task_state='okc',
-                                                          start_time=datetime.datetime.utcnow())
+                                                          start_time=now)
 
         self.statsd.clear()
 
@@ -1023,15 +1024,19 @@ class TestQuerySetupState(BaseAppTest):
                                          'setup_state': has_entries({'MimeType': 'application/vnd.nextthought.app.environments.setupstatefailure'})}))
 
         assert_that(self.statsd.metrics,
-                    has_item(is_timer('nti.onboarding.lms_site_setup_state_time_failed', not_none())))
+                    has_item(is_timer('nti.onboarding.lms_site_setup_time_failed', not_none())))
         self.statsd.clear()
 
-        mock_async_result.return_value = SiteInfo(site_id='S001', dns_name='xx.nextthought.io')
+        mock_async_result.return_value = site_info = SiteInfo(site_id='S001',
+                                                              dns_name='xx.nextthought.io')
+        site_info.start_time = now
+        site_info.end_time = datetime.datetime.utcnow()
         result = self.testapp.get(url, status=200, extra_environ=self._make_environ(username='user001@example.com')).json_body
         assert_that(result, has_entries({'id': 'S001', 'status': 'ACTIVE',
                                          'setup_state': has_entries({'MimeType': 'application/vnd.nextthought.app.environments.setupstatesuccess'})}))
         assert_that(self.statsd.metrics,
-                    has_item(is_timer('nti.onboarding.lms_site_setup_state_time_success', not_none())))
+                    has_items(is_timer('nti.onboarding.lms_site_setup_time_success', not_none()),
+                              is_timer('nti.onboarding.lms_site_task_setup_time_success', not_none())))
         self.statsd.clear()
 
     @with_test_app()
