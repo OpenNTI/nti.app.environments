@@ -76,7 +76,7 @@ def is_dns_name_available(dns_name, sites_folder=None):
     return _is_dns_name_available(dns_name)
 
 
-def query_setup_async_result(site, task=None):
+def query_setup_async_result(site, app_task=None):
     """
     Return the celery task async result or None
     """
@@ -86,13 +86,13 @@ def query_setup_async_result(site, task=None):
     if not ISetupStatePending.providedBy(setup_state):
         return None
 
-    if task is None:
+    if app_task is None:
         app = component.getUtility(ICeleryApp)
-        task = ISetupEnvironmentTask(app)
+        app_task = ISetupEnvironmentTask(app)
 
     assert setup_state.task_state
 
-    async_result = task.restore_task(setup_state.task_state)
+    async_result = app_task.restore_task(setup_state.task_state)
 
     if not async_result.ready():
         return None
@@ -133,14 +133,14 @@ def _mark_site_setup_finished(site, result):
 
 def query_setup_state(sites, request, side_effects=True):
     """
-    Query the sites setup state, return True if there exists site that is pending state,
+    Query the sites setup state, return True if a site of pending state exists,
     and has celery result, or return False otherwise.
     """
     updated = False
-    task = ISetupEnvironmentTask(component.getUtility(ICeleryApp))
+    app_task = ISetupEnvironmentTask(component.getUtility(ICeleryApp))
 
     for site in sites or ():
-        result = query_setup_async_result(site, task)
+        result = query_setup_async_result(site, app_task)
         if result is None:
             continue
 
