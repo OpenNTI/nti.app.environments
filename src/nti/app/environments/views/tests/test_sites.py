@@ -5,6 +5,7 @@ from hamcrest import is_
 from unittest import mock
 from hamcrest import assert_that
 from hamcrest import has_length
+from hamcrest import has_item
 from hamcrest import has_items
 from hamcrest import has_entries
 from hamcrest import has_properties
@@ -14,6 +15,7 @@ from hamcrest import starts_with
 from hamcrest import calling
 from hamcrest import raises
 from hamcrest import not_none
+from hamcrest import greater_than
 
 from pyramid import httpexceptions as hexc
 
@@ -56,6 +58,7 @@ from nti.app.environments.views.tests import with_test_app
 from nti.app.environments.views.tests import ensure_free_txn
 
 from nti.fakestatsd.matchers import is_gauge
+from nti.fakestatsd.matchers import is_timer
 
 
 def _absolute_path(filename):
@@ -1010,6 +1013,7 @@ class TestQuerySetupState(BaseAppTest):
     def testQuerySetupState(self, mock_mailer, mock_async_result):
         mock_mailer = mock.MagicMock()
         mock_mailer.queue_simple_html_text_email = lambda *args, **kwargs: None
+        now = datetime.datetime.utcnow()
 
         with ensure_free_txn():
             with mock.patch('nti.app.environments.models.utils.get_onboarding_root') as mock_get_onboarding_root:
@@ -1021,7 +1025,8 @@ class TestQuerySetupState(BaseAppTest):
                     sites.addSite(PersistentSite(dns_names=['xx.nextthought.io'],
                                                  owner = customers.getCustomer(email),
                                                  license=TrialLicense(start_date=datetime.datetime(2020, 1, 28),
-                                                                      end_date=datetime.datetime(2020, 1, 9))), siteId=siteId)
+                                                                      end_date=datetime.datetime(2020, 1, 9))),
+                                  siteId=siteId)
 
         url = '/onboarding/sites/S001/@@query-setup-state'
 
@@ -1031,16 +1036,30 @@ class TestQuerySetupState(BaseAppTest):
 
         mock_async_result.return_value = ValueError("Bad")
         with ensure_free_txn():
-            sites['S001'].setup_state = SetupStatePending(task_state='okc')
+            sites['S001'].setup_state = SetupStatePending(task_state='okc',
+                                                          start_time=now)
+
+        self.statsd.clear()
 
         result = self.testapp.get(url, status=200, extra_environ=self._make_environ(username='user001@example.com')).json_body
         assert_that(result, has_entries({'id': 'S001', 'status': 'PENDING',
                                          'setup_state': has_entries({'MimeType': 'application/vnd.nextthought.app.environments.setupstatefailure'})}))
 
-        mock_async_result.return_value = SiteInfo(site_id='S001', dns_name='xx.nextthought.io')
+        assert_that(self.statsd.metrics,
+                    has_item(is_timer('nti.onboarding.lms_site_setup_time.failed', not_none())))
+        self.statsd.clear()
+
+        mock_async_result.return_value = site_info = SiteInfo(site_id='S001',
+                                                              dns_name='xx.nextthought.io')
+        site_info.start_time = now
+        site_info.end_time = datetime.datetime.utcnow()
         result = self.testapp.get(url, status=200, extra_environ=self._make_environ(username='user001@example.com')).json_body
         assert_that(result, has_entries({'id': 'S001', 'status': 'ACTIVE',
                                          'setup_state': has_entries({'MimeType': 'application/vnd.nextthought.app.environments.setupstatesuccess'})}))
+        assert_that(self.statsd.metrics,
+                    has_items(is_timer('nti.onboarding.lms_site_setup_time.success', not_none()),
+                              is_timer('nti.onboarding.lms_site_task_setup_time.success', not_none())))
+        self.statsd.clear()
 
 
 class TestContinueToSite(BaseAppTest):
@@ -1092,8 +1111,6 @@ class TestSetupFailure(BaseAppTest):
         mock_client.return_value = _client
         mock_admin.return_value = True
         mock_mailer.return_value = _mailer = mock.MagicMock()
-        import nti.app.environments.views.subscribers
-        nti.app.environments.views.subscribers.SITE_SETUP_FAILURE_NOTIFICATION_EMAIL = 'test@nextthought.com'
         _mailer.queue_simple_html_text_email = lambda *args, **kwargs: _result.append((args, kwargs))
 
         url = '/onboarding/customers/user001@example.com/sites'

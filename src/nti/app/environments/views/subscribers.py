@@ -11,7 +11,6 @@ from zope import component
 from zope.lifecycleevent import IObjectAddedEvent
 from zope.lifecycleevent import IObjectRemovedEvent
 
-
 from nti.app.environments.api.hubspotclient import get_hubspot_client
 
 from nti.app.environments.interfaces import ITransactionRunner
@@ -249,11 +248,13 @@ def _store_task_results(siteid, task_results):
 
             pending = SetupStatePending()
             pending.task_state = task.save_task(task_results)
+            pending.start_time = datetime.utcnow()
             site.setup_state = pending
 
         tx_runner(_do_store, retries=5, sleep=0.1)
 
     gevent.spawn(_store)
+
 
 def _maybe_setup_site(success, app, siteid, client_name, dns_name, name, email):
     """
@@ -318,9 +319,35 @@ def _email_on_setup_error(site):
     notifier.notify()
 
 
+def _store_site_setup_stats(setup_state):
+    """
+    Store site setup timings in statsd.
+    """
+    client = statsd_client()
+    if client is not None and setup_state.elapsed_time:
+        if ISetupStateSuccess.providedBy(setup_state):
+            state = 'success'
+        else:
+            state = 'failed'
+        time_in_ms = setup_state.elapsed_time * 1000
+        client.timing('nti.onboarding.lms_site_setup_time.%s' % state,
+                      time_in_ms)
+        try:
+            time_in_ms = setup_state.site_info.elapsed_time * 1000
+            client.timing('nti.onboarding.lms_site_task_setup_time.%s' % state,
+                          time_in_ms)
+        except (AttributeError, TypeError):
+            pass
+
+
 @component.adapter(ILMSSiteSetupFinished)
 def _on_site_setup_finished(event):
+    """
+    On site setup finish, send out emails and update our site status. We also
+    clean up and recompute host load here.
+    """
     site = event.site
+    _store_site_setup_stats(site.setup_state)
     if not ISetupStateSuccess.providedBy(site.setup_state):
         _email_on_setup_error(site)
         return
