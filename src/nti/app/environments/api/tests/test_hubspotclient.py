@@ -1,5 +1,4 @@
 import hubspot3
-import unittest
 
 from unittest import mock
 
@@ -11,8 +10,10 @@ from hamcrest import has_entries
 
 from nti.app.environments.api.hubspotclient import HubspotClient
 
+from nti.app.environments.tests import BaseTest
 
-class TestHubspotClient(unittest.TestCase):
+
+class TestHubspotClient(BaseTest):
 
     @mock.patch("nti.app.environments.api.hubspotclient.Hubspot3")
     def test_fetch_contact_with_email(self, mockHub):

@@ -17,6 +17,8 @@ from zope.component.hooks import setHooks
 
 from nti.testing.layers import ConfiguringLayerMixin
 
+from nti.app.environments.interfaces import IOnboardingSettings
+
 from nti.environments.management.config import configure_settings
 
 from nti.environments.management.interfaces import ISettings
@@ -35,8 +37,12 @@ class RenderTestLayer(ConfiguringLayerMixin):
 	@classmethod
 	def setUp(cls):
 		settings = {
+			'hubspot_api_key': 'zzz',
+			'hubspot_portal_id': 'kkk',
 			'nti.environments.management.config': os.path.join(os.path.dirname(tests.__file__), 'test.ini')
 		}
+		component.getGlobalSiteManager().registerUtility(settings, IOnboardingSettings)
+
 		cls.__env_config = configure_settings(settings)
 		cls.setUpPackages()
 		cls.config = psetUp(registry=component.getGlobalSiteManager(), request=cls.request, hook_zca=False)

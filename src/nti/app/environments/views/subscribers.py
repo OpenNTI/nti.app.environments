@@ -15,6 +15,7 @@ from zope.lifecycleevent import IObjectRemovedEvent
 from nti.app.environments.api.hubspotclient import get_hubspot_client
 
 from nti.app.environments.interfaces import ITransactionRunner
+from nti.app.environments.interfaces import IOnboardingSettings
 
 from nti.app.environments.models.interfaces import SITE_STATUS_PENDING
 from nti.app.environments.models.interfaces import SITE_STATUS_ACTIVE
@@ -40,8 +41,6 @@ from nti.app.environments.models.sites import DedicatedEnvironment
 from nti.app.environments.models.utils import get_sites_folder
 from nti.app.environments.models.utils import get_hosts_folder
 from nti.app.environments.models.utils import get_onboarding_root
-
-from nti.app.environments.settings import SITE_SETUP_FAILURE_NOTIFICATION_EMAIL
 
 from nti.app.environments.views.notification import SiteSetupEmailNotifier
 from nti.app.environments.views.notification import SiteCreatedEmailNotifier
@@ -312,7 +311,8 @@ def _email_on_setup_error(site):
     """
     On site setup error, email a notification to configured entities.
     """
-    if not SITE_SETUP_FAILURE_NOTIFICATION_EMAIL:
+    settings = component.getUtility(IOnboardingSettings)
+    if not settings.get('site_setup_failure_notification_email'):
         return
     notifier = SiteSetupFailureEmailNotifier(site)
     notifier.notify()

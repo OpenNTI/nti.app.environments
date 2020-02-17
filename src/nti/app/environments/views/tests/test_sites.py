@@ -1151,7 +1151,7 @@ class TestSetupFailure(BaseAppTest):
                                                                            'dns_names': 'xxx.nextthought.io',
                                                                            'owner_email': 'user001@example.com',
                                                                            'env_info': '',
-                                                                           'exception': "ValueError('this setup failed')"}),}))
+                                                                           'exception': "ValueError('this setup failed',)"}),}))
 
         # Setup password
         setup_msg = next((x for x in _result if x[0][0] == 'nti.app.environments:email_templates/site_setup_password'))
