@@ -166,7 +166,7 @@ class SiteSetupEmailNotifier(BaseEmailNotifier):
 class SiteSetUpFinishedEmailNotifier(BaseEmailNotifier):
 
     _template = 'nti.app.environments:email_templates/site_setup_success'
-    _subject = "Your site is set up successfully"
+    _subject = "Site has been setup successfully"
 
     def __init__(self, context, request=None):
         super(SiteSetUpFinishedEmailNotifier, self).__init__(context, request)
@@ -193,7 +193,11 @@ class SiteSetUpFinishedEmailNotifier(BaseEmailNotifier):
         template_args = {
             'name': self._name(),
             'site_details_link': self.request.resource_url(self.site, '@@details'),
-            'site_invite_link': self._invite_href()
+            'site_invite_link': self._invite_href(),
+            'site_id': self.site.id,
+            'dns_names': ','.join(self.site.dns_names),
+            'owner_email': self.site.owner.email,
+            'client_name': self.site.client_name
         }
         return template_args
 
