@@ -52,17 +52,19 @@
 	</head>
 	<body>
 		<div class="container">
-		        <img src="${request.static_url('nti.app.environments:static/image/email_logo.png')}" width="41.87" height="40"/>
-			<div class="title">Your site is set up successfully!</div>
+		    <img src="${request.static_url('nti.app.environments:static/image/email_logo.png')}" width="41.87" height="40"/>
 			<div i18n:translate="" class="content" style="margin-top: 12px;">
-				Please follow the link below to accept your site invitation.
+				The site you have requested for ${owner_email}, ${client_name}, has been setup successfully.
 			</div>
-            <div style="margin-top:15px; padding: 0 auto;">
-                <a href="${site_invite_link}" class="btn-link" target="_blank">Accept Invitation</a>
-            </div>
             <div class="content" style="margin-top: 15px;font-size: 14px;line-height: 20px;">
-                You may copy/paste this link into your browser:<br/>
+                The link below can be sent to the site owner to allow them to create
+                their admin user on the new site. This link is only good for a single-use
+                and should only be used by the site owner.<br/>
                 <a href="${site_invite_link}" style="text-decoration: none;color: #3FB3F6;" target="_blank">${site_invite_link}</a>
+            </div>
+            <div class="content" style="margin-top: 30px;">
+                The new site is available here:<br/>
+                <a href="${dns_names}" style="text-decoration: none;color: #3FB3F6; font-size:14px;" target="_blank">${dns_names}</a>
             </div>
 			<div class="content" style="margin-top: 30px;">
                 Site Details Page:<br/>
@@ -70,7 +72,7 @@
 			</div>
 			<hr style="margin-top: 46px;border:1px solid rgba(0,0,0,0.07);border-bottom: 0;"/>
 			<div style="margin-top: 18px;font-size: 12px;line-height: 17px;">
-				If you feel this email was sent in error, or this account was created without your consent,<br/>you may email 
+				If you feel this email was sent in error, or this account was created without your consent,<br/>you may email
 				<a href="mailto:support@nextthought.com" tal:content="support_email|default" tal:attributes="href string:mailto:${support_email|default}" style="color: #494949;">
 					support@nextthought.com</a>.
 			</div>

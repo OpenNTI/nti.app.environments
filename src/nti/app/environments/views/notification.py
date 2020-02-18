@@ -240,6 +240,7 @@ class SiteSetupFailureEmailNotifier(BaseEmailNotifier):
             'dns_names': ','.join(self.site.dns_names),
             'exception': repr(state.exception),
             'owner_email': self.site.owner.email,
+            'client_name': self.site.client_name,
             'env_info': env_info
         }
         return template_args
