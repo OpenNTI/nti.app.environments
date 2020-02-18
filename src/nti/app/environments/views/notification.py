@@ -76,11 +76,23 @@ class BaseEmailNotifier(object):
 class SiteCreatedEmailNotifier(BaseEmailNotifier):
 
     _template = 'nti.app.environments:email_templates/new_site_request'
-    _subject = 'New Site Request'
 
     def __init__(self, context, request=None):
         super(SiteCreatedEmailNotifier, self).__init__(context, request)
         self.site = context
+
+    @Lazy
+    def _subject(self):
+        result = 'New Site Request [%s]' % self.site.id
+        settings = component.getUtility(ISettings)
+        try:
+            env_name = settings['general']['env_name']
+        except KeyError:
+            pass
+        else:
+            if env_name:
+                result = '[%s] %s' % (env_name, result)
+        return result
 
     def _recipients(self):
         settings = component.getUtility(IOnboardingSettings)
