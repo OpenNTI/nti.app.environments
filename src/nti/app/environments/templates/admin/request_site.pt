@@ -24,7 +24,7 @@
 		    <label class="required">Trial Site's URL</label>
 		    <p>The domain name for the trial site. <span class="example">client.nextthought.io</span> </p>
 		</div>
-                <input type="text" id="site_trial_url" class="lowercase"/>
+                <input type="text" id="site_trial_url" class="lowercase" suggested_domain="${base_domain}"/>
             </div>
             <div class="row-group">
                 <div class="success success-request-trial-site" style="display:none;"></div>
@@ -44,5 +44,55 @@
     </metal:block>
     <metal:block metal:fill-slot="script">
         <script src="/static/js/request_site.js"></script>
+        <script>
+
+            function formatInput(input, newValue, updatedLength) {
+                var val = input.val();
+                if (val === "") {
+                    return;
+                }
+                var caret_pos = input.prop("selectionStart");
+                caret_pos = caret_pos + updatedLength;
+                input.val(newValue);
+                input[0].setSelectionRange(caret_pos, caret_pos);
+            }
+
+            $('#site_trial_url').on('input', function(){
+                var current = $(this).val();
+                var base_domain = $(this).attr('suggested_domain');
+                if (!current){
+                    $(this).attr('old', '');
+                    return
+                }
+
+                if (current.endsWith(base_domain)) {
+                    var prefix = current.slice(0, current.length - base_domain.length - 1);
+                    var original_length = prefix.length;
+                    prefix = prefix.replace(/\./g,'');
+                    prefix = prefix.replace(/\s/g,'');
+                    current = prefix.concat('.').concat(base_domain);
+
+                    var updatedLength = prefix.length - original_length;
+                    formatInput($(this), current, updatedLength);
+                    $(this).attr('old', current);
+                } else {
+                    var old = $(this).attr('old') ? $(this).attr('old') : '';
+                    if (old.endsWith(base_domain)) {
+                        var updatedLength = old.length - current.length;
+                        current = old;
+                        formatInput($(this), current, updatedLength);
+                    } else{
+                        var original_length = current.length;
+                        current = current.replace(/\./g,'');
+                        current = current.replace(/\s/g,'');
+                        var updatedLength = current.length - original_length;
+                        current = current.concat('.').concat(base_domain);
+                        formatInput($(this), current, updatedLength);
+                    }
+                    $(this).attr('old', current);
+                }
+            });
+
+        </script>
     </metal:block>
 </metal:block>
