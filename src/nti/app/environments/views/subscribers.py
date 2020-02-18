@@ -389,7 +389,8 @@ def _notify_user_for_site_setup_finished(event):
     if not site.owner or site.owner.email == site.creator:
         return
 
-    logger.info("Notifying user to accept site invitation: %s.", site.creator)
+    logger.info("Notifying creator site is finished (%s) (%s)",
+                site.id, site.creator)
 
     notifier = SiteSetUpFinishedEmailNotifier(site)
     notifier.notify()
