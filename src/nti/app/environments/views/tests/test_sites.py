@@ -1166,12 +1166,12 @@ class TestSetupFailure(BaseAppTest):
                                                                           'name': 'user001@example.com'}),}))
         auth_rel = setup_msg['template_args']['password_setup_link']
 
-        # Already authenticated works, even if the token/url/etc is mangled or missing
+        # IFF token is valid, they are authenticated and taken to site
         res = self.testapp.get(auth_rel, status=302)
         assert_that(res.location, is_('http://localhost/sites/%s' % new_site_id))
         mangled_token = auth_rel.replace('token=', 'token=111')
         res = self.testapp.get(mangled_token, extra_environ=environ, status=302)
-        assert_that(res.location, is_('http://localhost/sites/%s' % new_site_id))
+        assert_that(res.location, is_('http://localhost/recover'))
 
         # Unauthenticated works if the token is valid
         res = self.testapp.get(auth_rel, status=302)

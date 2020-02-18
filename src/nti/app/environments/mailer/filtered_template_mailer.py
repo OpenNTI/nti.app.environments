@@ -52,6 +52,7 @@ class NextThoughtOnlyMailer(_BaseFilteredMailer):
         addr = getattr(IEmailAddressable(addr, addr), 'email', addr)
         if     addr.endswith('@nextthought.com') \
             or addr == 'ntiqatesting@gmail.com' \
+            or addr == 'jzuech3@gmail.com' \
             or addr == 'christopher.m.utz@gmail.com':
             return addr
 
