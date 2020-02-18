@@ -57,7 +57,9 @@
 				The site you have requested for ${owner_email}, ${client_name}, has been setup successfully.
 			</div>
             <div class="content" style="margin-top: 15px;font-size: 14px;line-height: 20px;">
-                The link below can be sent to the site owner to start working in their new site.<br/>
+                The link below can be sent to the site owner to allow them to create
+                their admin user on the new site. This link is only good for a single-use
+                and should only be used by the site owner.<br/>
                 <a href="${site_invite_link}" style="text-decoration: none;color: #3FB3F6;" target="_blank">${site_invite_link}</a>
             </div>
             <div class="content" style="margin-top: 30px;">

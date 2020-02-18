@@ -1,7 +1,9 @@
 The site you have requested for ${owner_email}, ${client_name}, has
 been setup successfully.
 
-The link below can be sent to the site owner to start working in their new site.
+The link below can be sent to the site owner to allow them to create
+their admin user on the new site. This link is only good for a single-use
+and should only be used by the site owner.
 ${site_invite_link}
 
 The new site is available here:
