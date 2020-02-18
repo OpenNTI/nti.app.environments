@@ -1,11 +1,11 @@
-Dear ${name},
+The site you have requested for ${owner_email}, ${client_name}, has
+been setup successfully.
 
-Your site is set up successfully!
-
-Please follow the link below to accept your site invitation.
-
-Copy/paste this link into your browser:
+The link below can be sent to the site owner to start working in their new site.
 ${site_invite_link}
+
+The new site is available here:
+${dns_names}
 
 Site Details Page:
 ${site_details_link}

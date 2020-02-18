@@ -379,6 +379,10 @@ def _on_site_setup_finished(event):
 
 @component.adapter(ILMSSiteSetupFinished)
 def _notify_user_for_site_setup_finished(event):
+    """
+    On site setup on behalf of another user, send the success
+    email to our internal user (the creator).
+    """
     site = event.site
     if not ISetupStateSuccess.providedBy(site.setup_state):
         return
