@@ -696,9 +696,7 @@ class QuerySetupState(BaseView):
     This view returns the site object
     """
     def __call__(self):
-        if self.context.owner.email != self.request.authenticated_userid:
-            raise hexc.HTTPForbidden()
-
+        # Currently admin/management, owner can have access this view.
         # may have site effects
         query_setup_state([self.context], self.request, side_effects=True)
         return self.context

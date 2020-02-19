@@ -1031,6 +1031,10 @@ class TestQuerySetupState(BaseAppTest):
         url = '/onboarding/sites/S001/@@query-setup-state'
 
         mock_async_result.return_value = None
+        self.testapp.get(url, status=302, extra_environ=self._make_environ(username=None))
+        self.testapp.get(url, status=403, extra_environ=self._make_environ(username='user002@example.com'))
+        self.testapp.get(url, status=200, extra_environ=self._make_environ(username='admin001'))
+
         result = self.testapp.get(url, status=200, extra_environ=self._make_environ(username='user001@example.com')).json_body
         assert_that(result, has_entries({'id': 'S001', 'status': 'PENDING'}))
 

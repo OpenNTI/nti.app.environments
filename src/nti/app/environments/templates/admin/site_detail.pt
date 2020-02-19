@@ -247,10 +247,17 @@
             </metal:block>
         </div>
 
-        <div class="site-item">
+        <div class="site-item" id="site_setup_state_item" query_setup_state="${site.query_setup_state|nothing}">
             <h3>Site Setup State</h3>
             <metal:block tal:omit-tag="" tal:condition="site.setup_state|nothing">
-                <p>Status: <span tal:content="site.setup_state.status"></span></p>
+                <p>Status: <span class="current_setup_status" tal:content="site.setup_state.status"></span></p>
+                <div class="query-setup-state" style="display:none;">
+                    <div class="spinnerText" style="display:none; color:green;padding-left: 6px;">
+                        <i class="fa fa-circle-o-notch fa-spin"></i>Querying site setup state
+                    </div>
+                    <div class="success success-query-setup-state" style="display:none;"></div>
+                    <div class="error error-query-setup-state" style="display:none;"></div>
+                </div>
             </metal:block>
             <metal:block tal:omit-tag="" tal:condition="not:site.setup_state|nothing">
                 <p>No data.</p>
@@ -270,6 +277,13 @@
         <script src="/static/js/site_detail.js"></script>
         <script>
             $('input[name=site_environment_load_factor]').on('input', positiveNumbersOnly);
+
+            window.onload = function () {
+                var query_url = $("#site_setup_state_item").attr('query_setup_state');
+                if (query_url){
+                    startQueryTimer(query_url);
+                }
+            };
         </script>
     </metal:block>
 </metal:block>

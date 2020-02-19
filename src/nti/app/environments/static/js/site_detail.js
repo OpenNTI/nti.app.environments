@@ -329,3 +329,89 @@ function saveParentSiteView(me, url) {
     data = JSON.stringify(data);
     doUpdate(url, data, '.success-edit-parent-site', '.error-edit-parent-site')
 }
+
+
+// query site setup-state timer.
+var queryTimer;
+
+function startQueryTimer(url, duration) {
+    // Show querying spinner, clear messages.
+    clearMessages('.success-query-setup-state', '.error-query-setup-state');
+    $("#site_setup_state_item .spinnerText").css("display", "block");
+    $("#site_setup_state_item .query-setup-state").css("display", "block");
+
+    duration = duration ? duration : 10;
+    if (!queryTimer) {
+        var counter = duration;
+        queryTimer = setInterval(function () {
+            if (--counter < 0) {
+                counter = duration;
+                query_setup_state(url);
+            }
+        }, 1000);
+    }
+    return queryTimer;
+}
+
+function endQueryTimer() {
+    if (queryTimer) {
+        clearInterval(queryTimer);
+        queryTimer = null;
+    }
+}
+
+function _setup_status(mimeType) {
+    if (mimeType === 'application/vnd.nextthought.app.environments.setupstatepending') {
+        return 'pending'
+    } else if (mimeType === 'application/vnd.nextthought.app.environments.setupstatesuccess') {
+        return 'success'
+    } else if (mimeType === 'application/vnd.nextthought.app.environments.setupstatefailure') {
+        return 'failure'
+    }
+    return ''
+}
+
+function query_setup_state(url) {
+    $.ajax({
+        url: url,
+        method: 'GET',
+        success: function (result) {
+            var result = result['setup_state'];
+
+            // This shouldn't happen, unless the state is reset to None.
+            // Terminate timer, hide spinner, show error.
+            if(!result) {
+                endQueryTimer();
+                $('#site_setup_state_item .spinnerText').css('display', 'none');
+                showErrorMessage("Setup state is reset to None?", '.success-query-setup-state', '.error-query-setup-state');
+            }
+            var current = _setup_status(result['MimeType']);
+
+            // Update current status
+            $('#site_setup_state_item .current_setup_status').text(current);
+
+            // Terminate timer, hide spinner, show success,  if status is not pending.
+            if (result['MimeType'] !== "application/vnd.nextthought.app.environments.setupstatepending"){
+                endQueryTimer();
+                $('#site_setup_state_item .spinnerText').css('display', 'none');
+                showSuccessMessage('Site is set up finished, current status is ' + current + '.',
+                                   '.success-query-setup-state', '.error-query-setup-state')
+            }
+        },
+        error: function (xhr, exception) {
+            // Terminate timer, hide spinner, show error.
+            endQueryTimer();
+            $('#site_setup_state_item .spinnerText').css('display', 'none');
+
+            var message = 'unknown error';
+            if(xhr.status === 401){
+                message = "session is out, please login and reload this page."
+            } else {
+                message = JSON.parse(xhr.responseText)['message'];
+            }
+
+            showErrorMessage("Failed to query setup state: " + message,
+                             '.success-query-setup-state', '.error-query-setup-state');
+        }
+    });
+}

@@ -254,6 +254,7 @@ class SiteDetailView(BaseTemplateView):
                          'parent_site': self._format_parent_site(self.context.parent_site) if self.context.parent_site else None,
                          'usage': self._format_usage(self.context),
                          'setup_state': self._format_setup_state(self.context.setup_state) if self.context.setup_state else None,
+                         'query_setup_state': request.resource_url(self.context, '@@query-setup-state') if ISetupStatePending.providedBy(self.context.setup_state) else None,
                          **extra_info}}
 
 
