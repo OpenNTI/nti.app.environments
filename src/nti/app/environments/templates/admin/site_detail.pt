@@ -97,14 +97,14 @@
             <h3>Environment</h3>
             <div id="view_environment">
                 <metal:block tal:omit-tag="" tal:condition="site.environment">
-                    <p>Type: <span class="site_environment_type" tal:content="site.environment.type"></span></p>
+                    <p>Type: <span class="site_environment_type" tal:content="site.environment.type" original_value="${site.environment.type}"></span></p>
                     <metal:block tal:omit-tag="" tal:condition="site.environment.type=='shared'">
-                        <p>Name: <span class="site_environment_name" tal:content="site.environment.env.name"></span></p>
+                        <p>Name: <span class="site_environment_name" tal:content="site.environment.env.name" original_value="${site.environment.env.name}"></span></p>
                     </metal:block>
                     <metal:block tal:omit-tag="" tal:condition="site.environment.type=='dedicated'">
-                        <p>PodId (ContainerId): <span class="site_environment_pod_id" tal:content="site.environment.env.pod_id"></span></p>
-                        <p>Host: <span class="site_environment_host" tal:content="site.environment.env.host.host_name" host_id="${site.environment.env.host.id}"></span></p>
-                        <p>Load Factor: <span class="site_environment_load_factor" tal:content="site.environment.env.load_factor"></span></p>
+                        <p>PodId (ContainerId): <span class="site_environment_pod_id" tal:content="site.environment.env.pod_id" original_value="${site.environment.env.pod_id}"></span></p>
+                        <p>Host: <span class="site_environment_host" tal:content="site.environment.env.host.host_name" original_value="${site.environment.env.host.id}"></span></p>
+                        <p>Load Factor: <span class="site_environment_load_factor" tal:content="site.environment.env.load_factor" original_value="${site.environment.env.load_factor}" ></span></p>
                     </metal:block>
                     <p>Last Modified: <span tal:content="site.environment.lastModified"></span></p>
                     <metal:block tal:omit-tag="" tal:condition="site.environment.splunk_link|nothing">

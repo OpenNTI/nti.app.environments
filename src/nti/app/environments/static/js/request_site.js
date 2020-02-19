@@ -28,3 +28,50 @@ function requestTrialSite (me, url) {
         }
     });
 }
+
+
+function formatInput(input, newValue, updatedLength) {
+    var val = input.val();
+    if (val === "") {
+        return;
+    }
+    var caret_pos = input.prop("selectionStart");
+    caret_pos = caret_pos + updatedLength;
+    input.val(newValue);
+    input[0].setSelectionRange(caret_pos, caret_pos);
+}
+
+
+/** make site url input always ends with a specific domain. */
+function handle_domain_input(me){
+    var current = $(me).val();
+    var base_domain = $(me).attr('suggested_domain');
+    if (!current){
+        $(me).attr('old', '');
+        return
+    }
+
+    if (current.endsWith(base_domain)) {
+        var original_length = current.length,
+            prefix = current.slice(0, current.length - base_domain.length - 1);
+
+        prefix = prefix.replace(/\./g,'').replace(/\s/g,'');
+        current = prefix.concat('.').concat(base_domain);
+
+        formatInput($(me), current, current.length - original_length);
+    } else {
+        var old = $(me).attr('old') ? $(me).attr('old') : '';
+        if (old.endsWith(base_domain)) {
+            var updatedLength = old.length - current.length;
+            current = old;
+            formatInput($(me), current, updatedLength);
+        } else{
+            var original_length = current.length;
+            current = current.replace(/\./g,'').replace(/\s/g,'');
+            var updatedLength = current.length - original_length;
+            current = current.concat('.').concat(base_domain);
+            formatInput($(me), current, updatedLength);
+        }
+    }
+    $(me).attr('old', current);
+}

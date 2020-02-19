@@ -6,6 +6,8 @@ from pyramid import httpexceptions as hexc
 
 from zope.cachedescriptors.property import Lazy
 
+from zope import component
+
 from zope.securitypolicy.interfaces import Allow as zopeAllow
 from zope.securitypolicy.interfaces import IPrincipalRoleManager
 
@@ -22,6 +24,8 @@ from nti.app.environments.auth import ACT_EDIT_SITE_ENVIRONMENT
 from nti.app.environments.auth import ACT_REQUEST_TRIAL_SITE
 from nti.app.environments.auth import ADMIN_ROLE
 from nti.app.environments.auth import ACCOUNT_MANAGEMENT_ROLE
+
+from nti.app.environments.interfaces import ISiteDomainPolicy
 
 from nti.app.environments.models.adapters import get_site_usage
 
@@ -260,7 +264,8 @@ class SiteRequestView(BaseTemplateView):
 
     def __call__(self):
         return {
-            'trial_site_request_url': self.request.resource_url(self.context, '@@request_trial_site')
+            'trial_site_request_url': self.request.resource_url(self.context, '@@request_trial_site'),
+            'base_domain': component.getUtility(ISiteDomainPolicy).base_domain 
         }
 
 
