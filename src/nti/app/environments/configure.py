@@ -29,6 +29,7 @@ def root_factory(request):
 # https://docs.pylonsproject.org/projects/venusian/en/latest/index.html#ignore-scan-argument
 _ignore_tests_scan_callable = re.compile('tests$').search
 
+
 def configure(settings=None, registry=None):
     # Use ZCA global site manager
     if registry is None:
@@ -46,6 +47,7 @@ def configure(settings=None, registry=None):
         config.include(pyramid_zcml)
         config.include('pyramid_retry')
         config.include('pyramid_zodbconn')
+        config.include('perfmetrics.pyramid')
 
         config.add_tween('nti.transactions.pyramid_tween.transaction_tween_factory',
                          over=EXCVIEW)

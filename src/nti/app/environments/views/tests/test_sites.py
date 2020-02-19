@@ -1086,8 +1086,9 @@ class TestContinueToSite(BaseAppTest):
 
         with ensure_free_txn():
             site_info = SiteInfo(site_id='S001', dns_name='xx.nextthought.io')
-            site_info.admin_invitation = '/dataserver2/@@accept-site-invitation?code=mockcode'
-            site_info.host = 'test.host'
+            task_result = {'admin_invitation': '/dataserver2/@@accept-site-invitation?code=mockcode',
+                           'host': 'test.host'}
+            site_info.task_result_dict = task_result
             sites['S001'].setup_state = SetupStateSuccess(task_state=object(),
                                                           site_info=site_info)
 
