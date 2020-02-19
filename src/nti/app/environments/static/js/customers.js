@@ -6,13 +6,36 @@ function getValue(id) {
 }
 
 function saveItem (me, url) {
-    var email = getValue("hubspot_email");
+    var email = getValue("customer_email");
+    var name = getValue('customer_name');
+    if(!name || !email){
+        showErrorMessage("Please fill in required fields.", '.success-creation', '.error-creation');
+        return
+    }
+
+    var organization = getValue("customer_organization");
+    var data = {
+        "email": email,
+        "name": name,
+        "organization": organization,
+        "MimeType": "application/vnd.nextthought.app.environments.customer"
+    };
+    data = JSON.stringify(data);
+    doCreationRequest(me, url, data, '#newModal');
+}
+
+function saveItemViaHubspot (me, url) {
+    var email = getValue("customer_email");
+    if(!email){
+        showErrorMessage("Please fill in email field.", '.success-creation', '.error-creation')
+        return
+    }
+
     var data = {
         "email": email
     };
     doCreationRequest(me, url, data, '#newModal');
 }
-
 
 function deleteItem (me) {
     var url = $(me).attr('delete_url');
@@ -31,8 +54,27 @@ function closeDeletingModal() {
     modal.style.display = "none";
 }
 
-function openNewModal() {
+function openNewModal(me, creation_url, label) {
     clearMessages('.success-creation', '.error-creation');
-    document.getElementById('hubspot_email').value = '';
-    document.getElementById('newModal').style.display = 'block';
+
+    var modal = $('#newModal');
+    $(modal.find('.modal-title')).text( $(me).text() );
+    $(modal.find('.btnSave')).attr('onclick', "saveItem(this, '" + creation_url + "');")
+
+    $('#customer_name').val('');
+    $('#customer_email').val('');
+    $('#customer_organization').val('');
+
+    if(label==='hubspot'){
+        $(modal.find('.input-row-name')).hide();
+        $(modal.find('.input-row-email')).show();
+        $(modal.find('.input-row-organization')).hide();
+        $(modal.find('.btnSave')).attr('onclick', "saveItemViaHubspot(this, '" + creation_url + "');")
+    } else {
+        $(modal.find('.input-row-name')).show();
+        $(modal.find('.input-row-email')).show();
+        $(modal.find('.input-row-organization')).show();
+        $(modal.find('.btnSave')).attr('onclick', "saveItem(this, '" + creation_url + "');")
+    }
+    $(modal).css('display', 'block');
 }

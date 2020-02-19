@@ -84,10 +84,14 @@ body {
 
 .success {
     color: green;
+    word-wrap: break-word; /* Internet Explorer 5.5+ */
+    word-break: break-all;
 }
 
 .error {
     color: red;
+    word-wrap: break-word; /* Internet Explorer 5.5+ */
+    word-break: break-all;
 }
 
 /** form input */
@@ -135,6 +139,13 @@ body {
 
 .form .input-row .input-col-3 select {
     height: 32px;
+}
+
+.form label.required::after {
+    color: red;
+    content: '*';
+    padding-left: 4px;
+    vertical-align: middle;
 }
 
 button {

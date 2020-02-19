@@ -83,8 +83,10 @@ class CustomersListView(BaseTemplateView, TableViewMixin):
 
     def __call__(self):
         table = make_specific_table(CustomersTable, self.context, self.request)
+        has_create_perm = self.request.has_permission(ACT_CREATE, self.context)
         return {'table': table,
-                'creation_url': self.request.resource_url(self.context, '@@hubspot') if self.request.has_permission(ACT_CREATE, self.context) else None,
+                'creation_url': self.request.resource_url(self.context) if has_create_perm else None,
+                'create_via_hubspot': self.request.resource_url(self.context, '@@hubspot') if has_create_perm else None,
                 'is_deletion_allowed': self._is_deletion_allowed(table)}
 
 
