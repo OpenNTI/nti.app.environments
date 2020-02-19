@@ -9,6 +9,8 @@ from zope import component
 
 from zope.event import notify
 
+from zope.container.interfaces import InvalidItemType
+
 from zope.schema._bootstrapinterfaces import ConstraintNotSatisfied
 
 from nti.app.environments.api.hubspotclient import get_hubspot_client
@@ -37,6 +39,7 @@ from nti.mailer.interfaces import ITemplatedMailer
 from .base import BaseView
 from .base import getOrCreateCustomer
 from .base import createCustomer
+from .base import ObjectCreateUpdateViewMixin
 from .utils import raise_json_error
 
 logger = __import__('logging').getLogger(__name__)
@@ -285,11 +288,11 @@ def deleteCustomerView(context, request):
     return hexc.HTTPNoContent()
 
 
-@view_defaults(renderer='json',
+@view_defaults(renderer='rest',
                context=ICustomersContainer,
                request_method='POST',
                permission=ACT_CREATE)
-class CustomerCreationView(BaseView):
+class CustomerCreationView(BaseView, ObjectCreateUpdateViewMixin):
 
     @property
     def client(self):
@@ -321,4 +324,23 @@ class CustomerCreationView(BaseView):
                                   name=contact['name'],
                                   hs_contact_vid=contact['canonical-vid'])
         self.request.response.status = 201
-        return {}
+        return customer
+
+    @view_config()
+    def create(self):
+        # Used for QA testing for now,
+        # we don't bind customers created here with HubSpot,
+        # and no CustomerVerifiedEvent should be fired.
+        try:
+            customer = self.createObjectWithExternal()
+            self.context.addCustomer(customer)
+            self.request.response.status = 201
+            logger.info("%s created a new customer, email: %s.",
+                        self.request.authenticated_userid,
+                        customer.email)
+            return customer
+        except InvalidItemType:
+            raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid customer type.")
+        except KeyError as err:
+            raise_json_error(hexc.HTTPConflict,
+                             "Existing customer: {}.".format(str(err)))

@@ -26,9 +26,14 @@
 
         <div class="toolbar">
             <input type="text" id='search' name="search" placeHolder="Search" class="search-input" onkeypress="return search(event);"/>
-            <metal:block tal:omit-tag="" tal:condition="creation_url|nothing">
-                <button type="button" style="float: right;" onclick="openNewModal();">Add Via Hubspot</button>
-            </metal:block>
+            <div style="float: right;">
+                <metal:block tal:omit-tag="" tal:condition="create_via_hubspot|nothing">
+                    <button type="button" onclick="openNewModal(this, '${create_via_hubspot}', 'hubspot');" style="margin-left: 6px;">Add Via Hubspot</button>
+                </metal:block>
+                <metal:block tal:omit-tag="" tal:condition="creation_url|nothing">
+                    <button type="button" onclick="openNewModal(this, '${creation_url}');" style="margin-left: 6px;">Add New Customer</button>
+                </metal:block>
+            </div>
         </div>
 
 		<table tal:condition="python: len(table.context)" tal:replace="structure python: table.render()" />
@@ -66,23 +71,35 @@
         <div id="newModal" class="modal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3>Add Via Hubspot</h3>
+                    <h3 class="modal-title">Add Via Hubspot</h3>
                 </div>
                 <div class="modal-body">
                     <div class="form">
-                        <div class="input-row">
-                            <label class="input-col-1">Email</label>
+                        <div class="input-row input-row-email">
+                            <label class="input-col-1 required">Email</label>
                             <div class="input-col-3">
-                                <input type="text" name="email" id="hubspot_email"/>
+                                <input type="text" name="email" id="customer_email"/>
+                            </div>
+                        </div>
+                        <div class="input-row input-row-name">
+                            <label class="input-col-1 required">Name</label>
+                            <div class="input-col-3">
+                                <input type="text" name="name" id="customer_name"/>
+                            </div>
+                        </div>
+                        <div class="input-row input-row-organization">
+                            <label class="input-col-1">Organization</label>
+                            <div class="input-col-3">
+                                <input type="text" name="organization" id="customer_organization"/>
                             </div>
                         </div>
                     </div>
-                    <div class="success success-creation" style="display:none;"></div>
-                    <div class="error error-creation" style="display:none;"></div>
+                            <div class="success success-creation" style="display:none; padding: 7px 15px;"></div>
+                            <div class="error error-creation" style="display:none;padding: 7px 15px;"></div>
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class='btn btnSave' onclick="saveItem(this, '${creation_url}');">
+                    <button type="button" class='btn btnSave' onclick="saveItem(this, '${create_via_hubspot}');">
                         <div class="spinnerText" style="display:none;">
                             <i class="fa fa-circle-o-notch fa-spin"></i>Saving
                         </div>
