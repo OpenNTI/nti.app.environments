@@ -150,6 +150,7 @@ def _get_site_setup_stat_status_str(setup_state):
 
 def _update_site_status_stats(all_sites):
     client = statsd_client()
+    buffer = []
     if client is not None:
         stat_to_count = {}
         for lms_site in all_sites:
@@ -164,7 +165,9 @@ def _update_site_status_stats(all_sites):
                     stat_to_count[status_str] = 0
                 stat_to_count[status_str] += 1
         for key, val in stat_to_count.items():
-            client.gauge(key, val)
+            client.gauge(key, val, buf=buffer)
+    if buffer:
+        client.sendbuf(buffer)
 
 
 @component.adapter(ILMSSite, IObjectModifiedFromExternalEvent)
