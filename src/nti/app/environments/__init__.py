@@ -13,6 +13,7 @@ import zope.i18nmessageid as zope_i18nmessageid
 from nti.externalization.extension_points import set_external_identifiers
 
 from .appserver import OnboardingServer
+from .appserver import spawn_sites_setup_state_watchdog
 
 from .interfaces import IOnboardingServer
 
@@ -47,5 +48,8 @@ def main(global_config, **settings):
     # Create and register our onboarding server
     server = OnboardingServer(config.registry._zodb_databases)
     getGlobalSiteManager().registerUtility(server, IOnboardingServer)
+
+    # Spawn for querying sites setup state.
+    spawn_sites_setup_state_watchdog(config.registry)
 
     return config.make_wsgi_app()
