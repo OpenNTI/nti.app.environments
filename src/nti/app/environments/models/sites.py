@@ -41,7 +41,7 @@ from nti.app.environments.models.interfaces import ISetupStatePending
 from nti.app.environments.models.interfaces import ISetupStateSuccess
 from nti.app.environments.models.interfaces import ISetupStateFailure
 
-from nti.app.environments.utils import find_iface
+from nti.app.environments.common import find_iface
 
 
 @interface.implementer(ISharedEnvironment)

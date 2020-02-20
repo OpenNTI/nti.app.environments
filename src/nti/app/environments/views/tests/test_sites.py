@@ -15,7 +15,6 @@ from hamcrest import starts_with
 from hamcrest import calling
 from hamcrest import raises
 from hamcrest import not_none
-from hamcrest import greater_than
 
 from pyramid import httpexceptions as hexc
 
@@ -1009,7 +1008,7 @@ class TestSitesListForCustomerView(BaseAppTest):
 class TestQuerySetupState(BaseAppTest):
 
     @with_test_app()
-    @mock.patch('nti.app.environments.views.utils.query_setup_async_result')
+    @mock.patch('nti.app.environments.utils.query_setup_async_result')
     @mock.patch('nti.app.environments.views.notification._mailer')
     def testQuerySetupState(self, mock_mailer, mock_async_result):
         mock_mailer = mock.MagicMock()
@@ -1099,7 +1098,7 @@ class TestContinueToSite(BaseAppTest):
 class TestSetupFailure(BaseAppTest):
 
     @with_test_app()
-    @mock.patch('nti.app.environments.views.utils.query_setup_async_result')
+    @mock.patch('nti.app.environments.utils.query_setup_async_result')
     @mock.patch('nti.app.environments.views.notification._mailer')
     @mock.patch('nti.app.environments.views.utils._is_dns_name_available')
     @mock.patch('nti.app.environments.views.sites.get_hubspot_client')

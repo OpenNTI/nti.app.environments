@@ -1,4 +1,3 @@
-import unittest
 import datetime
 
 from unittest import mock
@@ -16,8 +15,9 @@ from zope.schema._bootstrapinterfaces import SchemaNotProvided
 from zope.schema._bootstrapinterfaces import ValidationError
 from zope.schema._bootstrapinterfaces import WrongContainedType
 
+from nti.app.environments.utils import query_setup_async_result
+
 from nti.app.environments.views.utils import raise_json_error
-from nti.app.environments.views.utils import query_setup_async_result
 
 from nti.environments.management.tasks import SiteInfo
 

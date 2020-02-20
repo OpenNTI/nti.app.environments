@@ -9,13 +9,13 @@ from hamcrest import not_none
 
 from zope import interface
 
-from nti.app.environments.utils import find_iface
-from nti.app.environments.utils import convertToUTC
-from nti.app.environments.utils import parseDate
-from nti.app.environments.utils import formatDate
-from nti.app.environments.utils import formatDateToLocal
+from nti.app.environments.common import find_iface
+from nti.app.environments.common import convertToUTC
+from nti.app.environments.common import parseDate
+from nti.app.environments.common import formatDate
+from nti.app.environments.common import formatDateToLocal
 
-class TestUtils(unittest.TestCase):
+class TestCommon(unittest.TestCase):
 
     def test_find_iface(self):
         class _TestInterface(interface.Interface):

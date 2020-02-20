@@ -23,7 +23,7 @@ from nti.app.environments.views._table_utils import make_specific_table
 from nti.app.environments.views._table_utils import SitesForHostTable
 from nti.app.environments.views._table_utils import HostsTable
 
-from nti.app.environments.utils import find_iface
+from nti.app.environments.common import find_iface
 
 
 logger = __import__('logging').getLogger(__name__)

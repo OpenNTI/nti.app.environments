@@ -51,8 +51,8 @@ from nti.app.environments.models.utils import get_hosts_folder
 from nti.app.environments.resources import DashboardsResource
 from nti.app.environments.resources import RolesResource
 
-from nti.app.environments.utils import formatDateToLocal
-from nti.app.environments.utils import find_iface
+from nti.app.environments.common import formatDateToLocal
+from nti.app.environments.common import find_iface
 
 from nti.app.environments.views.base import BaseTemplateView
 from nti.app.environments.views.base import BaseView
@@ -66,7 +66,6 @@ from nti.app.environments.views._table_utils import DashboardRenewalsTable
 from nti.app.environments.views._table_utils import make_specific_table
 
 from nti.app.environments.views.utils import raise_json_error
-from nti.app.environments.views.utils import query_setup_state
 
 
 def _host_options(onboarding):
@@ -128,9 +127,6 @@ class SitesListView(BaseTemplateView, TableViewMixin):
         return [(x.host_id, "{} ({}/{})".format(x.host_id, x.current_load, x.capacity)) for x in hosts.values()]
 
     def __call__(self):
-        # may have side effects.
-        query_setup_state(self.context.values(), self.request, side_effects=True)
-
         table = make_specific_table(SitesTable, self.context, self.request)
         return {'table': table,
                 'creation_url': self.request.resource_url(self.context) if self.request.has_permission(ACT_CREATE, self.context) else None,
@@ -231,10 +227,6 @@ class SiteDetailView(BaseTemplateView):
     def __call__(self):
         request = self.request
         extra_info = self._site_extra_info() or {}
-
-        # may have site effects.
-        query_setup_state([self.context], self.request, side_effects=True)
-
         return {'sites_list_link': self.request.resource_url(self.context.__parent__, '@@list'),
                 'env_shared_options': SHARED_ENV_NAMES,
                 'site_status_options': SITE_STATUS_OPTIONS,
