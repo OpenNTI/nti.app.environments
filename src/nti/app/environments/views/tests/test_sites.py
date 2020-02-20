@@ -130,7 +130,8 @@ class TestSiteCreationView(BaseAppTest):
             'status': 'ACTIVE',
             'dns_names': ['s@Next.com']
         }
-        result = self.testapp.put_json(site_url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
+        result = self.testapp.put_json(site_url, params=params, status=200,
+                                       extra_environ=self._make_environ(username='admin001'))
         assert_that(site, has_properties({'status': 'ACTIVE',
                                           'dns_names': ['s@next.com']}))
 

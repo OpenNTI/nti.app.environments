@@ -140,23 +140,34 @@ def _update_stats_on_site_removed(lms_site, unused_event):
         _update_site_status_stats(all_sites)
 
 
-def _get_stat_status_str(status):
+def _get_site_stat_status_str(status):
     return 'nti.onboarding.lms_site_status_count.%s' % status.lower()
+
+
+def _get_site_setup_stat_status_str(setup_state):
+    return 'nti.onboarding.lms_site_setup_status_count.%s' % setup_state.state_name.lower()
 
 
 def _update_site_status_stats(all_sites):
     client = statsd_client()
+    buffer = []
     if client is not None:
         stat_to_count = {}
         for lms_site in all_sites:
-            if not lms_site.status:
-                continue
-            status_str = _get_stat_status_str(lms_site.status)
-            if status_str not in stat_to_count:
-                stat_to_count[status_str] = 0
-            stat_to_count[status_str] += 1
+            if lms_site.status:
+                status_str = _get_site_stat_status_str(lms_site.status)
+                if status_str not in stat_to_count:
+                    stat_to_count[status_str] = 0
+                stat_to_count[status_str] += 1
+            if lms_site.setup_state:
+                status_str = _get_site_setup_stat_status_str(lms_site.setup_state)
+                if status_str not in stat_to_count:
+                    stat_to_count[status_str] = 0
+                stat_to_count[status_str] += 1
         for key, val in stat_to_count.items():
-            client.gauge(key, val)
+            client.gauge(key, val, buf=buffer)
+    if buffer:
+        client.sendbuf(buffer)
 
 
 @component.adapter(ILMSSite, IObjectModifiedFromExternalEvent)
@@ -325,16 +336,12 @@ def _store_site_setup_stats(setup_state):
     """
     client = statsd_client()
     if client is not None and setup_state.elapsed_time:
-        if ISetupStateSuccess.providedBy(setup_state):
-            state = 'success'
-        else:
-            state = 'failed'
         time_in_ms = setup_state.elapsed_time * 1000
-        client.timing('nti.onboarding.lms_site_setup_time.%s' % state,
+        client.timing('nti.onboarding.lms_site_setup_time.%s' % setup_state.state_name,
                       time_in_ms)
         try:
             time_in_ms = setup_state.site_info.elapsed_time * 1000
-            client.timing('nti.onboarding.lms_site_task_setup_time.%s' % state,
+            client.timing('nti.onboarding.lms_site_task_setup_time.%s' % setup_state.state_name,
                           time_in_ms)
         except (AttributeError, TypeError):
             pass
@@ -348,6 +355,7 @@ def _on_site_setup_finished(event):
     """
     site = event.site
     _store_site_setup_stats(site.setup_state)
+    _update_site_status_stats(site.__parent__.values())
     if not ISetupStateSuccess.providedBy(site.setup_state):
         _email_on_setup_error(site)
         return
