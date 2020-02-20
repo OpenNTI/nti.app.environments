@@ -330,6 +330,9 @@ class ISetupState(IContained):
     Identifies a site setup state.
     """
 
+    state_name = ValidTextLine(title="The setup state descriptive name",
+                               required=True)
+
     # Right now we track this for all states. We may only
     # need it for pending?
     task_state = Object(interface.Interface,
@@ -395,6 +398,8 @@ class ILMSSite(IContained, IAttributeAnnotatable):
                          required=False)
 
     status = Choice(title=u'The LMS site status',
+                    description=u"""The site status is used by internal site managers to
+                    define the current site's relationship with NT.""",
                     values=SITE_STATUS_OPTIONS,
                     default=SITE_STATUS_PENDING)
 

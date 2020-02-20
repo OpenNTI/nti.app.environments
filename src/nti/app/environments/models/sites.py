@@ -118,6 +118,8 @@ class SetupStatePending(AbstractSetupState):
 
     createDirectFieldProperties(ISetupStatePending)
 
+    state_name = u'pending'
+
     mimeType = mime_type = 'application/vnd.nextthought.app.environments.setupstatepending'
 
 
@@ -126,6 +128,8 @@ class SetupStateSuccess(AbstractSetupState):
 
     createDirectFieldProperties(ISetupStateSuccess)
 
+    state_name = u'success'
+
     mimeType = mime_type = 'application/vnd.nextthought.app.environments.setupstatesuccess'
 
 
@@ -133,6 +137,8 @@ class SetupStateSuccess(AbstractSetupState):
 class SetupStateFailure(AbstractSetupState):
 
     createDirectFieldProperties(ISetupStateFailure)
+
+    state_name = u'failed'
 
     mimeType = mime_type = 'application/vnd.nextthought.app.environments.setupstatefailure'
 
