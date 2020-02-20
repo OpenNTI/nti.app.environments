@@ -134,7 +134,7 @@ class TestChallengerVerification(BaseAppTest):
 
         params = {'email': 'test@g.com', 'code': 'xxxxxx'}
         result = self.testapp.post_json(url, params=params, status=400, extra_environ=self._make_environ(username=None)).json_body
-        assert_that(result['message'], is_('Bad request.'))
+        assert_that(result['message'], is_(u'This link is no longer valid. Please enter your email again.'))
 
         with ensure_free_txn():
             customers = self._root().get('customers')
@@ -170,7 +170,7 @@ class TestChallengerVerification(BaseAppTest):
 
         params = {'email': 'test@g.com', 'code': 'xxxxxx'}
         result = self.testapp.post_json(url, params=params, status=400, extra_environ=self._make_environ(username=None)).json_body
-        assert_that(result['message'], is_('Bad request.'))
+        assert_that(result['message'], is_(u'This link is no longer valid. Please enter your email again.'))
 
         with ensure_free_txn():
             customers = self._root().get('customers')
@@ -205,8 +205,9 @@ class TestChallengerVerification(BaseAppTest):
         assert_that(result['message'], is_('Missing required field: code.'))
 
         params = {'email': 'test@g.com', 'code': 'xxxxxx'}
-        result = self.testapp.get(url, params=params, status=400, extra_environ=self._make_environ(username=None)).json_body
-        assert_that(result['message'], is_('Bad request.'))
+        result = self.testapp.get(url, params=params, status=302, extra_environ=self._make_environ(username=None))
+        assert_that(result.location,
+                    is_("http://localhost/recover?error=This%20link%20is%20no%20longer%20valid.%20Please%20enter%20your%20email%20again."))
 
         with ensure_free_txn():
             customers = self._root().get('customers')
@@ -214,8 +215,9 @@ class TestChallengerVerification(BaseAppTest):
 
         mock_validate.return_value = False
         params = {'email': 'test@g.com', 'code': 'xxxxxx'}
-        result = self.testapp.get(url, params=params, status=400, extra_environ=self._make_environ(username=None)).json_body
-        assert_that(result['message'], is_("That code wasn't valid. Give it another go!"))
+        result = self.testapp.get(url, params=params, status=302, extra_environ=self._make_environ(username=None))
+        assert_that(result.location,
+                    is_("http://localhost/recover?error=This%20link%20is%20no%20longer%20valid.%20Please%20enter%20your%20email%20again."))
 
         mock_validate.return_value = True
         mock_client.return_value = _client = mock.MagicMock()
