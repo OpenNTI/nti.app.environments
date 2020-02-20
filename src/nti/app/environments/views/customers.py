@@ -3,6 +3,8 @@ from pyramid import httpexceptions as hexc
 from pyramid.view import view_config
 from pyramid.view import view_defaults
 
+from six.moves import urllib_parse
+
 from urllib.parse import urljoin
 
 from zope import component
@@ -169,6 +171,10 @@ class RecoveryEmailChallengeView(EmailChallengeView):
         return hexc.HTTPNoContent()
 
 
+class RecoveryChallengeFailed(ValueError):
+    pass
+
+
 @view_defaults(renderer='rest',
                context=ICustomersContainer)
 class EmailChallengeVerifyView(BaseView):
@@ -182,14 +188,12 @@ class EmailChallengeVerifyView(BaseView):
 
         # This should exist
         if customer is None:
-            raise_json_error(hexc.HTTPBadRequest,
-                             'Bad request.')
+            raise RecoveryChallengeFailed(u'This link is no longer valid. Please enter your email again.')
 
         # Validate code against the challenge
         # This should raise if invalid
         if not validate_challenge_for_customer(customer, code):
-            raise raise_json_error(hexc.HTTPBadRequest,
-                                   "That code wasn't valid. Give it another go!")
+            raise RecoveryChallengeFailed(u"That code wasn't valid. Give it another go!")
 
         # remember the user
         remember(self.request, email)
@@ -200,11 +204,29 @@ class EmailChallengeVerifyView(BaseView):
         return {'email': email,
                 'customer': customer}
 
+    def _get_recovery_error_url(self):
+        recovery_url = urljoin(self.request.application_url, 'recover')
+        parsed = urllib_parse.urlparse(recovery_url)
+        parsed = list(parsed)
+        query = parsed[4]
+        error = u'This link is no longer valid. Please enter your email again.'
+        if query:
+            query = query + '&error=' + urllib_parse.quote(error)
+        else:
+            query = 'error=' + urllib_parse.quote(error)
+        parsed[4] = query
+        return urllib_parse.urlunparse(parsed)
+
     @view_config(name=EMAIL_CHALLENGE_VERIFY_VIEW, request_method='GET')
     @view_config(name=RECOVERY_CHALLENGE_VERIFY_VIEW, request_method='GET')
     def verify_from_link(self):
         params = self.request.params
-        self.do_verify(params)
+        try:
+            self.do_verify(params)
+        except RecoveryChallengeFailed:
+            recovery_url = self._get_recovery_error_url()
+            return hexc.HTTPFound(location=recovery_url,
+                                  headers=self.request.response.headers)
 
         # we have side effects
         self.request.environ['nti.request_had_transaction_side_effects'] = True
@@ -216,7 +238,11 @@ class EmailChallengeVerifyView(BaseView):
     @view_config(name=EMAIL_CHALLENGE_VERIFY_VIEW, request_method='POST')
     @view_config(name=RECOVERY_CHALLENGE_VERIFY_VIEW, request_method='POST')
     def verify_from_api(self):
-        data = self.do_verify(self.body_params)
+        try:
+            data = self.do_verify(self.body_params)
+        except RecoveryChallengeFailed as e:
+            raise raise_json_error(hexc.HTTPBadRequest,
+                                   e.args[0])
 
         result = LocatedExternalDict()
         result.__name__ = self.context.__name__
