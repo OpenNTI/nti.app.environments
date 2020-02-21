@@ -3,6 +3,8 @@ import time
 import gevent
 import transaction
 
+from perfmetrics import Metric
+
 from pyramid_zodbconn import get_connection
 
 from pyramid.interfaces import IRequestFactory
@@ -119,6 +121,7 @@ def spawn_sites_setup_state_watchdog(registry):
         while True:
             gevent.sleep(sleep_time)
             try:
+                @Metric('nti.onboarding.query_sites_setup_state')
                 def _do_query_setup_state(root):
                     request = _make_dummy_request(registry, root)
 
