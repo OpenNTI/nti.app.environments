@@ -80,7 +80,7 @@ def query_setup_state(sites, request=None, side_effects=True):
     Query the sites setup state, return True if a site of pending state exists,
     and has celery result, or return False otherwise.
     """
-    updated = False
+    updated = 0
     app_task = ISetupEnvironmentTask(component.getUtility(ICeleryApp))
 
     for site in sites or ():
@@ -90,10 +90,9 @@ def query_setup_state(sites, request=None, side_effects=True):
 
         _mark_site_setup_finished(site, result)
 
-        if updated is False:
-            updated = True
+        updated += 1
 
-    if request is not None and side_effects and updated:
+    if request is not None and side_effects and updated > 0:
         request.environ['nti.request_had_transaction_side_effects'] = True
 
     return updated

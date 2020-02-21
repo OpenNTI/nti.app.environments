@@ -127,9 +127,10 @@ def spawn_sites_setup_state_watchdog(registry):
                         folder = get_sites_folder(root)
                         sites = [x for x in folder.values() if ISetupStatePending.providedBy(x.setup_state)]
                         if sites:
-                            query_setup_state(sites, request)
-                            logger.info('Performed querying setup state on %s sites (%.2f)',
+                            updated = query_setup_state(sites, request)
+                            logger.info('Performed querying setup state on %s sites, state changed on %s sites (%.2f)',
                                         len(sites),
+                                        updated,
                                         time.time() - t0 )
 
                 tx_runner(_do_query_setup_state, retries=5, sleep=0.1)
