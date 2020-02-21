@@ -23,7 +23,7 @@ from nti.app.environments.views._table_utils import make_specific_table
 from nti.app.environments.views._table_utils import SitesForHostTable
 from nti.app.environments.views._table_utils import HostsTable
 
-from nti.app.environments.common import find_iface
+from nti.traversal.traversal import find_interface
 
 
 logger = __import__('logging').getLogger(__name__)
@@ -33,7 +33,7 @@ class _HostViewMixin(object):
 
     @Lazy
     def _hosts_folder(self):
-        return find_iface(self.context, IHostsContainer)
+        return find_interface(self.context, IHostsContainer)
 
     def _get_host_by_name(self, host_name):
         # When the hosts are very large, this will become slow,

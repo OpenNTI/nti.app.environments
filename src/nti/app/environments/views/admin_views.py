@@ -52,7 +52,6 @@ from nti.app.environments.resources import DashboardsResource
 from nti.app.environments.resources import RolesResource
 
 from nti.app.environments.common import formatDateToLocal
-from nti.app.environments.common import find_iface
 
 from nti.app.environments.views.base import BaseTemplateView
 from nti.app.environments.views.base import BaseView
@@ -66,6 +65,8 @@ from nti.app.environments.views._table_utils import DashboardRenewalsTable
 from nti.app.environments.views._table_utils import make_specific_table
 
 from nti.app.environments.views.utils import raise_json_error
+
+from nti.traversal.traversal import find_interface
 
 
 def _host_options(onboarding):
@@ -97,7 +98,7 @@ class CustomersListView(BaseTemplateView, TableViewMixin):
 class CustomerDetailView(BaseTemplateView, TableViewMixin):
 
     def _get_sites_folder(self):
-        onboarding_root = find_iface(self.context, IOnboardingRoot)
+        onboarding_root = find_interface(self.context, IOnboardingRoot)
         return get_sites_folder(onboarding_root)
 
     def _format_hubspot(self, contact=None):

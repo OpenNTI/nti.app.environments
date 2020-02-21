@@ -7,17 +7,6 @@ from dateutil import parser
 logger = __import__('logging').getLogger(__name__)
 
 
-def find_iface(resource, iface):
-    while resource is not None:
-        if iface.providedBy(resource):
-            return resource
-        try:
-            resource = resource.__parent__
-        except AttributeError:
-            resource = None
-    return None
-
-
 def convertToUTC(dt, local_tz='US/Central', toTimeStamp=False):
     local_date = pytz.timezone(local_tz).localize(dt) if dt.tzinfo is None else dt
     dt = local_date.astimezone(pytz.utc).replace(tzinfo=None)
