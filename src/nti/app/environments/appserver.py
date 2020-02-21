@@ -18,6 +18,7 @@ from zope.app.appsetup.appsetup import multi_database
 from zope.app.publication.zopepublication import ZopePublication
 
 from ZODB.interfaces import IDatabase
+from ZODB.interfaces import IConnection
 
 from .interfaces import ITransactionRunner
 from .interfaces import IOnboardingServer
@@ -151,7 +152,7 @@ def _make_dummy_request(registry, root):
     # Making sure request has the same connection as the one created earlier in current transaction.,
     # such that it will not try to get a new one when we load objects from the current request,
     # which may result in InvalidObjectReference error when submit the transaction.
-    request._primary_zodb_conn = root._p_jar
+    request._primary_zodb_conn = IConnection(root)
     return request
 
 
