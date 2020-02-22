@@ -750,8 +750,8 @@ class MarkInviteAcceptedView(BaseView):
     accepted and return to the result.
 
     TODO: We guard against a csrf here by requiring state in the session,
-    but we don't do anything to make sure the end user isn't h
-    itting this without actually accepting the invite.
+    but we don't do anything to make sure the end user isn't hitting this
+    without actually accepting the invite.
     Ideally we would have a way to actually know the invite was accepted, via
     a postback or an ability to query it. Kick that can down the road, surely
     a user wouldn't do that, and if they do it doesn't really hurt anything..

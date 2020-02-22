@@ -528,11 +528,15 @@ class TestRequestTrialSiteView(BaseAppTest):
 class TestCreateNewTrialSiteView(BaseAppTest):
 
     @with_test_app()
+    @mock.patch('nti.app.environments.views.utils.query_setup_async_result')
     @mock.patch('nti.app.environments.views.notification._mailer')
     @mock.patch('nti.app.environments.views.sites.get_hubspot_client')
     @mock.patch('nti.app.environments.views.sites.is_admin_or_account_manager')
     @mock.patch('nti.app.environments.views.utils._is_dns_name_available')
-    def testCreateNewTrialSiteView(self, mock_dns_available, mock_admin, mock_client, mock_mailer):
+    def testCreateNewTrialSiteView(self, mock_dns_available, mock_admin, mock_client, mock_mailer, mock_async_result):
+        """
+        Test creating a site on behalf of a user.
+        """
         _client = mock.MagicMock()
         _client.fetch_contact_by_email = lambda unused_email: None
         mock_client.return_value = _client
@@ -556,26 +560,53 @@ class TestCreateNewTrialSiteView(BaseAppTest):
         self.testapp.post_json(url, params=params, status=403, extra_environ=self._make_environ(username='user002@example.com'))
 
         env = self._make_environ(username='user001@example.com')
+        admin_env = self._make_environ(username='admin001')
         result = self.testapp.post_json(url, params=params, status=422,
-                                        extra_environ=env).json_body
+                                        extra_environ=admin_env).json_body
         assert_that(result, has_entries({'message': 'Please provide one site url.'}))
 
         params = {'dns_names': ['xxx'], 'client_name': 'xyz'}
         result = self.testapp.post_json(url, params=params, status=422,
-                                        extra_environ=env).json_body
+                                        extra_environ=admin_env).json_body
         assert_that(result, has_entries({'message': 'Invalid site url: xxx.'}))
 
         mock_dns_available.return_value = True
         params = {'dns_names': ['xxx.test_ntdomain.com'], 'client_name': 'xyz'}
         result = self.testapp.post_json(url, params=params, status=201,
-                                         extra_environ=env).json_body
+                                         extra_environ=admin_env).json_body
+        site_id = result.get('id')
+        assert_that(site_id, not_none())
         assert_that(result, has_entries({'client_name': 'xyz',
                                          'dns_names': ['xxx.test_ntdomain.com'],
                                          'owner': has_entries({'email': 'user001@example.com'})}))
 
+        # Cannot create second site as regular user
         params = {'dns_names': ['yyy.test_ntdomain.com']}
         self.testapp.post_json(url, params=params, status=403,
                                extra_environ=env)
+
+        now = datetime.datetime.utcnow()
+        with ensure_free_txn():
+            sites[site_id].setup_state = SetupStatePending(task_state='okc',
+                                                           start_time=now)
+
+        url = '/onboarding/sites/%s/@@query-setup-state' % site_id
+
+        mock_async_result.return_value = site_info = SiteInfo(site_id=site_id,
+                                                              dns_name='xx.nextthought.io')
+        site_info.start_time = now
+        site_info.end_time = datetime.datetime.utcnow()
+        site_info.task_result_dict = {'admin_invitation': '/dataserver2/@@accept-site-invitation?code=mockcode'}
+        self.testapp.get(url, status=200, extra_environ=env)
+
+        assert_that([x[0][0] for x in _result], has_items('nti.app.environments:email_templates/new_site_request',
+                                                          'nti.app.environments:email_templates/site_setup_success'))
+        success_msg = next((x for x in _result if x[0][0] == 'nti.app.environments:email_templates/site_setup_success'))
+        success_msg = success_msg[1]
+        assert_that(success_msg, has_entries('subject', starts_with("Site has been setup successfully"),
+                                             'template_args', has_entries('site_details_link', 'http://localhost/onboarding/sites/%s/@@details' % site_id,
+                                                                          'site_id', site_id,
+                                                                          'site_invite_link', 'https://xxx.test_ntdomain.com/dataserver2/@@accept-site-invitation?success=https%3A%2F%2Fxxx.test_ntdomain.com%2Flogin%2Faccount-setup')))
 
 
 class TestSitesUploadCSVView(BaseAppTest):

@@ -1,5 +1,7 @@
-from urllib.parse import urlunparse
 from urllib.parse import urljoin
+from urllib.parse import urlparse
+from urllib.parse import urlencode
+from urllib.parse import urlunparse
 
 from zope import component
 from zope import interface
@@ -184,16 +186,23 @@ class SiteSetUpFinishedEmailNotifier(BaseEmailNotifier):
         customer = self._customers_folder.getCustomer(creator)
         return customer.name if customer is not None else creator
 
-    def _invite_href(self):
-        target_app_url = urlunparse(('https', self.site.dns_names[0], '/app', None, None, None))
-        return urljoin(target_app_url,
-                       self.site.setup_state.site_info.admin_invitation)
+    def _invite_url(self):
+        dns_name = self.site.dns_names[0]
+        account_creation = urljoin('https://%s' % dns_name, '/login/account-setup')
+        params = {'success': account_creation}
+
+        target_app_url = urlunparse(('https', dns_name, '/app', None, None, None))
+        result = urljoin(target_app_url,
+                         self.site.setup_state.site_info.admin_invitation)
+        parsed = urlparse(result)
+        parsed = parsed._replace(query=urlencode(params, doseq=True))
+        return urlunparse(parsed)
 
     def _template_args(self):
         template_args = {
             'name': self._name(),
             'site_details_link': self.request.resource_url(self.site, '@@details'),
-            'site_invite_link': self._invite_href(),
+            'site_invite_link': self._invite_url(),
             'site_id': self.site.id,
             'dns_names': ','.join(self.site.dns_names),
             'owner_email': self.site.owner.email,
