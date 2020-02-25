@@ -24,7 +24,7 @@ from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import IDedicatedEnvironment
 from nti.app.environments.models.interfaces import SITE_STATUS_ACTIVE
 
-from nti.app.environments.utils import formatDateToLocal
+from nti.app.environments.common import formatDateToLocal
 
 
 @interface.implementer(IAbsoluteURL)

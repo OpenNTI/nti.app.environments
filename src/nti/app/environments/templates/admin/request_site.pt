@@ -22,7 +22,7 @@
             <div class="row-group">
 		<div>
 		    <label class="required">Trial Site's URL</label>
-		    <p>The domain name for the trial site. <span class="example">client.nextthought.io</span> </p>
+		    <p>The domain name for the trial site. <span class="example">client.${base_domain or 'nextthought.io'}</span> </p>
 		</div>
                 <input type="text" id="site_trial_url" class="lowercase" suggested_domain="${base_domain}"/>
             </div>

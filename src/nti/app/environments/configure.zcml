@@ -18,6 +18,8 @@
 	<include package="zope.generations" />
 	<include package="zope.generations" file="subscriber.zcml" />
 
+	<include package="zope.keyreference" />
+
 	<include package="zope.traversing" />
 
 	<!-- Include zope.app.appsetup package for database lifecycle events -->
@@ -88,4 +90,7 @@
 	<adapter for="nti.app.environments.models.interfaces.ILMSSite pyramid.interfaces.IRequest"
 			 factory=".adapters.SiteLinks"
 			 provides=".interfaces.ISiteLinks" />
+
+	<subscriber handler=".subscribers._spawn_setup_state_watchdog" />
+
 </configure>

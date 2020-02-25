@@ -60,17 +60,19 @@ from nti.app.environments.models.utils import get_sites_folder
 from nti.app.environments.models.utils import get_hosts_folder
 from nti.app.environments.models.utils import does_customer_have_sites
 
-from nti.app.environments.utils import convertToUTC
-from nti.app.environments.utils import find_iface
-from nti.app.environments.utils import formatDateToLocal
-from nti.app.environments.utils import parseDate
+from nti.app.environments.common import convertToUTC
+from nti.app.environments.common import formatDateToLocal
+from nti.app.environments.common import parseDate
+
+from nti.app.environments.utils import query_setup_state
 
 from nti.app.environments.views.utils import raise_json_error
 from nti.app.environments.views.utils import is_dns_name_available
-from nti.app.environments.views.utils import query_setup_state
 
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
+
+from nti.traversal.traversal import find_interface
 
 from .base import BaseFieldPutView
 from .base import BaseView
@@ -90,7 +92,7 @@ class SiteBaseView(BaseView):
 
     @Lazy
     def _customers(self):
-        root = find_iface(self.context, IOnboardingRoot)
+        root = find_interface(self.context, IOnboardingRoot)
         folder = get_customers_folder(root)
         return folder
 

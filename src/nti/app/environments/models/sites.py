@@ -41,7 +41,7 @@ from nti.app.environments.models.interfaces import ISetupStatePending
 from nti.app.environments.models.interfaces import ISetupStateSuccess
 from nti.app.environments.models.interfaces import ISetupStateFailure
 
-from nti.app.environments.utils import find_iface
+from nti.traversal.traversal import find_interface
 
 
 @interface.implementer(ISharedEnvironment)
@@ -167,7 +167,7 @@ class PersistentSite(SchemaConfigured, PersistentCreatedModDateTrackingObject, C
 
     def _get_owner(self):
         owner = self._owner_ref() if self._owner_ref else None
-        if find_iface(owner, ICustomersContainer) is None:
+        if find_interface(owner, ICustomersContainer, strict=False) is None:
             return None
         return owner
 
@@ -178,7 +178,7 @@ class PersistentSite(SchemaConfigured, PersistentCreatedModDateTrackingObject, C
 
     def _get_parent_site(self):
         parent = self._parent_ref() if self._parent_ref else None
-        if find_iface(parent, ILMSSitesContainer) is None:
+        if find_interface(parent, ILMSSitesContainer, strict=False) is None:
             return None
         return parent
 

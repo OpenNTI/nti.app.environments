@@ -9,7 +9,7 @@ from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import IEnterpriseLicense
 from nti.app.environments.models.interfaces import IDedicatedEnvironment
-from nti.app.environments.utils import parseDate
+from nti.app.environments.common import parseDate
 
 
 def _parse_date(value):

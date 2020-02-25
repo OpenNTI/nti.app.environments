@@ -1,4 +1,15 @@
+import os
+import time
+import gevent
+import transaction
+
+from perfmetrics import Metric
+
 from pyramid_zodbconn import get_connection
+
+from pyramid.interfaces import IRequestFactory
+from pyramid.request import Request
+from pyramid.threadlocal import RequestContext
 
 from zope import component
 from zope import interface
@@ -9,10 +20,22 @@ from zope.app.appsetup.appsetup import multi_database
 from zope.app.publication.zopepublication import ZopePublication
 
 from ZODB.interfaces import IDatabase
+from ZODB.interfaces import IConnection
 
+from .interfaces import ITransactionRunner
 from .interfaces import IOnboardingServer
+from .interfaces import IOnboardingSettings
 
 from .models import ROOT_KEY
+
+from .models.interfaces import ISetupStatePending
+
+from .models.utils import get_sites_folder
+
+from .utils import query_setup_state
+
+logger = __import__('logging').getLogger(__name__)
+
 
 @interface.implementer(IOnboardingServer)
 class OnboardingServer(object):
@@ -72,6 +95,69 @@ class OnboardingServer(object):
         assert root_db is dbs[0], 'Expect a single root db'
 
         database(root_db)        
+
+
+def spawn_sites_setup_state_watchdog(registry):
+    """
+    Spawn a greenlet to query the setup state for pending sites every 10 mins.
+    For reducing the conflicts within multiple workers, a randomly sleep time
+    is set for each worker.
+    """
+    # A monotonic series, unlikely to wrap when we spawned
+    my_sleep_adjustment = os.getpid() % 20
+    if os.getpid() % 2:  # if even, go low
+        my_sleep_adjustment = -my_sleep_adjustment
+
+    sleep_time = 10*60 + my_sleep_adjustment
+
+    tx_runner = component.getUtility(ITransactionRunner)
+
+    def _query_setup_state():
+        logger.info("[Worker %s] querying the setup state for pending sites every %s mins %s seconds.",
+                    os.getpid(),
+                    sleep_time // 60,
+                    sleep_time % 60)
+
+        while True:
+            gevent.sleep(sleep_time)
+            try:
+                @Metric('nti.onboarding.query_sites_setup_state')
+                def _do_query_setup_state(root):
+                    request = _make_dummy_request(registry, root)
+
+                    with RequestContext(request) as request:
+                        t0 = time.time()
+                        folder = get_sites_folder(root)
+                        sites = [x for x in folder.values() if ISetupStatePending.providedBy(x.setup_state)]
+                        if sites:
+                            updated = query_setup_state(sites, request)
+                            logger.info('Performed querying setup state on %s sites, state changed on %s sites (%.2f)',
+                                        len(sites),
+                                        updated,
+                                        time.time() - t0 )
+
+                tx_runner(_do_query_setup_state, retries=5, sleep=0.1)
+            except transaction.interfaces.TransientError:
+                logger.debug("Trying sites setup state query later.", exc_info=True)
+                continue
+
+    return gevent.spawn(_query_setup_state)
+
+
+def _make_dummy_request(registry, root):
+    base_url = registry.getUtility(IOnboardingSettings)['application_url']
+    req_factory = component.queryUtility(IRequestFactory, default=Request)
+    request = req_factory.blank('/', base_url=base_url)
+    request.registry = registry
+
+    # At least the email template requires this.
+    request.context = root
+
+    # Making sure request has the same connection as the one created earlier in current transaction.,
+    # such that it will not try to get a new one when we load objects from the current request,
+    # which may result in InvalidObjectReference error when submit the transaction.
+    request._primary_zodb_conn = IConnection(root)
+    return request
 
 
 def root_folder(request):
