@@ -12,6 +12,7 @@ requires = [
     'dnspython',
     'gunicorn[gevent]',
     'nameparser',
+    'Paste',
     'python-dateutil',
     'plaster_pastedeploy',
     'pyramid',
@@ -119,6 +120,9 @@ setup(
     entry_points={
         'paste.app_factory': [
             'main = nti.app.environments:main',
+        ],
+        "paste.filter_app_factory": [
+            "ops_ping = nti.app.environments.wsgi_ping:ping_handler_factory",
         ],
         'console_scripts': [
             "nti_pserve=nti.app.environments.nti_gunicorn:main",
