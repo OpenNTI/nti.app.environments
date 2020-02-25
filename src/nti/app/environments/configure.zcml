@@ -90,4 +90,7 @@
 	<adapter for="nti.app.environments.models.interfaces.ILMSSite pyramid.interfaces.IRequest"
 			 factory=".adapters.SiteLinks"
 			 provides=".interfaces.ISiteLinks" />
+
+	<subscriber handler=".subscribers._spawn_setup_state_watchdog" />
+
 </configure>
