@@ -212,18 +212,17 @@ class SiteDetailView(BaseTemplateView):
                 'lastModified': formatDateToLocal(usage.lastModified)}
 
     def _format_setup_state(self, state):
-        res = {}
-        for iface, status in ((ISetupStatePending, 'pending'),
-                              (ISetupStateSuccess, 'success'),
-                              (ISetupStateFailure, 'failure')):
-            if iface.providedBy(state):
-                res['status'] = status
-        if res:
-            res['setup_state'] = state
-            return res
+        result = {'state_name': state.state_name,
+                  'start_time': formatDateToLocal(state.start_time) if state.start_time else '',
+                  'end_time': formatDateToLocal(state.end_time) if state.end_time else '',
+                  'elapsed_time': (state.end_time - state.start_time).total_seconds() if state.start_time and state.end_time else ''}
 
-        raise_json_error(hexc.HTTPUnprocessableEntity,
-                         "Unknown setup_state: {}.".format(state))
+        if ISetupStateFailure.providedBy(state):
+            result['exception'] = str(state.exception)
+        elif not ISetupStatePending.providedBy(state) and not ISetupStateSuccess.providedBy(state):
+            raise_json_error(hexc.HTTPUnprocessableEntity,
+                             "Unknown setup_state: {}.".format(state))
+        return result
 
     def __call__(self):
         request = self.request
