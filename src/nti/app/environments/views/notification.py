@@ -1,5 +1,6 @@
 from urllib.parse import urljoin
 from urllib.parse import urlparse
+from urllib.parse import parse_qs
 from urllib.parse import urlencode
 from urllib.parse import urlunparse
 
@@ -189,12 +190,13 @@ class SiteSetUpFinishedEmailNotifier(BaseEmailNotifier):
     def _invite_url(self):
         dns_name = self.site.dns_names[0]
         account_creation = urljoin('https://%s' % dns_name, '/login/account-setup')
-        params = {'success': account_creation}
 
         target_app_url = urlunparse(('https', dns_name, '/app', None, None, None))
         result = urljoin(target_app_url,
                          self.site.setup_state.site_info.admin_invitation)
         parsed = urlparse(result)
+        params = parse_qs(parsed.query)
+        params['success'] = account_creation
         parsed = parsed._replace(query=urlencode(params, doseq=True))
         return urlunparse(parsed)
 

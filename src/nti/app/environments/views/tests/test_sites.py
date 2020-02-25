@@ -527,7 +527,7 @@ class TestRequestTrialSiteView(BaseAppTest):
 class TestCreateNewTrialSiteView(BaseAppTest):
 
     @with_test_app()
-    @mock.patch('nti.app.environments.views.utils.query_setup_async_result')
+    @mock.patch('nti.app.environments.utils.query_setup_async_result')
     @mock.patch('nti.app.environments.views.notification._mailer')
     @mock.patch('nti.app.environments.views.sites.get_hubspot_client')
     @mock.patch('nti.app.environments.views.sites.is_admin_or_account_manager')
@@ -602,10 +602,13 @@ class TestCreateNewTrialSiteView(BaseAppTest):
                                                           'nti.app.environments:email_templates/site_setup_success'))
         success_msg = next((x for x in _result if x[0][0] == 'nti.app.environments:email_templates/site_setup_success'))
         success_msg = success_msg[1]
+        site_invite_rel = success_msg.get('template_args', {}).get('site_invite_link')
         assert_that(success_msg, has_entries('subject', starts_with("Site has been setup successfully"),
                                              'template_args', has_entries('site_details_link', 'http://localhost/onboarding/sites/%s/@@details' % site_id,
-                                                                          'site_id', site_id,
-                                                                          'site_invite_link', 'https://xxx.test_ntdomain.com/dataserver2/@@accept-site-invitation?success=https%3A%2F%2Fxxx.test_ntdomain.com%2Flogin%2Faccount-setup')))
+                                                                          'site_id', site_id)))
+        assert_that(site_invite_rel, not_none())
+        assert_that(site_invite_rel, contains_string('code=mockcode'))
+        assert_that(site_invite_rel, contains_string('success=https%3A%2F%2Fxxx.test_ntdomain.com%2Flogin%2Faccount-setup'))
 
 
 class TestSitesUploadCSVView(BaseAppTest):
