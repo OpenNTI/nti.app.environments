@@ -287,6 +287,16 @@ class SiteStatusColumn(column.GetAttrColumn):
     attrName = 'status'
 
 
+class SiteSetupStateColumn(column.GetAttrColumn):
+
+    weight = 3
+    header = 'Setup State'
+    attrName = 'setup_state'
+
+    def getValue(self, obj):
+        return obj.setup_state.state_name if obj.setup_state else ''
+
+
 class SiteCreatedColumn(CreatedColumn):
 
     weight = 8

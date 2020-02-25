@@ -527,7 +527,7 @@ class TestRequestTrialSiteView(BaseAppTest):
 class TestCreateNewTrialSiteView(BaseAppTest):
 
     @with_test_app()
-    @mock.patch('nti.app.environments.views.utils.query_setup_async_result')
+    @mock.patch('nti.app.environments.utils.query_setup_async_result')
     @mock.patch('nti.app.environments.views.notification._mailer')
     @mock.patch('nti.app.environments.views.sites.get_hubspot_client')
     @mock.patch('nti.app.environments.views.sites.is_admin_or_account_manager')

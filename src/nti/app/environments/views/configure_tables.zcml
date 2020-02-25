@@ -93,6 +93,11 @@
 			 provides="z3c.table.interfaces.IColumn"
 			 name="status" />
 
+	<adapter factory="._table_utils.SiteSetupStateColumn"
+			 for="* * ._table_utils.SitesTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="setup_state" />
+
 	<adapter factory="._table_utils.SiteCreatedColumn"
 			 for="* * ._table_utils.SitesTable"
 			 provides="z3c.table.interfaces.IColumn"
@@ -118,6 +123,10 @@
 
 	<adapter factory="._table_utils.SiteColumnHeader"
 			 for="* * * ._table_utils.SiteStatusColumn"
+			 provides="z3c.table.interfaces.IColumnHeader"/>
+
+	<adapter factory="._table_utils.SiteColumnHeader"
+			 for="* * * ._table_utils.SiteSetupStateColumn"
 			 provides="z3c.table.interfaces.IColumnHeader"/>
 
 	<adapter factory="._table_utils.SiteColumnHeader"
