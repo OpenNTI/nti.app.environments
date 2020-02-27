@@ -47,7 +47,7 @@ function getUrlParameter(name) {
             return qname[1] === undefined ? '' : decodeURIComponent(qname[1]);
         }
     }
-};
+}
 
 
 function updateUrlParameter(name, value, url) {

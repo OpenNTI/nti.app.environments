@@ -23,6 +23,7 @@ from nti.app.environments.auth import ACT_DELETE, ACT_UPDATE
 from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import IDedicatedEnvironment
 from nti.app.environments.models.interfaces import SITE_STATUS_ACTIVE
+from nti.app.environments.models.interfaces import SITE_STATUS_OPTIONS
 
 from nti.app.environments.common import formatDateToLocal
 
@@ -44,7 +45,7 @@ class TrivialTableAbsoluteURL(object):
 @interface.implementer(IBatchProvider)
 class DefaultTableBatchProvider(batch.BatchProvider):
 
-    _request_args = ['%(prefix)s-sortOn', '%(prefix)s-sortOrder', 'search', 'role_name']
+    _request_args = ['%(prefix)s-sortOn', '%(prefix)s-sortOrder', 'search', 'role_name', 'filterBy']
 
 
 class BaseTable(table.Table):
@@ -187,11 +188,32 @@ class CustomerColumnHeader(header.SortingColumnHeader):
 
 class _FilterMixin(object):
 
-    def _get_filter(self, name, params):
+    def _get_filter(self, name, params, lowercase=True):
         value = params[name].strip() if params.get(name) else ''
-        if value:
+        if lowercase and value:
             value = value.lower()
         return value
+
+    def _get_filter_by(self, params, _allow_fields=(), _normalize={}, _filter={}):
+        value = self._get_filter('filterBy', params, False)
+        if value:
+            value = value.split(";")
+            value = [x.split("=") for x in value]
+            result = []
+            for x in value:
+                if len(x) >= 2 and x[0] in _allow_fields and x[1]:
+                    filter_name = x[0]
+                    filter_value = _normalize[filter_name](x[1]) if _normalize.get(filter_name) else x[1]
+                    filter_func = _filter[filter_name]
+                    result.append((filter_name, filter_value, filter_func))
+            return result or None
+        return value or None
+
+    def _apply_filter_by(self, item, filterBy):
+        for _name, value, _filter in filterBy or ():
+            if not _filter(item, value):
+                return False
+        return True
 
 
 class ValuesForCustomersTable(value.ValuesForContainer, _FilterMixin):
@@ -226,11 +248,42 @@ class BaseSitesTable(BaseTable, _FilterMixin):
                 return True
         return False
 
+    def _normalize_setup_state(self, state):
+        if state:
+            state = state.split(',')
+            state = [x for x in state if x in ('pending', 'failed', 'success', 'none')]
+        return state
+
+    def _normalize_status(self, status):
+        if status:
+            status = status.split(',')
+            status = [x for x in status if x in SITE_STATUS_OPTIONS]
+        return status
+
+    def _filter_by_setup_state(self, item, state):
+        current = 'none' if not item.setup_state else item.setup_state.state_name
+        return current in state
+
+    def _filter_by_status(self, item, status):
+        return item.status in status
+
     @property
     def values(self):
         params = self.request.params
         term = self._get_filter('search', params)
-        return self._raw_values if not term else [x for x in self._raw_values if self._predicate(x, term)]
+        filterBy = self._get_filter_by(params,
+                                       _allow_fields=('setup_state', 'status'),
+                                       _normalize={'setup_state': self._normalize_setup_state,
+                                                   'status': self._normalize_status},
+                                       _filter={'setup_state': self._filter_by_setup_state,
+                                                'status': self._filter_by_status})
+
+        result = self._raw_values
+        if filterBy:
+            result = [x for x in result if self._apply_filter_by(x, filterBy)]
+        if term:
+            result = [x for x in result if self._predicate(x, term)]
+        return result
 
 
 class SitesTable(BaseSitesTable):
@@ -247,7 +300,7 @@ class SitesTable(BaseSitesTable):
 
 class SiteColumnHeader(header.SortingColumnHeader):
 
-    _request_args = ['search']
+    _request_args = ['search', 'filterBy']
 
 
 class SiteURLColumn(column.LinkColumn):
