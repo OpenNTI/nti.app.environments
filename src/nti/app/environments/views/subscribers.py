@@ -16,8 +16,11 @@ from nti.app.environments.api.hubspotclient import get_hubspot_client
 from nti.app.environments.interfaces import ITransactionRunner
 from nti.app.environments.interfaces import IOnboardingSettings
 
-from nti.app.environments.models.interfaces import SITE_STATUS_PENDING
 from nti.app.environments.models.interfaces import SITE_STATUS_ACTIVE
+from nti.app.environments.models.interfaces import SITE_STATUS_PENDING
+from nti.app.environments.models.interfaces import SITE_STATUS_OPTIONS
+from nti.app.environments.models.interfaces import SETUP_STATE_STATUS_OPTIONS
+
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ICustomer
 from nti.app.environments.models.interfaces import ISetupStateSuccess
@@ -145,29 +148,37 @@ def _get_site_stat_status_str(status):
 
 
 def _get_site_setup_stat_status_str(setup_state):
-    return 'nti.onboarding.lms_site_setup_status_count.%s' % setup_state.state_name.lower()
+    try:
+        state_name = setup_state.state_name.lower()
+    except AttributeError:
+        state_name = setup_state.lower()
+    return 'nti.onboarding.lms_site_setup_status_count.%s' % state_name
 
 
 def _update_site_status_stats(all_sites):
     client = statsd_client()
-    buffer = []
     if client is not None:
+        buffer = []
         stat_to_count = {}
+        # Init possible states (ensures we zero out states when necessary)
+        for status_option in SITE_STATUS_OPTIONS:
+            status_str = _get_site_stat_status_str(status_option)
+            stat_to_count[status_str] = 0
+        for setup_status_option in SETUP_STATE_STATUS_OPTIONS:
+            status_str = _get_site_setup_stat_status_str(setup_status_option)
+            stat_to_count[status_str] = 0
+
         for lms_site in all_sites:
             if lms_site.status:
                 status_str = _get_site_stat_status_str(lms_site.status)
-                if status_str not in stat_to_count:
-                    stat_to_count[status_str] = 0
                 stat_to_count[status_str] += 1
             if lms_site.setup_state:
                 status_str = _get_site_setup_stat_status_str(lms_site.setup_state)
-                if status_str not in stat_to_count:
-                    stat_to_count[status_str] = 0
                 stat_to_count[status_str] += 1
         for key, val in stat_to_count.items():
             client.gauge(key, val, buf=buffer)
-    if buffer:
-        client.sendbuf(buffer)
+        if buffer:
+            client.sendbuf(buffer)
 
 
 @component.adapter(ILMSSite, IObjectModifiedFromExternalEvent)

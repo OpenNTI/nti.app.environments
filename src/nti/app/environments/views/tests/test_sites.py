@@ -135,7 +135,11 @@ class TestSiteCreationView(BaseAppTest):
                                           'dns_names': ['s@next.com']}))
 
         assert_that(self.statsd.metrics,
-                    has_items(is_gauge('nti.onboarding.lms_site_status_count.active', '1')))
+                    has_items(is_gauge('nti.onboarding.lms_site_status_count.active', '1'),
+                              is_gauge('nti.onboarding.lms_site_status_count.inactive', '0'),
+                              is_gauge('nti.onboarding.lms_site_status_count.cancelled', '0'),
+                              is_gauge('nti.onboarding.lms_site_status_count.unknown', '0'),
+                              is_gauge('nti.onboarding.lms_site_status_count.pending', '0')))
         self.statsd.clear()
 
         # delete

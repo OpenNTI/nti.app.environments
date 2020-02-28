@@ -39,9 +39,9 @@ from nti.environments.management.interfaces import IInitializedSiteInfo
 MessageFactory = zope_i18nmessageid.MessageFactory('nti.app.environments')
 _ = MessageFactory
 
-SITE_STATUS = ('new', 'pending', 'active', 'defunct',)
 
 SHARED_ENV_NAMES = ('alpha', 'test', 'prod', 'assoc', 'hrpros')
+
 
 SITE_STATUS_PENDING = 'PENDING'
 SITE_STATUS_ACTIVE = 'ACTIVE'
@@ -53,6 +53,10 @@ SITE_STATUS_OPTIONS = (SITE_STATUS_PENDING,
                        SITE_STATUS_INACTIVE,
                        SITE_STATUS_CANCELLED,
                        SITE_STATUS_UNKNOWN)
+
+
+#: Site setup state status options; mirrors ISetupState implementations
+SETUP_STATE_STATUS_OPTIONS = (u'pending', u'success', u'failed')
 
 
 class IOnboardingRoot(IContainer, IAttributeAnnotatable):
