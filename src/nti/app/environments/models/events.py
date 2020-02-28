@@ -2,6 +2,7 @@ from zope import interface
 
 from zope.interface.interfaces import ObjectEvent
 
+from nti.app.environments.models.interfaces import IHostKnownSitesEvent
 from nti.app.environments.models.interfaces import ILMSSiteCreatedEvent
 from nti.app.environments.models.interfaces import ILMSSiteUpdatedEvent
 from nti.app.environments.models.interfaces import IHostLoadUpdatedEvent
@@ -63,3 +64,11 @@ class SiteSetupFinishedEvent(object):
 class CustomerVerifiedEvent(ObjectEvent):
 
     customer = alias('object')
+
+
+@interface.implementer(IHostKnownSitesEvent)
+class HostKnownSitesEvent(object):
+
+    def __init__(self, host, site_ids):
+        self.host = host
+        self.site_ids = site_ids

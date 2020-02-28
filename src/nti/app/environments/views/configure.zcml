@@ -11,6 +11,7 @@
 	<include package="." file="configure_tables.zcml" />
 
 	<!-- handlers -->
+	<subscriber handler=".subscribers._update_site_hosts" />
 	<subscriber handler=".subscribers._site_created_event" />
 	<subscriber handler=".subscribers._update_host_load_stats" />
 	<subscriber handler=".subscribers._customer_verified_event" />

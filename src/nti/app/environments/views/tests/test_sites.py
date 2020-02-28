@@ -593,8 +593,8 @@ class TestCreateNewTrialSiteView(BaseAppTest):
             sites[site_id].setup_state = SetupStatePending(task_state='okc',
                                                            start_time=now)
 
+        # Site setup is completed successfully
         url = '/onboarding/sites/%s/@@query-setup-state' % site_id
-
         mock_async_result.return_value = site_info = SiteInfo(site_id=site_id,
                                                               dns_name='xx.nextthought.io')
         site_info.start_time = now
