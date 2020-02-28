@@ -116,3 +116,7 @@
     color: #000;
     background-color: #fff;
 }
+
+.toolbar .drop-select {
+    margin-bottom: 16px;
+}
