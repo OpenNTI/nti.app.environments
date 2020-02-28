@@ -53,6 +53,8 @@ from nti.app.environments.resources import RolesResource
 
 from nti.app.environments.common import formatDateToLocal
 
+from nti.app.environments.utils import query_setup_state
+
 from nti.app.environments.views.base import BaseTemplateView
 from nti.app.environments.views.base import BaseView
 from nti.app.environments.views.base import TableViewMixin
@@ -227,6 +229,12 @@ class SiteDetailView(BaseTemplateView):
     def __call__(self):
         request = self.request
         extra_info = self._site_extra_info() or {}
+
+        # may have side effects.
+        query_setup_state([self.context],
+                          request=self.request,
+                          side_effects=True)
+
         return {'sites_list_link': self.request.resource_url(self.context.__parent__, '@@list'),
                 'env_shared_options': SHARED_ENV_NAMES,
                 'site_status_options': SITE_STATUS_OPTIONS,
