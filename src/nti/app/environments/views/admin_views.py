@@ -219,9 +219,14 @@ class SiteDetailView(BaseTemplateView):
                   'end_time': formatDateToLocal(state.end_time) if state.end_time else '',
                   'elapsed_time': (state.end_time - state.start_time).total_seconds() if state.start_time and state.end_time else ''}
 
-        if ISetupStateFailure.providedBy(state):
+        if ISetupStateSuccess.providedBy(state):
+            site_info = state.site_info
+            result['task_start_time'] = formatDateToLocal(site_info.start_time) if site_info.start_time else ''
+            result['task_end_time'] = formatDateToLocal(site_info.end_time) if site_info.end_time else ''
+            result['task_elapsed_time'] = site_info.elapsed_time if site_info.elapsed_time is not None else ''
+        elif ISetupStateFailure.providedBy(state):
             result['exception'] = str(state.exception)
-        elif not ISetupStatePending.providedBy(state) and not ISetupStateSuccess.providedBy(state):
+        elif not ISetupStatePending.providedBy(state):
             raise_json_error(hexc.HTTPUnprocessableEntity,
                              "Unknown setup_state: {}.".format(state))
         return result

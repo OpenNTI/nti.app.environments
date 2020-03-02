@@ -251,11 +251,20 @@
             <h3>Site Setup State</h3>
             <metal:block tal:omit-tag="" tal:condition="site.setup_state|nothing">
                 <p>Status: <span tal:content="site.setup_state.state_name"></span></p>
-                <p>Task StartTime: <span tal:content="site.setup_state.start_time"></span></p>
-                <p>Task EndTime: <span tal:content="site.setup_state.end_time"></span></p>
-                <p>Task Elapsed Time (seconds): <span tal:content="site.setup_state.elapsed_time"></span></p>
+                <p>State Created Time: <span tal:content="site.setup_state.start_time"></span></p>
+                <p>State Changed Time: <span tal:content="site.setup_state.end_time"></span></p>
+                <p>Total Elapsed Time (seconds): <span tal:content="site.setup_state.elapsed_time"></span></p>
                 <metal:block tal:omit-tag="" tal:condition="site.setup_state.exception|nothing">
                     <p>Exception: <span tal:content="site.setup_state.exception"></span></p>
+                </metal:block>
+                <metal:block tal:omit-tag="" tal:condition="site.setup_state.task_start_time|nothing">
+                    <p>Task Start Time: <span tal:content="site.setup_state.task_start_time"></span></p>
+                </metal:block>
+                <metal:block tal:omit-tag="" tal:condition="site.setup_state.task_end_time|nothing">
+                    <p>Task End Time: <span tal:content="site.setup_state.task_end_time"></span></p>
+                </metal:block>
+                <metal:block tal:omit-tag="" tal:condition="site.setup_state.task_elapsed_time|nothing">
+                    <p>Task Elapsed Time (seconds): <span tal:content="site.setup_state.task_elapsed_time"></span></p>
                 </metal:block>
             </metal:block>
             <metal:block tal:omit-tag="" tal:condition="not:site.setup_state|nothing">
