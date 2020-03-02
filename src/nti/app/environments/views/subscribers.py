@@ -409,14 +409,16 @@ def _update_site_hosts(event):
     hosts_to_update = set([host])
     known_host_site_ids = set(event.site_ids)
     for site in get_sites_folder().values():
+        old_host = getattr(site.environment, 'host', None)
         if site.id in known_host_site_ids:
             # This site must map to our host
-            if site.environment.host != host:
+            if old_host != host:
                 logger.info("Updating site host information (%s) (old=%s) (new=%s)",
                             site.id,
-                            site.environment.host,
+                            old_host,
                             host)
-                hosts_to_update.add(site.environment.host)
+                if old_host:
+                    hosts_to_update.add(site.environment.host)
                 # We have our host, setup our dedicated environment.
                 # TODO: we are assuming we are setup in a dedicated environment.
                 # in the future we need to consult the setup_info for that
@@ -424,13 +426,13 @@ def _update_site_hosts(event):
                                            host=host,
                                            load_factor=1)
                 site.environment = env
-        elif    site.environment is not None \
-            and site.environment.host == host:
-            logger.info("Removing site host reference (%s) (old=%s) (new=%s)",
+        elif old_host == host:
+            # The site has our host, but the host does not know of the site,
+            # remove the mapping
+            logger.info("Removing site host reference (%s) (%s)",
                         site.id,
-                        site.environment.host)
-            # This site should no longer map to our host
-            hosts_to_update.add(site.environment.host)
+                        old_host)
+            hosts_to_update.add(old_host)
             site.environment = None
     for host_to_update in hosts_to_update:
         host_to_update.recompute_current_load()
