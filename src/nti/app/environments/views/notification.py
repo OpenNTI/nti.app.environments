@@ -189,7 +189,7 @@ class SiteSetUpFinishedEmailNotifier(BaseEmailNotifier):
 
     def _invite_url(self):
         dns_name = self.site.dns_names[0]
-        account_creation = urljoin('https://%s' % dns_name, '/login/account-setup')
+        account_creation = '/login/account-setup'
 
         target_app_url = urlunparse(('https', dns_name, '/app', None, None, None))
         result = urljoin(target_app_url,
