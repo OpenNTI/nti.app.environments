@@ -188,6 +188,11 @@ class SiteSetUpFinishedEmailNotifier(BaseEmailNotifier):
         return customer.name if customer is not None else creator
 
     def _invite_url(self):
+        """
+        Get the invite url (with our site dns name). Also make sure we set a
+        `success` query param so that the user is redirected to account-setup
+        to create their account.
+        """
         dns_name = self.site.dns_names[0]
         account_creation = '/login/account-setup'
 
