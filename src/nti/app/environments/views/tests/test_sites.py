@@ -616,7 +616,7 @@ class TestCreateNewTrialSiteView(BaseAppTest):
                                                                           'site_id', site_id)))
         assert_that(site_invite_rel, not_none())
         assert_that(site_invite_rel, contains_string('code=mockcode'))
-        assert_that(site_invite_rel, contains_string('success=https%3A%2F%2Fxxx.test_ntdomain.com%2Flogin%2Faccount-setup'))
+        assert_that(site_invite_rel, contains_string('success=%2Flogin%2Faccount-setup'))
 
         # Make pending again
         with ensure_free_txn():
