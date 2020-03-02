@@ -71,7 +71,6 @@ def _mark_site_setup_finished(site, result):
 
     # Overwrite with our new state
     site.setup_state = state
-
     notify(SiteSetupFinishedEvent(site))
 
 

@@ -8,6 +8,8 @@ from perfmetrics import statsd_client
 
 from zope import component
 
+from zope.event import notify
+
 from zope.lifecycleevent import IObjectAddedEvent
 from zope.lifecycleevent import IObjectRemovedEvent
 
@@ -24,6 +26,7 @@ from nti.app.environments.models.interfaces import SETUP_STATE_STATUS_OPTIONS
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ICustomer
 from nti.app.environments.models.interfaces import ISetupStateSuccess
+from nti.app.environments.models.interfaces import IHostKnownSitesEvent
 from nti.app.environments.models.interfaces import ILMSSiteCreatedEvent
 from nti.app.environments.models.interfaces import ILMSSiteUpdatedEvent
 from nti.app.environments.models.interfaces import IDedicatedEnvironment
@@ -37,12 +40,13 @@ from nti.app.environments.models.customers import HubspotContact
 
 from nti.app.environments.models.hosts import get_or_create_host
 
+from nti.app.environments.models.events import HostKnownSitesEvent
+
 from nti.app.environments.models.sites import SetupStatePending
 from nti.app.environments.models.sites import DedicatedEnvironment
 
 from nti.app.environments.models.utils import get_sites_folder
 from nti.app.environments.models.utils import get_hosts_folder
-from nti.app.environments.models.utils import get_onboarding_root
 
 from nti.app.environments.views.notification import SiteSetupEmailNotifier
 from nti.app.environments.views.notification import SiteCreatedEmailNotifier
@@ -53,6 +57,7 @@ from nti.environments.management.interfaces import ICeleryApp
 from nti.environments.management.interfaces import ISetupEnvironmentTask
 
 from nti.externalization.interfaces import IObjectModifiedFromExternalEvent
+
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -380,20 +385,57 @@ def _on_site_setup_finished(event):
 
     logger.info('Associating site %s with host %s', site.id, setup_info.host)
 
-    root = get_onboarding_root()
-    assert root
+    # One-time use variable, store here.
+    peer_envs = list(setup_info.peer_environments)
+    if not peer_envs:
+        # This is a broken state, our new site will not be linked
+        logger.warn('Setup info with empty peer environments (%s) (%s)',
+                    peer_envs, setup_info)
+        return
 
-    hosts_folder = get_hosts_folder(onboarding_root=root)
+    hosts_folder = get_hosts_folder()
     host = get_or_create_host(hosts_folder, setup_info.host)
+    event = HostKnownSitesEvent(host, peer_envs)
+    notify(event)
 
-    # We have our host, setup our dedicated environment.
-    # TODO: we are assuming we are setup in a dedicated environment.
-    # in the future we need to consult the setup_info for that
-    env = DedicatedEnvironment(pod_id=site.id,
-                               host=host,
-                               load_factor=1)
-    site.environment = env
-    host.recompute_current_load()
+
+@component.adapter(IHostKnownSitesEvent)
+def _update_site_hosts(event):
+    """
+    For a host, we have updated information about which sites
+    run on that host.
+    """
+    host = event.host
+    hosts_to_update = set([host])
+    known_host_site_ids = set(event.site_ids)
+    for site in get_sites_folder().values():
+        old_host = getattr(site.environment, 'host', None)
+        if site.id in known_host_site_ids:
+            # This site must map to our host
+            if old_host != host:
+                logger.info("Updating site host information (%s) (old=%s) (new=%s)",
+                            site.id,
+                            old_host,
+                            host)
+                if old_host:
+                    hosts_to_update.add(site.environment.host)
+                # We have our host, setup our dedicated environment.
+                # TODO: we are assuming we are setup in a dedicated environment.
+                # in the future we need to consult the setup_info for that
+                env = DedicatedEnvironment(pod_id=site.id,
+                                           host=host,
+                                           load_factor=1)
+                site.environment = env
+        elif old_host == host:
+            # The site has our host, but the host does not know of the site,
+            # remove the mapping
+            logger.info("Removing site host reference (%s) (%s)",
+                        site.id,
+                        old_host)
+            hosts_to_update.add(old_host)
+            site.environment = None
+    for host_to_update in hosts_to_update:
+        host_to_update.recompute_current_load()
 
 
 @component.adapter(ILMSSiteSetupFinished)

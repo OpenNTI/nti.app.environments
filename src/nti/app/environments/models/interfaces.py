@@ -30,6 +30,7 @@ from nti.schema.field import Int
 from nti.schema.field import Choice
 from nti.schema.field import Object
 from nti.schema.field import DateTime
+from nti.schema.field import ListOrTuple
 from nti.schema.field import ValidTextLine
 from nti.schema.field import UniqueIterable
 from nti.schema.field import ValidBytesLine
@@ -448,6 +449,16 @@ class IHostLoadUpdatedEvent(interface.Interface):
                   required=True)
 
 
+class IHostKnownSitesEvent(interface.Interface):
+
+    host = Object(IHost,
+                  title="The host that has updated information",
+                  required=True)
+
+    site_ids = ListOrTuple(title=u"The site identifiers tied to this environment",
+                           readonly=True)
+
+
 class ILMSSiteCreatedEvent(interface.Interface):
 
     site = Object(ILMSSite,
@@ -477,7 +488,6 @@ class ISupportLMSSiteCreatedEvent(INewLMSSiteCreatedEvent):
     """
     Indicates a site was created for another party.
     """
-
 
 
 class ILMSSiteUpdatedEvent(interface.Interface):

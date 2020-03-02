@@ -1,13 +1,16 @@
 import os
 import datetime
 
-from hamcrest import is_
 from unittest import mock
+
+from hamcrest import is_
+from hamcrest import none
 from hamcrest import assert_that
 from hamcrest import has_length
 from hamcrest import has_item
 from hamcrest import has_items
 from hamcrest import has_entries
+from hamcrest import has_property
 from hamcrest import has_properties
 from hamcrest import instance_of
 from hamcrest import contains_string
@@ -590,11 +593,12 @@ class TestCreateNewTrialSiteView(BaseAppTest):
 
         now = datetime.datetime.utcnow()
         with ensure_free_txn():
-            sites[site_id].setup_state = SetupStatePending(task_state='okc',
-                                                           start_time=now)
+            sites = self._root().get('sites')
+            sites[site_id].setup_state = pending = SetupStatePending(task_state='okc',
+                                                                     start_time=now)
 
+        # Site setup is completed successfully
         url = '/onboarding/sites/%s/@@query-setup-state' % site_id
-
         mock_async_result.return_value = site_info = SiteInfo(site_id=site_id,
                                                               dns_name='xx.nextthought.io')
         site_info.start_time = now
@@ -613,6 +617,59 @@ class TestCreateNewTrialSiteView(BaseAppTest):
         assert_that(site_invite_rel, not_none())
         assert_that(site_invite_rel, contains_string('code=mockcode'))
         assert_that(site_invite_rel, contains_string('success=https%3A%2F%2Fxxx.test_ntdomain.com%2Flogin%2Faccount-setup'))
+
+        # Make pending again
+        with ensure_free_txn():
+            sites = self._root().get('sites')
+            sites[site_id].setup_state = pending
+        site_info.task_result_dict = {'admin_invitation': '/dataserver2/@@accept-site-invitation?code=mockcode',
+                                      'host_system': 'test.host',
+                                      'peer_environments': [site_id]}
+        self.statsd.clear()
+        self.testapp.get(url, extra_environ=env)
+
+        # We can validate effects via the stats
+        with ensure_free_txn():
+            sites = self._root().get('sites')
+            site = sites[site_id]
+            assert_that(site.environment.host, has_property('host_name', 'test.host'))
+        assert_that(self.statsd.metrics,
+                    has_item(is_gauge('nti.onboarding.host_current_load.test.host', is_('1'))))
+
+        # Now map to a new host
+        with ensure_free_txn():
+            sites = self._root().get('sites')
+            sites[site_id].setup_state = pending
+        site_info.task_result_dict = {'admin_invitation': '/dataserver2/@@accept-site-invitation?code=mockcode',
+                                      'host_system': 'test.host2',
+                                      'peer_environments': [site_id]}
+        self.statsd.clear()
+        self.testapp.get(url, extra_environ=env)
+
+        with ensure_free_txn():
+            sites = self._root().get('sites')
+            site = sites[site_id]
+            assert_that(site.environment.host, has_property('host_name', 'test.host2'))
+        assert_that(self.statsd.metrics,
+                    has_items(is_gauge('nti.onboarding.host_current_load.test.host', is_('0')),
+                              is_gauge('nti.onboarding.host_current_load.test.host2', is_('1'))))
+
+        # Now remove mapping
+        with ensure_free_txn():
+            sites = self._root().get('sites')
+            sites[site_id].setup_state = pending
+        site_info.task_result_dict = {'admin_invitation': '/dataserver2/@@accept-site-invitation?code=mockcode',
+                                      'host_system': 'test.host2',
+                                      'peer_environments': [site_id + 'bleh']}
+        self.statsd.clear()
+        self.testapp.get(url, extra_environ=env)
+
+        with ensure_free_txn():
+            sites = self._root().get('sites')
+            site = sites[site_id]
+            assert_that(site.environment, none())
+        assert_that(self.statsd.metrics,
+                    has_item(is_gauge('nti.onboarding.host_current_load.test.host2', is_('0'))))
 
 
 class TestSitesUploadCSVView(BaseAppTest):
@@ -1125,7 +1182,7 @@ class TestContinueToSite(BaseAppTest):
         with ensure_free_txn():
             site_info = SiteInfo(site_id='S001', dns_name='xx.nextthought.io')
             task_result = {'admin_invitation': '/dataserver2/@@accept-site-invitation?code=mockcode',
-                           'host': 'test.host'}
+                           'host_system': 'test.host'}
             site_info.task_result_dict = task_result
             sites['S001'].setup_state = SetupStateSuccess(task_state=object(),
                                                           site_info=site_info)
