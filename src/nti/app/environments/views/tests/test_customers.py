@@ -249,7 +249,7 @@ class TestCustomersViews(BaseAppTest):
                                             'MimeType': 'application/vnd.nextthought.app.environments.customer'}))
 
     @with_test_app()
-    @mock.patch('nti.app.environments.views.customers.get_hubspot_client')
+    @mock.patch('nti.app.environments.views.base.get_hubspot_client')
     def testCustomerCreationAndDeletion(self, mock_client):
         mock_client.return_value = _client = mock.MagicMock()
         _client.fetch_contact_by_email = lambda email: None

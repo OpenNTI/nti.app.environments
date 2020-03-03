@@ -13,6 +13,7 @@ from zope.schema._bootstrapinterfaces import ValidationError
 from nti.externalization import new_from_external_object
 from nti.externalization import update_from_external_object
 
+from nti.app.environments.api.hubspotclient import get_hubspot_client
 
 from nti.app.environments.auth import ACT_READ
 from nti.app.environments.auth import ACT_DELETE
@@ -41,6 +42,10 @@ class BaseView(object):
     def __init__(self, context, request):
         self.context = context
         self.request = request
+
+    @Lazy
+    def _hubspot_client(self):
+        return get_hubspot_client()
 
     def _get_param(self, name, params=None, required=True):
         params = self.request.params if params is None else params

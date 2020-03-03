@@ -15,8 +15,6 @@ from zope.container.interfaces import InvalidItemType
 
 from zope.schema._bootstrapinterfaces import ConstraintNotSatisfied
 
-from nti.app.environments.api.hubspotclient import get_hubspot_client
-
 from nti.app.environments.models.interfaces import ICustomer
 from nti.app.environments.models.interfaces import ICustomersContainer
 from nti.app.environments.models.interfaces import checkEmailAddress
@@ -320,10 +318,6 @@ def deleteCustomerView(context, request):
                permission=ACT_CREATE)
 class CustomerCreationView(BaseView, ObjectCreateUpdateViewMixin):
 
-    @property
-    def client(self):
-        return get_hubspot_client()
-
     @view_config(name="hubspot")
     def with_hubspot(self):
         email = self._get_param('email')
@@ -336,7 +330,11 @@ class CustomerCreationView(BaseView, ObjectCreateUpdateViewMixin):
             raise_json_error(hexc.HTTPConflict,
                              "Existing customer: {}.".format(email))
 
-        contact = self.client.fetch_contact_by_email(email)
+        if self._hubspot_client is None:
+            raise_json_error(hexc.HTTPUnprocessableEntity,
+                             "No hubspot support is available.")
+
+        contact = self._hubspot_client.fetch_contact_by_email(email)
         if not contact:
             raise_json_error(hexc.HTTPUnprocessableEntity,
                              "No hubspot contact found: {}.".format(email))

@@ -75,6 +75,9 @@ def _customer_verified_event(event):
 
     # upsert contact to hubspot
     client = get_hubspot_client()
+    if client is None:
+        return
+
     result = client.upsert_contact(customer.email,
                                    customer.name)
     if result is None:

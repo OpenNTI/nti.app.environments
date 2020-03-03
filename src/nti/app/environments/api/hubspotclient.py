@@ -160,13 +160,13 @@ class DevModeHubspotClient(HubspotClient):
 @interface.implementer(IHubspotClient)
 def _hubspot_client_factory():
     settings = component.getUtility(IOnboardingSettings)
-    return HubspotClient(settings['hubspot_api_key'])
+    return HubspotClient(settings['hubspot_api_key']) if 'hubspot_api_key' in settings else None
 
 
 @interface.implementer(IHubspotClient)
 def _devmode_hubspot_client_factory():
     settings = component.getUtility(IOnboardingSettings)
-    return DevModeHubspotClient(settings['hubspot_api_key'])
+    return DevModeHubspotClient(settings['hubspot_api_key']) if 'hubspot_api_key' in settings else None
 
 
 def _split_name(name):
@@ -175,10 +175,12 @@ def _split_name(name):
 
 
 def get_hubspot_client():
-    return component.getUtility(IHubspotClient)
+    return component.queryUtility(IHubspotClient)
 
 
 def get_hubspot_profile_url(contact_vid):
     settings = component.getUtility(IOnboardingSettings)
+    if 'hubspot_portal_id' not in settings:
+        return None
     return "https://app.hubspot.com/contacts/{portal_id}/contact/{vid}".format(portal_id=settings['hubspot_portal_id'],
                                                                                vid=contact_vid)

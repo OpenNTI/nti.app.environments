@@ -88,7 +88,8 @@ class CustomersListView(BaseTemplateView, TableViewMixin):
         has_create_perm = self.request.has_permission(ACT_CREATE, self.context)
         return {'table': table,
                 'creation_url': self.request.resource_url(self.context) if has_create_perm else None,
-                'create_via_hubspot': self.request.resource_url(self.context, '@@hubspot') if has_create_perm else None,
+                'create_via_hubspot': self.request.resource_url(self.context, '@@hubspot') \
+                                            if has_create_perm and self._hubspot_client is not None else None,
                 'is_deletion_allowed': self._is_deletion_allowed(table)}
 
 

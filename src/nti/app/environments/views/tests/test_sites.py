@@ -423,7 +423,7 @@ class TestRequestTrialSiteView(BaseAppTest):
     @with_test_app()
     @mock.patch('nti.app.environments.views.notification._mailer')
     @mock.patch('nti.app.environments.views.utils._is_dns_name_available')
-    @mock.patch('nti.app.environments.views.sites.get_hubspot_client')
+    @mock.patch('nti.app.environments.views.base.get_hubspot_client')
     @mock.patch('nti.app.environments.views.sites.is_admin_or_account_manager')
     def testRequestTrialSiteView(self, mock_admin, mock_client, mock_dns_available, mock_mailer):
         _client = mock.MagicMock()
@@ -536,7 +536,7 @@ class TestCreateNewTrialSiteView(BaseAppTest):
     @with_test_app()
     @mock.patch('nti.app.environments.utils.query_setup_async_result')
     @mock.patch('nti.app.environments.views.notification._mailer')
-    @mock.patch('nti.app.environments.views.sites.get_hubspot_client')
+    @mock.patch('nti.app.environments.views.base.get_hubspot_client')
     @mock.patch('nti.app.environments.views.sites.is_admin_or_account_manager')
     @mock.patch('nti.app.environments.views.utils._is_dns_name_available')
     def testCreateNewTrialSiteView(self, mock_dns_available, mock_admin, mock_client, mock_mailer, mock_async_result):
@@ -790,7 +790,7 @@ class TestSitesUploadCSVView(BaseAppTest):
         assert_that(view._process_parent_site('abc.com'), is_(site))
 
     @with_test_app()
-    @mock.patch('nti.app.environments.views.sites.get_hubspot_client')
+    @mock.patch('nti.app.environments.views.base.get_hubspot_client')
     @mock.patch('nti.app.environments.models.utils.get_current_request')
     def testSitesUploadCSVView(self, mock_request, mock_client):
         mock_request.return_value = self.request
@@ -941,7 +941,7 @@ class TestSitesUploadCSVView(BaseAppTest):
         assert_that(view._existing_site_dns_names, has_length(6))
 
     @with_test_app()
-    @mock.patch('nti.app.environments.views.sites.get_hubspot_client')
+    @mock.patch('nti.app.environments.views.base.get_hubspot_client')
     def testGet(self, mock_client):
         mock_client.return_value = client = mock.MagicMock()
         client.fetch_contact_by_email = lambda email: None
@@ -1196,7 +1196,7 @@ class TestSetupFailure(BaseAppTest):
     @mock.patch('nti.app.environments.utils.query_setup_async_result')
     @mock.patch('nti.app.environments.views.notification._mailer')
     @mock.patch('nti.app.environments.views.utils._is_dns_name_available')
-    @mock.patch('nti.app.environments.views.sites.get_hubspot_client')
+    @mock.patch('nti.app.environments.views.base.get_hubspot_client')
     @mock.patch('nti.app.environments.views.sites.is_admin_or_account_manager')
     def test_setup_failed_and_setup_password(self, mock_admin, mock_client, mock_dns_available, mock_mailer, mock_async_result):
         _result = []
