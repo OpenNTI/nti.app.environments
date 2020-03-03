@@ -1,5 +1,6 @@
 # NOTE: We must not import *anything* before the patch
-import gevent; gevent.config.resolver = 'dnspython'
+# This fails with attribute errors for some reason...
+#import gevent; gevent.config.resolver = 'dnspython'
 import gevent.monkey
 gevent.monkey.patch_all()
 
