@@ -15,8 +15,6 @@ from zope.container.interfaces import InvalidItemType
 
 from zope.event import notify
 
-from nti.app.environments.api.hubspotclient import get_hubspot_client
-
 from nti.app.environments.auth import ACT_CREATE
 from nti.app.environments.auth import ACT_DELETE
 from nti.app.environments.auth import ACT_EDIT_SITE_ENVIRONMENT
@@ -96,10 +94,6 @@ class SiteBaseView(BaseView):
         folder = get_customers_folder(root)
         return folder
 
-    @Lazy
-    def _client(self):
-        return get_hubspot_client()
-
     def _handle_owner(self, value, created=False):
         """
         Create a new customer if customer is not found and created is True.
@@ -112,8 +106,8 @@ class SiteBaseView(BaseView):
 
         folder = self._customers
         customer = folder.getCustomer(value)
-        if customer is None and created is True:
-            contact = self._client.fetch_contact_by_email(value)
+        if customer is None and created is True and self._hubspot_client is not None:
+            contact = self._hubspot_client.fetch_contact_by_email(value)
             if contact:
                 if not contact['name']:
                     raise_json_error(hexc.HTTPUnprocessableEntity,

@@ -20,7 +20,12 @@
             <p>Email: <span tal:content="customer.customer.email"></span></p>
             <p>Organization: <span tal:content="customer.customer.organization or 'Unknown'"></span></p>
             <metal:block tal:omit-tag="" tal:condition="customer.hubspot">
-                <p>Hubspot: <a href="${customer.hubspot.profile_url}" target="_blank">${customer.hubspot.contact_vid}</a></p>
+                <metal:block tal:omit-tag="" tal:condition="customer.hubspot.profile_url">
+                    <p>Hubspot: <a href="${customer.hubspot.profile_url}" target="_blank">${customer.hubspot.contact_vid}</a></p>
+                </metal:block>
+                <metal:block tal:omit-tag="" tal:condition="not:customer.hubspot.profile_url">
+                    <p>Hubspot: ${customer.hubspot.contact_vid}</p>
+                </metal:block>
             </metal:block>
         </div>
 
