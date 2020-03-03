@@ -222,6 +222,7 @@ class EmailChallengeVerifyView(BaseView):
         try:
             self.do_verify(params)
         except RecoveryChallengeFailed:
+            forget(self.request)
             recovery_url = self._get_recovery_error_url()
             return hexc.HTTPFound(location=recovery_url,
                                   headers=self.request.response.headers)
@@ -239,6 +240,7 @@ class EmailChallengeVerifyView(BaseView):
         try:
             data = self.do_verify(self.body_params)
         except RecoveryChallengeFailed as e:
+            forget(self.request)
             raise raise_json_error(hexc.HTTPBadRequest,
                                    e.args[0])
 
