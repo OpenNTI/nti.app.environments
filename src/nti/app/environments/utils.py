@@ -63,7 +63,6 @@ def _mark_site_setup_finished(site, result):
     else:
         state = _create_setup_state(SetupStateSuccess,
                                     site.setup_state)
-        state.end_time = result.end_time
         state.site_info = result
         logger.info('Site setup complete (id=%s) (task_time=%.2f) (duration=%.2f) (successfully=True)',
                     site.id,
