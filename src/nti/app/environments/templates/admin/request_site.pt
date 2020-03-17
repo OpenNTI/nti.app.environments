@@ -15,7 +15,7 @@
                     <label>Site Name</label>
                     <p>Will be used as the default name for site community, brand, etc. Limited to ${client_name.max_length} characters. <span class="example">Intelligent Education</span></p>
                 </div>
-                <input type="text" id="site_trial_client"/>
+                <input type="text" id="site_trial_client" maxlength="${client_name.max_length}"/>
             </div>
             <div class="row-group">
                 <div>
