@@ -5,6 +5,7 @@
     <meta name="author" content="NextThought">
     <title metal:define-slot="title">NextThought Site Onboarding</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
     <link href="/static/css/base.css" rel="stylesheet">
     <metal:slot metal:define-slot="css"></metal:slot>
 <body>

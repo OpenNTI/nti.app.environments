@@ -1,42 +1,58 @@
 <metal:block metal:use-macro="load: ../macros/layout_admin.pt">
     <title metal:fill-slot="title">
-        Trial Site Request
+        Create Trial Site
     </title>
     <metal:block metal:fill-slot="content">
         <div class="trial-site-request form-container">
-            <h2 style="margin-top: 32px;margin-bottom: 32px;">Trial Site Request Form</h2>
+            <h1 style="margin-top: 0px;margin-bottom:16px;">Create Trial Site</h1>
+            <div style="margin-bottom: 16px;">
+                Complete the following form to set up a new trial site for a client. 
+                This form will create the site immediately and email you (the requesting user) a secure one-time link that can be passed on to the client (end user) to set up their admin account. 
+                As an alternative, you can use the emailed link to set up an admin account for yourself and invite the end user through the normal site invitation flow in the platform.
+            </div>
             <div class="row-group">
                 <div>
-		    <label>Site Name</label>
-		    <p>Will be used as default name for site community, brand, etc. <span class="example">Intelligent Education</span></p>
-		</div>
+                    <label>Site Name</label>
+                    <p>Will be used as the default name for site community, brand, etc. Limited to ${client_name.max_length} characters. <span class="example">Intelligent Education</span></p>
+                </div>
                 <input type="text" id="site_trial_client"/>
             </div>
             <div class="row-group">
                 <div>
-		    <label class="required">Client Email Contact</label>
-		    <p>We'll associate this to the hubspot contact if one exists. <span class="example">suzy@client.com</span> </p>
-		</div>
+                    <label class="required">Client Email Contact</label>
+                    <p style="margin-bottom: 10px">
+                        The email address must match an existing customer or match a customer email in hubspot. <span class="example">suzy@client.com</span>
+                    </p>
+                    <p style="margin-top: 10px; color:#494949;font-style:italic;">
+                        Important: Customers are currently limited to one trial site. If you need an additional site for an existing client contact 
+                        <a href="mailto:tony.tarleton@nextthought.com" style="text-decoration:none;color: #3FB3F6;">tony.tarleton@nextthought.com</a>
+                    </p>
+                </div>
                 <input type="text" id="site_trial_email"/>
             </div>
             <div class="row-group">
-		<div>
-		    <label class="required">Trial Site's URL</label>
-		    <p>The domain name for the trial site. <span class="example">client.${base_domain or 'nextthought.io'}</span> </p>
-		</div>
+                <div>
+                    <label class="required">Trial Site's URL</label>
+                    <p>The domain name for the trial site. <span class="example">client.${base_domain or 'nextthought.io'}</span> </p>
+                </div>
                 <input type="text" id="site_trial_url" class="lowercase" suggested_domain="${base_domain}"/>
             </div>
             <div class="row-group">
                 <div class="success success-request-trial-site" style="display:none;"></div>
                 <div class="error error-request-trial-site" style="display:none;"></div>
             </div>
-            <div class="row-group">
+            <div class="row-group" style="margin-bottom: 50px;">
+                <div style="margin-bottom: 10px;font-size:14px;">
+                    This may take a minute. Please be patient. 
+                    Once submitted you will be taken to a page where you can check on your site's status. 
+                    We'll also send you an email with the setup is complete.
+                </div>
                 <button type="button" class='btn btnSave' onclick="requestTrialSite(this, '${trial_site_request_url}');">
                     <div class="spinnerText" style="display:none;">
-                        <i class="fa fa-circle-o-notch fa-spin"></i>Saving
+                        <i class="fa fa-circle-o-notch fa-spin"></i>Creating
                     </div>
                     <div class="nonSpinnerText">
-                        Request New Site
+                        Create Trial Site
                     </div>
                 </button>
             </div>

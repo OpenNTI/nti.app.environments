@@ -273,7 +273,10 @@ class SiteRequestView(BaseTemplateView):
     def __call__(self):
         return {
             'trial_site_request_url': self.request.resource_url(self.context, '@@request_trial_site'),
-            'base_domain': component.getUtility(ISiteDomainPolicy).base_domain 
+            'base_domain': component.getUtility(ISiteDomainPolicy).base_domain,
+            'client_name': {
+                'max_length': ILMSSite['client_name'].max_length
+            }
         }
 
 
