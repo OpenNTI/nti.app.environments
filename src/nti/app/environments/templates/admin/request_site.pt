@@ -25,7 +25,7 @@
                     </p>
                     <p style="margin-top: 10px; color:#494949;font-style:italic;">
                         Important: Customers are currently limited to one trial site. If you need an additional site for an existing client contact 
-                        <a href="mailto:tony.tarleton@nextthought.com" style="text-decoration:none;color: #3FB3F6;">tony.tarleton@nextthought.com</a>
+                        <a href="mailto:sites@nextthought.com" style="text-decoration:none;color: #3FB3F6;">sites@nextthought.com</a>
                     </p>
                 </div>
                 <input type="text" id="site_trial_email"/>
