@@ -421,6 +421,15 @@ class TestSitePutView(BaseAppTest):
 class TestRequestTrialSiteView(BaseAppTest):
 
     @with_test_app()
+    def test_create_license(self):
+        sites = self._root().get('sites')
+        view = RequestTrialSiteView(sites, self.request)
+        result = view._create_license(True)
+        assert_that((result.end_date - result.start_date).days, is_(90))
+        result = view._create_license(False)
+        assert_that((result.end_date - result.start_date).days, is_(14))
+
+    @with_test_app()
     @mock.patch('nti.app.environments.views.notification._mailer')
     @mock.patch('nti.app.environments.views.utils._is_dns_name_available')
     @mock.patch('nti.app.environments.views.base.get_hubspot_client')

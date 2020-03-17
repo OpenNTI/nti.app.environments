@@ -216,9 +216,9 @@ class RequestTrialSiteView(SiteBaseView, ObjectCreateUpdateViewMixin):
         return names
 
     def _create_license(self, is_admin_or_management):
-        # Trial days is 90 if owner is admin/management, else 30.
+        # Trial days is 90 if owner is admin/management, else 14.
         start_date = datetime.datetime.utcnow()
-        days = 90 if is_admin_or_management else 30
+        days = 90 if is_admin_or_management else 14
         return TrialLicense(start_date=start_date,
                             end_date=start_date + datetime.timedelta(days=days))
 
