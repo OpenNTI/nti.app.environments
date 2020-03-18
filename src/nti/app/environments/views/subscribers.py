@@ -373,14 +373,17 @@ def _on_site_setup_finished(event):
     clean up and recompute host load here.
     """
     site = event.site
+
+    if      ISetupStateSuccess.providedBy(site.setup_state) \
+        and site.status == SITE_STATUS_PENDING:
+        site.status = SITE_STATUS_ACTIVE
+
     _store_site_setup_stats(site.setup_state)
     _update_site_status_stats(site.__parent__.values())
+
     if not ISetupStateSuccess.providedBy(site.setup_state):
         _email_on_setup_error(site)
         return
-
-    if site.status == SITE_STATUS_PENDING:
-        site.status = SITE_STATUS_ACTIVE
 
     setup_info = site.setup_state.site_info
     if not setup_info.host:
