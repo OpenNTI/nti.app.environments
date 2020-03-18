@@ -92,7 +92,9 @@ class TestSiteCreationView(BaseAppTest):
 
     @with_test_app()
     @mock.patch('nti.app.environments.models.wref.get_customers_folder')
-    def test_site(self, mock_customers):
+    @mock.patch('nti.app.environments.views.subscribers._store_task_results')
+    def test_site(self, mock_store, mock_customers):
+        mock_store.return_value = True
         url = '/onboarding/sites'
         params = self._params()
         self.testapp.post_json(url, params=params, status=302, extra_environ=self._make_environ(username=None))
@@ -434,7 +436,9 @@ class TestRequestTrialSiteView(BaseAppTest):
     @mock.patch('nti.app.environments.views.utils._is_dns_name_available')
     @mock.patch('nti.app.environments.views.base.get_hubspot_client')
     @mock.patch('nti.app.environments.views.sites.is_admin_or_account_manager')
-    def testRequestTrialSiteView(self, mock_admin, mock_client, mock_dns_available, mock_mailer):
+    @mock.patch('nti.app.environments.views.subscribers._store_task_results')
+    def testRequestTrialSiteView(self, mock_store, mock_admin, mock_client, mock_dns_available, mock_mailer):
+        mock_store.return_value = True
         _client = mock.MagicMock()
         _client.fetch_contact_by_email = lambda email: None
         mock_client.return_value = _client
@@ -548,10 +552,12 @@ class TestCreateNewTrialSiteView(BaseAppTest):
     @mock.patch('nti.app.environments.views.base.get_hubspot_client')
     @mock.patch('nti.app.environments.views.sites.is_admin_or_account_manager')
     @mock.patch('nti.app.environments.views.utils._is_dns_name_available')
-    def testCreateNewTrialSiteView(self, mock_dns_available, mock_admin, mock_client, mock_mailer, mock_async_result):
+    @mock.patch('nti.app.environments.views.subscribers._store_task_results')
+    def testCreateNewTrialSiteView(self, mock_store, mock_dns_available, mock_admin, mock_client, mock_mailer, mock_async_result):
         """
         Test creating a site on behalf of a user.
         """
+        mock_store.return_value = True
         _client = mock.MagicMock()
         _client.fetch_contact_by_email = lambda unused_email: None
         mock_client.return_value = _client
@@ -1207,8 +1213,10 @@ class TestSetupFailure(BaseAppTest):
     @mock.patch('nti.app.environments.views.utils._is_dns_name_available')
     @mock.patch('nti.app.environments.views.base.get_hubspot_client')
     @mock.patch('nti.app.environments.views.sites.is_admin_or_account_manager')
-    def test_setup_failed_and_setup_password(self, mock_admin, mock_client, mock_dns_available, mock_mailer, mock_async_result):
+    @mock.patch('nti.app.environments.views.subscribers._store_task_results')
+    def test_setup_failed_and_setup_password(self, mock_store, mock_admin, mock_client, mock_dns_available, mock_mailer, mock_async_result):
         _result = []
+        mock_store.return_value = True
         mock_async_result.return_value = ValueError("this setup failed")
         mock_dns_available.return_value = True
         _client = mock.MagicMock()
