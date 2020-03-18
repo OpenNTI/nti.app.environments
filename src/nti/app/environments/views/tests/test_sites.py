@@ -338,12 +338,12 @@ class TestSitePutView(BaseAppTest):
         params = {'MimeType': 'application/vnd.nextthought.app.environments.enterpriselicense',
                   'end_date': '2016-07'}
         result = self.testapp.put_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
-        assert_that(result.json_body, has_entries({"message": "Missing required field: start_date."}))
+        assert_that(result.json_body, has_entries({"message": "Missing start_date."}))
 
         params = {'MimeType': 'application/vnd.nextthought.app.environments.enterpriselicense',
                   'start_date': '2016-07'}
         result = self.testapp.put_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
-        assert_that(result.json_body, has_entries({"message": "Missing required field: end_date."}))
+        assert_that(result.json_body, has_entries({"message": "Missing end_date."}))
 
     @with_test_app()
     @mock.patch('nti.app.environments.models.utils.get_onboarding_root')
@@ -1261,7 +1261,7 @@ class TestSetupFailure(BaseAppTest):
                                                                            'dns_names': 'xxx.nextthought.io',
                                                                            'owner_email': 'user001@example.com',
                                                                            'env_info': '',
-                                                                           'exception': "ValueError('this setup failed')"}),}))
+                                                                           'exception': "ValueError('this setup failed',)"}),}))
 
         # Setup password
         setup_msg = next((x for x in _result if x[0][0] == 'nti.app.environments:email_templates/site_setup_password'))

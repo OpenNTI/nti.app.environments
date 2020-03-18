@@ -38,11 +38,11 @@ class TestChallengeView(BaseAppTest):
         url = '/onboarding/customers/@@email_challenge'
         params = {}
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username=None)).json_body
-        assert_that(result, has_entries({'message': 'Missing required field: name.'}))
+        assert_that(result, has_entries({'message': 'Missing name.'}))
 
         params = {'name': 'Test User'}
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username=None)).json_body
-        assert_that(result, has_entries({'message': 'Missing required field: email.'}))
+        assert_that(result, has_entries({'message': 'Missing email.'}))
 
         params = {'name': 'Test User', 'email': 'invalidemail'}
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username=None)).json_body
@@ -80,7 +80,7 @@ class TestChallengeView(BaseAppTest):
         url = '/onboarding/customers/@@recovery_challenge'
         params = {}
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username=None)).json_body
-        assert_that(result, has_entries({'message': 'Missing required field: email.'}))
+        assert_that(result, has_entries({'message': 'Missing email.'}))
 
         params = {'email': 'invalidemail'}
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username=None)).json_body
@@ -126,11 +126,11 @@ class TestChallengerVerification(BaseAppTest):
         url = '/onboarding/customers/@@email_challenge_verify'
         params = {}
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username=None)).json_body
-        assert_that(result['message'], is_('Missing required field: email.'))
+        assert_that(result['message'], is_('Missing email.'))
 
         params = {'email': 'test@g.com'}
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username=None)).json_body
-        assert_that(result['message'], is_('Missing required field: code.'))
+        assert_that(result['message'], is_('Missing code.'))
 
         params = {'email': 'test@g.com', 'code': 'xxxxxx'}
         result = self.testapp.post_json(url, params=params, status=400, extra_environ=self._make_environ(username=None)).json_body
@@ -162,11 +162,11 @@ class TestChallengerVerification(BaseAppTest):
         url = '/onboarding/customers/@@recovery_challenge_verify'
         params = {}
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username=None)).json_body
-        assert_that(result['message'], is_('Missing required field: email.'))
+        assert_that(result['message'], is_('Missing email.'))
 
         params = {'email': 'test@g.com'}
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username=None)).json_body
-        assert_that(result['message'], is_('Missing required field: code.'))
+        assert_that(result['message'], is_('Missing code.'))
 
         params = {'email': 'test@g.com', 'code': 'xxxxxx'}
         result = self.testapp.post_json(url, params=params, status=400, extra_environ=self._make_environ(username=None)).json_body
@@ -198,11 +198,11 @@ class TestChallengerVerification(BaseAppTest):
         url = '/onboarding/customers/@@recovery_challenge_verify'
         params = {}
         result = self.testapp.get(url, params=params, status=422, extra_environ=self._make_environ(username=None)).json_body
-        assert_that(result['message'], is_('Missing required field: email.'))
+        assert_that(result['message'], is_('Missing email.'))
 
         params = {'email': 'test@g.com'}
         result = self.testapp.get(url, params=params, status=422, extra_environ=self._make_environ(username=None)).json_body
-        assert_that(result['message'], is_('Missing required field: code.'))
+        assert_that(result['message'], is_('Missing code.'))
 
         params = {'email': 'test@g.com', 'code': 'xxxxxx'}
         result = self.testapp.get(url, params=params, status=302, extra_environ=self._make_environ(username=None))
@@ -262,7 +262,7 @@ class TestCustomersViews(BaseAppTest):
         self.testapp.post(url, params=params, status=302, extra_environ=self._make_environ(username=None))
         self.testapp.post(url, params=params, status=403, extra_environ=self._make_environ(username='user001'))
         result = self.testapp.post(url, params=params, status=400, extra_environ=self._make_environ(username='admin001')).json_body
-        assert_that(result['message'], is_('Missing required email'))
+        assert_that(result['message'], is_('Missing email.'))
 
         params = {'email': 'xxx'}
         result = self.testapp.post(url, params=params, status=422, extra_environ=self._make_environ(username='admin001')).json_body

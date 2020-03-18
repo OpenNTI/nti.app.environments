@@ -3,7 +3,7 @@
         Create Trial Site
     </title>
     <metal:block metal:fill-slot="content">
-        <div class="trial-site-request form-container">
+        <div class="trial-site-request form-container submit-form">
             <h1 style="margin-top: 0px;margin-bottom:16px;">Create Trial Site</h1>
             <div style="margin-bottom: 16px;">
                 Complete the following form to set up a new trial site for a client. 
@@ -12,10 +12,11 @@
             </div>
             <div class="row-group">
                 <div>
-                    <label>Site Name</label>
+                    <label class="required">Site Name</label>
                     <p>Will be used as the default name for site community, brand, etc. Limited to ${client_name.max_length} characters. <span class="example">Intelligent Education</span></p>
                 </div>
-                <input type="text" id="site_trial_client" maxlength="${client_name.max_length}"/>
+                <input type="text" id="site_trial_client" name="client_name" maxlength="${client_name.max_length}"/>
+                <span class="field-error"></span>
             </div>
             <div class="row-group">
                 <div>
@@ -28,14 +29,16 @@
                         <a href="mailto:sites@nextthought.com" style="text-decoration:none;color: #3FB3F6;">sites@nextthought.com</a>
                     </p>
                 </div>
-                <input type="text" id="site_trial_email"/>
+                <input type="text" id="site_trial_email" name="owner"/>
+                <span class="field-error"></span>
             </div>
             <div class="row-group">
                 <div>
                     <label class="required">Trial Site's URL</label>
                     <p>The domain name for the trial site. <span class="example">client.${base_domain or 'nextthought.io'}</span> </p>
                 </div>
-                <input type="text" id="site_trial_url" class="lowercase" suggested_domain="${base_domain}"/>
+                <input type="text" id="site_trial_url" name="dns_names" class="lowercase" suggested_domain="${base_domain}"/>
+                <span class="field-error"></span>
             </div>
             <div class="row-group">
                 <div class="success success-request-trial-site" style="display:none;"></div>
@@ -62,7 +65,14 @@
         <script src="/static/js/request_site.js"></script>
         <script>
             $('#site_trial_url').on('input', function(){
+                clearFieldError($(this));
                 handle_domain_input($(this));
+            });
+            $('#site_trial_client').on('input', function(){
+                clearFieldError($(this));
+            });
+            $('#site_trial_email').on('input', function(){
+                clearFieldError($(this));
             });
         </script>
     </metal:block>

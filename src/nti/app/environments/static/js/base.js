@@ -160,7 +160,7 @@ function ajaxErrorHandler(xhr, exception, errorHandle, modal) {
 
 
 /** do ajax request */
-function doAjaxRequest(me, url, data, method, success, error, modal, postHandler) {
+function doAjaxRequest(me, url, data, method, success, error, modal, postHandler, postErrorHandler) {
     // show spinner
     $($(me).find('.nonSpinnerText')[0]).hide();
     $($(me).find('.spinnerText')[0]).show();
@@ -187,8 +187,12 @@ function doAjaxRequest(me, url, data, method, success, error, modal, postHandler
             $($(me).find('.nonSpinnerText')[0]).show();
 
             ajaxErrorHandler(jqXHR, exception, function() {
-                var res = JSON.parse(jqXHR.responseText);
-                showErrorMessage(res['message'], success, error);
+                if (postErrorHandler) {
+                    postErrorHandler(me, jqXHR, exception);
+                } else {
+                    var res = JSON.parse(jqXHR.responseText);
+                    showErrorMessage(res['message'], success, error);
+                }
             }, modal);
         }
     });

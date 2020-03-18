@@ -52,7 +52,9 @@ class BaseView(object):
         value = params.get(name)
         value = value.strip() if value else None
         if not value and required:
-            raise_json_error(hexc.HTTPBadRequest, 'Missing required {}'.format(name))
+            raise_json_error(hexc.HTTPBadRequest,
+                             'Missing {}.'.format(name),
+                             field=name)
         return value
 
     @Lazy
@@ -71,7 +73,8 @@ class BaseView(object):
             raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid {}".format(field), field)
         if required and val is None:
             raise_json_error(hexc.HTTPUnprocessableEntity,
-                             'Missing required field: {}.'.format(field))
+                             'Missing {}.'.format(field),
+                             field=field)
         return val.strip() if isinstance(val, str) else val
 
 

@@ -94,15 +94,19 @@ class SiteBaseView(BaseView):
         folder = get_customers_folder(root)
         return folder
 
-    def _handle_owner(self, value, created=False):
+    def _handle_owner(self, value, created=False, field="owner"):
         """
         Create a new customer if customer is not found and created is True.
         """
         if not value:
-            raise_json_error(hexc.HTTPUnprocessableEntity, "Missing email.")
+            raise_json_error(hexc.HTTPUnprocessableEntity,
+                             "Missing email.",
+                             field=field)
 
         if not checkEmailAddress(value):
-            raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid email.")
+            raise_json_error(hexc.HTTPUnprocessableEntity,
+                             "Invalid email.",
+                             field=field)
 
         folder = self._customers
         customer = folder.getCustomer(value)
@@ -111,7 +115,8 @@ class SiteBaseView(BaseView):
             if contact:
                 if not contact['name']:
                     raise_json_error(hexc.HTTPUnprocessableEntity,
-                                     "Name is missing for customer on hubspot: {}.".format(value))
+                                     "Name is missing for customer on hubspot: {}.".format(value),
+                                     field=field)
                 customer = createCustomer(folder,
                                           email=value,
                                           name=contact['name'],
@@ -119,7 +124,8 @@ class SiteBaseView(BaseView):
 
         if customer is None:
             raise_json_error(hexc.HTTPUnprocessableEntity,
-                             "No customer found with email: {}.".format(value))
+                             "No customer found with email: {}.".format(value),
+                             field=field)
 
         return customer
 
@@ -175,7 +181,8 @@ class RequestTrialSiteView(SiteBaseView, ObjectCreateUpdateViewMixin):
         # if owner is not admin or management, they can only create at most one site.
         if not is_admin_or_management and does_customer_have_sites(owner):
             raise_json_error(hexc.HTTPConflict,
-                            'Existing sites for owner: {}.'.format(owner.email))
+                            'Existing sites for owner: {}.'.format(owner.email),
+                            field='owner')
 
     def readInput(self):
         params = super(RequestTrialSiteView, self).readInput()
@@ -194,10 +201,12 @@ class RequestTrialSiteView(SiteBaseView, ObjectCreateUpdateViewMixin):
         kwargs['status'] = SITE_STATUS_PENDING
         return kwargs
 
-    def _handle_dns_names(self, params, is_admin_or_management):
-        names = params.get('dns_names') or []
+    def _handle_dns_names(self, params, is_admin_or_management, field="dns_names"):
+        names = params.get(field) or []
         if not isinstance(names, list) or not names or len(names) != 1:
-            raise_json_error(hexc.HTTPUnprocessableEntity, 'Please provide one site url.')
+            raise_json_error(hexc.HTTPUnprocessableEntity,
+                             'Please provide one site url.',
+                             field=field)
 
         names = [x.strip().lower() if isinstance(x, str) else x for x in names]
 
@@ -207,11 +216,14 @@ class RequestTrialSiteView(SiteBaseView, ObjectCreateUpdateViewMixin):
             if not isinstance(name, str) \
                 or not policy.check_dns_name(name, is_admin_or_management=is_admin_or_management):
                 raise_json_error(hexc.HTTPUnprocessableEntity,
-                                 "Invalid site url: {}.".format(name))
+                                 "Invalid site url: {}.".format(name),
+                                 field=field)
 
         for name in names:
             if not is_dns_name_available(name, self.sites_folder):
-                raise_json_error(hexc.HTTPUnprocessableEntity, "Site url is not available: {}.".format(name))
+                raise_json_error(hexc.HTTPUnprocessableEntity,
+                                 "Site url is not available: {}.".format(name),
+                                 field=field)
 
         return names
 
