@@ -28,7 +28,7 @@ class TestCheckDNSNameAvailableView(BaseAppTest):
         self.testapp.get(url, params=params, status=302, extra_environ=self._make_environ(username=None))
 
         result = self.testapp.get(url, params=params, status=400, extra_environ=self._make_environ(username='user001')).json_body
-        assert_that(result['message'], is_('Missing required dns_name'))
+        assert_that(result['message'], is_('Missing dns_name.'))
 
         mock_available.return_value = True
         mock_admin.return_value = True
@@ -128,7 +128,7 @@ class TestValidDomainView(BaseAppTest):
         params = {}
         self.testapp.get(url, params=params, status=302, extra_environ=self._make_environ(username=None))
         result = self.testapp.get(url, params=params, status=400, extra_environ=self._make_environ(username='admin001'))
-        assert_that(result.json_body, has_entries({'message': 'Missing required subdomain'}))
+        assert_that(result.json_body, has_entries({'message': 'Missing subdomain.'}))
 
         mock_admin.return_value = True
         mock_available.return_value = True

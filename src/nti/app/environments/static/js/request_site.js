@@ -1,15 +1,43 @@
 "use strict";
 
-function getValue(id) {
-    var val = document.getElementById(id).value.trim();
-    return val ? val : null;
+function showFieldError(input, message) {
+    var error = $(input).siblings('.field-error');
+    if (error) {
+        $(error).text(message || 'Please fill in this field.');
+        $(error).show();
+        return true
+    }
+}
+
+function clearFieldError(input) {
+    var error = $(input).siblings('.field-error');
+    if (error) {
+        $(error).hide();
+    }
+}
+
+function getValue(id, errorSelector) {
+    var input = $(id);
+    clearFieldError(input);
+    var val = $(input).val().trim();
+    val = val ? val : null;
+    if (!val){
+        showFieldError(input);
+    }
+    return val
 }
 
 function requestTrialSite (me, url) {
-    var client_name = getValue("site_trial_client"),
-              owner = getValue("site_trial_email"),
-          dns_names = getValue('site_trial_url');
+    clearMessages('.success-request-trial-site', '.error-request-trial-site');
+
+    var client_name = getValue("#site_trial_client"),
+              owner = getValue("#site_trial_email"),
+          dns_names = getValue('#site_trial_url');
           dns_names = dns_names ? $.map(dns_names.split(","), $.trim) : null;
+
+    if (!client_name || !owner || !dns_names){
+        return
+    }
 
     var data = {
         "client_name": client_name,
@@ -26,6 +54,16 @@ function requestTrialSite (me, url) {
                 window.location.reload();
             });
         }
+    }, function(me, xhr, exception){
+        var res = JSON.parse(xhr.responseText);
+        if(res.field){
+            var form = $(me).closest('.submit-form');
+            var input = $(form).find('input[name='+res.field+']')[0];
+            if(input && showFieldError(input, res.message)){
+                return
+            }
+        }
+        showErrorMessage(res['message'], '.success-request-trial-site', '.error-request-trial-site');
     });
 }
 
