@@ -427,7 +427,7 @@ class TestRequestTrialSiteView(BaseAppTest):
         sites = self._root().get('sites')
         view = RequestTrialSiteView(sites, self.request)
         result = view._create_license(True)
-        assert_that((result.end_date - result.start_date).days, is_(90))
+        assert_that((result.end_date - result.start_date).days, is_(30))
         result = view._create_license(False)
         assert_that((result.end_date - result.start_date).days, is_(14))
 
