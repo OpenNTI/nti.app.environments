@@ -72,7 +72,7 @@ def configure(settings=None, registry=None):
 
         # Session factory
         # Because we may store info in the session when user log in,
-        # we would like to make this cookie session never expires unless browser closes, just like auth_tkt.
+        # we would like to make this cookie session never expires unless browser closes or log out, just like auth_tkt.
         session_factory = SignedCookieSessionFactory('foo',
                                                      timeout=None)
         config.set_session_factory(session_factory)
