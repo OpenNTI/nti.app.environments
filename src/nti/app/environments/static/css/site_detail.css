@@ -68,3 +68,12 @@ h3 {
     display: block;
     margin-top: 6px;
 }
+
+.btn-login {
+    float:right;
+    color:#FFFFFF;
+    background-color:#3FB34F;
+    border:none;
+    padding: 6px 12px;
+    min-width: auto;
+}

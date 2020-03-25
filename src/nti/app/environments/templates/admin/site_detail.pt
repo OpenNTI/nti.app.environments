@@ -15,6 +15,12 @@
                 </a>
             </div>
             <div class="site-item site-info">
+                <metal:block tal:omit-tag="" tal:condition="site.site_login_link|nothing">
+                    <a href="${site.site_login_link}" class="btn btnCustom btn-login"
+                       target="_blank">
+                        Log in
+                    </a>
+                </metal:block>
                 <h3>Site Info</h3>
                 <div id="view_site_info">
                     <p>Site ID: <span tal:content="python: site.site_id|nothing"></span></p>

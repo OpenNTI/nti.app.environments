@@ -142,6 +142,7 @@ def google_oauth2(context, request):
                 raise hexc.HTTPUnprocessableEntity('Invalid domain')
 
         headers = remember(request, email)
+        request.session['login.realname'] = profile.get('name') or 'Unknown Name'
         success = request.session.get('google.success') or _DEFAULT_SUCCESS_URL
         return hexc.HTTPFound(location=success, headers=headers)
 

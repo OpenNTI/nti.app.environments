@@ -70,8 +70,11 @@ def configure(settings=None, registry=None):
         config.set_authentication_policy(authn_policy)
         config.set_authorization_policy(authz_policy)
 
-        # session factory
-        session_factory = SignedCookieSessionFactory('foo')
+        # Session factory
+        # Because we may store info in the session when user log in,
+        # we would like to make this cookie session never expires unless browser closes, just like auth_tkt.
+        session_factory = SignedCookieSessionFactory('foo',
+                                                     timeout=None)
         config.set_session_factory(session_factory)
 
         config.add_renderer(name='rest', factory='nti.app.environments.renderers.renderers.DefaultRenderer')
