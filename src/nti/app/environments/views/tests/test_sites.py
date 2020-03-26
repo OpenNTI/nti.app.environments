@@ -1,5 +1,6 @@
 import os
 import datetime
+import jwt
 
 from unittest import mock
 
@@ -54,6 +55,7 @@ from nti.app.environments.views.customers import getOrCreateCustomer
 
 from nti.app.environments.views.sites import SitesUploadCSVView
 from nti.app.environments.views.sites import RequestTrialSiteView
+from nti.app.environments.views.sites import SiteLoginView
 
 from nti.app.environments.views.tests import BaseAppTest
 from nti.app.environments.views.tests import with_test_app
@@ -1310,3 +1312,62 @@ class TestSetupFailure(BaseAppTest):
             token.created = datetime.datetime.utcnow() - datetime.timedelta(days=30)
         res = self.testapp.get(auth_rel, status=302)
         assert_that(res.location, is_('http://localhost/recover'))
+
+
+class TestSiteLoginView(BaseAppTest):
+
+    @with_test_app()
+    @mock.patch('nti.app.environments.views.sites.SiteLoginView._get_realname')
+    def testSiteLoginView(self, mock_realname):
+        mock_realname.return_value = 'test user'
+        site = PersistentSite(dns_names=['xx.nextthought.io'],
+                              license=TrialLicense(start_date=datetime.datetime(2020, 1, 1),
+                                                   end_date=datetime.datetime(2020, 1, 9)))
+
+        view = SiteLoginView(site, self.request)
+        result = view._get_jwt_token(username='test@nextthought.com', secret='test')
+        decoded = jwt.decode(result, 'test')
+        assert_that(decoded, has_entries({'login': 'test@nextthought.com',
+                                  'realname': 'test user',
+                                  'email': 'test@nextthought.com',
+                                  'create': 'true',
+                                  'admin': 'true',
+                                  'iss': None,
+                                  'exp': not_none()}))
+
+        result = view._get_jwt_token(username='test@nextthought.com', secret='test', timeout=-1)
+        assert_that(calling(jwt.decode).with_args(result, 'test'),
+                    raises(jwt.exceptions.ExpiredSignatureError, pattern='Signature has expired'))
+
+        result = view._get_jwt_token(username='test@nextthought.com', secret='test')
+        assert_that(calling(jwt.decode).with_args(result, 'test', issuer="okc"),
+                    raises(jwt.exceptions.InvalidIssuerError, pattern='Invalid issuer'))
+
+        result = view._get_jwt_token(username='test@nextthought.com', secret='test', issuer='okc')
+        decoded = jwt.decode(result, 'test', issuer='okc')
+        assert_that(decoded, has_entries({'iss': 'okc'}))
+
+        assert_that(calling(jwt.decode).with_args(result, 'test', issuer="bad"),
+                    raises(jwt.exceptions.InvalidIssuerError, pattern='Invalid issuer'))
+
+    @with_test_app()
+    @mock.patch('nti.app.environments.models.utils.get_onboarding_root')
+    def test_get(self, mock_onboarding_root):
+        mock_onboarding_root.return_value = root = self._root()
+        with ensure_free_txn():
+            customer = root.get('customers').addCustomer(PersistentCustomer(email='user001@example.com',
+                                                                            name="testname"))
+
+            root.get('sites').addSite(PersistentSite(license=TrialLicense(start_date=datetime.datetime(2019, 12, 12, 0, 0, 0),
+                                                                     end_date=datetime.datetime(2019, 12, 13, 0, 0, 0)),
+                                                environment=SharedEnvironment(name='test'),
+                                                created=datetime.datetime(2019, 12, 11, 0, 0, 0),
+                                                status='ACTIVE',
+                                                dns_names=['example.com'],
+                                                owner=customer), siteId='S001')
+
+        url = '/onboarding/sites/S001/@@login'
+        self.testapp.get(url, status=302, extra_environ=self._make_environ(username=None))
+        self.testapp.get(url, status=403, extra_environ=self._make_environ(username='user001@example.com'))
+        self.testapp.get(url, status=403, extra_environ=self._make_environ(username='manager001'))
+        self.testapp.get(url, status=303, extra_environ=self._make_environ(username='admin001'))

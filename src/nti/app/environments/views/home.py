@@ -8,4 +8,5 @@ from .base import BaseTemplateView
 class HomeView(BaseTemplateView):
 
     def __call__(self):
-        return {'username': self.request.authenticated_userid}
+        return {'username': self.request.authenticated_userid,
+                'realname': self.request.session.get('login.realname')}

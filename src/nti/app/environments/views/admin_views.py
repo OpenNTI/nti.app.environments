@@ -22,6 +22,7 @@ from nti.app.environments.auth import ACT_CREATE
 from nti.app.environments.auth import ACT_EDIT_SITE_LICENSE
 from nti.app.environments.auth import ACT_EDIT_SITE_ENVIRONMENT
 from nti.app.environments.auth import ACT_REQUEST_TRIAL_SITE
+from nti.app.environments.auth import ACT_SITE_LOGIN
 from nti.app.environments.auth import ADMIN_ROLE
 from nti.app.environments.auth import ACCOUNT_MANAGEMENT_ROLE
 
@@ -254,6 +255,7 @@ class SiteDetailView(BaseTemplateView):
                          'license': self._format_license(self.context.license),
                          'environment': self._format_env(self.context.environment) if self.context.environment else None,
                          'environment_edit_link': request.resource_url(self.context, '@@environment') if request.has_permission(ACT_EDIT_SITE_ENVIRONMENT, self.context) else None,
+                         'site_login_link': request.resource_url(self.context, '@@login') if request.has_permission(ACT_SITE_LOGIN, self.context) else None,
                          'client_name': self.context.client_name,
                          'site_edit_link': request.resource_url(self.context) if request.has_permission(ACT_UPDATE, self.context) else None,
                          'lastModified': formatDateToLocal(self.context.lastModified),

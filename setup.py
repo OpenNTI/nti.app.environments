@@ -37,6 +37,7 @@ requires = [
     'pyramid-chameleon',
     'pyramid-mako',
     'pyramid-zcml',
+    'pyjwt',
     'zope.interface',
     'zope.component',
     'nti.externalization',

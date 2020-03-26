@@ -18,7 +18,7 @@
 
     <div class="container">
         <metal:block tal:omit-tag="" tal:condition="view.logged_in">
-            <h1>Welcome, ${username}.</h1>
+            <h1>Welcome, ${realname} (${username}).</h1>
         </metal:block>
         <metal:block tal:omit-tag="" tal:condition="not:view.logged_in">
             <h1>Please sign in.</h1>
