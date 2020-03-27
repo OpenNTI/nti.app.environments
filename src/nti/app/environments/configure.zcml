@@ -92,5 +92,6 @@
 			 provides=".interfaces.ISiteLinks" />
 
 	<subscriber handler=".subscribers._spawn_setup_state_watchdog" />
+	<subscriber handler=".subscribers._spawn_invitation_status_watchdog" />
 
 </configure>

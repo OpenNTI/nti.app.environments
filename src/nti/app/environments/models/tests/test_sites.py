@@ -311,7 +311,9 @@ class TestSites(BaseTest):
     def testSetupStateSuccess(self):
         state = SetupStateSuccess()
         result = toExternalObject(state)
-        assert_that(result, has_entries({'MimeType': 'application/vnd.nextthought.app.environments.setupstatesuccess'}))
+        assert_that(result, has_entries({'MimeType': 'application/vnd.nextthought.app.environments.setupstatesuccess',
+                                         'invite_accepted_date': None,
+                                         'invitation_active': True}))
         assert_that(calling(new_from_external_object).with_args(result),
                     raises(ComponentLookupError, pattern="No factory for object"))
 

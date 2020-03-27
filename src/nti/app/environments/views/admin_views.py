@@ -226,6 +226,11 @@ class SiteDetailView(BaseTemplateView):
             result['task_start_time'] = formatDateToLocal(site_info.start_time) if site_info.start_time else ''
             result['task_end_time'] = formatDateToLocal(site_info.end_time) if site_info.end_time else ''
             result['task_elapsed_time'] = site_info.elapsed_time if site_info.elapsed_time is not None else ''
+            if state.invite_accepted_date:
+                result['invite_accepted_date'] = formatDateToLocal(state.invite_accepted_date)
+                result['invitation_status'] = 'accepted'
+            else:
+                result['invitation_status'] = 'pending' if state.invitation_active else 'inactive'
         elif ISetupStateFailure.providedBy(state):
             result['exception'] = str(state.exception)
         elif not ISetupStatePending.providedBy(state):

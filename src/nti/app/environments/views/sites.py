@@ -2,8 +2,6 @@ import csv
 import datetime
 import hashlib
 import os
-import jwt
-import time
 
 from pyramid import httpexceptions as hexc
 
@@ -32,7 +30,6 @@ from nti.app.environments.auth import is_admin_or_account_manager
 
 from nti.app.environments.interfaces import ISitesCollection
 from nti.app.environments.interfaces import ISiteDomainPolicy
-from nti.app.environments.interfaces import IOnboardingSettings
 
 from nti.app.environments.models.events import CSVSiteCreatedEvent
 from nti.app.environments.models.events import TrialSiteCreatedEvent
@@ -70,6 +67,7 @@ from nti.app.environments.common import formatDateToLocal
 from nti.app.environments.common import parseDate
 
 from nti.app.environments.utils import query_setup_state
+from nti.app.environments.utils import generate_jwt_token
 
 from nti.app.environments.views.utils import raise_json_error
 from nti.app.environments.views.utils import is_dns_name_available
@@ -829,31 +827,20 @@ class SiteLoginView(BaseView):
         # Based on the session configuration, realname shouldn't expire.
         return self.request.session.get('login.realname')
 
-    def _get_jwt_token(self, username=None, secret=None, issuer=None, timeout=30):
+    def _get_jwt_token(self, username=None, secret=None, issuer=None, timeout=None):
         username = username or self.request.authenticated_userid
-        payload = {
-            'login': username,
-            'realname': self._get_realname(),
-            'email': username,
-            'create': "true",
-            "admin": "true",
-            "iss": issuer
-        }
-        if timeout is not None:
-            payload['exp'] = time.time() + float(timeout)
-
-        jwt_token = jwt.encode(payload,
-                               secret,
-                               algorithm='HS256')
-        return jwt_token.decode('utf8')
+        token = generate_jwt_token(username=username,
+                                   realname=self._get_realname(),
+                                   email=username,
+                                   secret=secret,
+                                   issuer=issuer,
+                                   timeout=timeout)
+        return token
 
     def __call__(self):
         site_url = "https://{}".format(self.context.dns_names[0])
-        settings = component.getUtility(IOnboardingSettings)
         params = {
-            'jwt': self._get_jwt_token(secret=settings.get('jwt_secret', '$Id$'),
-                                       issuer=settings.get('jwt_issuer', None),
-                                       timeout=settings.get('jwt_timeout', 30)),
+            'jwt': self._get_jwt_token(),
             'success': urljoin(site_url, '/app'),
             'failure': urljoin(site_url, '/login/'),
         }

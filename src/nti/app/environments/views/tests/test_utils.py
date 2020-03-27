@@ -1,13 +1,19 @@
 import datetime
+import requests
+import jwt
 
 from unittest import mock
 
 from hamcrest import is_
 from hamcrest import calling
 from hamcrest import raises
+from hamcrest import not_none
 from hamcrest import assert_that
+from hamcrest import has_entries
 
 from pyramid import exceptions as hexc
+
+from zope import component
 
 from zope.schema._bootstrapinterfaces import ConstraintNotSatisfied
 from zope.schema._bootstrapinterfaces import RequiredMissing
@@ -15,7 +21,9 @@ from zope.schema._bootstrapinterfaces import SchemaNotProvided
 from zope.schema._bootstrapinterfaces import ValidationError
 from zope.schema._bootstrapinterfaces import WrongContainedType
 
+from nti.app.environments.utils import fetch_site_invitation
 from nti.app.environments.utils import query_setup_async_result
+from nti.app.environments.utils import query_invitation_status
 
 from nti.app.environments.views.utils import raise_json_error
 
@@ -27,6 +35,8 @@ from nti.app.environments.models.sites import TrialLicense
 from nti.app.environments.models.sites import PersistentSite
 from nti.app.environments.models.sites import SetupStateSuccess
 from nti.app.environments.models.sites import SetupStatePending
+
+from nti.app.environments.interfaces import IOnboardingSettings
 
 from nti.app.environments.views.tests import BaseAppTest
 from nti.app.environments.views.tests import with_test_app
@@ -89,3 +99,147 @@ class TestUtils(BaseAppTest):
 
         site.setup_state = SetupStateSuccess(task_state='ok', site_info=SiteInfo(site_id='S001', dns_name='xx.nextthought.io'))
         assert_that(query_setup_async_result(site), is_(None))
+
+    @mock.patch('nti.app.environments.utils.requests.get')
+    def test_fetch_site_invitation(self, mock_get):
+        settings = {}
+        component.getGlobalSiteManager().registerUtility(settings, IOnboardingSettings)
+        _result = []
+        def _mock_get(url, params):
+            _result.append((url, params))
+            return {"acceptedTime": 30}
+        mock_get.side_effect = _mock_get
+        assert_that(fetch_site_invitation('demo.dev', 'testcode'), is_({"acceptedTime": 30}))
+        assert_that(_result[0][0], is_('https://demo.dev/dataserver2/Invitations/testcode'))
+        assert_that(_result[0][1], has_entries({'jwt':not_none()}))
+        decoded = jwt.decode(_result[0][1]['jwt'], '$Id$')
+        assert_that(decoded, has_entries({'login': 'admin@nextthought.com',
+                                         'realname': None,
+                                         'email': None,
+                                         'create': "true",
+                                         "admin": "true",
+                                         "iss": None}))
+
+        mock_get.side_effect = requests.exceptions.ConnectionError
+        assert_that(fetch_site_invitation('demo.dev', 'testcode'), is_(None))
+
+        component.getGlobalSiteManager().unregisterUtility(settings, IOnboardingSettings)
+
+    @with_test_app()
+    @mock.patch("nti.app.environments.utils.fetch_site_invitation")
+    def test_query_invitation_status(self, mock_fetch):
+        with mock.patch('nti.app.environments.models.utils.get_onboarding_root') as mock_onboarding_root:
+            mock_onboarding_root.return_value = self._root()
+            customers = self._root().get('customers')
+            customers.addCustomer(PersistentCustomer(email='user001@example.com', name="testname"))
+            sites = self._root().get('sites')
+            for email, siteId in (('user001@example.com', 'S001'),
+                                  ('user001@example.com', 'S002'),
+                                  ('user001@example.com', 'S003')):
+                sites.addSite(PersistentSite(dns_names=[siteId],
+                                             owner = customers.getCustomer(email),
+                                             license=TrialLicense(start_date=datetime.datetime(2020, 1, 28),
+                                                                  end_date=datetime.datetime(2020, 1, 9))), siteId=siteId)
+
+        site = sites['S001']
+
+        # state is not success
+        site.setup_state = SetupStatePending(task_state='ok')
+        result = query_invitation_status([site])
+        assert_that(result, has_entries({'total': 0}))
+
+        site.setup_state = SetupStateSuccess(task_state='ok',
+                                             invitation_active = False,
+                                             site_info=SiteInfo(site_id='S001',
+                                                                dns_name='xx.nextthought.io'))
+        site.setup_state.site_info.task_result_dict = {'admin_invitation_code': 'testcode'}
+
+        # invitation_active is not True
+        result = query_invitation_status([site])
+        assert_that(result, has_entries({'total': 0}))
+
+        # invite_accepted_date is not None
+        site.setup_state.invitation_effecitve = True
+        site.setup_state.invite_accepted_date = datetime.datetime(2020, 1, 26)
+        result = query_invitation_status([site])
+        assert_that(result, has_entries({'total': 0}))
+
+        # admin_invitation_code is None
+        site.setup_state.invite_accepted_date = None
+        site.setup_state.site_info.task_result_dict = {'admin_invitation_code': None}
+        result = query_invitation_status([site])
+        assert_that(result, has_entries({'total': 0}))
+
+        # okay, response is None
+        mock_fetch.return_value = None
+        site.setup_state.invitation_active = True
+        site.setup_state.invite_accepted_date = None
+        site.setup_state.site_info.task_result_dict = {'admin_invitation_code': 'testcode'}
+        result = query_invitation_status([site])
+        assert_that(result, has_entries({'total': 1, 'unknown': 1}))
+
+        # code is cancelled
+        mock_fetch.return_value = mock.MagicMock(status_code=404)
+        result = query_invitation_status([site])
+        assert_that(result, has_entries({'total': 1, 'cancelled': 1}))
+        assert_that(site.setup_state.invitation_active, is_(False))
+        assert_that(site.setup_state.invite_accepted_date, is_(None))
+        assert_that(query_invitation_status([site]), has_entries({'total': 0}))
+
+        # reset
+        site.setup_state.invitation_active = True
+
+        # bad authenticate
+        mock_fetch.return_value = mock.MagicMock(status_code=401)
+        result = query_invitation_status([site])
+        assert_that(result, has_entries({'total': 1, 'unknown': 1}))
+
+        # good, haven't accepted
+        mock_fetch.return_value = mock.MagicMock(status_code=200, json=lambda : {'acceptedTime': None,
+                                                                                 'expiryTime': 0})
+        result = query_invitation_status([site])
+        assert_that(result, has_entries({'total': 1, 'pending': 1}))
+
+        result = query_invitation_status([site])
+        assert_that(result, has_entries({'total': 1, 'pending': 1}))
+
+        # accepted
+        mock_fetch.return_value = mock.MagicMock(status_code=200, json=lambda : {'acceptedTime': 90,
+                                                                                 'expiryTime': 1})
+
+        result = query_invitation_status([site])
+        assert_that(result, has_entries({'total': 1, 'accepted': 1}))
+        assert_that(site.setup_state.invite_accepted_date, is_(datetime.datetime.utcfromtimestamp(90)))
+
+        assert_that(query_invitation_status([site]), has_entries({'total': 0}))
+
+        #reset
+        site.setup_state.invite_accepted_date = None
+
+        # expires
+        mock_fetch.return_value = mock.MagicMock(status_code=200, json=lambda : {'acceptedTime': None,
+                                                                                 'expiryTime': 1})
+        result = query_invitation_status([site])
+        assert_that(result, has_entries({'total': 1, 'expired': 1}))
+        assert_that(site.setup_state.invitation_active, is_(False))
+        assert_that(site.setup_state.invite_accepted_date, is_(None))
+
+        assert_that(query_invitation_status([site]), has_entries({'total': 0}))
+
+        # test many
+        for site_id in ('S002', 'S003'):
+            site = sites[site_id]
+            site.setup_state = SetupStateSuccess(task_state='ok',
+                                                 invitation_active = True,
+                                                 site_info=SiteInfo(site_id=site_id,
+                                                                    dns_name=site_id))
+            site.setup_state.site_info.task_result_dict = {'admin_invitation_code': 'testcode'}
+
+        mock_body = {'S002': mock.MagicMock(status_code=200, json=lambda : {'acceptedTime': 90,
+                                                                            'expiryTime': 1}),
+                     'S003': mock.MagicMock(status_code=200, json=lambda : {'acceptedTime': None,
+                                                                                 'expiryTime': 1})
+                                                                            }
+        mock_fetch.side_effect = lambda host_name, _: mock_body.get(host_name)
+        assert_that(query_invitation_status([sites['S002'], sites['S003']]),
+                    has_entries({'total': 2, 'accepted': 1, 'expired': 1}))
