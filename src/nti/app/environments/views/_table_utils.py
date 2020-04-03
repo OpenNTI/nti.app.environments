@@ -218,14 +218,21 @@ class _FilterMixin(object):
 
 class ValuesForCustomersTable(value.ValuesForContainer, _FilterMixin):
 
-    def _predicate(self, item, email):
-        return email in item.email.lower()
+    def _predicate(self, item, term):
+        """
+        Search on email, name and hubspot id.
+        """
+        if term in item.email.lower() \
+            or (item.name and term in item.name.lower()) \
+            or (item.hubspot_contact and term in item.hubspot_contact.contact_vid):
+            return True
+        return False
 
     @property
     def values(self):
         params = self.request.params
-        email = self._get_filter('search', params)
-        return self.context.values() if not email else [x for x in self.context.values() if self._predicate(x, email)]
+        term = self._get_filter('search', params)
+        return self.context.values() if not term else [x for x in self.context.values() if self._predicate(x, term)]
 
 
 # Sites table
