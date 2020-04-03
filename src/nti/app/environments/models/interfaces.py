@@ -27,6 +27,7 @@ from nti.base.interfaces import ICreatedTime
 from nti.schema.interfaces import InvalidValue
 
 from nti.schema.field import Int
+from nti.schema.field import Bool
 from nti.schema.field import Choice
 from nti.schema.field import Object
 from nti.schema.field import DateTime
@@ -368,6 +369,11 @@ class ISetupStateSuccess(ISetupState):
 
     invite_accepted_date = DateTime(title=u'The datetime the inital invite was accepted',
                                     required=False)
+
+    invitation_active = Bool(title="If the admin invitation code is still active",
+                                description="Invitation code may be deleted or expired on platform.",
+                                default=True,
+                                required=False)
 
 
 class ISetupStateFailure(ISetupState):

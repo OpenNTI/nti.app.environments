@@ -1,4 +1,7 @@
 import datetime
+import requests
+import time
+import jwt
 
 from zope import component
 
@@ -8,11 +11,14 @@ from nti.environments.management.interfaces import ICeleryApp
 from nti.environments.management.interfaces import ISetupEnvironmentTask
 
 from nti.app.environments.models.interfaces import ISetupStatePending
+from nti.app.environments.models.interfaces import ISetupStateSuccess
 
 from nti.app.environments.models.events import SiteSetupFinishedEvent
 
 from nti.app.environments.models.sites import SetupStateFailure
 from nti.app.environments.models.sites import SetupStateSuccess
+
+from nti.app.environments.interfaces import IOnboardingSettings
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -95,3 +101,93 @@ def query_setup_state(sites, request=None, side_effects=True):
         request.environ['nti.request_had_transaction_side_effects'] = True
 
     return updated
+
+
+def generate_jwt_token(username, realname=None, email=None,
+                       secret=None, issuer=None, timeout=None):
+    settings = component.getUtility(IOnboardingSettings)
+
+    secret = settings.get('jwt_secret', '$Id$') if secret is None else secret
+    issuer = settings.get('jwt_issuer', None) if issuer is None else issuer
+    timeout=settings.get('jwt_timeout', 30) if timeout is None else timeout
+
+    payload = {
+        'login': username,
+        'realname': realname,
+        'email': email,
+        'create': "true",
+        "admin": "true",
+        "iss": issuer
+    }
+    if timeout is not None:
+        payload['exp'] = time.time() + float(timeout)
+
+    jwt_token = jwt.encode(payload,
+                           secret,
+                           algorithm='HS256')
+    return jwt_token.decode('utf8')
+
+
+def fetch_site_invitation(host_name, invitation_code, adminUser='admin@nextthought.com'):
+    url = 'https://{host}/dataserver2/Invitations/{code}'.format(host=host_name,
+                                                                 code=invitation_code)
+    jwt_token = generate_jwt_token(adminUser)
+    try:
+        return requests.get(url, params={'jwt': jwt_token})
+    except requests.exceptions.ConnectionError:
+        logger.warning("%s is offline?", host_name)
+        return None
+
+
+def query_invitation_status(sites):
+    """
+    Query all successfully setup sites and update the invitation status.
+    """
+    result = {'total': 0, 'accepted': 0, 'pending': 0,
+              'expired': 0,'cancelled': 0, 'unknown': 0}
+
+    for x in sites or ():
+        if not ISetupStateSuccess.providedBy(x.setup_state) \
+            or x.setup_state.invite_accepted_date \
+            or not x.setup_state.invitation_active \
+            or not x.setup_state.site_info.admin_invitation_code:
+            continue
+
+        result['total'] += 1
+
+        code = x.setup_state.site_info.admin_invitation_code
+
+        resp = fetch_site_invitation(x.dns_names[0], code)
+        if resp is None:
+            result['unknown'] += 1
+            continue
+
+        if resp.status_code == 404:
+            logger.warning("Invitation (%s) was cancelled?", code)
+            x.setup_state.invitation_active =False
+            result['cancelled'] += 1
+            continue
+
+        if resp.status_code != 200:
+            # This shouldn't happen, status code may like 401 ,403.
+            logger.warning("%s error with invitation code (%s).", resp.status_code, code)
+            result['unknown'] += 1
+            continue
+
+        body = resp.json()
+
+        acceptedTime = body['acceptedTime']
+        if acceptedTime is not None:
+            x.setup_state.invite_accepted_date = datetime.datetime.utcfromtimestamp(acceptedTime)
+            result['accepted'] += 1
+            continue
+
+        isExpired = bool(body['expiryTime'] and body['expiryTime'] <= time.time())
+        if isExpired:
+            x.setup_state.invitation_active =False
+            result['expired'] += 1
+            continue
+
+        result['pending'] += 1
+
+    return result

@@ -33,6 +33,7 @@ from .models.interfaces import ISetupStatePending
 from .models.utils import get_sites_folder
 
 from .utils import query_setup_state
+from .utils import query_invitation_status
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -158,6 +159,51 @@ def _make_dummy_request(registry, root):
     # which may result in InvalidObjectReference error when submit the transaction.
     request._primary_zodb_conn = IConnection(root)
     return request
+
+
+def spawn_site_invitation_code_status_watchdog():
+    """
+    Spawn a greenlet to query the status of sites invitation codes every 10 mins.
+    For reducing the conflicts within multiple workers, a randomly sleep time
+    is set for each worker.
+    """
+    # A monotonic series, unlikely to wrap when we spawned
+    my_sleep_adjustment = os.getpid() % 20
+    if os.getpid() % 2:  # if even, go low
+        my_sleep_adjustment = -my_sleep_adjustment
+
+    sleep_time = 5#10*60 + my_sleep_adjustment
+
+    tx_runner = component.getUtility(ITransactionRunner)
+
+    def _query_sites_invitation_status():
+        logger.info("[Worker %s] querying sites invitation status every %s mins %s seconds.",
+                    os.getpid(),
+                    sleep_time // 60,
+                    sleep_time % 60)
+        while True:
+            gevent.sleep(sleep_time)
+            try:
+                @Metric('nti.onboarding.query_sites_invitation_status')
+                def _do_query_sites_invitation(root):
+                    t0 = time.time()
+                    folder = get_sites_folder(root)
+                    result = query_invitation_status(folder.values())
+                    logger.info('Performed querying sites invitation status on %s sites, %s accepted, %s pending, %s expired, %s cancelled, %s unknown (%.2f)',
+                                result['total'],
+                                result['accepted'],
+                                result['pending'],
+                                result['expired'],
+                                result['cancelled'],
+                                result['unknown'],
+                                time.time() - t0 )
+
+                tx_runner(_do_query_sites_invitation, retries=5, sleep=0.1)
+            except transaction.interfaces.TransientError:
+                logger.debug("Trying sites invitation status query later.", exc_info=True)
+                continue
+
+    return gevent.spawn(_query_sites_invitation_status)
 
 
 def root_folder(request):
