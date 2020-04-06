@@ -392,6 +392,18 @@ class SiteAgeColumn(column.Column):
         return (self.table._current_time - item.created).days
 
 
+class SiteLicenseEndDateColumn(BaseDateColumn):
+
+    weight = 7
+    header = 'Trial End Date'
+
+    def getValue(self, item):
+        return formatDateToLocal(item.license.end_date)
+
+    def getSortKey(self, item):
+        return self.getValue(item)
+
+
 class DashboardRenewalsTable(BaseSitesTable):
 
     def __init__(self, context, request):

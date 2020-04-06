@@ -172,7 +172,7 @@ def spawn_site_invitation_code_status_watchdog():
     if os.getpid() % 2:  # if even, go low
         my_sleep_adjustment = -my_sleep_adjustment
 
-    sleep_time = 5#10*60 + my_sleep_adjustment
+    sleep_time = 10*60 + my_sleep_adjustment
 
     tx_runner = component.getUtility(ITransactionRunner)
 
