@@ -153,8 +153,17 @@
 			 provides="z3c.table.interfaces.IColumn"
 			 name="site_age" />
 
+	<adapter factory="._table_utils.SiteLicenseEndDateColumn"
+			 for="* * ._table_utils.DashboardTrialSitesTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="site_license_end_date" />
+
 	<adapter factory="._table_utils.SiteColumnHeader"
 			 for="* * * ._table_utils.SiteAgeColumn"
+			 provides="z3c.table.interfaces.IColumnHeader"/>
+
+	<adapter factory="._table_utils.SiteColumnHeader"
+			 for="* * * ._table_utils.SiteLicenseEndDateColumn"
 			 provides="z3c.table.interfaces.IColumnHeader"/>
 
 	<!-- Dashboard Sites Renewal table -->
