@@ -395,7 +395,7 @@ class SiteAgeColumn(column.Column):
 class SiteLicenseEndDateColumn(BaseDateColumn):
 
     weight = 7
-    header = 'Trial End Date'
+    header = 'End Date'
 
     def getValue(self, item):
         return formatDateToLocal(item.license.end_date)
