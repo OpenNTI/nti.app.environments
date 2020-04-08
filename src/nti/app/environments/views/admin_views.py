@@ -116,7 +116,8 @@ class CustomerDetailView(BaseTemplateView, TableViewMixin):
                 'customer': {'customer': self.context,
                              'hubspot': self._format_hubspot(self.context.hubspot_contact) if self.context.hubspot_contact else None},
                 'table': table,
-                'is_deletion_allowed': self._is_deletion_allowed(table)}
+                'is_deletion_allowed': self._is_deletion_allowed(table),
+                'format_date': formatDateToLocal}
 
 
 @view_config(

@@ -24,6 +24,8 @@
             <p>Host Name: <span tal:content="host.host_name"></span></p>
             <p>Capacity: <span tal:content="host.capacity"></span></p>
             <p>Current Load: <span tal:content="host.current_load"></span></p>
+            <p>Created: <span tal:content="python: format_date(host.createdTime)"/></p>
+            <p>Last Modified: <span tal:content="python: format_date(host.lastModified)"/></p>
         </div>
 
         <h1 style="margin-top: 32px;">Sites</h1>

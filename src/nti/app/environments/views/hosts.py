@@ -14,6 +14,8 @@ from nti.app.environments.models.interfaces import IHostsContainer
 
 from nti.app.environments.models.utils import get_sites_folder
 
+from nti.app.environments.common import formatDateToLocal
+
 from nti.app.environments.views.base import BaseView
 from nti.app.environments.views.base import BaseTemplateView
 from nti.app.environments.views.base import TableViewMixin
@@ -69,7 +71,8 @@ class HostDetailView(BaseTemplateView, TableViewMixin):
         table = make_specific_table(SitesForHostTable, sites, self.request, host=self.context)
         return {'hosts_list_link': self.request.resource_url(self.context.__parent__, '@@list'),
                 'host': self.context,
-                'table': table}
+                'table': table,
+                'format_date': formatDateToLocal}
 
 
 @view_config(renderer='rest',

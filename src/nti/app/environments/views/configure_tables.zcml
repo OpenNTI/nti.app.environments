@@ -103,10 +103,10 @@
 			 provides="z3c.table.interfaces.IColumn"
 			 name="created" />
 
-	<adapter factory="._table_utils.SiteLastModifiedColumn"
+	<adapter factory="._table_utils.SiteLicenseEndDateColumn"
 			 for="* * ._table_utils.SitesTable"
 			 provides="z3c.table.interfaces.IColumn"
-			 name="lastModified" />
+			 name="site_license_end_date" />
 
 	<adapter factory="._table_utils.SiteColumnHeader"
 			 for="* * * ._table_utils.SiteURLColumn"
@@ -129,7 +129,7 @@
 			 provides="z3c.table.interfaces.IColumnHeader"/>
 
 	<adapter factory="._table_utils.SiteColumnHeader"
-             for="* * * ._table_utils.SiteLastModifiedColumn"
+             for="* * * ._table_utils.SiteLicenseEndDateColumn"
 			 provides="z3c.table.interfaces.IColumnHeader"/>
 
 	<!-- Dashboard TrialSites table -->
@@ -148,7 +148,7 @@
 			 provides="z3c.table.interfaces.IColumn"
 			 name="site_age" />
 
-	<adapter factory="._table_utils.SiteLicenseEndDateColumn"
+	<adapter factory="._table_utils.DashboardTrialSiteLicenseEndDateColumn"
 			 for="* * ._table_utils.DashboardTrialSitesTable"
 			 provides="z3c.table.interfaces.IColumn"
 			 name="site_license_end_date" />
@@ -158,7 +158,7 @@
 			 provides="z3c.table.interfaces.IColumnHeader"/>
 
 	<adapter factory="._table_utils.SiteColumnHeader"
-			 for="* * * ._table_utils.SiteLicenseEndDateColumn"
+			 for="* * * ._table_utils.DashboardTrialSiteLicenseEndDateColumn"
 			 provides="z3c.table.interfaces.IColumnHeader"/>
 
 	<!-- Dashboard Sites Renewal table -->

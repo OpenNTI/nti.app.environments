@@ -130,9 +130,12 @@ class HubSpotColumn(column.GetAttrColumn):
 
 class BaseDateColumn(column.GetAttrColumn):
 
+    def _get_value(self, item):
+        return getattr(item, self.attrName)
+
     def getValue(self, item):
-        value = getattr(item, self.attrName)
-        return formatDateToLocal(value)
+        value = self._get_value(item)
+        return formatDateToLocal(value, '%Y-%m-%d')
 
     def getSortKey(self, item):
         return self.getValue(item)
@@ -362,9 +365,13 @@ class SiteCreatedColumn(CreatedColumn):
     weight = 8
 
 
-class SiteLastModifiedColumn(LastModifiedColumn):
+class SiteLicenseEndDateColumn(BaseDateColumn):
 
     weight = 9
+    header = 'End Date'
+
+    def _get_value(self, item):
+        return item.license.end_date
 
 
 class DashboardTrialSitesTable(BaseSitesTable):
@@ -387,16 +394,9 @@ class SiteAgeColumn(column.Column):
         return (self.table._current_time - item.created).days
 
 
-class SiteLicenseEndDateColumn(BaseDateColumn):
+class DashboardTrialSiteLicenseEndDateColumn(SiteLicenseEndDateColumn):
 
     weight = 7
-    header = 'End Date'
-
-    def getValue(self, item):
-        return formatDateToLocal(item.license.end_date)
-
-    def getSortKey(self, item):
-        return self.getValue(item)
 
 
 class DashboardRenewalsTable(BaseSitesTable):
@@ -420,14 +420,13 @@ class SiteURLAliasColumn(SiteURLColumn):
         return names[1] if len(names) > 1 else ''
 
 
-class SiteRenewalDateColumn(column.Column):
+class SiteRenewalDateColumn(BaseDateColumn):
 
     weight = 3
     header = 'License Renewal Date'
 
-    def renderCell(self, item):
-        value = item.license.end_date
-        return formatDateToLocal(value)
+    def _get_value(self, item):
+        return item.license.end_date
 
 
 class SiteDaysToRenewColumn(column.Column):
