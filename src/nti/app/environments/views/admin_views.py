@@ -140,7 +140,6 @@ class SitesListView(BaseTemplateView, TableViewMixin):
                 'trial_site_request_url': self.request.resource_url(self.context, '@@request_trial_site') if self.request.has_permission(ACT_REQUEST_TRIAL_SITE, self.context) else None,
                 'site_status_options': SITE_STATUS_OPTIONS,
                 'env_shared_options': SHARED_ENV_NAMES,
-                'is_deletion_allowed': self._is_deletion_allowed(table),
                 'hosts_options': _host_options(self._onboarding_root)}
 
 
@@ -263,6 +262,7 @@ class SiteDetailView(BaseTemplateView):
                          'site_login_link': request.resource_url(self.context, '@@login') if request.has_permission(ACT_SITE_LOGIN, self.context) else None,
                          'client_name': self.context.client_name,
                          'site_edit_link': request.resource_url(self.context) if request.has_permission(ACT_UPDATE, self.context) else None,
+                         'site_delete_link': request.resource_url(self.context) if request.has_permission(ACT_DELETE, self.context) else None,
                          'lastModified': formatDateToLocal(self.context.lastModified),
                          'parent_site': self._format_parent_site(self.context.parent_site) if self.context.parent_site else None,
                          'usage': self._format_usage(self.context),

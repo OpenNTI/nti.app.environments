@@ -108,11 +108,6 @@
 			 provides="z3c.table.interfaces.IColumn"
 			 name="lastModified" />
 
-	<adapter factory="._table_utils.SiteDeleteColumn"
-			 for="* * ._table_utils.SitesTable"
-			 provides="z3c.table.interfaces.IColumn"
-			 name="delete" />
-
 	<adapter factory="._table_utils.SiteColumnHeader"
 			 for="* * * ._table_utils.SiteURLColumn"
 			 provides="z3c.table.interfaces.IColumnHeader"/>

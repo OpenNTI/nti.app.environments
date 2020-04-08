@@ -367,11 +367,6 @@ class SiteLastModifiedColumn(LastModifiedColumn):
     weight = 9
 
 
-class SiteDeleteColumn(DeleteColumn):
-
-    weight = 10
-
-
 class DashboardTrialSitesTable(BaseSitesTable):
 
     def __init__(self, context, request):

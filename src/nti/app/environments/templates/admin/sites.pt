@@ -6,13 +6,6 @@
         <link href="/static/css/modal.css" rel="stylesheet">
         <link href="/static/css/table.css" rel="stylesheet">
         <link href="/static/css/select.css" rel="stylesheet">
-        <style>
-            <metal:block tal:omit-tag="" tal:condition="not:is_deletion_allowed|nothing">
-                .nti_delete {
-                    display: none;
-                }
-            </metal:block>
-        </style>
     </metal:block>
 
     <metal:block metal:fill-slot="content">
@@ -72,24 +65,6 @@
                 <span tal:replace="structure python: table.renderBatch()"/>
             </div>
 	    </div>
-
-        <div id="deletingModal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Deleting?</h3>
-                </div>
-                <div class="modal-body">
-                    <p>Are you sure you want to delete site <strong><span class="deleting_email"></span></strong>?</p>
-                    <div class="success success-deletion" style="display:none;"></div>
-                    <div class="error error-deletion" style="display:none;"></div>
-                </div>
-
-                <div class="modal-footer">
-                    <button class='btn btnOK' onclick="deleteItem(this);">Delete</button>
-                    <button class='btn btnNO' onclick="document.getElementById('deletingModal').style.display = 'none';">Cancel</button>
-                </div>
-            </div>
-        </div>
 
         <div id="newModal" class="modal">
             <div class="modal-content">

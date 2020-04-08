@@ -297,6 +297,30 @@
             <button class="btn btnCustom" onclick="window.location.reload();">
                 Refresh
             </button>
+            <div style="float:right;">
+                <metal:block tal:omit-tag="" tal:condition="site.site_delete_link|nothing">
+                    <button class="btn btnCustom btnDelete" onclick="document.getElementById('deletingModal').style.display = 'block';">
+                        Delete
+                    </button>
+                    <div id="deletingModal" class="modal">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3>Deleting?</h3>
+                            </div>
+                            <div class="modal-body">
+                                <p>Are you sure you want to delete site?</p>
+                                <div class="success success-deletion" style="display:none;"></div>
+                                <div class="error error-deletion" style="display:none;"></div>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button class='btn btnOK' onclick="deleteItem(this, '${site.site_delete_link}', '${sites_list_link}');">Delete</button>
+                                <button class='btn btnNO' onclick="document.getElementById('deletingModal').style.display = 'none';">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </metal:block>
+            </div>
         </div>
     </metal:block>
     <metal:block metal:fill-slot="script">
