@@ -4,7 +4,7 @@
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600" rel="stylesheet">
 		<title>
-			New Site Request
+			A new site has been created.
 		</title>
 		<style>
 			body {
@@ -57,7 +57,7 @@
 		<div class="container">
 			<img src="${request.static_url('nti.app.environments:static/image/email_logo.png')}" width="41.87" height="40"/>
 			<div class="title">
-				A new site has been requested.
+				A new site has been created.
 			</div>
 			<table style="border-collapse:collapse; width:100%; margin-top:20px;">
 				<tr>
