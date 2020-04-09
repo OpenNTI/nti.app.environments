@@ -27,6 +27,8 @@
                     <p>Hubspot: ${customer.hubspot.contact_vid}</p>
                 </metal:block>
             </metal:block>
+            <p>Created: <span tal:content="python: format_date(customer.customer.createdTime)"/></p>
+            <p>Last Modified: <span tal:content="python: format_date(customer.customer.lastModified)"/></p>
         </div>
 
         <h1 style="margin-top: 32px;">Sites</h1>

@@ -201,9 +201,10 @@ a {
     background-color: #4CAF50;
 }
 
-.btnOK {
-	color: #fff;
-    background-color: #dc3545;
+.btnOK,
+.btnDelete {
+	color: #fff !important;
+    background-color: #dc3545 !important;
 }
 
 .btnNO {

@@ -329,3 +329,13 @@ function saveParentSiteView(me, url) {
     data = JSON.stringify(data);
     doUpdate(url, data, '.success-edit-parent-site', '.error-edit-parent-site')
 }
+
+
+function deleteItem (me, url, sites_list_link) {
+    doDeletionRequest(me, url, {}, '#deletingModal', function(result){
+        showSuccessMessage("Successfully.", '.success-deletion', '.error-deletion', 500, function () {
+            $('#deletingModal').hide()
+            window.location.href = sites_list_link;
+        });
+    });
+}
