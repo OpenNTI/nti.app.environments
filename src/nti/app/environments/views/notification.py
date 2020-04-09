@@ -108,7 +108,8 @@ class SiteCreatedEmailNotifier(BaseEmailNotifier):
             'client': self.site.client_name,
             'email': self.site.owner.email,
             'url': self.site.dns_names[0] if self.site.dns_names else '',
-            'site_detail_link': self.request.resource_url(self.site, '@@details')
+            'site_detail_link': self.request.resource_url(self.site, '@@details'),
+            'owner_detail_link': self.request.resource_url(self.site.owner, '@@details')
         }
         return template_args
 

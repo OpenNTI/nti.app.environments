@@ -1,8 +1,9 @@
-${requesting_user} has requested a new site be created.
+A new site has been created.
 
 Site ID: ${site_id}
-Client: ${client}
-Email: ${email}
+Creator: ${requesting_user}
+Client Name: ${client}
+Owner: ${email}
 URL: ${url}
 
-${site_detail_link}
+For site details, please visit ${site_detail_link}.
