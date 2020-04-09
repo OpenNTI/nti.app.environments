@@ -35,6 +35,9 @@ class NTClient(object):
         except requests.exceptions.ConnectionError:
             logger.warn("Unknown site host: %s.", host_name)
             return None
+        except requests.exceptions.ReadTimeout:
+            logger.warn("Caught read timeout.")
+            return None
         except ValueError:
             logger.warn("Bad json data from site host: %s.", host_name)
             return None
