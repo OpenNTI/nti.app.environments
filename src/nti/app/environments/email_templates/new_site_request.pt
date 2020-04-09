@@ -2,51 +2,99 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:metal="http://xml.zope.org/namespaces/metal" xmlns:tal="http://xml.zope.org/namespaces/tal" xmlns:i18n="http://xml.zope.org/namespaces/i18n" i18n:domain="nti.app.environments" i18n:source="en">
 	<head>
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600" rel="stylesheet">
 		<title>
-			Confirm your email address
+			New Site Request
 		</title>
 		<style>
-			.main {
-				max-width: 100%;
-				margin: 0 auto;
-				font-size: 17px;
+			body {
+				background-color: #F9F9F9;
+				color: #494949;
+				font-family: 'Open Sans', sans-serif, Helvetica, Arial;
+				padding: 20px 0px;
+				font-size: 16px;
+				line-height: 24px;
+			}
+			.title {
+				margin-top: 20px;
+				font-size: 26px;
+				font-weight: 600;
+				letter-spacing: -0.5px;
+				line-height: 36px;
 			}
 			a {
 				text-decoration: none;
+				color: #3fb3f6;
+			}
+			td {
+				border-collapse: collapse;
+				padding: 5px 0px;
+				font-size: 15px;
+			}
+
+			@media only screen and (min-width: 480px)  {
+				.container {
+					width: 610px;
+					margin: 0 auto;
+					padding: 47px 60px 50px 60px;
+					background-color: #FFFFFF;
+					border-top: 3px solid #3FB34F;
+				}
+			}
+
+			@media only screen and (max-width: 480px)  {
+				.container {
+					width: 100%;
+					margin: 0 auto;
+					padding: 47px 2px 50px 2px;
+					background-color: #FFFFFF;
+					border-top: 3px solid #3FB34F;
+				}
 			}
 		</style>
 	</head>
 	<body>
-		<div class="main">
-			<img src="https://d2ixlfeu83tci.cloudfront.net/images/email_logo.png" width="177" height="25" style="margin:15px 0 0 0"/>
-			<p>
-				${requesting_user} has requested a new site be created.
-			</p>
-			<p i18n:translate="">
-				Site ID: ${site_id}
-			</p>
-			<p i18n:translate="">
-				Client: ${client}
-			</p>
-			<p i18n:translate="">
-				Email: ${email}
-			</p>
-			<p i18n:translate="">
-				URL: ${url}
-			</p>
-            <p>
-                For site detail, please visit <a href="#" tal:attributes="href site_detail_link">here</a>.
-            </p>
-			<p>
-				<span i18n:translate="">
-					This email contains private information for you - please don't forward it.
-					Questions about setting up your new NextThought site? Email us at
-					<a i18n:name="support_email" href="mailto:support@nextthought.com" tal:content="support_email|default" tal:attributes="href string:mailto:${support_email|default}">
-						support@nextthought.com
-					</a>
-					.
-				</span>
-			</p>
+		<div class="container">
+			<img src="${request.static_url('nti.app.environments:static/image/email_logo.png')}" width="41.87" height="40"/>
+			<div class="title">
+				A new site has been requested.
+			</div>
+			<table style="border-collapse:collapse; width:100%; margin-top:20px;">
+				<tr>
+					<td>Site ID</td>
+					<td style="font-weight: 600;">
+						<a href="#" tal:attributes="href site_detail_link" target="_blank">${site_id}</a>
+					</td>
+				</tr>
+				<tr>
+					<td>Creator</td>
+					<td style="font-weight: 600;">
+						<a href="javascript:void(0);" style="color: #494949;">${requesting_user}</a>
+					</td>
+				</tr>
+				<tr>
+					<td>Client Name</td>
+					<td style="font-weight: 600;">${client}</td>
+				</tr>
+				<tr>
+					<td>Owner</td>
+					<td style="font-weight: 600;">
+						<a href="#" tal:attributes="href owner_detail_link" target="_blank">${email}</a>
+					</td>
+				</tr>
+				<tr>
+					<td>URL</td>
+					<td style="font-weight: 600;">
+						<a href="javascript:void(0);" style="color: #494949;">${url}</a>
+					</td>
+				</tr>
+			</table>
+			<hr style="margin-top: 47px;border:1px solid rgba(0,0,0,0.07);border-bottom: 0;"/>
+			<div style="margin-top: 15px;font-size: 12px;line-height: 17px;">
+				If you feel this email was sent in error, or this account was created without your consent,<br/>you may email
+				<a href="mailto:support@nextthought.com" tal:content="support_email|default" tal:attributes="href string:mailto:${support_email|default}" style="color: #494949;">
+					support@nextthought.com</a>.
+			</div>
 		</div>
 	</body>
 </html>
