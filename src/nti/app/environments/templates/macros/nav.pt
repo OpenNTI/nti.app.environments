@@ -37,7 +37,7 @@
             </metal:block>
             <metal:block tal:omit-tag="" tal:condition="view.is_sites_visible">
                 <div class="nav-item">
-                    <a href="/onboarding/sites/@@list">Sites</a>
+                    <a href="/onboarding/sites/@@list?table-sortOn=table-created-4&table-sortOrder=descending">Sites</a>
                 </div>
             </metal:block>
             <div class="nav-item">
