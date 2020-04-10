@@ -17,7 +17,7 @@
         <div class="customer-info"><br>
             <img src="/static/image/avatar.png" alt="Avatar" style="width:120px;border-radius: 50%;">
             <p>Name: <span tal:content="customer.customer.name or 'Unknown'"></span></p>
-            <p>Email: <span tal:content="customer.customer.email"></span></p>
+            <p>Email: <a href="mailto:${customer.customer.email}">${customer.customer.email}</a></p>
             <p>Organization: <span tal:content="customer.customer.organization or 'Unknown'"></span></p>
             <metal:block tal:omit-tag="" tal:condition="customer.hubspot">
                 <metal:block tal:omit-tag="" tal:condition="customer.hubspot.profile_url">
@@ -29,6 +29,11 @@
             </metal:block>
             <p>Created: <span tal:content="python: format_date(customer.customer.createdTime)"/></p>
             <p>Last Modified: <span tal:content="python: format_date(customer.customer.lastModified)"/></p>
+
+            <p>Last Verified:
+                <span tal:content="python: format_date(customer.customer.last_verified) or 'unverified'"
+                      tal:attributes="style python: 'color:#3FB34F' if customer.customer.last_verified else 'color:#FFA500'"/>
+            </p>
         </div>
 
         <h1 style="margin-top: 32px;">Sites</h1>
@@ -46,7 +51,7 @@
             </div>
 	    </div>
 
-        <div class="margin-top: 16px;">
+        <div style="margin-top: 16px;margin-bottom:16px;">
             <button class="btn btnCustom" onclick="window.location='${customers_list_link}';">
                 Back To Customers
             </button>
