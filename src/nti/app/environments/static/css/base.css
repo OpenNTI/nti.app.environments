@@ -103,7 +103,7 @@ body {
 
 /** form input */
 .form {
-    width: 80%;
+    width: 100%;
 }
 .form .input-row {
     width: 100%;
@@ -119,11 +119,11 @@ body {
 .form .input-row .input-col-1 {
     position: relative;
     width: 100%;
-    -ms-flex: 0 0 20%;
-    flex: 0 0 20%;
-    max-width: 20%;
+    -ms-flex: 0 0 25%;
+    flex: 0 0 25%;
+    max-width: 25%;
     display: inline-block;
-    padding: 7px 15px;
+    padding: 6px 0px;
 }
 
 .form .input-row .input-col-3 {

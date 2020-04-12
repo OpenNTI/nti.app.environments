@@ -339,3 +339,68 @@ function deleteItem (me, url, sites_list_link) {
         });
     });
 }
+
+
+/** token */
+
+
+function getTimeout(id, errorSelector) {
+    var input = $('#timeout');
+    clearFieldError(input);
+    var val = $(input).val().trim();
+    val = val ? val : null;
+    if(!val){
+        showFieldError(input);
+    } else {
+        val = Number(val);
+        if(val < 1 || val > 360) {
+            val = null;
+            showFieldError(input, "Time limit should be between 1 and 360 mins.");
+        } else {
+            val = val * 60;
+        }
+    }
+    return val
+}
+
+
+function openSiteTokenModal() {
+    document.getElementById('tokenModal').style.display = 'block';
+    $('#token-result-wrapper').hide();
+}
+
+function closeSiteTokenModal() {
+    document.getElementById('tokenModal').style.display = 'none';
+}
+
+function generateToken(me, url) {
+    clearMessages('.success-token', '.error-token');
+    var timeout = getTimeout();
+    if(!timeout){
+        return;
+    }
+
+    var data = timeout ? {'timeout': timeout} : {};
+    doAjaxRequest(me, url, data, 'GET', '.success-token', '.error-token', null, function(result){
+        $('#token-result-wrapper').show();
+        $('#highlight').text(result['jwt']);
+        hideTooltip();
+    });
+}
+
+function copyToken(me) {
+    copyToClipBoard('highlight');
+    showTooltip();
+}
+
+function showTooltip() {
+    var tooltip = $('#token-result-wrapper .tooltiptext');
+    $(tooltip).css('visibility', 'visible');
+    $(tooltip).css('opacity', 1);
+}
+
+function hideTooltip() {
+    var tooltip = $('#token-result-wrapper .tooltiptext');
+    $(tooltip).css('visibility', 'hidden');
+    $(tooltip).css('opacity', 0);
+}
