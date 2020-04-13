@@ -133,15 +133,7 @@ function getValue(id) {
 /** copy div content to clipboard. */
 function copyToClipBoard(divSelector) {
     var elm = document.getElementById(divSelector);
-    if(document.body.createTextRange) {
-        // for Internet Explorer
-        var range = document.body.createTextRange();
-        range.moveToElementText(elm);
-        range.select();
-        document.execCommand("Copy");
-    }
-    else if(window.getSelection) {
-        // other browsers
+    if(window.getSelection) {
         var selection = window.getSelection();
         var range = document.createRange();
         range.selectNodeContents(elm);
