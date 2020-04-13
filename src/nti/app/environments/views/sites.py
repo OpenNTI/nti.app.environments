@@ -18,6 +18,7 @@ from zope.container.interfaces import InvalidItemType
 
 from zope.event import notify
 
+from nti.app.environments.auth import ACT_ADMIN
 from nti.app.environments.auth import ACT_CREATE
 from nti.app.environments.auth import ACT_DELETE
 from nti.app.environments.auth import ACT_EDIT_SITE_ENVIRONMENT
@@ -812,16 +813,7 @@ class MarkInviteAcceptedView(BaseView):
         return self.make_redirect()
 
 
-@view_config(renderer='rest',
-             context=ILMSSite,
-             request_method='GET',
-             permission=ACT_SITE_LOGIN,
-             name="login")
-class SiteLoginView(BaseView):
-    """
-    Currently only admin could login the target site via JWT.
-    """
-    login_href = '/dataserver2/logon.nti'
+class JWTTokenViewMixin(object):
 
     def _get_realname(self):
         # Based on the session configuration, realname shouldn't expire.
@@ -837,6 +829,18 @@ class SiteLoginView(BaseView):
                                    timeout=timeout)
         return token
 
+
+@view_config(renderer='rest',
+             context=ILMSSite,
+             request_method='GET',
+             permission=ACT_SITE_LOGIN,
+             name="login")
+class SiteLoginView(BaseView, JWTTokenViewMixin):
+    """
+    Currently only admin could login the target site via JWT.
+    """
+    login_href = '/dataserver2/logon.nti'
+
     def __call__(self):
         site_url = "https://{}".format(self.context.dns_names[0])
         params = {
@@ -847,3 +851,32 @@ class SiteLoginView(BaseView):
         location = '{}?{}'.format(urljoin(site_url, self.login_href),
                                   urlencode(params))
         return hexc.HTTPSeeOther(location=location)
+
+
+@view_config(renderer='rest',
+             context=ILMSSite,
+             request_method='GET',
+             permission=ACT_ADMIN,
+             name="generate_token")
+class GenerateSiteJWTTokenView(BaseView, JWTTokenViewMixin):
+    """
+    Generate a JWT token for requesting users, this token should
+    expires in a given time between 1 ~ 360 minutes.
+    """
+    _min_timeout = 60
+    _max_timeout = 60 * 360
+    _default_timeout = 60 * 30
+
+    def _get_timeout(self):
+        try:
+            timeout = float(self.request.params.get('timeout', self._default_timeout))
+        except ValueError:
+            timeout = None
+        if timeout is None or timeout < self._min_timeout or timeout > self._max_timeout:
+            raise_json_error(hexc.HTTPUnprocessableEntity,
+                             "Invalid timeout.")
+        return timeout
+
+    def __call__(self):
+        timeout = self._get_timeout()
+        return {'jwt': self._get_jwt_token(timeout=timeout)}

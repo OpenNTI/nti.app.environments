@@ -1,21 +1,5 @@
 "use strict";
 
-function showFieldError(input, message) {
-    var error = $(input).siblings('.field-error');
-    if (error) {
-        $(error).text(message || 'Please fill in this field.');
-        $(error).show();
-        return true
-    }
-}
-
-function clearFieldError(input) {
-    var error = $(input).siblings('.field-error');
-    if (error) {
-        $(error).hide();
-    }
-}
-
 function getValue(id, errorSelector) {
     var input = $(id);
     clearFieldError(input);

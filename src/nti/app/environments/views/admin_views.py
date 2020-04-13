@@ -15,7 +15,7 @@ from nti.app.environments.api.siteinfo import nt_client
 
 from nti.app.environments.api.hubspotclient import get_hubspot_profile_url
 
-from nti.app.environments.auth import ACT_READ
+from nti.app.environments.auth import ACT_READ, ACT_ADMIN
 from nti.app.environments.auth import ACT_UPDATE
 from nti.app.environments.auth import ACT_DELETE
 from nti.app.environments.auth import ACT_CREATE
@@ -261,6 +261,7 @@ class SiteDetailView(BaseTemplateView):
                          'environment': self._format_env(self.context.environment) if self.context.environment else None,
                          'environment_edit_link': request.resource_url(self.context, '@@environment') if request.has_permission(ACT_EDIT_SITE_ENVIRONMENT, self.context) else None,
                          'site_login_link': request.resource_url(self.context, '@@login') if request.has_permission(ACT_SITE_LOGIN, self.context) else None,
+                         'generate_token_link': request.resource_url(self.context, '@@generate_token') if request.has_permission(ACT_ADMIN, self.context) else None,
                          'client_name': self.context.client_name,
                          'site_edit_link': request.resource_url(self.context) if request.has_permission(ACT_UPDATE, self.context) else None,
                          'site_delete_link': request.resource_url(self.context) if request.has_permission(ACT_DELETE, self.context) else None,

@@ -70,10 +70,74 @@ h3 {
 }
 
 .btn-login {
-    float:right;
     color:#FFFFFF;
     background-color:#3FB34F;
     border:none;
     padding: 6px 12px;
     min-width: auto;
+}
+
+/** token */
+.token-result-wrapper {
+    margin-top: 24px;
+    padding: 24px 0;
+    text-align:initial;
+    display:none;
+    border-top:1px solid rgba(0,0,0,0.07);
+}
+.token-result-wrapper .token-result {
+    width: 100%;
+    background-color: #f7f7f9;
+    border-radius: 2px;
+}
+.token-result-wrapper .clipboard {
+    position: relative;
+    display: block;
+    float: right;
+}
+.token-result-wrapper .clipboard .tooltiptext {
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 4px;
+    position: absolute;
+    right: 4px;
+    z-index: 10;
+    bottom: 125%;
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size:10px;
+}
+.token-result-wrapper .clipboard .tooltiptext::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #555 transparent transparent transparent;
+}
+.token-result-wrapper .clipboard .btnCopy {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 10;
+    display: block;
+    padding: 4px;
+    font-size: 12px;
+    color: #818a91;
+    cursor: pointer;
+    background-color: transparent;
+    border: 0;
+    border-radius: 4px;
+}
+.token-result-wrapper .clipboard:hover .btnCopy {
+    color: #FFFFFF;
+    background-color: #3fb3f6;
+}
+.token-result-wrapper .highlight {
+    padding: 32px;
+    word-wrap: break-word;
 }

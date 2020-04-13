@@ -35,6 +35,22 @@ function clearMessages(successSelector, errorSelector) {
     $(errorSelector).hide();
 }
 
+function showFieldError(input, message) {
+    var error = $(input).siblings('.field-error');
+    if (error) {
+        $(error).text(message || 'Please fill in this field.');
+        $(error).show();
+        return true
+    }
+}
+
+function clearFieldError(input) {
+    var error = $(input).siblings('.field-error');
+    if (error) {
+        $(error).hide();
+    }
+}
+
 
 function getUrlParameter(name) {
     var url = window.location.search.substring(1),
@@ -101,10 +117,30 @@ function positiveNumbersOnly (e) {
     formatInput($(me), newValue);
 }
 
+function positiveFloatOnly(e) {
+    var me = e.target;
+    var newValue = me.value.replace(/[^0-9.]/g, '');
+    newValue = newValue.replace(/(\..*)\./g, '$1');
+    formatInput($(me), newValue);
+}
+
 
 function getValue(id) {
     var val = document.getElementById(id).value.trim();
     return val ? val : null;
+}
+
+/** copy div content to clipboard. */
+function copyToClipBoard(divSelector) {
+    var elm = document.getElementById(divSelector);
+    if(window.getSelection) {
+        var selection = window.getSelection();
+        var range = document.createRange();
+        range.selectNodeContents(elm);
+        selection.removeAllRanges();
+        selection.addRange(range);
+        document.execCommand("Copy");
+    }
 }
 
 
