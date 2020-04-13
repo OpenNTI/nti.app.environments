@@ -11,7 +11,7 @@ from nti.links import Link
 
 from nti.property.property import alias
 
-from nti.app.environments.auth import ACT_CREATE, is_admin_or_account_manager
+from nti.app.environments.auth import ACT_CREATE, is_admin_or_manager
 
 from nti.app.environments.models.interfaces import ICustomer, ILMSSite
 from nti.app.environments.models.interfaces import ISetupStateSuccess
@@ -77,7 +77,7 @@ class CustomerSitesLinkDecorator(AbstractRequestAwareDecorator):
 class SiteInfoDecorator(AbstractRequestAwareDecorator):
 
     def _predicate(self, unused_context, unused_result):
-        return is_admin_or_account_manager(self.request.authenticated_userid, self.request)
+        return is_admin_or_manager(self.request.authenticated_userid, self.request)
 
     def _do_decorate_external(self, context, external):
         for attr_name in SITE_FIELDS_EXTERNAL_FOR_ADMIN_ONLY:

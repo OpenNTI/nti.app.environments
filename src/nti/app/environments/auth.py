@@ -22,6 +22,7 @@ ACT_SITE_LOGIN = 'nti.app.environments.actions.site_login'
 
 ADMIN_ROLE = 'role:nti.roles.admin'
 ACCOUNT_MANAGEMENT_ROLE = 'role:nti.roles.account-management'
+OPS_ROLE = 'role:nti.roles.ops-management'
 
 
 def is_admin(userid, request):
@@ -32,10 +33,10 @@ def is_admin(userid, request):
     return False
 
 
-def is_admin_or_account_manager(userid, request):
+def is_admin_or_manager(userid, request):
     roles = _registered_roles(userid, request)
     for role in roles or ():
-        if role in (ADMIN_ROLE, ACCOUNT_MANAGEMENT_ROLE):
+        if role in (ADMIN_ROLE, ACCOUNT_MANAGEMENT_ROLE, OPS_ROLE):
             return True
     return False
 
@@ -44,7 +45,7 @@ def _registered_roles(userid, request):
     for mgr in (principalRoleManager, IPrincipalRoleManager(IOnboardingRoot(request))):
         roles = mgr.getRolesForPrincipal(userid)
         for role, access in roles or ():
-            if role in (ADMIN_ROLE, ACCOUNT_MANAGEMENT_ROLE) and access == Allow:
+            if role in (ADMIN_ROLE, ACCOUNT_MANAGEMENT_ROLE, OPS_ROLE) and access == Allow:
                 yield role
 
 

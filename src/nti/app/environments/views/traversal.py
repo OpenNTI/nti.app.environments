@@ -17,7 +17,7 @@ from zope.traversing.interfaces import IPathAdapter, ITraversable
 from nti.app.environments.auth import ADMIN_ROLE
 from nti.app.environments.auth import ACT_READ
 from nti.app.environments.auth import ACT_CREATE
-from nti.app.environments.auth import is_admin_or_account_manager
+from nti.app.environments.auth import is_admin_or_manager
 
 from nti.app.environments.models.interfaces import ICustomer
 
@@ -45,7 +45,7 @@ class SitesCollection(Contained):
     def __acl__(self):
         result= [(Allow, ADMIN_ROLE, ALL_PERMISSIONS)]
 
-        if is_admin_or_account_manager(self.owner.email, self.request) \
+        if is_admin_or_manager(self.owner.email, self.request) \
             or not does_customer_have_sites(self.owner):
             result.append((Allow, self.owner.email, (ACT_CREATE, ACT_READ)))
         else:

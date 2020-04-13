@@ -25,8 +25,10 @@ from nti.wref.interfaces import IWeakRef
 
 from nti.app.environments.auth import ADMIN_ROLE
 from nti.app.environments.auth import ACCOUNT_MANAGEMENT_ROLE
+from nti.app.environments.auth import OPS_ROLE
 from nti.app.environments.auth import ACT_READ
 from nti.app.environments.auth import ACT_REQUEST_TRIAL_SITE
+from nti.app.environments.auth import ACT_SITE_LOGIN
 
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ISiteUsage
@@ -155,7 +157,8 @@ class PersistentSite(SchemaConfigured, PersistentCreatedModDateTrackingObject, C
 
     def __acl__(self):
         result = [(Allow, ADMIN_ROLE, ALL_PERMISSIONS),
-                  (Allow, ACCOUNT_MANAGEMENT_ROLE, (ACT_READ,))]
+                  (Allow, ACCOUNT_MANAGEMENT_ROLE, (ACT_READ,)),
+                  (Allow, OPS_ROLE, (ACT_READ,))]
         if self.owner:
             result.insert(0, (Allow, self.owner.email, (ACT_READ,)))
         return result
@@ -204,7 +207,8 @@ class SitesFolder(CaseInsensitiveCheckingLastModifiedBTreeContainer):
     @LazyOnClass
     def __acl__(self):
         return [(Allow, ADMIN_ROLE, ALL_PERMISSIONS),
-                (Allow, ACCOUNT_MANAGEMENT_ROLE, (ACT_READ, ACT_REQUEST_TRIAL_SITE))]
+                (Allow, ACCOUNT_MANAGEMENT_ROLE, (ACT_READ, ACT_REQUEST_TRIAL_SITE)),
+                (Allow, OPS_ROLE, (ACT_READ, ACT_REQUEST_TRIAL_SITE, ACT_SITE_LOGIN))]
 
     def addSite(self, site, siteId=None):
         siteId = site.__name__ or siteId or _generate_site_id()
