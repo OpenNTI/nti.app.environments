@@ -176,6 +176,9 @@ def query_invitation_status(sites):
 
         body = resp.json()
 
+        if 'acceptedTime' not in body:
+            logger.warning('acceptedTime not in invitation info (%s)', body)
+
         acceptedTime = body.get('acceptedTime')
         if acceptedTime is not None:
             x.setup_state.invite_accepted_date = datetime.datetime.utcfromtimestamp(acceptedTime)
