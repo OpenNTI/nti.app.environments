@@ -19,8 +19,9 @@ from nti.app.environments.auth import ACT_READ
 from nti.app.environments.auth import ACT_DELETE
 from nti.app.environments.auth import ADMIN_ROLE
 from nti.app.environments.auth import ACCOUNT_MANAGEMENT_ROLE
+from nti.app.environments.auth import OPS_ROLE
 from nti.app.environments.auth import is_admin
-from nti.app.environments.auth import is_admin_or_account_manager
+from nti.app.environments.auth import is_admin_or_manager
 
 from nti.app.environments.models.customers import HubspotContact
 from nti.app.environments.models.customers import PersistentCustomer
@@ -87,7 +88,8 @@ class BaseTemplateView(BaseView):
     is_roles_visible = None
     is_hosts_visible = None
     role_names = ((ADMIN_ROLE, 'Admin'),
-                  (ACCOUNT_MANAGEMENT_ROLE, 'Account Management'))
+                  (ACCOUNT_MANAGEMENT_ROLE, 'Account Management'),
+                  (OPS_ROLE, 'Operations Management'))
 
     @Lazy
     def _onboarding_root(self):
@@ -99,7 +101,7 @@ class BaseTemplateView(BaseView):
             self.logged_in = True
             self.is_customers_visible = self.request.has_permission(ACT_READ, get_customers_folder(self._onboarding_root, request))
             self.is_sites_visible = self.request.has_permission(ACT_READ, get_sites_folder(self._onboarding_root, request))
-            self.is_dashboard_visible = is_admin_or_account_manager(self.request.authenticated_userid, request)
+            self.is_dashboard_visible = is_admin_or_manager(self.request.authenticated_userid, request)
             self.is_roles_visible = is_admin(self.request.authenticated_userid, request)
             self.is_hosts_visible = self.request.has_permission(ACT_READ, get_hosts_folder(self._onboarding_root, request))
 

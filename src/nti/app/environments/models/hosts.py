@@ -24,6 +24,7 @@ from nti.schema.schema import SchemaConfigured
 from nti.app.environments.auth import ACT_READ
 from nti.app.environments.auth import ADMIN_ROLE
 from nti.app.environments.auth import ACCOUNT_MANAGEMENT_ROLE
+from nti.app.environments.auth import OPS_ROLE
 
 from nti.app.environments.models.events import HostLoadUpdatedEvent
 
@@ -76,7 +77,8 @@ class HostsFolder(CaseInsensitiveCheckingLastModifiedBTreeContainer):
     @LazyOnClass
     def __acl__(self):
         return [(Allow, ADMIN_ROLE, ALL_PERMISSIONS),
-                (Allow, ACCOUNT_MANAGEMENT_ROLE, ACT_READ)]
+                (Allow, ACCOUNT_MANAGEMENT_ROLE, ACT_READ),
+                (Allow, OPS_ROLE, ACT_READ)]
 
     def addHost(self, host):
         if host.id is None:

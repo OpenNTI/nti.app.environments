@@ -10,7 +10,7 @@ from zope.cachedescriptors.property import Lazy
 
 from nti.externalization.interfaces import LocatedExternalDict\
 
-from nti.app.environments.auth import is_admin_or_account_manager
+from nti.app.environments.auth import is_admin_or_manager
 
 from nti.app.environments.interfaces import ISiteDomainPolicy
 
@@ -117,7 +117,7 @@ class ValidDomainView(BaseView):
                        'domain': domain})
 
         # For admin/management, just no random suffix should be applied.
-        if is_admin_or_account_manager(userid, self.request):
+        if is_admin_or_manager(userid, self.request):
             dns_name = '{}.{}'.format(subdomain, domain)
             is_available = is_dns_name_available(dns_name, self.sites_folder)
             result.update({'dns_name': dns_name,

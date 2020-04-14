@@ -437,7 +437,7 @@ class TestRequestTrialSiteView(BaseAppTest):
     @mock.patch('nti.app.environments.views.notification._mailer')
     @mock.patch('nti.app.environments.views.utils._is_dns_name_available')
     @mock.patch('nti.app.environments.views.base.get_hubspot_client')
-    @mock.patch('nti.app.environments.views.sites.is_admin_or_account_manager')
+    @mock.patch('nti.app.environments.views.sites.is_admin_or_manager')
     @mock.patch('nti.app.environments.views.subscribers._store_task_results')
     def testRequestTrialSiteView(self, mock_store, mock_admin, mock_client, mock_dns_available, mock_mailer):
         mock_store.return_value = True
@@ -552,7 +552,7 @@ class TestCreateNewTrialSiteView(BaseAppTest):
     @mock.patch('nti.app.environments.utils.query_setup_async_result')
     @mock.patch('nti.app.environments.views.notification._mailer')
     @mock.patch('nti.app.environments.views.base.get_hubspot_client')
-    @mock.patch('nti.app.environments.views.sites.is_admin_or_account_manager')
+    @mock.patch('nti.app.environments.views.sites.is_admin_or_manager')
     @mock.patch('nti.app.environments.views.utils._is_dns_name_available')
     @mock.patch('nti.app.environments.views.subscribers._store_task_results')
     def testCreateNewTrialSiteView(self, mock_store, mock_dns_available, mock_admin, mock_client, mock_mailer, mock_async_result):
@@ -1214,7 +1214,7 @@ class TestSetupFailure(BaseAppTest):
     @mock.patch('nti.app.environments.views.notification._mailer')
     @mock.patch('nti.app.environments.views.utils._is_dns_name_available')
     @mock.patch('nti.app.environments.views.base.get_hubspot_client')
-    @mock.patch('nti.app.environments.views.sites.is_admin_or_account_manager')
+    @mock.patch('nti.app.environments.views.sites.is_admin_or_manager')
     @mock.patch('nti.app.environments.views.subscribers._store_task_results')
     def test_setup_failed_and_setup_password(self, mock_store, mock_admin, mock_client, mock_dns_available, mock_mailer, mock_async_result):
         _result = []

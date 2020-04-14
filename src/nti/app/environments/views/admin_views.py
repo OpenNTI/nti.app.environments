@@ -25,6 +25,7 @@ from nti.app.environments.auth import ACT_REQUEST_TRIAL_SITE
 from nti.app.environments.auth import ACT_SITE_LOGIN
 from nti.app.environments.auth import ADMIN_ROLE
 from nti.app.environments.auth import ACCOUNT_MANAGEMENT_ROLE
+from nti.app.environments.auth import OPS_ROLE
 
 from nti.app.environments.interfaces import ISiteDomainPolicy
 
@@ -323,7 +324,8 @@ class _RoleMixin(object):
 
     _role_names_map = {
         ADMIN_ROLE: 'Admin Role',
-        ACCOUNT_MANAGEMENT_ROLE: 'Account Management Role'
+        ACCOUNT_MANAGEMENT_ROLE: 'Account Management Role',
+        OPS_ROLE: 'Operations Management Role'
     }
 
     def _is_email_valid(self, email):

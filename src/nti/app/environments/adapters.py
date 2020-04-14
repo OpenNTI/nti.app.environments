@@ -15,7 +15,7 @@ from ZODB.interfaces import IBroken
 
 from zope.securitypolicy.principalrole import AnnotationPrincipalRoleManager
 
-from nti.app.environments.auth import is_admin_or_account_manager
+from nti.app.environments.auth import is_admin_or_manager
 
 from nti.app.environments.models.interfaces import IOnboardingRoot
 
@@ -173,5 +173,5 @@ class SiteDomainPolicy(object):
         if is_admin_or_management is None:
             assert userid, 'userid is required.'
             request = request or get_current_request()
-            is_admin_or_management = is_admin_or_account_manager(userid, request)
+            is_admin_or_management = is_admin_or_manager(userid, request)
         return bool(is_admin_or_management or dns_name.endswith(self.base_domain))

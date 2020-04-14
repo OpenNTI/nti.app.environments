@@ -27,7 +27,7 @@ from nti.app.environments.auth import ACT_READ
 from nti.app.environments.auth import ACT_REQUEST_TRIAL_SITE
 from nti.app.environments.auth import ACT_UPDATE
 from nti.app.environments.auth import ACT_SITE_LOGIN
-from nti.app.environments.auth import is_admin_or_account_manager
+from nti.app.environments.auth import is_admin_or_manager
 
 from nti.app.environments.interfaces import ISitesCollection
 from nti.app.environments.interfaces import ISiteDomainPolicy
@@ -197,8 +197,8 @@ class RequestTrialSiteView(SiteBaseView, ObjectCreateUpdateViewMixin):
         kwargs['client_name'] = self._get_value('client_name', required=True)
         kwargs['owner'] = self._get_owner(params)
 
-        is_admin_or_management = is_admin_or_account_manager(kwargs['owner'].email,
-                                                             self.request)
+        is_admin_or_management = is_admin_or_manager(kwargs['owner'].email,
+                                                     self.request)
 
         self._check_for_owner(kwargs['owner'], is_admin_or_management)
 
