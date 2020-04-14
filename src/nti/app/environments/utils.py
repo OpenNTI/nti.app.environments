@@ -176,13 +176,16 @@ def query_invitation_status(sites):
 
         body = resp.json()
 
-        acceptedTime = body['acceptedTime']
+        if 'acceptedTime' not in body:
+            logger.warning('acceptedTime not in invitation info (%s)', body)
+
+        acceptedTime = body.get('acceptedTime')
         if acceptedTime is not None:
             x.setup_state.invite_accepted_date = datetime.datetime.utcfromtimestamp(acceptedTime)
             result['accepted'] += 1
             continue
 
-        isExpired = bool(body['expiryTime'] and body['expiryTime'] <= time.time())
+        isExpired = bool(body.get('expiryTime') and body['expiryTime'] <= time.time())
         if isExpired:
             x.setup_state.invitation_active =False
             result['expired'] += 1
