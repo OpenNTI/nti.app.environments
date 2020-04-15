@@ -34,6 +34,8 @@ from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ISiteUsage
 from nti.app.environments.models.interfaces import ISetupState
 from nti.app.environments.models.interfaces import ITrialLicense
+from nti.app.environments.models.interfaces import IStarterLicense
+from nti.app.environments.models.interfaces import IGrowthLicense
 from nti.app.environments.models.interfaces import ICustomersContainer
 from nti.app.environments.models.interfaces import IEnterpriseLicense
 from nti.app.environments.models.interfaces import ISharedEnvironment
@@ -75,6 +77,8 @@ class TrialLicense(SchemaConfigured, PersistentCreatedModDateTrackingObject, Con
 
     createFieldProperties(ITrialLicense)
 
+    license_name = u'trial'
+
     mimeType = mime_type = 'application/vnd.nextthought.app.environments.triallicense'
 
     def __init__(self, *args, **kwargs):
@@ -87,7 +91,37 @@ class EnterpriseLicense(SchemaConfigured, PersistentCreatedModDateTrackingObject
 
     createFieldProperties(IEnterpriseLicense)
 
+    license_name = u'enterprise'
+
     mimeType = mime_type = 'application/vnd.nextthought.app.environments.enterpriselicense'
+
+    def __init__(self, *args, **kwargs):
+        SchemaConfigured.__init__(self, *args, **kwargs)
+        PersistentCreatedModDateTrackingObject.__init__(self)
+
+
+@interface.implementer(IStarterLicense)
+class StarterLicense(SchemaConfigured, PersistentCreatedModDateTrackingObject, Contained):
+
+    createFieldProperties(IStarterLicense)
+
+    license_name = u'starter'
+
+    mimeType = mime_type = 'application/vnd.nextthought.app.environments.starterlicense'
+
+    def __init__(self, *args, **kwargs):
+        SchemaConfigured.__init__(self, *args, **kwargs)
+        PersistentCreatedModDateTrackingObject.__init__(self)
+
+
+@interface.implementer(IGrowthLicense)
+class GrowthLicense(SchemaConfigured, PersistentCreatedModDateTrackingObject, Contained):
+
+    createFieldProperties(IGrowthLicense)
+
+    license_name = u'growth'
+
+    mimeType = mime_type = 'application/vnd.nextthought.app.environments.growthlicense'
 
     def __init__(self, *args, **kwargs):
         SchemaConfigured.__init__(self, *args, **kwargs)

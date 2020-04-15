@@ -113,14 +113,21 @@
                             <select class="input-col-3" name="license" id="site_license" onchange="onLicenseChange()">
                                 <option value=""></option>
                                 <option value="trial">trial</option>
+                                <option value="starter">starter</option>
+                                <option value="growth">growth</option>
                                 <option value="enterprise">enterprise</option>
                             </select>
                         </div>
                         <div class="input-row" style="display:none;" id="site_license_details">
                             <label class="input-col-1"></label>
                             <div class="input-col-3">
-                                <input type="text" name="site_license_start_date" id="site_license_start_date" placeHolder="Start Date"/>
-                                <input type="text" name="site_license_end_date" id="site_license_end_date" placeHolder="End Date" style="margin-top: 16px;"/>
+                                <input type="text" name="site_license_start_date" id="site_license_start_date" placeHolder="Start Date" style="display:none;"/>
+                                <input type="text" name="site_license_end_date" id="site_license_end_date" placeHolder="End Date" style="margin-top: 16px;display:none;"/>
+                                <select name="site_license_frequency" id="site_license_frequency" style="margin-top:16px; display:none;">
+                                    <option value="">Select an option</option>
+                                    <metal:block tal:omit-tag="" tal:repeat="option license_frequency_options"><option value="${option}">${option}</option></metal:block>
+                                </select>
+                                <input type="text" name="site_license_seats" id="site_license_seats" placeHolder="Seats" style="margin-top: 16px;display:none;"/>
                             </div>
                         </div>
                         <div class="input-row">
@@ -211,6 +218,7 @@
             });
 
             $('#site_environment_load_factor').on('input', positiveNumbersOnly);
+            $('input[name=site_license_seats]').on('input', positiveNumbersOnly);
 
             $('#filter_by_state .drop-btn').on('CustomSelectChanged', function(e) {
                 var filterBy = updateFilterBy(["setup_state", $(this).attr('value') || ''])

@@ -63,7 +63,7 @@ class TestUtils(BaseAppTest):
         err = WrongContainedType()
         err.args = ((RequiredMissing(),), "age")
         assert_that(calling(raise_json_error).with_args(hexc.HTTPBadRequest, err, field="name"),
-                    raises(hexc.HTTPBadRequest, pattern="Missing field: age."))
+                    raises(hexc.HTTPBadRequest, pattern="Missing age."))
 
         assert_that(calling(raise_json_error).with_args(hexc.HTTPBadRequest, ValidationError()),
                     raises(hexc.HTTPBadRequest, pattern=""))

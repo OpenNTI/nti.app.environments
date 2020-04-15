@@ -29,6 +29,8 @@ from nti.app.environments.models.sites import SharedEnvironment
 from nti.app.environments.models.sites import DedicatedEnvironment
 from nti.app.environments.models.sites import TrialLicense
 from nti.app.environments.models.sites import EnterpriseLicense
+from nti.app.environments.models.sites import StarterLicense
+from nti.app.environments.models.sites import GrowthLicense
 from nti.app.environments.models.sites import PersistentSite
 from nti.app.environments.models.sites import SetupStatePending
 from nti.app.environments.models.sites import SetupStateFailure
@@ -39,6 +41,8 @@ from nti.app.environments.models.sites import _generate_site_id
 from nti.app.environments.models.hosts import PersistentHost, HostsFolder
 
 from nti.app.environments.models.interfaces import ITrialLicense
+from nti.app.environments.models.interfaces import IStarterLicense
+from nti.app.environments.models.interfaces import IGrowthLicense
 from nti.app.environments.models.interfaces import IEnterpriseLicense
 from nti.app.environments.models.interfaces import ISharedEnvironment
 from nti.app.environments.models.interfaces import IDedicatedEnvironment
@@ -160,6 +164,68 @@ class TestSites(BaseTest):
 
         inst = update_from_external_object(inst, {'start_date': datetime.datetime(2019, 12, 13, 0, 0, 0), 'end_date': datetime.datetime(2019, 12, 14, 0, 0, 0)})
         assert_that(inst, has_properties({'start_date': datetime.datetime(2019, 12, 13, 0, 0, 0), 'end_date': datetime.datetime(2019, 12, 14, 0, 0, 0)}))
+
+    def testStarterLicense(self):
+        inst = StarterLicense()
+        assert_that(inst, has_properties({'start_date': None,
+                                          'frequency': None,
+                                          'seats': None}))
+        errors = getValidationErrors(IStarterLicense, inst)
+        assert_that(errors, has_length(3))
+        assert_that(errors, has_items(('start_date', RequiredMissing('start_date')),
+                                      ('frequency', RequiredMissing('frequency')),
+                                      ('seats', RequiredMissing('seats'))))
+
+        _start = datetime.datetime(2019, 12, 11, 0, 0, 0)
+        inst = StarterLicense(start_date=_start,
+                              frequency='monthly',
+                              seats=1)
+        assert_that(inst, has_properties({'start_date': _start,
+                                          'frequency': 'monthly',
+                                          'seats': 1}))
+        errors = getValidationErrors(IStarterLicense, inst)
+        assert_that(errors, has_length(0))
+
+        result = to_external_object(inst)
+        assert_that(result, has_entries({'Class': 'StarterLicense',
+                                         'MimeType': 'application/vnd.nextthought.app.environments.starterlicense',
+                                         'start_date': '2019-12-11T00:00:00Z',
+                                         'frequency': 'monthly',
+                                         'seats': 1}))
+
+        inst = update_from_external_object(inst, {'start_date': datetime.datetime(2019, 12, 13, 0, 0, 0), 'frequency': 'yearly', 'seats': 2})
+        assert_that(inst, has_properties({'start_date': datetime.datetime(2019, 12, 13, 0, 0, 0), 'frequency': 'yearly', 'seats': 2}))
+
+    def testGrowthLicense(self):
+        inst = GrowthLicense()
+        assert_that(inst, has_properties({'start_date': None,
+                                          'frequency': None,
+                                          'seats': None}))
+        errors = getValidationErrors(IGrowthLicense, inst)
+        assert_that(errors, has_length(3))
+        assert_that(errors, has_items(('start_date', RequiredMissing('start_date')),
+                                      ('frequency', RequiredMissing('frequency')),
+                                      ('seats', RequiredMissing('seats'))))
+
+        _start = datetime.datetime(2019, 12, 11, 0, 0, 0)
+        inst = GrowthLicense(start_date=_start,
+                             frequency='monthly',
+                             seats=2)
+        assert_that(inst, has_properties({'start_date': _start,
+                                          'frequency': 'monthly',
+                                          'seats': 2}))
+        errors = getValidationErrors(IGrowthLicense, inst)
+        assert_that(errors, has_length(0))
+
+        result = to_external_object(inst)
+        assert_that(result, has_entries({'Class': 'GrowthLicense',
+                                         'MimeType': 'application/vnd.nextthought.app.environments.growthlicense',
+                                         'start_date': '2019-12-11T00:00:00Z',
+                                         'frequency': 'monthly',
+                                         'seats': 2}))
+
+        inst = update_from_external_object(inst, {'start_date': datetime.datetime(2019, 12, 13, 0, 0, 0), 'frequency': 'yearly', 'seats': 3})
+        assert_that(inst, has_properties({'start_date': datetime.datetime(2019, 12, 13, 0, 0, 0), 'frequency': 'yearly', 'seats': 3}))
 
     @mock.patch("nti.app.environments.models.wref.get_customers_folder")
     def testPersistentSite(self, mock_customers):

@@ -17,6 +17,25 @@ function doUpdate(url, data, success, error, method) {
     });
 }
 
+function hideEditGroupItems(items, edit) {
+    items.forEach(function(selector){
+        $(edit.find(selector[0])).css('display', 'none');
+        var elem = $(edit).find(selector[1]);
+        $(elem).css('display', 'none');
+        $(elem).val('');
+    });
+}
+
+function showEditGroupItems(items, edit, view) {
+    items.forEach(function(selector){
+        $(edit.find(selector[0])).css('display', 'block');
+        var original = $(view.find(selector[1])).attr('original_value');
+        var elem = $(edit).find(selector[1]);
+        $(elem).css('display', 'inline-block');
+        $(elem).val( original ? original : '' );
+    });
+}
+
 // environment.
 function getSharedSelectors() {
     return [['.name_group_item', '.site_environment_name']];
@@ -42,33 +61,11 @@ function showEnvironmentEditView() {
     $(edit.find('.site_environment_type')).val(_type);
 
     if (_type==='shared') {
-        shared.forEach(function(selector){
-            $(edit.find(selector[0])).css('display', 'block');
-            var original = $(view.find(selector[1])).attr('original_value');
-            var elem = $(edit).find(selector[1]);
-            $(elem).css('display', 'inline-block');
-            $(elem).val( original ? original : '' );
-        });
-        dedicated.forEach(function(selector){
-            $(edit.find(selector[0])).css('display', 'none');
-            var elem = $(edit).find(selector[1]);
-            $(elem).css('display', 'none');
-            $(elem).val('');
-        });
+        hideEditGroupItems(dedicated, edit);
+        showEditGroupItems(shared, edit, view);
     } else {
-        shared.forEach(function(selector){
-            $(edit.find(selector[0])).css('display', 'none');
-            var elem = $(edit).find(selector[1]);
-            $(elem).css('display', 'none');
-            $(elem).val('');
-        });
-        dedicated.forEach(function(selector){
-            $(edit.find(selector[0])).css('display', 'block');
-            var original = $(view.find(selector[1])).attr('original_value');
-            var elem = $(edit).find(selector[1]);
-            $(elem).css('display', 'inline-block');
-            $(elem).val( original ? original : '' );
-        });
+        hideEditGroupItems(shared, edit);
+        showEditGroupItems(dedicated, edit, view);
     }
 }
 
@@ -144,6 +141,17 @@ function saveEnvironmentView(me, url)  {
 
 
 // license.
+function getStandardSelectors() {
+    return [['.start_group_item', '.site_license_start_date'],
+            ['.end_group_item', '.site_license_end_date']];
+}
+
+function getNonStandardSelectors() {
+    return [['.start_group_item', '.site_license_start_date'],
+            ['.frequency_group_item', '.site_license_frequency'],
+            ['.seats_group_item', '.site_license_seats']];
+}
+
 function showLicenseEditView() {
     var view = $('#view_license');
     view.css('display', 'none');
@@ -152,12 +160,18 @@ function showLicenseEditView() {
     edit.css('display', 'block');
 
     var _type = $(view.find('.site_license_type')[0]).text();
-    var start_date = $(view.find('.site_license_start_date')[0]).text();
-    var end_date = $(view.find('.site_license_end_date')[0]).text();
-
     $(edit.find('.site_license_type')[0]).val(_type);
-    $(edit.find('.site_license_start_date')[0]).val(start_date);
-    $(edit.find('.site_license_end_date')[0]).val(end_date);
+
+    var standard = getStandardSelectors(),
+        nonstandard = getNonStandardSelectors();
+
+    if (_type === 'trial' || _type === 'enterprise') {
+        hideEditGroupItems(nonstandard, edit);
+        showEditGroupItems(standard, edit, view);
+    } else if (_type === 'starter' || _type === 'growth') {
+        hideEditGroupItems(standard, edit);
+        showEditGroupItems(nonstandard, edit, view);
+    }
 }
 
 function cancelLicenseEditView() {
@@ -166,27 +180,63 @@ function cancelLicenseEditView() {
     clearMessages('.success-edit-license', '.error-edit-license');
 }
 
-function getLicenseDataByView(view_selector, target_method) {
+function onLicenseChange () {
+    var edit = $('#edit_license');
+    var _type = $(edit.find('.site_license_type')).val(),
+        standard = getStandardSelectors(),
+        nonstandard = getNonStandardSelectors();
+
+    if (_type === "trial" || _type === "enterprise") {
+        nonstandard.forEach(function(selector){
+            $(edit.find(selector[0])).css('display', 'none');
+            $(edit.find(selector[1])).css('display', 'none');
+        });
+        standard.forEach(function(selector){
+            $(edit.find(selector[0])).css('display', 'block');
+            $(edit.find(selector[1])).css('display', 'inline-block');
+        });
+    } else if (_type === "starter" || _type ==="growth") {
+        standard.forEach(function(selector){
+            $(edit.find(selector[0])).css('display', 'none');
+            $(edit.find(selector[1])).css('display', 'none');
+        });
+        nonstandard.forEach(function(selector){
+            $(edit.find(selector[0])).css('display', 'block');
+            $(edit.find(selector[1])).css('display', 'inline-block');
+        });
+    }
+}
+
+function getLicenseDataByView(view_selector, original) {
     var view = $(view_selector);
-    var _type = $(view.find('.site_license_type'))[target_method]();
+    var _type = original ? $(view.find('.site_license_type')).attr('original_value'): $(view.find('.site_license_type')).val();
     if(!_type) {
         return null
     }
 
-    var data = {'MimeType': getLicenseMimeType(_type)},
-        names = ['start_date', 'end_date'],
-        klasses = ['.site_license_start_date', '.site_license_end_date'];
-
-    names.forEach(function(field, index){
-        var tmp = $(view.find(klasses[index]))[target_method]().trim();
-        data[field] = tmp ? tmp : null;
-    });
+    var data = {'MimeType': getLicenseMimeType(_type)};
+    if(_type === 'trial' || _type === 'enterprise') {
+        var names = ['start_date', 'end_date'];
+        var klasses = ['.site_license_start_date', '.site_license_end_date'];
+        names.forEach(function(field, index){
+            var tmp = original ? $(view.find(klasses[index])).attr('original_value'): $(view.find(klasses[index])).val().trim();
+            data[field] = tmp ? tmp : null;
+        });
+    } else {
+        var names = ['start_date', 'frequency', 'seats'];
+        var klasses = ['.site_license_start_date', '.site_license_frequency', '.site_license_seats'];
+        names.forEach(function(field, index){
+            var tmp = original ? $(view.find(klasses[index])).attr('original_value'): $(view.find(klasses[index])).val().trim();
+            data[field] = tmp ? tmp : null;
+        });
+    }
     return JSON.stringify(data)
+
 }
 
 function saveLicenseView(me, url) {
-    var original = getLicenseDataByView('#view_license', 'text');
-    var incoming = getLicenseDataByView('#edit_license', 'val');
+    var original = getLicenseDataByView('#view_license', true);
+    var incoming = getLicenseDataByView('#edit_license', false);
     if (incoming === null) {
         return
     }

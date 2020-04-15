@@ -355,7 +355,8 @@ class SiteLicensePutView(BaseSiteFieldPutView):
     def readInput(self):
         external = super(BaseFieldPutView, self).readInput()
         external['start_date'] = self._handle_date('start_date', self._get_value('start_date', external, required=True))
-        external['end_date'] = self._handle_date('end_date', self._get_value('end_date', external, required=True))
+        if 'end_date' in external:
+            external['end_date'] = self._handle_date('end_date', self._get_value('end_date', external, required=True))
         return external
 
 
@@ -549,7 +550,7 @@ class SitesUploadCSVView(SiteBaseView, ObjectCreateUpdateViewMixin):
             except KeyError as e:
                 raise ValueError("Existing site id: {}.".format(siteId))
         except KeyError as e:
-            raise_json_error(hexc.HTTPUnprocessableEntity, 'Missing field {}.'.format(str(e)))
+            raise_json_error(hexc.HTTPUnprocessableEntity, 'Missing {}.'.format(str(e)))
         except ValueError as e:
             raise_json_error(hexc.HTTPUnprocessableEntity, str(e))
 
