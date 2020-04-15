@@ -86,7 +86,11 @@ docs_require = [
 
 setup(
     name='nti.app.environments',
-    version='0.0',
+    version_config={
+        "version_format": "{tag}.dev{commitcount}+{sha}",
+        "starting_version": "0.0.0"
+    },
+    setup_requires=['better-setuptools-git-version'],
     description='NTI App Environments',
     long_description=README + '\n\n' + CHANGES,
     classifiers=[
