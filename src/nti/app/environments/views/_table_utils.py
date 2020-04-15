@@ -135,7 +135,7 @@ class BaseDateColumn(column.GetAttrColumn):
 
     def getValue(self, item):
         value = self._get_value(item)
-        return formatDateToLocal(value, '%Y-%m-%d')
+        return formatDateToLocal(value, '%Y-%m-%d') if value is not None else ''
 
     def getSortKey(self, item):
         return self.getValue(item)
@@ -340,7 +340,7 @@ class SiteLicenseColumn(column.GetAttrColumn):
     attrName = 'license'
 
     def getValue(self, obj):
-        return 'trial' if ITrialLicense.providedBy(obj.license) else 'enterprise'
+        return obj.license.license_name
 
 
 class SiteStatusColumn(column.GetAttrColumn):
@@ -371,7 +371,7 @@ class SiteLicenseEndDateColumn(BaseDateColumn):
     header = 'End Date'
 
     def _get_value(self, item):
-        return item.license.end_date
+        return getattr(item.license, 'end_date', None)
 
 
 class DashboardTrialSitesTable(BaseSitesTable):

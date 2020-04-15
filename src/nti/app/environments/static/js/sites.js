@@ -17,7 +17,9 @@ function saveItem (me, url) {
     var license = lic_mimetype? {
         "MimeType": lic_mimetype,
         "start_date": getValue("site_license_start_date"),
-        "end_date": getValue("site_license_end_date")
+        "end_date": getValue("site_license_end_date"),
+        "frequency": getValue("site_license_frequency"),
+        "seats": getValue("site_license_seats")
     } : null;
     var status = getValue("site_status");
     var dns_names = getValue("site_dns_names");
@@ -61,6 +63,17 @@ function onLicenseChange() {
     var value = document.getElementById("site_license").value;
     if (value === "trial" || value === "enterprise") {
         document.getElementById("site_license_details").style.display = "flex";
+        document.getElementById("site_license_details").style.display = "flex";
+        document.getElementById("site_license_start_date").style.display = "inline-block";
+        document.getElementById("site_license_end_date").style.display = "inline-block";
+        document.getElementById("site_license_frequency").style.display = "none";
+        document.getElementById("site_license_seats").style.display = "none";
+    } else if (value === "starter" || value === "growth") {
+        document.getElementById("site_license_details").style.display = "flex";
+        document.getElementById("site_license_start_date").style.display = "inline-block";
+        document.getElementById("site_license_end_date").style.display = "none";
+        document.getElementById("site_license_frequency").style.display = "inline-block";
+        document.getElementById("site_license_seats").style.display = "inline-block";
     } else {
         document.getElementById("site_license_details").style.display = "none";
     }

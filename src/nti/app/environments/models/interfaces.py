@@ -60,6 +60,11 @@ SITE_STATUS_OPTIONS = (SITE_STATUS_PENDING,
 #: Site setup state status options; mirrors ISetupState implementations
 SETUP_STATE_STATUS_OPTIONS = (u'pending', u'success', u'failed')
 
+LICENSE_FREQUENCY_MONTHLY = 'monthly'
+LICENSE_FREQUENCY_YEARLY = 'yearly'
+LICENSE_FREQUENCY_OPTIONS = (LICENSE_FREQUENCY_MONTHLY,
+                             LICENSE_FREQUENCY_YEARLY)
+
 
 class IOnboardingRoot(IContainer, IAttributeAnnotatable):
     """
@@ -281,22 +286,50 @@ class ISiteLicense(interface.Interface):
     """
     The license governing this site.
     """
+    license_name = ValidTextLine(title="The license descriptive name",
+                                 required=True)
+
     start_date = DateTime(title='The datetime this license starts.',
                           required=True)
+
+
+class IStandardLicense(ISiteLicense):
 
     end_date = DateTime(title='The datetime this license ends.',
                         required=True)
 
 
-class ITrialLicense(ISiteLicense):
+class ITrialLicense(IStandardLicense):
     """
     A temporary trial license used for evaluation.
     """
 
 
-class IEnterpriseLicense(ISiteLicense):
+class IEnterpriseLicense(IStandardLicense):
     """
     An enterprise level license.
+    """
+
+
+class IRestrictedLicense(ISiteLicense):
+
+    frequency = Choice(title=u'The frequency',
+                       values=LICENSE_FREQUENCY_OPTIONS,
+                       required=True)
+
+    seats = Int(title="The seats.",
+                required=True)
+
+
+class IStarterLicense(IRestrictedLicense):
+    """
+    A starter level license.
+    """
+
+
+class IGrowthLicense(IRestrictedLicense):
+    """
+    A growth level license.
     """
 
 

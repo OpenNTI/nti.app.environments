@@ -26,10 +26,10 @@ def raise_json_error(factory, error, field=None):
         elif isinstance(error, WrongContainedType) \
             and error.args[0] \
             and isinstance(error.args[0][0], RequiredMissing):
-            message = 'Missing field: {}.'.format(error.args[1])
+            message = 'Missing {}.'.format(error.args[1])
 
         elif isinstance(error, RequiredMissing):
-            message = 'Missing field: {}.'.format(error.args[0])
+            message = 'Missing {}.'.format(error.args[0])
 
         elif isinstance(error, NotUnique):
             message = "Existing duplicated {} for {}.".format(error.args[1], error.args[2])

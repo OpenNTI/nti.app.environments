@@ -254,7 +254,7 @@ class TestSitePutView(BaseAppTest):
         # dns_names
         params = { 'dns_names': None }
         result = self.testapp.put_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
-        assert_that(result.json_body, has_entries({"message": "Missing field: dns_names."}))
+        assert_that(result.json_body, has_entries({"message": "Missing dns_names."}))
 
         params = { 'dns_names': [] }
         result = self.testapp.put_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
@@ -404,17 +404,17 @@ class TestSitePutView(BaseAppTest):
         params = {'MimeType': 'application/vnd.nextthought.app.environments.dedicatedenvironment',
                   'host': host_pod2.id}
         result = self.testapp.put_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
-        assert_that(result.json_body, has_entries({'message': 'Missing field: pod_id.'}))
+        assert_that(result.json_body, has_entries({'message': 'Missing pod_id.'}))
 
         params = {'MimeType': 'application/vnd.nextthought.app.environments.dedicatedenvironment',
                   'pod_id': 'pod2'}
         result = self.testapp.put_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
-        assert_that(result.json_body, has_entries({'message': 'Missing field: host.'}))
+        assert_that(result.json_body, has_entries({'message': 'Missing host.'}))
 
         params = {'MimeType': 'application/vnd.nextthought.app.environments.sharedenvironment',
                   'name': None}
         result = self.testapp.put_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
-        assert_that(result.json_body, has_entries({'message': 'Missing field: name.'}))
+        assert_that(result.json_body, has_entries({'message': 'Missing name.'}))
 
         params = {'MimeType': 'application/vnd.nextthought.app.environments.sharedenvironment',
                   'name': 3}

@@ -177,9 +177,17 @@
         <div class="site-item">
             <h3>License</h3>
             <div id="view_license">
-                <p>Type: <span class="site_license_type" tal:content="site.license.type"></span></p>
-                <p>Start Date: <span class="site_license_start_date" tal:content="site.license.start_date"></span></p>
-                <p>End Date: <span class="site_license_end_date" tal:content="site.license.end_date"></span></p>
+                <p>Type: <span class="site_license_type" tal:content="site.license.type" original_value="${site.license.type}"></span></p>
+                <p>Start Date: <span class="site_license_start_date" tal:content="site.license.start_date" original_value="${site.license.start_date}"></span></p>
+                <metal:block tal:omit-tag="" tal:condition="exists:site.license.end_date">
+                    <p>End Date: <span class="site_license_end_date" tal:content="site.license.end_date" original_value="${site.license.end_date}"></span></p>
+                </metal:block>
+                <metal:block tal:omit-tag="" tal:condition="exists:site.license.frequency">
+                    <p>Frequency: <span class="site_license_frequency" tal:content="site.license.frequency" original_value="${site.license.frequency}"></span></p>
+                </metal:block>
+                <metal:block tal:omit-tag="" tal:condition="exists:site.license.seats">
+                    <p>Seats: <span class="site_license_seats" tal:content="site.license.seats" original_value="${site.license.seats}"></span></p>
+                </metal:block>
                 <p>Last Modified: <span tal:content="site.license.lastModified"/></p>
                 <metal:block tal:omit-tag="" tal:condition="site.license.edit_link|nothing">
                     <a href="javascript:showLicenseEditView();">Edit</a>
@@ -189,18 +197,33 @@
                  <div class="form-group">
                     <div class="form-group-item">
                         <label>Type</label>
-                        <select class="site_license_type">
+                        <select class="site_license_type" onchange="onLicenseChange()">
                             <option value="trial">trial</option>
+                            <option value="starter">starter</option>
+                            <option value="growth">growth</option>
                             <option value="enterprise">enterprise</option>
                         </select>
                     </div>
-                    <div class="form-group-item">
+                    <div class="form-group-item start_group_item">
                         <label>Start Date</label>
                         <input type="text" class="site_license_start_date"/>
                     </div>
-                    <div class="form-group-item">
+                    <div class="form-group-item end_group_item">
                         <label>End Date</label>
                         <input type="text" class="site_license_end_date"/>
+                    </div>
+                    <div class="form-group-item frequency_group_item">
+                        <label>Frequency</label>
+                        <select class="site_license_frequency">
+                            <option value="">Select a option</option>
+                            <metal:block tal:omit-tag="" tal:repeat="option license_frequency_options">
+                                <option value="${option}">${option}</option>
+                            </metal:block>
+                        </select>
+                    </div>
+                    <div class="form-group-item seats_group_item">
+                        <label>Seats</label>
+                        <input type="text" class="site_license_seats" name="site_license_seats"/>
                     </div>
                     <div class="form-group-item">
                         <div class="success success-edit-license" style="display:none;"></div>
@@ -375,6 +398,7 @@
         <script src="/static/js/site_detail.js"></script>
         <script>
             $('input[name=site_environment_load_factor]').on('input', positiveNumbersOnly);
+            $('input[name=site_license_seats]').on('input', NonNegtiveNumberOnly);
             $('input[name=timeout]').on('input', function(e){
                 var old = $(this).attr('data-old-value') || '';
                 positiveFloatOnly(e);

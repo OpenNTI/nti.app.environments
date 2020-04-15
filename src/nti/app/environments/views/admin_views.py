@@ -32,11 +32,9 @@ from nti.app.environments.interfaces import ISiteDomainPolicy
 from nti.app.environments.models.adapters import get_site_usage
 
 from nti.app.environments.models.interfaces import ICustomer
-from nti.app.environments.models.interfaces import IEnterpriseLicense
 from nti.app.environments.models.interfaces import ISharedEnvironment
 from nti.app.environments.models.interfaces import IDedicatedEnvironment
 from nti.app.environments.models.interfaces import IOnboardingRoot
-from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import ICustomersContainer
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ILMSSitesContainer
@@ -46,6 +44,11 @@ from nti.app.environments.models.interfaces import ISetupStateFailure
 from nti.app.environments.models.interfaces import SITE_STATUS_OPTIONS
 from nti.app.environments.models.interfaces import SHARED_ENV_NAMES
 from nti.app.environments.models.interfaces import checkEmailAddress
+from nti.app.environments.models.interfaces import LICENSE_FREQUENCY_OPTIONS
+from nti.app.environments.models.interfaces import ITrialLicense
+from nti.app.environments.models.interfaces import IStarterLicense
+from nti.app.environments.models.interfaces import IGrowthLicense
+from nti.app.environments.models.interfaces import IEnterpriseLicense
 
 from nti.app.environments.models.utils import get_sites_folder
 from nti.app.environments.models.utils import get_hosts_folder
@@ -142,7 +145,8 @@ class SitesListView(BaseTemplateView, TableViewMixin):
                 'trial_site_request_url': self.request.resource_url(self.context, '@@request_trial_site') if self.request.has_permission(ACT_REQUEST_TRIAL_SITE, self.context) else None,
                 'site_status_options': SITE_STATUS_OPTIONS,
                 'env_shared_options': SHARED_ENV_NAMES,
-                'hosts_options': _host_options(self._onboarding_root)}
+                'hosts_options': _host_options(self._onboarding_root),
+                'license_frequency_options': LICENSE_FREQUENCY_OPTIONS}
 
 
 @view_config(renderer='../templates/admin/site_detail.pt',
@@ -163,20 +167,20 @@ class SiteDetailView(BaseTemplateView):
         hostname = self.context.dns_names[0] if self.context.dns_names else None
         return nt_client.fetch_site_info(hostname) if hostname else None
 
-    def _license_type(self, lic):
-        if ITrialLicense.providedBy(lic):
-            return 'trial'
-        elif IEnterpriseLicense.providedBy(lic):
-            return 'enterprise'
-        raise ValueError('Unknown license type.')
-
     def _format_license(self, lic):
         edit_link = self.request.resource_url(self.context, '@@license') if self.request.has_permission(ACT_EDIT_SITE_LICENSE, self.context) else None
-        return {'type': self._license_type(lic),
-                'start_date': formatDateToLocal(lic.start_date),
-                'end_date': formatDateToLocal(lic.end_date),
-                'edit_link': edit_link,
-                'lastModified': formatDateToLocal(lic.lastModified)}
+        result = {'type': lic.license_name,
+                  'start_date': formatDateToLocal(lic.start_date),
+                  'edit_link': edit_link,
+                  'lastModified': formatDateToLocal(lic.lastModified)}
+        if ITrialLicense.providedBy(lic) or IEnterpriseLicense.providedBy(lic):
+            result.update({'end_date': formatDateToLocal(lic.end_date)})
+            return result
+        elif IStarterLicense.providedBy(lic) or IGrowthLicense.providedBy(lic):
+            result.update({'frequency': lic.frequency,
+                           'seats': lic.seats})
+            return result
+        raise ValueError("Unknown license type.")
 
     def _splunk_link(self, env):
         tpl = 'https://splunk.nextthought.com/en-US/app/search/search?q={}'
@@ -252,6 +256,7 @@ class SiteDetailView(BaseTemplateView):
                 'env_shared_options': SHARED_ENV_NAMES,
                 'site_status_options': SITE_STATUS_OPTIONS,
                 'hosts_options': _host_options(self._onboarding_root),
+                'license_frequency_options': LICENSE_FREQUENCY_OPTIONS,
                 'site': {'created': formatDateToLocal(self.context.created),
                          'creator': self.context.creator,
                          'owner': self._format_owner(self.context.owner),

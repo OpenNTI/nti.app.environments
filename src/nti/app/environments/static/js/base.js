@@ -109,6 +109,19 @@ function formatInput(input, newValue) {
     input[0].setSelectionRange(caret_pos, caret_pos);
 }
 
+function NonNegtiveNumberOnly (e) {
+    var me = e.target;
+    var newValue = me.value.replace(/\D/g,'');
+    if(newValue && newValue[0]==='0') {
+        newValue = newValue.replace(/^0+/, "");
+        if(!newValue) {
+            newValue = '0';
+        }
+    } else {
+        newValue = newValue.replace(/^0+/, "");
+    }
+    formatInput($(me), newValue);
+}
 
 function positiveNumbersOnly (e) {
     var me = e.target;
@@ -159,6 +172,10 @@ function getLicenseMimeType(_type) {
         return "application/vnd.nextthought.app.environments.triallicense";
     } else if (_type === "enterprise") {
         return "application/vnd.nextthought.app.environments.enterpriselicense";
+    } else if (_type === "starter") {
+        return "application/vnd.nextthought.app.environments.starterlicense";
+    } else if (_type === "growth") {
+        return "application/vnd.nextthought.app.environments.growthlicense";
     }
     return null
 }
