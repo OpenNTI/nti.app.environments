@@ -6,6 +6,8 @@ from zope import interface
 from zope.container.folder import Folder
 
 from nti.app.environments.auth import ADMIN_ROLE
+from nti.app.environments.auth import AUTOMATED_REPORTS_ROLE
+from nti.app.environments.auth import ACT_AUTOMATED_REPORTS
 
 from .interfaces import IOnboardingRoot
 
@@ -20,5 +22,6 @@ class OnboardingRoot(Folder):
     __name__ = None
 
     def __acl__(self):
-        result = [(Allow, ADMIN_ROLE, ALL_PERMISSIONS)]
+        result = [(Allow, ADMIN_ROLE, ALL_PERMISSIONS),
+                  (Allow, AUTOMATED_REPORTS_ROLE, ACT_AUTOMATED_REPORTS)]
         return result

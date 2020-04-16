@@ -22,10 +22,12 @@ from nti.app.environments.api.siteinfo import nt_client
 
 from nti.app.environments.api.hubspotclient import get_hubspot_profile_url
 
-from nti.app.environments.auth import ACT_READ, ACT_ADMIN
+from nti.app.environments.auth import ACT_ADMIN
+from nti.app.environments.auth import ACT_READ
 from nti.app.environments.auth import ACT_UPDATE
 from nti.app.environments.auth import ACT_DELETE
 from nti.app.environments.auth import ACT_CREATE
+from nti.app.environments.auth import ACT_AUTOMATED_REPORTS
 from nti.app.environments.auth import ACT_EDIT_SITE_LICENSE
 from nti.app.environments.auth import ACT_EDIT_SITE_ENVIRONMENT
 from nti.app.environments.auth import ACT_REQUEST_TRIAL_SITE
@@ -426,7 +428,7 @@ class RemoveRoleToPrincipalView(BaseView, _RoleMixin):
 @view_config(renderer='rest',
              request_method='POST',
              context=IOnboardingRoot,
-             permission=ACT_ADMIN,
+             permission=ACT_AUTOMATED_REPORTS,
              name="trial_sites_digest_email")
 class TrialSitesDigestEmailView(BaseView):
     """

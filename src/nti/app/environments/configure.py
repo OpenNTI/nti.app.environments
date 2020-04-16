@@ -18,7 +18,7 @@ from nti.app.pyramid_zope.traversal import ZopeResourceTreeTraverser
 
 from nti.environments.management.config import configure_settings
 
-from .auth import AuthenticationPolicy
+from .auth import create_authentication_policy
 
 from .models.interfaces import IOnboardingRoot
 
@@ -64,8 +64,7 @@ def configure(settings=None, registry=None):
         config.include('.tasks')
 
         # security policies
-        authn_policy = AuthenticationPolicy('foo',
-                                            hashalg='sha512')
+        authn_policy = create_authentication_policy()
         authz_policy = ACLAuthorizationPolicy()
         config.set_authentication_policy(authn_policy)
         config.set_authorization_policy(authz_policy)
