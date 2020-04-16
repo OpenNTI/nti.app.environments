@@ -1,9 +1,11 @@
+import time
 import datetime
 
 from unittest import mock
 from hamcrest import is_
 from hamcrest import not_none
 from hamcrest import assert_that
+from hamcrest import has_length
 from hamcrest import has_entries
 from hamcrest import instance_of
 
@@ -19,6 +21,7 @@ from nti.app.environments.views.admin_views import SitesListView
 from nti.app.environments.views.admin_views import SiteDetailView
 from nti.app.environments.views.admin_views import CustomersListView
 from nti.app.environments.views.admin_views import CustomerDetailView
+from nti.app.environments.views.admin_views import TrialSitesDigestEmailView
 
 from nti.app.environments.views.tests import BaseAppTest
 from nti.app.environments.views.tests import with_test_app
@@ -132,3 +135,50 @@ class TestAdminViews(BaseAppTest):
                                                  'site_edit_link': None,
                                                  'lastModified': not_none()
                                              })}))
+
+
+class TestTrialSitesDigestEmailView(BaseAppTest):
+
+    @with_test_app()
+    @mock.patch('nti.app.environments.models.wref.get_customers_folder')
+    def testTrialSitesDigestEmailView(self, mock_customers):
+        inst = TrialSitesDigestEmailView(self._root(), self.request)
+        assert_that(inst.get_newly_created_trial_sites(0, time.time()), has_length(0))
+
+        with ensure_free_txn():
+            root = self._root()
+            mock_customers.return_value = customers = root.get('customers')
+            customer = PersistentCustomer(email='123@gmail.com',
+                                          name="testname",
+                                          hubspot_contact=HubspotContact(contact_vid='vid001'))
+            customer = customers.addCustomer(customer)
+
+            sites = root.get('sites')
+            def _d(month, day):
+                return datetime.datetime(2020, month, day, 0, 0, 0)
+            for site_id, created, _license in (('S001', 90, TrialLicense(start_date=_d(4, 10), end_date=_d(4, 15))),
+                                               ('S002', 100, TrialLicense(start_date=_d(4, 11), end_date=_d(4, 16))),
+                                               ('S003', 110, TrialLicense(start_date=_d(4, 12), end_date=_d(4, 17))),
+                                               ('S004', 120, TrialLicense(start_date=_d(4, 13), end_date=_d(4, 18)))):
+                site = PersistentSite(license=_license,
+                                      environment=SharedEnvironment(name='test'),
+                                      status='ACTIVE',
+                                      dns_names=['x', 'y'],
+                                      owner=customer)
+                site.createdTime = created
+                sites.addSite(site, site_id)
+
+        # notBefore(inclusive), notAfter(inclusive)
+        inst = TrialSitesDigestEmailView(root, self.request)
+        assert_that(inst.get_newly_created_trial_sites(91, 99), has_length(0))
+        assert_that(inst.get_newly_created_trial_sites(90, 100), has_length(2))
+
+        # notBefore(exclusive), notAfter(inclusive)
+        assert_that(inst.get_ending_trial_sites(_d(4, 10), _d(4, 14)), has_length(0))
+        assert_that(inst.get_ending_trial_sites(_d(4, 10), _d(4, 15)), has_length(1))
+        assert_that(inst.get_ending_trial_sites(_d(4, 15), _d(4, 18)), has_length(3))
+
+        # notAfter(inclusive)
+        assert_that(inst.get_past_due_trial_sites(_d(4,14)), has_length(0))
+        assert_that(inst.get_past_due_trial_sites(_d(4,15)), has_length(1))
+        assert_that(inst.get_past_due_trial_sites(_d(4,18)), has_length(4))
