@@ -1,4 +1,3 @@
-from pyramid import httpexceptions as hexc
 from pyramid.interfaces import IAuthenticationPolicy
 
 from pyramid_authstack import AuthenticationStackPolicy

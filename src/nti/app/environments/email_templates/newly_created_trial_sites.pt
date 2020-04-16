@@ -99,7 +99,7 @@
 										<tr style="vertical-align: top;">
 											<td class="left xs-left">Site Name</td>
 											<td class="right xs-right">
-												${item.site_name}
+												<a href="${item.site_name}" target="_blank">${item.site_name}</a>
 											</td>
 										</tr>
 									</tbody>
@@ -137,7 +137,7 @@
 									<tbody>
 										<tr style="vertical-align: top;">
 											<td class="left xs-left">Creator</td>
-											<td class="right xs-right"><a href="javascript:void(0);" style="color: #494949;">${item.creator}</a></td>
+											<td class="right xs-right"><a href="mailto:${item.creator}">${item.creator}</a></td>
 										</tr>
 									</tbody>
 								</table>
