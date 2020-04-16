@@ -1,4 +1,4 @@
-Trial Sites Created This Week
+Trial Sites Created Last Week
 
 % if not items:
 No trial sites created in the last 7 days.

@@ -530,7 +530,7 @@ class TrialSitesDigestEmailView(BaseView):
 
     def send_newly_created_trial_sites(self, template_args):
         self._send_mail(template="nti.app.environments:email_templates/newly_created_trial_sites",
-                        subject=self._generate_subject("Trial Sites Created This Week"),
+                        subject=self._generate_subject("Trial Sites Created Last Week"),
                         template_args=template_args)
 
     def send_past_due_and_ending_trial_sites(self, template_args):
