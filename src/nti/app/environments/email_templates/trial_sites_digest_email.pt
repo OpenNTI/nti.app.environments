@@ -68,7 +68,7 @@
 		<tbody>
 		<tr style="border-top: 3px solid #3FB34F;">
 			<td style="padding: 5px;">
-				<img src="${request.static_url('nti.app.environments:static/image/email_logo.png')}" width="41.87" height="40" style="margin-top: 20px;"/>
+				<img src="https://assets.nextthought.com/images/nextthought/platform/email/logo_trans_square.png" width="41.87" height="40" style="margin-top: 20px;"/>
 			</td>
 		</tr>
 		<metal:block tal:omit-tag=""

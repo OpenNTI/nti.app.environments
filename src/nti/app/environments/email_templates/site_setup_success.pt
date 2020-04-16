@@ -52,7 +52,7 @@
 	</head>
 	<body>
 		<div class="container">
-		    <img src="${request.static_url('nti.app.environments:static/image/email_logo.png')}" width="41.87" height="40"/>
+		    <img src="https://assets.nextthought.com/images/nextthought/platform/email/logo_trans_square.png" width="41.87" height="40"/>
 			<div i18n:translate="" class="content" style="margin-top: 12px;">
 				The site you have requested for ${owner_email}, ${client_name}, has been setup successfully.
 			</div>
