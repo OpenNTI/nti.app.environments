@@ -60,7 +60,7 @@ class TestHosts(BaseAppTest):
 
     @with_test_app()
     def testHostsListView(self):
-        url = '/onboarding/hosts/@@list'
+        url = '/onboarding/hosts/@@list?search=66'
         self.testapp.get(url, status=302, extra_environ=self._make_environ(username=None))
         self.testapp.get(url, status=403, extra_environ=self._make_environ(username='user001'))
         self.testapp.get(url, status=200, extra_environ=self._make_environ(username='admin001'))

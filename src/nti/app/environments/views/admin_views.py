@@ -143,10 +143,6 @@ class CustomerDetailView(BaseTemplateView, TableViewMixin):
              name='list')
 class SitesListView(BaseTemplateView, TableViewMixin):
 
-    def _format_hosts(self):
-        hosts = get_hosts_folder(self._onboarding_root)
-        return [(x.host_id, "{} ({}/{})".format(x.host_id, x.current_load, x.capacity)) for x in hosts.values()]
-
     def __call__(self):
         table = make_specific_table(SitesTable, self.context, self.request)
         return {'table': table,
