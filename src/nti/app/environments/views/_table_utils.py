@@ -21,6 +21,7 @@ from z3c.table.interfaces import IBatchProvider
 from nti.app.environments.auth import ACT_DELETE, ACT_UPDATE
 
 from nti.app.environments.models.interfaces import ITrialLicense
+from nti.app.environments.models.interfaces import IStandardLicense
 from nti.app.environments.models.interfaces import IDedicatedEnvironment
 from nti.app.environments.models.interfaces import SITE_STATUS_ACTIVE
 from nti.app.environments.models.interfaces import SITE_STATUS_OPTIONS
@@ -408,7 +409,7 @@ class DashboardRenewalsTable(BaseSitesTable):
 
     @Lazy
     def _raw_filter(self):
-        return lambda x: x.status == SITE_STATUS_ACTIVE
+        return lambda x: bool(IStandardLicense.providedBy(x.license) and x.status == SITE_STATUS_ACTIVE)
 
 
 class SiteURLAliasColumn(SiteURLColumn):
