@@ -20,46 +20,12 @@
 				text-decoration: none;
 				color: #3fb3f6;
 			}
-			@media only screen and (min-width: 600px)  {
-				.minWidthTable {
-					min-width: 610px;
-				}
-				.fillWidth {
-					min-width: 100%;
-					width: 100%;
-				}
-				.left {
-					display: none;
-				}
-				th {
-					padding: 5px;
-					text-align: left;
-					font-weight: 600;
-				}
-				td {
-					text-align: left;
-				}
+			.minWidthTable {
+				min-width: 610px;
 			}
-
-			@media only screen and (max-width: 600px)  {
-				.minWidthTable {
-					min-width: 100%;
-				}
-				.xs-fillWidth {
-					min-width: 100%;
-					width: 100%;
-				}
-				.xs-left {
-					display:table-cell;
-					width: 100px;
-					font-weight: 600;
-				}
-				.xs-block {
-					display: block;
-				}
-				.xs-hide {
-					display: none;
-				}
+			.fillWidth {
+				min-width: 100%;
+				width: 100%;
 			}
 		</style>
 	</head>
@@ -91,13 +57,13 @@
 			<td style="padding-left:5px;padding-right:5px;">
 				<table style="border-collapse:collapse;width:100%;min-width:100%;">
 					<thead>
-						<tr class="fillWidth xs-hide">
-							<th>Site Name</th>
-							<th>Site Id</th>
-							<th>Owner</th>
-							<th>Creator</th>
-							<th>Created Time</th>
-							<th>End Date</th>
+						<tr class="fillWidth">
+							<th align="left" style="padding: 5px;font-weight: 600;">Site Name</th>
+							<th align="left" style="padding: 5px;font-weight: 600;">Site Id</th>
+							<th align="left" style="padding: 5px;font-weight: 600;">Owner</th>
+							<th align="left" style="padding: 5px;font-weight: 600;">Creator</th>
+							<th align="left" style="padding: 5px;font-weight: 600;">Created Time</th>
+							<th align="left" style="padding: 5px;font-weight: 600;">End Date</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -107,8 +73,7 @@
 								<table class="fillWidth" style="border-collapse:collapse;">
 									<tbody>
 										<tr style="vertical-align: top;">
-											<td class="left xs-left">Site Name</td>
-											<td class="right xs-right">
+											<td class="right xs-right" align="left">
 												<a href="${item.site_name}" target="_blank">${item.site_name}</a>
 											</td>
 										</tr>
@@ -119,7 +84,6 @@
 								<table class="fullWidth" style="border-collapse:collapse;">
 									<tbody>
 										<tr style="vertical-align: top;">
-											<td class="left xs-left">Site Id</td>
 											<td class="right xs-right"><a href="${item.site_details_link}" target="_blank">${item.site_id}</a></td>
 										</tr>
 									</tbody>
@@ -129,8 +93,7 @@
 								<table class="fillWidth" style="border-collapse:collapse;">
 									<tbody>
 										<tr style="vertical-align: top;">
-											<td class="left xs-left">Owner</td>
-											<td class="right xs-right">
+											<td class="right xs-right" align="left">
 												<metal:block tal:omit-tag="" tal:condition="item.owner_details_link">
 													<a href="${item.owner_details_link}" target="_blank">${item.owner}</a>
 												</metal:block>
@@ -146,8 +109,9 @@
 								<table class="fillWidth" style="border-collapse:collapse;">
 									<tbody>
 										<tr style="vertical-align: top;">
-											<td class="left xs-left">Creator</td>
-											<td class="right xs-right"><a href="mailto:${item.creator}">${item.creator}</a></td>
+											<td class="right xs-right" align="left">
+												<a href="mailto:${item.creator}">${item.creator}</a>
+											</td>
 										</tr>
 									</tbody>
 								</table>
@@ -155,18 +119,16 @@
 							<td class="xs-fillWidth xs-block" style="padding: 5px;">
 								<table class="fillWidth" style="border-collapse:collapse;">
 									<tbody>
-										<tr style="vertical-align: top;">
-											<td class="left xs-left">Created Time</td>
+										<tr style="vertical-align: top;" align="left">
 											<td class="right xs-right">${item.createdTime}</td>
 										</tr>
 									</tbody>
 								</table>
 							</td>
-							<td class="xs-fillWidth xs-block" style="padding: 5px;">
+							<td class="xs-fillWidth xs-block" style="padding: 5px;" align="left">
 								<table class="fillWidth" style="border-collapse:collapse;">
 									<tbody>
-										<tr style="vertical-align: top;">
-											<td class="left xs-left">End Date</td>
+										<tr style="vertical-align: top;" align="left">
 											<td class="right xs-right">${item.end_date}</td>
 										</tr>
 									</tbody>
