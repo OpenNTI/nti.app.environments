@@ -72,7 +72,7 @@ class TestHubspotClient(BaseTest):
                                                           'properties': {'email': {'value': 'test@gmail.com'},
                                                                          'lastname': {'value': 'TestLast'},
                                                                          'firstname': {'value': 'TestFirst'},
-                                                                         'mobilephone': {'value': '77'}}}
+                                                                         'nti_asci_customer_phone_number': {'value': '77'}}}
         result = client.fetch_contact_by_email('testing@gmail.com')
         assert_that(result, has_entries({'email': 'test@gmail.com',
                                          'name': 'TestFirst TestLast',

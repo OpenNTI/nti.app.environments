@@ -47,7 +47,7 @@ class HubspotClient(object):
         return response
 
     def _fetch_contact_by_email(self, email, product_interest=False):
-        props = ['email', 'firstname', 'lastname', 'mobilephone']
+        props = ['email', 'firstname', 'lastname', 'nti_asci_customer_phone_number']
         if product_interest:
             props.append('product_interest')
         return self._call(self._client.contacts.get_by_email,
@@ -64,7 +64,7 @@ class HubspotClient(object):
 
         props = contact['properties']
 
-        mobile_phone = props['mobilephone']['value'].strip() if 'mobilephone' in props else None
+        mobile_phone = props['nti_asci_customer_phone_number']['value'].strip() if 'nti_asci_customer_phone_number' in props else None
         first = props['firstname']['value'].strip() if 'firstname' in props else None
         last = props['lastname']['value'].strip() if 'lastname' in props else None
         name = "{} {}".format(first, last) if first and last else first or last
@@ -141,7 +141,7 @@ class HubspotClient(object):
         for prop_name, prop_value in (('email', email),
                                       ('firstname', firstname),
                                       ('lastname', lastname),
-                                      ('mobilephone', phone),
+                                      ('nti_asci_customer_phone_number', phone),
                                       ('product_interest', product_interest)):
             if prop_value is not None:
                 props.append(self._build_property(prop_name, prop_value))
