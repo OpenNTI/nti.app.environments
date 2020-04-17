@@ -482,7 +482,7 @@ class PrincipalDeleteColumn(column.Column):
 class HostsTable(BaseTable, _FilterMixin):
 
     def _predicate(self, item, term):
-        return term in item.host_id.lower()
+        return term in item.id.lower() or term in item.host_name.lower()
 
     @property
     def values(self):
