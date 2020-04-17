@@ -66,17 +66,19 @@ class BaseView(object):
             raise_json_error(hexc.HTTPBadRequest, "Invalid json body.")
         return body
 
-    def _get_value(self, field, params=None, expected_type=None, required=False):
+    def _get_value(self, field, params=None, required=False):
         if params is None:
             params = self.body_params
+
         val = params.get(field)
-        if expected_type is not None and not isinstance(val, (expected_type, None)):
-            raise_json_error(hexc.HTTPUnprocessableEntity, "Invalid {}".format(field), field)
+        if isinstance(val, str):
+            val = val.strip() or None
+
         if required and val is None:
             raise_json_error(hexc.HTTPUnprocessableEntity,
                              'Missing {}.'.format(field),
                              field=field)
-        return val.strip() if isinstance(val, str) else val
+        return val
 
 
 class BaseTemplateView(BaseView):
@@ -173,10 +175,11 @@ class BaseFieldPutView(BaseView, ObjectCreateUpdateViewMixin):
                              error=err)
 
 
-def createCustomer(container, email, name, organization=None, hs_contact_vid=None):
+def createCustomer(container, email, name, phone, organization=None, hs_contact_vid=None):
     try:
         customer = PersistentCustomer(email=email,
                                       name=name,
+                                      phone=phone,
                                       organization=organization)
         if hs_contact_vid:
             customer.hubspot_contact = HubspotContact(contact_vid=str(hs_contact_vid))
@@ -187,9 +190,14 @@ def createCustomer(container, email, name, organization=None, hs_contact_vid=Non
     return customer
 
 
-def getOrCreateCustomer(container, email, name, organization=None, hs_contact_vid=None):
+def getOrCreateCustomer(container, email, name, phone, organization=None, hs_contact_vid=None):
     try:
         customer = container[email]
     except KeyError:
-        customer = createCustomer(container, email, name, organization=organization, hs_contact_vid=hs_contact_vid)
+        customer = createCustomer(container,
+                                  email=email,
+                                  name=name,
+                                  phone=phone,
+                                  organization=organization,
+                                  hs_contact_vid=hs_contact_vid)
     return customer

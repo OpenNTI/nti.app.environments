@@ -196,6 +196,9 @@ class ICustomer(IContained):
                          min_length=1,
                          constraint=checkRealname)
 
+    phone = ValidTextLine(title=u'Phone Number',
+                          required=False)
+
     hubspot_contact = Object(IHubspotContact,
                              title=u'The hubspot contact for this customer',
                              required=False,

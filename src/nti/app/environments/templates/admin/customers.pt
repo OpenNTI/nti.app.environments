@@ -87,6 +87,12 @@
                                 <input type="text" name="name" id="customer_name"/>
                             </div>
                         </div>
+                        <div class="input-row input-row-phone">
+                            <label class="input-col-1">Phone</label>
+                            <div class="input-col-3">
+                                <input type="text" name="phone" id="customer_phone"/>
+                            </div>
+                        </div>
                         <div class="input-row input-row-organization">
                             <label class="input-col-1">Organization</label>
                             <div class="input-col-3">

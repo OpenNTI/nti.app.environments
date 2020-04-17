@@ -13,10 +13,12 @@ function saveItem (me, url) {
         return
     }
 
+    var phone = getValue("customer_phone");
     var organization = getValue("customer_organization");
     var data = {
         "email": email,
         "name": name,
+        "phone": phone,
         "organization": organization,
         "MimeType": "application/vnd.nextthought.app.environments.customer"
     };
@@ -63,16 +65,19 @@ function openNewModal(me, creation_url, label) {
 
     $('#customer_name').val('');
     $('#customer_email').val('');
+    $('#customer_phone').val('');
     $('#customer_organization').val('');
 
     if(label==='hubspot'){
         $(modal.find('.input-row-name')).hide();
         $(modal.find('.input-row-email')).show();
+        $(modal.find('.input-row-phone')).hide();
         $(modal.find('.input-row-organization')).hide();
         $(modal.find('.btnSave')).attr('onclick', "saveItemViaHubspot(this, '" + creation_url + "');")
     } else {
         $(modal.find('.input-row-name')).show();
         $(modal.find('.input-row-email')).show();
+        $(modal.find('.input-row-phone')).show();
         $(modal.find('.input-row-organization')).show();
         $(modal.find('.btnSave')).attr('onclick', "saveItem(this, '" + creation_url + "');")
     }

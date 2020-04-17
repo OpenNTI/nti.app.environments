@@ -54,6 +54,7 @@ class TestHubspotClient(BaseTest):
         result = client.fetch_contact_by_email('testing@gmail.com')
         assert_that(result, has_entries({'email': 'test@gmail.com',
                                          'name': 'TestFirst',
+                                         'phone': '',
                                          'canonical-vid': 12630274}))
 
         # email, lastname
@@ -63,16 +64,19 @@ class TestHubspotClient(BaseTest):
         result = client.fetch_contact_by_email('testing@gmail.com')
         assert_that(result, has_entries({'email': 'test@gmail.com',
                                          'name': 'TestLast',
+                                         'phone': '',
                                          'canonical-vid': 12630274}))
 
         # email, lastname, firstname
         mockcontacts.get_by_email.return_value = {'canonical-vid': 12630274,
                                                           'properties': {'email': {'value': 'test@gmail.com'},
                                                                          'lastname': {'value': 'TestLast'},
-                                                                         'firstname': {'value': 'TestFirst'}}}
+                                                                         'firstname': {'value': 'TestFirst'},
+                                                                         'mobilephone': {'value': '77'}}}
         result = client.fetch_contact_by_email('testing@gmail.com')
         assert_that(result, has_entries({'email': 'test@gmail.com',
                                          'name': 'TestFirst TestLast',
+                                         'phone': '77',
                                          'canonical-vid': 12630274}))
 
 
@@ -91,31 +95,31 @@ class TestHubspotClient(BaseTest):
         mockHub.return_value = mock.Mock(contacts=mockcontacts)
 
         client = HubspotClient("test")
-        result = client.upsert_contact('testing@gmail.com', 'Test Last')
+        result = client.upsert_contact('testing@gmail.com', 'Test Last', '44')
         assert_that(result, has_entries({'contact_vid': '123'}))
 
         mockcontacts.get_by_email.return_value = {'vid': '456',
                                                   'properties': {'product_interest': {'value': ''}}}
         
         client = HubspotClient("test")
-        result = client.upsert_contact('testing@gmail.com', 'Test Last')
+        result = client.upsert_contact('testing@gmail.com', 'Test Last', '44')
         assert_that(result, has_entries({'contact_vid': '456'}))
 
         # No found
         def _upsert(*args, **kwargs):
             raise hubspot3.error.HubspotNotFound(None, None)
         mockcontacts.update_by_email.side_effect = _upsert
-        result = client.upsert_contact('testing@gmail.com', 'Test Last')
+        result = client.upsert_contact('testing@gmail.com', 'Test Last', '44')
         assert_that(result, is_(None))
 
         def _upsert2(*args, **kwargs):
             raise hubspot3.error.HubspotError(None, None)
         mockcontacts.update_by_email.side_effect = _upsert2
-        assert_that(calling(client.upsert_contact).with_args('testing@gmail.com', 'Test Last'),
+        assert_that(calling(client.upsert_contact).with_args('testing@gmail.com', 'Test Last', '44'),
                     raises(hubspot3.error.HubspotError))
 
         def _upsert3(*args, **kwargs):
             raise hubspot3.error.HubspotConflict(None, None)
         mockcontacts.update_by_email.side_effect = _upsert3
-        assert_that(calling(client.upsert_contact).with_args('testing@gmail.com', 'Test Last'),
+        assert_that(calling(client.upsert_contact).with_args('testing@gmail.com', 'Test Last', '44'),
                     raises(hubspot3.error.HubspotConflict))
