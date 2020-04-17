@@ -138,7 +138,8 @@ class BaseDateColumn(column.GetAttrColumn):
         return formatDateToLocal(value, '%Y-%m-%d') if value is not None else ''
 
     def getSortKey(self, item):
-        return self.getValue(item)
+        value = self._get_value(item)
+        return formatDateToLocal(value) if value is not None else ''
 
 
 class LastVerifiedColumn(BaseDateColumn):
@@ -426,7 +427,7 @@ class SiteRenewalDateColumn(BaseDateColumn):
     header = 'License Renewal Date'
 
     def _get_value(self, item):
-        return item.license.end_date
+        return getattr(item.license, 'end_date', None)
 
 
 class SiteDaysToRenewColumn(column.Column):

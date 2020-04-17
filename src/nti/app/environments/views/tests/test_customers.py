@@ -46,13 +46,21 @@ class TestChallengeView(BaseAppTest):
 
         params = {'name': 'Test User', 'email': 'invalidemail'}
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username=None)).json_body
+        assert_that(result, has_entries({'message': 'Missing phone.'}))
+
+        params = {'name': 'Test User', 'email': 'invalidemail', 'phone': ''}
+        result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username=None)).json_body
+        assert_that(result, has_entries({'message': 'Missing phone.'}))
+
+        params = {'name': 'Test User', 'email': 'invalidemail', 'phone': '333'}
+        result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username=None)).json_body
         assert_that(result, has_entries({'message': 'Invalid email.'}))
 
-        params = {'name': '123456', 'email': 'test@example.com'}
+        params = {'name': '123456', 'email': 'test@example.com', 'phone': '333'}
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username=None)).json_body
         assert_that(result, has_entries({'message': 'Invalid Realname 123456'}))
 
-        params = {'name': 'Test User', 'email': 'test@example.com'}
+        params = {'name': 'Test User', 'email': 'test@example.com', 'phone': '333'}
         result = self.testapp.post_json(url, params=params, status=200, extra_environ=self._make_environ(username=None)).json_body
         assert_that(result, has_entries({'name': 'Test User',
                                          'email': 'test@example.com',
@@ -147,7 +155,7 @@ class TestChallengerVerification(BaseAppTest):
 
         mock_validate.return_value = True
         mock_client.return_value = _client = mock.MagicMock()
-        _client.upsert_contact = lambda email, name: {'contact_vid': '123'}
+        _client.upsert_contact = lambda email, name, phone: {'contact_vid': '123'}
 
         params = {'email': 'test@g.com', 'code': 'xxxxxx', 'name': "okc"}
         result = self.testapp.post_json(url, params=params, status=200, extra_environ=self._make_environ(username=None)).json_body
@@ -183,7 +191,7 @@ class TestChallengerVerification(BaseAppTest):
 
         mock_validate.return_value = True
         mock_client.return_value = _client = mock.MagicMock()
-        _client.upsert_contact = lambda email, name: {'contact_vid': '123'}
+        _client.upsert_contact = lambda email, name, phone: {'contact_vid': '123'}
 
         params = {'email': 'test@g.com', 'code': 'xxxxxx', 'name': "okc"}
         result = self.testapp.post_json(url, params=params, status=200, extra_environ=self._make_environ(username=None)).json_body
@@ -221,7 +229,7 @@ class TestChallengerVerification(BaseAppTest):
 
         mock_validate.return_value = True
         mock_client.return_value = _client = mock.MagicMock()
-        _client.upsert_contact = lambda email, name: {'contact_vid': '123'}
+        _client.upsert_contact = lambda email, name, phone: {'contact_vid': '123'}
 
         params = {'email': 'test@g.com', 'code': 'xxxxxx', 'name': "okc"}
         result = self.testapp.get(url, params=params, status=302, extra_environ=self._make_environ(username=None))
@@ -274,11 +282,12 @@ class TestCustomersViews(BaseAppTest):
 
         _client.fetch_contact_by_email = lambda email: {'canonical-vid': 123,
                                                         'email': email,
+                                                        'phone': '222-333-444',
                                                         'name': 'Test User'}
         params = {'email': 'test@ex.com'}
         self.testapp.post(url, params=params, status=201, extra_environ=self._make_environ(username='admin001'))
         assert_that(customers, has_length(1))
-        assert_that(customers['test@ex.com'], has_properties({'name': 'Test User', 'email': 'test@ex.com',
+        assert_that(customers['test@ex.com'], has_properties({'name': 'Test User', 'email': 'test@ex.com','phone': '222-333-444',
                                                               'hubspot_contact': has_properties({'contact_vid': '123'})}))
 
         params = {'email': 'test@ex.com'}

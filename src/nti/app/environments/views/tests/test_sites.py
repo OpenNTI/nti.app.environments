@@ -499,7 +499,7 @@ class TestRequestTrialSiteView(BaseAppTest):
         result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001')).json_body
         assert_that(result['message'], is_('Site url is not available: xxx.'))
 
-        _client.fetch_contact_by_email = lambda email: {'canonical-vid': '133','email': email, 'name': "OKC Test"}
+        _client.fetch_contact_by_email = lambda email: {'canonical-vid': '133','email': email, 'name': "OKC Test", 'phone': '443'}
         params = {'owner': '12345@gmail.com', 'dns_names': ['ooo'], 'client_name': 'xyz'}
         result = self.testapp.post_json(url, params=params, status=201, extra_environ=self._make_environ(username='admin001')).json_body
         assert_that(result['redirect_url'], starts_with('http://localhost/onboarding/sites/'))
@@ -877,10 +877,10 @@ class TestSitesUploadCSVView(BaseAppTest):
         assert_that(calling(view._process_owner).with_args({'Hubspot Contact': 'test@nt.com'}),
                     raises(hexc.HTTPUnprocessableEntity, pattern="No customer found with email: test@nt.com."))
 
-        _client.fetch_contact_by_email = lambda email: {'canonical-vid': 123, 'email': email, 'name': 'Test OK'}
+        _client.fetch_contact_by_email = lambda email: {'canonical-vid': 123, 'email': email, 'name': 'Test OK', 'phone': ''}
 
         result = view._process_owner({'Hubspot Contact': 'test2@nt.com'})
-        assert_that(result, has_properties({'email': 'test2@nt.com', 'hubspot_contact': not_none(), 'name': 'Test OK'}))
+        assert_that(result, has_properties({'email': 'test2@nt.com', 'hubspot_contact': not_none(), 'name': 'Test OK', 'phone': ''}))
         assert_that(customers, has_length(1))
 
         result = view._process_owner({'Hubspot Contact': 'test2@nt.com'})

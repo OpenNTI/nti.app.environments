@@ -78,8 +78,9 @@ def _customer_verified_event(event):
     if client is None:
         return
 
-    result = client.upsert_contact(customer.email,
-                                   customer.name)
+    result = client.upsert_contact(email=customer.email,
+                                   name=customer.name,
+                                   phone=customer.phone)
     if result is None:
         return
 

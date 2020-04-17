@@ -75,13 +75,18 @@ class EmailChallengeView(BaseView):
     def _get_or_create_customer(self, params):
         name = self._get_value('name', params, required=True)
         email = self._get_value('email', params, required=True)
+        phone = self._get_value('phone', params, required=True)
         if not checkEmailAddress(email):
             raise_json_error(hexc.HTTPUnprocessableEntity,
                              'Invalid email.')
 
         organization = self._get_value('organization', params)
         try:
-            return getOrCreateCustomer(self.context, email, name, organization)
+            return getOrCreateCustomer(self.context,
+                                       email=email,
+                                       name=name,
+                                       phone=phone,
+                                       organization=organization)
         except ConstraintNotSatisfied as e:
             raise_json_error(hexc.HTTPBadRequest,
                              'Invalid {}.'.format(e.field.__name__))
@@ -348,6 +353,7 @@ class CustomerCreationView(BaseView, ObjectCreateUpdateViewMixin):
         customer = createCustomer(self.context,
                                   email=email,
                                   name=contact['name'],
+                                  phone=contact['phone'],
                                   hs_contact_vid=contact['canonical-vid'])
         self.request.response.status = 201
         return customer

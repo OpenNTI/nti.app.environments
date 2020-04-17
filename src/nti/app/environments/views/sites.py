@@ -126,6 +126,7 @@ class SiteBaseView(BaseView):
                 customer = createCustomer(folder,
                                           email=value,
                                           name=contact['name'],
+                                          phone=contact['phone'],
                                           hs_contact_vid=contact['canonical-vid'])
 
         if customer is None:
