@@ -1,0 +1,153 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:metal="http://xml.zope.org/namespaces/metal" xmlns:tal="http://xml.zope.org/namespaces/tal" xmlns:i18n="http://xml.zope.org/namespaces/i18n" i18n:domain="nti.app.environments" i18n:source="en">
+	<head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600,800" rel="stylesheet">
+		<title>
+			Weekly Trial Site Digest
+		</title>
+		<style>
+			body {
+				background-color: #F9F9F9;
+				color: #494949;
+				font-family: 'Open Sans', sans-serif, Helvetica, Arial;
+				margin: 0;
+				padding: 20px 0;
+				font-size: 12px;
+				line-height: 20px;
+			}
+			a {
+				text-decoration: none;
+				color: #3fb3f6;
+			}
+			.minWidthTable {
+				min-width: 610px;
+			}
+			.fillWidth {
+				min-width: 100%;
+				width: 100%;
+			}
+		</style>
+	</head>
+	<body>
+	<table class="minWidthTable" style="margin: 0 auto;background-color:#FFFFFF;border-collapse:collapse;">
+		<tbody>
+		<tr style="border-top: 3px solid #3FB34F;">
+			<td style="padding: 5px;">
+				<img src="https://assets.nextthought.com/images/nextthought/platform/email/logo_trans_square.png" width="41.87" height="40" style="margin-top: 20px;"/>
+			</td>
+		</tr>
+		<metal:block tal:omit-tag=""
+					 tal:define="ending python: (ending_items, 'Trial Sites Ending this week', 'There is no trial sites ending in the next 7 days.');
+								 past python: (past_items, 'Trial Sites Past Due', 'There is no trial sites past due.');
+								 items_tuple python: (ending, past);"
+					 tal:repeat="items items_tuple">
+		<tr>
+			<td style="padding: 5px;">
+				<div style="margin: 20px 0 0px 0;font-size:20px; line-height: 24px; font-weight:600;">
+					${items[1]}
+				</div>
+				<metal:block tal:omit-tag="" tal:condition="not:items[0]">
+					<div style="margin-top: 20px;">${items[2]}</div>
+				</metal:block>
+			</td>
+		</tr>
+		<metal:block tal:omit-tag="" tal:condition="items[0]">
+		<tr>
+			<td style="padding-left:5px;padding-right:5px;">
+				<table style="border-collapse:collapse;width:100%;min-width:100%;">
+					<thead>
+						<tr class="fillWidth">
+							<th align="left" style="padding: 5px;font-weight: 600;">Site Name</th>
+							<th align="left" style="padding: 5px;font-weight: 600;">Site Id</th>
+							<th align="left" style="padding: 5px;font-weight: 600;">Owner</th>
+							<th align="left" style="padding: 5px;font-weight: 600;">Creator</th>
+							<th align="left" style="padding: 5px;font-weight: 600;">Created Time</th>
+							<th align="left" style="padding: 5px;font-weight: 600;">End Date</th>
+						</tr>
+					</thead>
+					<tbody>
+					<metal:block tal:omit-tag="" tal:repeat="item items[0]">
+						<tr class="fillWidth" style="border-top:1px solid rgba(0,0,0,0.07);border-bottom:1px solid rgba(0,0,0,0.07)">
+							<td class="xs-fillWidth xs-block" style="padding: 5px;">
+								<table class="fillWidth" style="border-collapse:collapse;">
+									<tbody>
+										<tr style="vertical-align: top;">
+											<td class="right xs-right" align="left">
+												<a href="${item.site_name}" target="_blank">${item.site_name}</a>
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</td>
+							<td class="xs-fillWidth xs-block" style="padding: 5px;">
+								<table class="fullWidth" style="border-collapse:collapse;">
+									<tbody>
+										<tr style="vertical-align: top;">
+											<td class="right xs-right"><a href="${item.site_details_link}" target="_blank">${item.site_id}</a></td>
+										</tr>
+									</tbody>
+								</table>
+							</td>
+							<td class="xs-fillWidth xs-block" style="padding: 5px;">
+								<table class="fillWidth" style="border-collapse:collapse;">
+									<tbody>
+										<tr style="vertical-align: top;">
+											<td class="right xs-right" align="left">
+												<metal:block tal:omit-tag="" tal:condition="item.owner_details_link">
+													<a href="${item.owner_details_link}" target="_blank">${item.owner}</a>
+												</metal:block>
+												<metal:block tal:omit-tag="" tal:condition="not:item.owner_details_link">
+													<a href="javascript:void(0);" style="color: #494949;">${item.owner}</a>
+												</metal:block>
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</td>
+							<td class="xs-fillWidth xs-block" style="padding: 5px;">
+								<table class="fillWidth" style="border-collapse:collapse;">
+									<tbody>
+										<tr style="vertical-align: top;">
+											<td class="right xs-right" align="left">
+												<a href="mailto:${item.creator}">${item.creator}</a>
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</td>
+							<td class="xs-fillWidth xs-block" style="padding: 5px;">
+								<table class="fillWidth" style="border-collapse:collapse;">
+									<tbody>
+										<tr style="vertical-align: top;" align="left">
+											<td class="right xs-right">${item.createdTime}</td>
+										</tr>
+									</tbody>
+								</table>
+							</td>
+							<td class="xs-fillWidth xs-block" style="padding: 5px;" align="left">
+								<table class="fillWidth" style="border-collapse:collapse;">
+									<tbody>
+										<tr style="vertical-align: top;" align="left">
+											<td class="right xs-right">${item.end_date}</td>
+										</tr>
+									</tbody>
+								</table>
+							</td>
+						</tr>
+					</metal:block>
+					</tbody>
+				</table>
+			</td>
+		</tr>
+		</metal:block>
+		</metal:block>
+		<tr>
+			<td style="padding: 5px;">
+				<div style="margin: 20px 0;">
+				</div>
+			</td>
+		</tr>
+	</table>
+	</body>
+</html>

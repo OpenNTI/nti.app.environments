@@ -106,9 +106,9 @@ def with_test_app(auth_cookie=True, callback=dummy_callback):
                 app = main({}, **settings)
                 authn_policy = app.registry.getUtility(IAuthenticationPolicy)
                 if auth_cookie:
-                    authn_policy.cookie = DummyCookieHelper({})
+                    authn_policy.policies['auth_tkt'].cookie = DummyCookieHelper({})
                 if callback:
-                    authn_policy.callback = callback
+                    authn_policy.policies['auth_tkt'].callback = callback
 
                 assert component.getSiteManager() is app.registry
                 self.testapp = TestApp(app)

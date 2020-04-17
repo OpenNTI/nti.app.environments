@@ -1,4 +1,7 @@
+import time
 import urllib.parse
+
+from datetime import datetime
 
 from pyramid.view import view_config
 
@@ -11,14 +14,20 @@ from zope import component
 from zope.securitypolicy.interfaces import Allow as zopeAllow
 from zope.securitypolicy.interfaces import IPrincipalRoleManager
 
+from nti.mailer.interfaces import ITemplatedMailer
+
+from nti.environments.management.interfaces import ISettings
+
 from nti.app.environments.api.siteinfo import nt_client
 
 from nti.app.environments.api.hubspotclient import get_hubspot_profile_url
 
-from nti.app.environments.auth import ACT_READ, ACT_ADMIN
+from nti.app.environments.auth import ACT_ADMIN
+from nti.app.environments.auth import ACT_READ
 from nti.app.environments.auth import ACT_UPDATE
 from nti.app.environments.auth import ACT_DELETE
 from nti.app.environments.auth import ACT_CREATE
+from nti.app.environments.auth import ACT_AUTOMATED_REPORTS
 from nti.app.environments.auth import ACT_EDIT_SITE_LICENSE
 from nti.app.environments.auth import ACT_EDIT_SITE_ENVIRONMENT
 from nti.app.environments.auth import ACT_REQUEST_TRIAL_SITE
@@ -28,6 +37,7 @@ from nti.app.environments.auth import ACCOUNT_MANAGEMENT_ROLE
 from nti.app.environments.auth import OPS_ROLE
 
 from nti.app.environments.interfaces import ISiteDomainPolicy
+from nti.app.environments.interfaces import IOnboardingSettings
 
 from nti.app.environments.models.adapters import get_site_usage
 
@@ -74,6 +84,7 @@ from nti.app.environments.views._table_utils import make_specific_table
 from nti.app.environments.views.utils import raise_json_error
 
 from nti.traversal.traversal import find_interface
+from nti.externalization.interfaces import LocatedExternalDict
 
 
 def _host_options(onboarding):
@@ -412,3 +423,145 @@ class RemoveRoleToPrincipalView(BaseView, _RoleMixin):
 
         self.principal_role_manager.unsetRoleForPrincipal(role_name, email)
         return {}
+
+
+@view_config(renderer='rest',
+             request_method='POST',
+             context=IOnboardingRoot,
+             permission=ACT_AUTOMATED_REPORTS,
+             name="trial_sites_digest_email")
+class TrialSitesDigestEmailView(BaseView):
+    """
+    Will send two emails, one email is about trial sites that were created in the last 7 days,
+    the other email is about trial sites that were past due or ending in the upcoming 7 days.
+    """
+    @Lazy
+    def trial_sites(self):
+        sites_folder = get_sites_folder(self.context)
+        return [x for x in sites_folder.values() if ITrialLicense.providedBy(x.license)]
+
+    @Lazy
+    def prefix(self):
+        settings = component.getUtility(ISettings)
+        try:
+            env_name = settings['general']['env_name']
+        except KeyError:
+            env_name = None
+        return env_name
+
+    @Lazy
+    def recipients(self):
+        return self._get_setting_value_as_list('trial_sites_digest_email_recipients')
+
+    @Lazy
+    def cc(self):
+        return self._get_setting_value_as_list('trial_sites_digest_email_cc')
+
+    @Lazy
+    def _mailer(self):
+        return component.getUtility(ITemplatedMailer, name='default')
+
+    def _send_mail(self, template, subject, template_args):
+        self._mailer.queue_simple_html_text_email(template,
+                                                  subject=subject,
+                                                  recipients=self.recipients,
+                                                  template_args=template_args,
+                                                  cc=self.cc,
+                                                  text_template_extension='.mak')
+
+    def _generate_subject(self, title):
+        return "[%s] %s" % (self.prefix, title) if self.prefix else title
+
+    def _get_setting_value_as_list(self, field):
+        settings = component.getUtility(IOnboardingSettings)
+        value = [x.strip() for x in settings[field].split(',')]
+        return [x for x in value if x]
+
+    def _format_site(self, site):
+        return {
+            'site_name': site.dns_names[0],
+            'site_id': site.id,
+            'owner': site.owner.email,
+            'creator': site.creator,
+            'createdTime': formatDateToLocal(site.createdTime),
+            'site_details_link': self.request.resource_url(site, '@@details'),
+            'owner_details_link': self.request.resource_url(site.owner, '@@details') if site.owner else ''
+        }
+
+    def get_newly_created_trial_sites(self, notBefore, notAfter):
+        """
+        Fetch all trial sites since from a specific time if since is provided,
+        and sorted by createdTime in descending order.
+        """
+        items = []
+        for x in self.trial_sites:
+            if notBefore <= x.createdTime and x.createdTime <= notAfter:
+                items.append(self._format_site(x))
+        items = sorted(items, key=lambda x: x['createdTime'], reverse=True)
+        return items
+
+    def get_ending_trial_sites(self, notBefore, notAfter):
+        """
+        Get all trial sites that are ending in the next 7 days,
+        sorted by ending date in ascending order.
+        """
+        items = []
+        for x in self.trial_sites:
+            if x.license.end_date > notBefore and x.license.end_date <= notAfter:
+                item = self._format_site(x)
+                item['end_date'] = formatDateToLocal(x.license.end_date)
+                items.append(item)
+        items = sorted(items, key=lambda x: x['end_date'])
+        return items
+
+    def get_past_due_trial_sites(self, notAfter):
+        """
+        Get all trial sites that were past due,
+        sorted by end_date in descending order.
+        """
+        items = []
+        for x in self.trial_sites:
+            if x.license.end_date <= notAfter:
+                item = self._format_site(x)
+                item['end_date'] = formatDateToLocal(x.license.end_date)
+                items.append(item)
+        items = sorted(items, key=lambda x: x['end_date'], reverse=True)
+        return items
+
+    def send_newly_created_trial_sites(self, template_args):
+        self._send_mail(template="nti.app.environments:email_templates/newly_created_trial_sites",
+                        subject=self._generate_subject("Trial Sites Created Last Week"),
+                        template_args=template_args)
+
+    def send_past_due_and_ending_trial_sites(self, template_args):
+        self._send_mail(template="nti.app.environments:email_templates/trial_sites_digest_email",
+                        subject=self._generate_subject("Weekly Trial Site Digest"),
+                        template_args=template_args)
+
+    def __call__(self):
+        current_time = time.time()
+        current_date = datetime.utcfromtimestamp(current_time)
+
+        # Newly created trial sites
+        items = self.get_newly_created_trial_sites(notBefore=current_time-7*24*60*60,
+                                                   notAfter=current_time)
+        self.send_newly_created_trial_sites(template_args={'items': items})
+
+        # Past due and ending trial sites.
+        ending_items = self.get_ending_trial_sites(notBefore=current_date,
+                                                   notAfter=datetime.utcfromtimestamp(current_time + 7*24*60*60))
+        past_items = self.get_past_due_trial_sites(notAfter=current_date)
+        self.send_past_due_and_ending_trial_sites(template_args={
+                                                    'ending_items': ending_items,
+                                                    'past_items': past_items
+                                                    })
+
+        result = LocatedExternalDict()
+        result.__name__ = self.context.__name__
+        result.__parent__ = self.context.__parent__
+        result.update({
+            "new": len(items),
+            "ending": len(ending_items),
+            "past_due": len(past_items)
+        })
+        return result

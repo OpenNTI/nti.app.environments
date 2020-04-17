@@ -3,6 +3,8 @@
 
 	<include package="nti.app.environments.securitypolicy" file="meta.zcml" />
 
+	<include package="zope.password" />
+
 	<include package="zope.principalregistry" />
 
 	<!-- roles -->
@@ -12,7 +14,16 @@
 	<sp:role id="role:nti.roles.account-management"
 			 title="A role for operations or sales." />
 
+	<sp:role id="role:nti.roles.automated-reports"
+			 title="A role for reports view." />
+
 	<!-- principals -->
+	<sp:principal id="automated.reports@nextthought.com"
+				  login="automated.reports@nextthought.com"
+				  title="A user that is able to run automated reports."
+				  password_manager="SHA1"
+				  password="{SHA}AwBXpqbU5eDEjd8wbUaq8J0JRXI=" />
+
 	<sp:principal id="alex.yang@nextthought.com"
 				  login="alex.yang@nextthought.com"
 				  title="Alex Yang" />
@@ -34,6 +45,9 @@
 				  title="Josh Zuech" />
 
 	<!-- roles to principals -->
+	<sp:grant role="role:nti.roles.automated-reports"
+			  principal="automated.reports@nextthought.com" />
+
 	<sp:grant role="role:nti.roles.admin"
 			  principal="alex.yang@nextthought.com" />
 

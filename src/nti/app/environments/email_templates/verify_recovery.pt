@@ -59,7 +59,7 @@
 	</head>
 	<body>
 		<div class="container">
-			<img src="${request.static_url('nti.app.environments:static/image/email_logo.png')}" width="41.87" height="40"/>
+			<img src="https://assets.nextthought.com/images/nextthought/platform/email/logo_trans_square.png" width="41.87" height="40"/>
 			<div class="title">Welcome back to NextThought!</div>
 			<div i18n:translate="" class="content" style="margin-top: 12px;">
 				Please verify your account, this link will expire soon.
