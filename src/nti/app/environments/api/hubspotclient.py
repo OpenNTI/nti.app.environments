@@ -116,12 +116,24 @@ class HubspotClient(object):
             interest.append(product_interest)
         return ';'.join(interest)
 
+    def _does_name_exist(self, result):
+        """
+        Return True if either first or last name exists, otherwise False.
+        """
+        props = result['properties']
+        for field_name in ('firstname', 'lastname'):
+            if field_name in props and props[field_name]['value'].strip():
+                return True
+        return False
+
     def upsert_contact(self, email, name, phone, product_interest='LMS'):
         logger.info("Upserting contact to hubspot for email: %s.", email)
         result = self._fetch_contact_by_email(email, product_interest=True)
         if result is None:
             result = self.create_contact(email, name, phone, product_interest)
         else:
+            # Don't update name if first or last name exists.
+            name = name if not self._does_name_exist(result) else None
             interest = self._new_interest(result, product_interest)
             result = self.update_contact(email, name, phone, interest)
 
