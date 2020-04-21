@@ -73,6 +73,11 @@ def _customer_verified_event(event):
     customer.last_verified = datetime.utcfromtimestamp(_now)
     customer.updateLastModIfGreater(_now)
 
+    # push stats
+    statsd = statsd_client()
+    if statsd is not None:
+        statsd.incr('nti.onboarding.verified_customer_count')
+
     # upsert contact to hubspot
     client = get_hubspot_client()
     if client is None:
@@ -135,6 +140,8 @@ def _update_host_load_on_site_removed(site, unused_event):
 def _update_stats_on_site_added(event):
     client = statsd_client()
     if client is not None:
+        client.incr('nti.onboarding.new_lms_site_count')
+
         lms_site = event.site
         client.gauge('nti.onboarding.lms_site_count',
                      len(lms_site.__parent__))
