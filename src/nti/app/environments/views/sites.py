@@ -45,7 +45,6 @@ from nti.app.environments.models.interfaces import ILMSSitesContainer
 from nti.app.environments.models.interfaces import IOnboardingRoot
 from nti.app.environments.models.interfaces import ISharedEnvironment
 from nti.app.environments.models.interfaces import ISiteUsage
-from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import SITE_STATUS_PENDING
 from nti.app.environments.models.interfaces import SITE_STATUS_UNKNOWN
 from nti.app.environments.models.interfaces import checkEmailAddress
@@ -612,9 +611,9 @@ class SiteCSVExportView(CSVBaseView):
     def row_data_for_record(self, record):
         return {'Site': record.id,
                 'Owner': record.owner.email,
-                'License': 'trial' if ITrialLicense.providedBy(record.license) else 'enterprise',
+                'License': record.license.license_name,
                 'License Start Date': formatDateToLocal(record.license.start_date),
-                'License End Date': formatDateToLocal(record.license.end_date),
+                'License End Date': formatDateToLocal(getattr(record.license, 'end_date', None)),
                 'Environment': self._format_env(record.environment),
                 'Host Machine': record.environment.host.host_name if IDedicatedEnvironment.providedBy(record.environment) else '',
                 'Status': record.status,

@@ -31,11 +31,9 @@
                 </div>
                 <div class="drop-menu">
                     <div class="drop-item nothing" value=""><span class="text"></span></div>
-                    <div class="drop-item" value="PENDING"><span class="text">PENDING</span></div>
-                    <div class="drop-item" value="ACTIVE"><span class="text">ACTIVE</span></div>
-                    <div class="drop-item" value="INACTIVE"><span class="text">INACTIVE</span></div>
-                    <div class="drop-item" value="CANCELLED"><span class="text">CANCELLED</span></div>
-                    <div class="drop-item" value="UNKNOWN"><span class="text">UNKNOWN</span></div>
+                    <metal:block tal:omit-tag="" tal:repeat="option site_status_options">
+                        <div class="drop-item" value="${option}"><span class="text">${option}</span></div>
+                    </metal:block>
                 </div>
             </div>
             <div style="float: right;">
