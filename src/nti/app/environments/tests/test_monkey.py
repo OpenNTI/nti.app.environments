@@ -15,8 +15,10 @@ import unittest
 
 from sqlalchemy import create_engine
 
-from .._monkey import geventPostgresclient_dialect
-
+try:
+	from .._monkey import geventPostgresclient_dialect
+except ImportError:
+    pass
 
 class TestPatchSqlalchemy(unittest.TestCase):
 
