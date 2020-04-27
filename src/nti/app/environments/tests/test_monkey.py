@@ -47,7 +47,3 @@ class TestPatchSqlalchemy(unittest.TestCase):
             engine.connect()
         except StopExecution:
             pass
-            
-
-        
-

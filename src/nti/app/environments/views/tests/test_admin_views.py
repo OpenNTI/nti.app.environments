@@ -10,6 +10,7 @@ from hamcrest import has_entries
 from hamcrest import instance_of
 
 from nti.app.environments.models.interfaces import SITE_STATUS_OPTIONS
+from nti.app.environments.models.interfaces import SITE_STATUS_INACTIVE
 from nti.app.environments.models.interfaces import SHARED_ENV_NAMES
 
 from nti.app.environments.models.customers import PersistentCustomer
@@ -168,6 +169,9 @@ class TestTrialSitesDigestEmailView(BaseAppTest):
                 site.createdTime = created
                 sites.addSite(site, site_id)
 
+            #Mark S004 inactive so we assert it doesn't come back
+            sites['S004'].status = SITE_STATUS_INACTIVE
+
         # notBefore(inclusive), notAfter(inclusive)
         inst = TrialSitesDigestEmailView(root, self.request)
         assert_that(inst.get_newly_created_trial_sites(91, 99), has_length(0))
@@ -176,9 +180,9 @@ class TestTrialSitesDigestEmailView(BaseAppTest):
         # notBefore(exclusive), notAfter(inclusive)
         assert_that(inst.get_ending_trial_sites(_d(4, 10), _d(4, 14)), has_length(0))
         assert_that(inst.get_ending_trial_sites(_d(4, 10), _d(4, 15)), has_length(1))
-        assert_that(inst.get_ending_trial_sites(_d(4, 15), _d(4, 18)), has_length(3))
+        assert_that(inst.get_ending_trial_sites(_d(4, 15), _d(4, 18)), has_length(2))
 
         # notAfter(inclusive)
         assert_that(inst.get_past_due_trial_sites(_d(4,14)), has_length(0))
         assert_that(inst.get_past_due_trial_sites(_d(4,15)), has_length(1))
-        assert_that(inst.get_past_due_trial_sites(_d(4,18)), has_length(4))
+        assert_that(inst.get_past_due_trial_sites(_d(4,18)), has_length(3))
