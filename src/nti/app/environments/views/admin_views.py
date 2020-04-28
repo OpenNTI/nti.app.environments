@@ -156,6 +156,34 @@ class SitesListView(BaseTemplateView, TableViewMixin):
                 'license_frequency_options': LICENSE_FREQUENCY_OPTIONS}
 
 
+@view_config(renderer='rest',
+             request_method='GET',
+             context=ILMSSite,
+             permission=ACT_READ,
+             name='pendo_account_link')
+class SitePendoAccountDetails(BaseTemplateView):
+
+    def __call__(self):
+        if self.context.status != SITE_STATUS_ACTIVE:
+            raise hexc.HTTPNotFound()
+
+        pong = nt_client.dataserver_ping(self.context.dns_names[0])
+        if not pong:
+            raise hexc.HTTPNotFound()
+
+        # TODO rather than fetching this dynamically, the ds
+        # site seems like something that would be nice to persistently
+        # cache. It's immutable so that should be fine.
+        # We fetch the canonical site directly from the ds because for
+        # envs in shared sites it's difficult to infer what the ds site is.
+        site = pong.get('Site', '').lower()
+        if not site:
+            raise hexc.HTTPNotFound()
+
+        location = 'https://app.pendo.io/parentAccount/{}'.format(site)
+        
+        return hexc.HTTPSeeOther(location=location)
+
 @view_config(renderer='../templates/admin/site_detail.pt',
              request_method='GET',
              context=ILMSSite,
@@ -199,17 +227,21 @@ class SiteDetailView(BaseTemplateView):
         return None
 
     def _format_env(self, env=None):
+        formatted_env = {'env': env,
+                         'lastModified': formatDateToLocal(env.lastModified),
+                         'splunk_link': self._splunk_link(env)}
+
+        if self.context.status == SITE_STATUS_ACTIVE:
+            formatted_env['pendo_account_link'] = self.request.resource_url(self.context, '@@pendo_account_link')
+        
         if ISharedEnvironment.providedBy(env):
-            return {'type': 'shared',
-                    'env': env,
-                    'lastModified': formatDateToLocal(env.lastModified),
-                    'splunk_link': self._splunk_link(env)}
+            formatted_env['type'] = 'shared'
         elif IDedicatedEnvironment.providedBy(env):
-            return {'type': 'dedicated',
-                    'env': env,
-                    'lastModified': formatDateToLocal(env.lastModified),
-                    'splunk_link': self._splunk_link(env)}
-        raise ValueError('Unknown environment type.')
+            formatted_env['type'] = 'dedicated'
+        else:
+            raise ValueError('Unknown environment type.')
+
+        return formatted_env
 
     def _format_owner(self, owner=None):
         return {'owner': owner,

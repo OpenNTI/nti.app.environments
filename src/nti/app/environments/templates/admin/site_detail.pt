@@ -123,6 +123,9 @@
                     <metal:block tal:omit-tag="" tal:condition="site.environment.splunk_link|nothing">
                         <a href="${site.environment.splunk_link}" target="_blank" style="margin-right: 16px;">Splunk</a>
                     </metal:block>
+		    <metal:block tal:omit-tag="" tal:condition="site.environment.pendo_account_link|nothing">
+                        <a href="${site.environment.pendo_account_link}" target="_blank" style="margin-right: 16px;">Pendo</a>
+                    </metal:block>
                 </metal:block>
                 <metal:block tal:omit-tag="" tal:condition="site.environment_edit_link|nothing">
                     <a href="javascript:showEnvironmentEditView();">Edit</a>

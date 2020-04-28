@@ -4,6 +4,7 @@ logger = __import__('logging').getLogger(__name__)
 
 SITE_URL = 'https://{host_name}'
 SITE_INFO_TPL = 'https://{host_name}/dataserver2/SiteBrand'
+SITE_DATASERVER_PING_TPL = 'https://{host_name}/dataserver2/logon.ping'
 SITE_LOGO_TPL = 'https://{host_name}{uri}'
 
 
@@ -32,6 +33,26 @@ class NTClient(object):
             return {'logo_url': logo_url,
                     'brand_name': resp['brand_name'],
                     'site_url': SITE_URL.format(host_name=host_name)}
+        except requests.exceptions.ConnectionError:
+            logger.warn("Unknown site host: %s.", host_name)
+            return None
+        except requests.exceptions.ReadTimeout:
+            logger.warn("Caught read timeout.")
+            return None
+        except ValueError:
+            logger.warn("Bad json data from site host: %s.", host_name)
+            return None
+
+    def dataserver_ping(self, host_name):
+        try:
+            logger.info("Performing dataserver2 logon.ping for: {}.".format(host_name))
+            url = SITE_DATASERVER_PING_TPL.format(host_name=host_name)
+            resp = self.session.get(url, timeout=(5, 5))
+            if resp.status_code != 200:
+                logger.warn("Bad request. status code: %s.", resp.status_code)
+                return None
+
+            return resp.json()
         except requests.exceptions.ConnectionError:
             logger.warn("Unknown site host: %s.", host_name)
             return None
