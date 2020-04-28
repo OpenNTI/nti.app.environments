@@ -12,6 +12,7 @@ from nti.environments.management.interfaces import ISetupEnvironmentTask
 
 from nti.app.environments.models.interfaces import ISetupStatePending
 from nti.app.environments.models.interfaces import ISetupStateSuccess
+from nti.app.environments.models.interfaces import SITE_STATUS_ACTIVE
 
 from nti.app.environments.models.events import SiteSetupFinishedEvent
 
@@ -150,7 +151,8 @@ def query_invitation_status(sites):
         if not ISetupStateSuccess.providedBy(x.setup_state) \
             or x.setup_state.invite_accepted_date \
             or not x.setup_state.invitation_active \
-            or not x.setup_state.site_info.admin_invitation_code:
+            or not x.setup_state.site_info.admin_invitation_code\
+            or x.status != SITE_STATUS_ACTIVE:
             continue
 
         result['total'] += 1
