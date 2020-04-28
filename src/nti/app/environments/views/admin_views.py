@@ -59,6 +59,8 @@ from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import IStarterLicense
 from nti.app.environments.models.interfaces import IGrowthLicense
 from nti.app.environments.models.interfaces import IEnterpriseLicense
+from nti.app.environments.models.interfaces import SITE_STATUS_ACTIVE
+from nti.app.environments.models.interfaces import SITE_STATUS_PENDING
 
 from nti.app.environments.models.utils import get_sites_folder
 from nti.app.environments.models.utils import get_hosts_folder
@@ -469,6 +471,10 @@ class TrialSitesDigestEmailView(BaseView):
         return [x for x in sites_folder.values() if ITrialLicense.providedBy(x.license)]
 
     @Lazy
+    def active_trial_sites(self):
+        return [x for x in self.trial_sites if x.status in (SITE_STATUS_ACTIVE, SITE_STATUS_PENDING, )]
+
+    @Lazy
     def prefix(self):
         settings = component.getUtility(ISettings)
         try:
@@ -534,7 +540,7 @@ class TrialSitesDigestEmailView(BaseView):
         sorted by ending date in ascending order.
         """
         items = []
-        for x in self.trial_sites:
+        for x in self.active_trial_sites:
             if x.license.end_date > notBefore and x.license.end_date <= notAfter:
                 item = self._format_site(x)
                 item['end_date'] = formatDateToLocal(x.license.end_date)
@@ -548,7 +554,7 @@ class TrialSitesDigestEmailView(BaseView):
         sorted by end_date in descending order.
         """
         items = []
-        for x in self.trial_sites:
+        for x in self.active_trial_sites:
             if x.license.end_date <= notAfter:
                 item = self._format_site(x)
                 item['end_date'] = formatDateToLocal(x.license.end_date)
