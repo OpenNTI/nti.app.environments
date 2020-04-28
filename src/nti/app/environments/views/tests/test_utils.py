@@ -31,6 +31,9 @@ from nti.environments.management.tasks import SiteInfo
 
 from nti.app.environments.models.customers import PersistentCustomer
 
+from nti.app.environments.models.interfaces import SITE_STATUS_ACTIVE
+from nti.app.environments.models.interfaces import SITE_STATUS_INACTIVE
+
 from nti.app.environments.models.sites import TrialLicense
 from nti.app.environments.models.sites import PersistentSite
 from nti.app.environments.models.sites import SetupStateSuccess
@@ -135,12 +138,16 @@ class TestUtils(BaseAppTest):
             sites = self._root().get('sites')
             for email, siteId in (('user001@example.com', 'S001'),
                                   ('user001@example.com', 'S002'),
-                                  ('user001@example.com', 'S003')):
+                                  ('user001@example.com', 'S003'),
+                                  ('user001@example.com', 'S004')):
                 sites.addSite(PersistentSite(dns_names=[siteId],
                                              owner = customers.getCustomer(email),
                                              license=TrialLicense(start_date=datetime.datetime(2020, 1, 28),
                                                                   end_date=datetime.datetime(2020, 1, 9))), siteId=siteId)
+                sites[siteId].status = SITE_STATUS_ACTIVE
 
+            sites['S004'].status = SITE_STATUS_INACTIVE
+            
         site = sites['S001']
 
         # state is not success
