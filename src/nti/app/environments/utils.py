@@ -15,6 +15,7 @@ from nti.app.environments.models.interfaces import ISetupStateSuccess
 from nti.app.environments.models.interfaces import SITE_STATUS_ACTIVE
 
 from nti.app.environments.models.events import SiteSetupFinishedEvent
+from nti.app.environments.models.events import SiteOwnerCompletedSetupEvent
 
 from nti.app.environments.models.sites import SetupStateFailure
 from nti.app.environments.models.sites import SetupStateSuccess
@@ -184,6 +185,7 @@ def query_invitation_status(sites):
         acceptedTime = body.get('acceptedTime')
         if acceptedTime is not None:
             x.setup_state.invite_accepted_date = datetime.datetime.utcfromtimestamp(acceptedTime)
+            notify(SiteOwnerCompletedSetupEvent(x))
             result['accepted'] += 1
             continue
 

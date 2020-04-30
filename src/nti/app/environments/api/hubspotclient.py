@@ -1,3 +1,4 @@
+import pytz
 import time
 
 from nameparser import HumanName
@@ -6,6 +7,8 @@ from hubspot3 import Hubspot3
 from hubspot3.error import HubspotNotFound
 from hubspot3.error import HubspotError
 from hubspot3.error import HubspotConflict
+
+from pyramid.threadlocal import get_current_request
 
 from zope import component
 from zope import interface
@@ -16,8 +19,19 @@ from nti.app.environments.api.interfaces import IHubspotClient
 
 from nti.app.environments.interfaces import IOnboardingSettings
 
+from nti.app.environments.models.interfaces import ISetupStateSuccess
+from nti.app.environments.models.interfaces import ILMSSiteCreatedEvent
+from nti.app.environments.models.interfaces import ILMSSiteSetupFinished
+from nti.app.environments.models.interfaces import ILMSSiteOwnerCompletedSetupEvent
+
+from nti.app.environments.models.utils import get_sites_with_owner
+
 logger = __import__('logging').getLogger(__name__)
 
+HUBSPOT_FIELD_ASCI_PHONE = 'nti_asci_customer_phone_number'
+HUBSPOT_FIELD_ASCI_SITE_GOTO = 'nti_asci_site_goto_url'
+HUBSPOT_FIELD_ASCI_SITE_DETAILS = 'nti_asci_internal_site_details'
+HUBSPOT_FIELD_ASCI_SITE_COMPLETED = 'nti_asci_setup_completed'
 
 @interface.implementer(IHubspotClient)
 class HubspotClient(object):
@@ -106,6 +120,22 @@ class HubspotClient(object):
         if result is None:
             logger.warn("Failed to update contact to hubspot with email: %s, name: %s, phone: %s, product_interest: %s.",
                         email, name, phone, product_interest)
+        return result
+
+    def update_contact_with_properties(self, email, props):
+        """
+        Update the supplied contact (email) with the supplied properties.
+        pros is a dictionary of property name to property value
+        """
+        logger.info("Updating contact %s with %i properties",
+                    email, len(props))
+
+        result = self._call(self._client.contacts.update_by_email,
+                            email,
+                            {'properties': [self._build_property(name, value) for name, value in props.items()]})
+        if result is None:
+            logger.warn("Failed to update contact %s.", email)
+
         return result
 
     def _new_interest(self, result, product_interest):
@@ -201,3 +231,84 @@ def get_hubspot_profile_url(contact_vid):
         return None
     return "https://app.hubspot.com/contacts/{portal_id}/contact/{vid}".format(portal_id=settings['hubspot_portal_id'],
                                                                                vid=contact_vid)
+
+def _as_hubspot_timestamp(dt, hubspot_tz='US/Central'):
+    # Note hubspot wants times in milliseconds. It stores them internally as UTC
+    # and displays in the timezone of the user. The documentation is unclear, but
+    # empirical evidence suggests that they expect the inbound timestamps to also
+    # be in the accounts timezone, not utc...
+    # https://developers.hubspot.com/docs/faq/how-should-timestamps-be-formatted-for-hubspots-apis
+    utc_date = pytz.utc.localize(dt)
+    hubspot_dt = utc_date.astimezone(pytz.timezone(hubspot_tz))
+    return int(hubspot_dt.timestamp()*1000)
+
+@component.adapter(ILMSSiteCreatedEvent)
+def _sync_new_site_to_hubspot(event):
+    site = event.site
+    customer = site.owner
+
+    # TODO We're making an assumption in the hubspot data that there is only one site per customer here.
+    # That's true right now for external users, but not for internal users.
+    if len(list(get_sites_with_owner(customer))) > 1:
+        logger.warn('Customer %s already has sites. Not overwriting hubspot info', customer.email)
+        return
+
+    logger.info('Syncing site details url to hubspot for contact %s', customer.email)
+
+    request = get_current_request()
+
+    props = {
+        HUBSPOT_FIELD_ASCI_SITE_DETAILS: request.resource_url(site, '@@details')
+    }
+    
+    hubspot_client = get_hubspot_client()
+    hubspot_client.update_contact_with_properties(customer.email, props)
+
+@component.adapter(ILMSSiteSetupFinished)
+def _sync_finished_site_to_hubspot(event):
+    site = event.site
+    if not ISetupStateSuccess.providedBy(site.setup_state):
+        return
+
+    if not site.setup_state.site_info.admin_invitation:
+        return
+
+    customer = site.owner
+    
+    # TODO We're making an assumption in the hubspot data that there is only one site per customer here.
+    # That's true right now for external users, but not for internal users.
+    if len(list(get_sites_with_owner(customer))) > 1:
+        logger.warn('Customer %s already has sites. Not overwriting hubspot info', customer.email)
+        return
+
+    logger.info('Syncing site goto url to hubspot for contact %s', customer.email)
+
+    request = get_current_request()
+
+    props = {
+        HUBSPOT_FIELD_ASCI_SITE_GOTO: request.resource_url(site, '@@GoToSite')
+    }
+    
+    hubspot_client = get_hubspot_client()
+    hubspot_client.update_contact_with_properties(customer.email, props)
+
+@component.adapter(ILMSSiteOwnerCompletedSetupEvent)
+def _sync_setup_completed_to_hubspot(event):
+    site = event.site
+    customer = site.owner
+
+    # TODO We're making an assumption in the hubspot data that there is only one site per customer here.
+    # That's true right now for external users, but not for internal users.
+    if len(list(get_sites_with_owner(customer))) > 1:
+        logger.warn('Customer %s already has sites. Not overwriting hubspot info', customer.email)
+        return
+
+    logger.info('Syncing setup completed time to hubspot for contact %s', customer.email)
+
+    
+    props = {
+        HUBSPOT_FIELD_ASCI_SITE_COMPLETED: _as_hubspot_timestamp(event.completed_at)
+    }
+
+    hubspot_client = get_hubspot_client()
+    hubspot_client.update_contact_with_properties(customer.email, props)

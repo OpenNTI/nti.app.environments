@@ -11,6 +11,7 @@ from nti.app.environments.models.interfaces import ICustomerVerifiedEvent
 from nti.app.environments.models.interfaces import ICSVLMSSiteCreatedEvent
 from nti.app.environments.models.interfaces import ITrialLMSSiteCreatedEvent
 from nti.app.environments.models.interfaces import ISupportLMSSiteCreatedEvent
+from nti.app.environments.models.interfaces import ILMSSiteOwnerCompletedSetupEvent
 
 from nti.property.property import alias
 
@@ -58,6 +59,15 @@ class SiteSetupFinishedEvent(object):
 
     def __init__(self, site):
         self.site = site
+
+@interface.implementer(ILMSSiteOwnerCompletedSetupEvent)
+class SiteOwnerCompletedSetupEvent(ObjectEvent):
+
+    site = alias('object')
+
+    @property
+    def completed_at(self):
+        return self.site.setup_state.invite_accepted_date
 
 
 @interface.implementer(ICustomerVerifiedEvent)

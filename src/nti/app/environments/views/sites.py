@@ -37,6 +37,7 @@ from nti.app.environments.models.events import CSVSiteCreatedEvent
 from nti.app.environments.models.events import TrialSiteCreatedEvent
 from nti.app.environments.models.events import SupportSiteCreatedEvent
 from nti.app.environments.models.events import SiteUpdatedEvent
+from nti.app.environments.models.events import SiteOwnerCompletedSetupEvent
 
 from nti.app.environments.models.hosts import PersistentHost
 
@@ -809,6 +810,7 @@ class MarkInviteAcceptedView(BaseView):
             return self.make_redirect()
 
         setup_state.invite_accepted_date = datetime.datetime.utcnow()
+        notify(SiteOwnerCompletedSetupEvent(self.context))
         self.request.environ['nti.request_had_transaction_side_effects'] = True
 
         # Let the transaction commit

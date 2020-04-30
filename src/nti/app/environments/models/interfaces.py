@@ -557,6 +557,21 @@ class ILMSSiteSetupFinished(interface.Interface):
                   required=True)
 
 
+class ILMSSiteOwnerCompletedSetupEvent(IObjectEvent):
+    """
+    An event fired when we detect the owner completed the initial
+    setup of the site. Note this may be fired some time after the setup was
+    actually completed. The known time of completion is available
+    via the completed_at attribute.
+    """
+    site = Object(ILMSSite,
+                  title="The site.",
+                  required=True)
+
+    completed_at = DateTime(title=u'The datetime the setup was completed at',
+                            required=True)
+
+
 class ICustomerVerifiedEvent(IObjectEvent):
     """
     An event that fires when a customer has been verified.
