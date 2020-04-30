@@ -18,5 +18,9 @@
 			 	 provides=".interfaces.IHubspotClient" />
 	</configure>
 
+	<subscriber handler=".hubspotclient._sync_new_site_to_hubspot" />
+	<subscriber handler=".hubspotclient._sync_finished_site_to_hubspot" />
+	<subscriber handler=".hubspotclient._sync_setup_completed_to_hubspot" />
+
 
 </configure>

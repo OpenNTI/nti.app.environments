@@ -31,11 +31,13 @@ from nti.app.environments.auth import is_admin_or_manager
 
 from nti.app.environments.interfaces import ISitesCollection
 from nti.app.environments.interfaces import ISiteDomainPolicy
+from nti.app.environments.interfaces import ISiteLinks
 
 from nti.app.environments.models.events import CSVSiteCreatedEvent
 from nti.app.environments.models.events import TrialSiteCreatedEvent
 from nti.app.environments.models.events import SupportSiteCreatedEvent
 from nti.app.environments.models.events import SiteUpdatedEvent
+from nti.app.environments.models.events import SiteOwnerCompletedSetupEvent
 
 from nti.app.environments.models.hosts import PersistentHost
 
@@ -808,6 +810,7 @@ class MarkInviteAcceptedView(BaseView):
             return self.make_redirect()
 
         setup_state.invite_accepted_date = datetime.datetime.utcnow()
+        notify(SiteOwnerCompletedSetupEvent(self.context))
         self.request.environ['nti.request_had_transaction_side_effects'] = True
 
         # Let the transaction commit
@@ -881,3 +884,23 @@ class GenerateSiteJWTTokenView(BaseView, JWTTokenViewMixin):
     def __call__(self):
         timeout = self._get_timeout()
         return {'jwt': self._get_jwt_token(timeout=timeout)}
+
+
+@view_config(renderer='rest',
+             context=ILMSSite,
+             request_method='GET',
+             name="GoToSite")
+class GoToSite(BaseView):
+
+    def __call__(self):
+        """
+        Redirect to the preferred_dns name for the site.
+        Note this view is unauthenticated so that it can be used
+        as an entry point from emails, etc. We rely on the destination
+        being secured.
+        """
+        site_links = component.queryMultiAdapter((self.context, self.request), ISiteLinks)
+        pref_dns = site_links.preferred_dns if site_links else None
+        if not pref_dns:
+            raise hexc.HTTPNotFound()
+        return hexc.HTTPSeeOther(location=f'https://{pref_dns}')
