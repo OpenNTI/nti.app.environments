@@ -244,6 +244,11 @@ def _as_hubspot_timestamp(dt, hubspot_tz='US/Central'):
 
 @component.adapter(ILMSSiteCreatedEvent)
 def _sync_new_site_to_hubspot(event):
+    hubspot_client = get_hubspot_client()
+    if hubspot_client is None:
+        logger.warn('No configured hubspot client. Not syncing')
+        return
+    
     site = event.site
     customer = site.owner
 
@@ -261,11 +266,15 @@ def _sync_new_site_to_hubspot(event):
         HUBSPOT_FIELD_ASCI_SITE_DETAILS: request.resource_url(site, '@@details')
     }
     
-    hubspot_client = get_hubspot_client()
     hubspot_client.update_contact_with_properties(customer.email, props)
 
 @component.adapter(ILMSSiteSetupFinished)
 def _sync_finished_site_to_hubspot(event):
+    hubspot_client = get_hubspot_client()
+    if hubspot_client is None:
+        logger.warn('No configured hubspot client. Not syncing')
+        return
+
     site = event.site
     if not ISetupStateSuccess.providedBy(site.setup_state):
         return
@@ -289,11 +298,16 @@ def _sync_finished_site_to_hubspot(event):
         HUBSPOT_FIELD_ASCI_SITE_GOTO: request.resource_url(site, '@@GoToSite')
     }
     
-    hubspot_client = get_hubspot_client()
+    
     hubspot_client.update_contact_with_properties(customer.email, props)
 
 @component.adapter(ILMSSiteOwnerCompletedSetupEvent)
 def _sync_setup_completed_to_hubspot(event):
+    hubspot_client = get_hubspot_client()
+    if hubspot_client is None:
+        logger.warn('No configured hubspot client. Not syncing')
+        return
+    
     site = event.site
     customer = site.owner
 
@@ -310,5 +324,4 @@ def _sync_setup_completed_to_hubspot(event):
         HUBSPOT_FIELD_ASCI_SITE_COMPLETED: _as_hubspot_timestamp(event.completed_at)
     }
 
-    hubspot_client = get_hubspot_client()
     hubspot_client.update_contact_with_properties(customer.email, props)
