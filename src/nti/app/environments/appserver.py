@@ -22,6 +22,8 @@ from zope.app.publication.zopepublication import ZopePublication
 from ZODB.interfaces import IDatabase
 from ZODB.interfaces import IConnection
 
+from .api.siteinfo import query_invitation_status
+
 from .interfaces import ITransactionRunner
 from .interfaces import IOnboardingServer
 from .interfaces import IOnboardingSettings
@@ -33,7 +35,7 @@ from .models.interfaces import ISetupStatePending
 from .models.utils import get_sites_folder
 
 from .utils import query_setup_state
-from .utils import query_invitation_status
+
 
 logger = __import__('logging').getLogger(__name__)
 
