@@ -70,7 +70,7 @@ from nti.app.environments.resources import RolesResource
 
 from nti.app.environments.common import formatDateToLocal
 
-from nti.app.environments.utils import query_setup_state
+from nti.app.environments.tasks.setup import query_setup_state
 
 from nti.app.environments.views.base import BaseTemplateView
 from nti.app.environments.views.base import BaseView

@@ -24,7 +24,7 @@ from zope.schema._bootstrapinterfaces import WrongContainedType
 from nti.app.environments.api.siteinfo import nt_client
 from nti.app.environments.api.siteinfo import query_invitation_status
 
-from nti.app.environments.utils import query_setup_async_result
+from nti.app.environments.tasks.setup import query_setup_async_result
 
 from nti.app.environments.views.utils import raise_json_error
 

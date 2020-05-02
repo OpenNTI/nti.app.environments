@@ -34,7 +34,7 @@ from .models.interfaces import ISetupStatePending
 
 from .models.utils import get_sites_folder
 
-from .utils import query_setup_state
+from .tasks.setup import query_setup_state
 
 
 logger = __import__('logging').getLogger(__name__)

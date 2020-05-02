@@ -1,7 +1,4 @@
 import datetime
-import requests
-import time
-import jwt
 
 from zope import component
 
