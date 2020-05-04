@@ -4,6 +4,7 @@ import jwt
 
 from unittest import mock
 
+from hamcrest import all_of
 from hamcrest import is_
 from hamcrest import none
 from hamcrest import assert_that
@@ -1271,7 +1272,8 @@ class TestSetupFailure(BaseAppTest):
                                                                            'dns_names': 'xxx.nextthought.io',
                                                                            'owner_email': 'user001@example.com',
                                                                            'env_info': '',
-                                                                           'exception': "ValueError('this setup failed')"}),}))
+                                                                           # The exact way the exception goes to a string is dependent on the pythong 3 version
+                                                                           'exception': all_of(contains_string('ValueError'), contains_string('this setup failed'))}),}))
 
         # Setup password
         setup_msg = next((x for x in _result if x[0][0] == 'nti.app.environments:email_templates/site_setup_password'))
