@@ -38,8 +38,6 @@ class BaseAppTest(unittest.TestCase):
             'zodbconn.uri' : 'memory://',
             'google_client_id': 'xxx',
             'google_client_secret': 'yyy',
-            'hubspot_api_key': 'zzz',
-            'hubspot_portal_id': 'kkk',
             'new_site_request_notification_email': 'test@example.com',
             'site_setup_failure_notification_email': 'test@example.com',
             'nti.environments.management.config': os.path.join(os.path.dirname(tests.__file__), 'test.ini')
