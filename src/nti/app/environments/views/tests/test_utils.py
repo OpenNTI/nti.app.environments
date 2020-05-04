@@ -21,9 +21,10 @@ from zope.schema._bootstrapinterfaces import SchemaNotProvided
 from zope.schema._bootstrapinterfaces import ValidationError
 from zope.schema._bootstrapinterfaces import WrongContainedType
 
-from nti.app.environments.utils import fetch_site_invitation
-from nti.app.environments.utils import query_setup_async_result
-from nti.app.environments.utils import query_invitation_status
+from nti.app.environments.api.siteinfo import nt_client
+from nti.app.environments.api.siteinfo import query_invitation_status
+
+from nti.app.environments.tasks.setup import query_setup_async_result
 
 from nti.app.environments.views.utils import raise_json_error
 
@@ -103,7 +104,7 @@ class TestUtils(BaseAppTest):
         site.setup_state = SetupStateSuccess(task_state='ok', site_info=SiteInfo(site_id='S001', dns_name='xx.nextthought.io'))
         assert_that(query_setup_async_result(site), is_(None))
 
-    @mock.patch('nti.app.environments.utils.requests.get')
+    @mock.patch('nti.app.environments.api.siteinfo.requests.Session.get')
     def test_fetch_site_invitation(self, mock_get):
         settings = {}
         component.getGlobalSiteManager().registerUtility(settings, IOnboardingSettings)
@@ -112,7 +113,7 @@ class TestUtils(BaseAppTest):
             _result.append((url, params))
             return {"acceptedTime": 30}
         mock_get.side_effect = _mock_get
-        assert_that(fetch_site_invitation('demo.dev', 'testcode'), is_({"acceptedTime": 30}))
+        assert_that(nt_client.fetch_site_invitation('demo.dev', 'testcode'), is_({"acceptedTime": 30}))
         assert_that(_result[0][0], is_('https://demo.dev/dataserver2/Invitations/testcode'))
         assert_that(_result[0][1], has_entries({'jwt':not_none()}))
         decoded = jwt.decode(_result[0][1]['jwt'], '$Id$')
@@ -124,12 +125,12 @@ class TestUtils(BaseAppTest):
                                          "iss": None}))
 
         mock_get.side_effect = requests.exceptions.ConnectionError
-        assert_that(fetch_site_invitation('demo.dev', 'testcode'), is_(None))
+        assert_that(nt_client.fetch_site_invitation('demo.dev', 'testcode'), is_(None))
 
         component.getGlobalSiteManager().unregisterUtility(settings, IOnboardingSettings)
 
     @with_test_app()
-    @mock.patch("nti.app.environments.utils.fetch_site_invitation")
+    @mock.patch("nti.app.environments.api.siteinfo.nt_client.fetch_site_invitation")
     def test_query_invitation_status(self, mock_fetch):
         with mock.patch('nti.app.environments.models.utils.get_onboarding_root') as mock_onboarding_root:
             mock_onboarding_root.return_value = self._root()

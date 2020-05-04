@@ -18,6 +18,8 @@ from zope.container.interfaces import InvalidItemType
 
 from zope.event import notify
 
+from nti.app.environments.api.siteinfo import generate_jwt_token
+
 from nti.app.environments.auth import ACT_ADMIN
 from nti.app.environments.auth import ACT_CREATE
 from nti.app.environments.auth import ACT_DELETE
@@ -68,8 +70,7 @@ from nti.app.environments.common import convertToUTC
 from nti.app.environments.common import formatDateToLocal
 from nti.app.environments.common import parseDate
 
-from nti.app.environments.utils import query_setup_state
-from nti.app.environments.utils import generate_jwt_token
+from nti.app.environments.tasks.setup import query_setup_state
 
 from nti.app.environments.views.utils import raise_json_error
 from nti.app.environments.views.utils import is_dns_name_available
