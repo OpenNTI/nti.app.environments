@@ -64,7 +64,8 @@ requires = [
     'pyramid_zope_request',
     'hubspot3',
     'z3c.rml',
-    'zope.cachedescriptors'
+    'zope.cachedescriptors',
+    'tabulate'
 ]
 
 tests_require = [
@@ -129,7 +130,8 @@ setup(
         ],
         'console_scripts': [
             "nti_pserve=nti.app.environments.nti_gunicorn:main",
-            "nti_list_sites=nti.app.environments.utils.nti_list_sites:main"
+            "nti_list_sites=nti.app.environments.utils.nti_list_sites:main",
+            "nti_ping_sites=nti.app.environments.utils.nti_ping_sites:main"
         ],
     },
 )
