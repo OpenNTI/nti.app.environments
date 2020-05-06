@@ -129,6 +129,7 @@ setup(
         ],
         'console_scripts': [
             "nti_pserve=nti.app.environments.nti_gunicorn:main",
+            "nti_list_sites=nti.app.environments.utils.nti_list_sites:main"
         ],
     },
 )

@@ -18,7 +18,6 @@ from zope.app.appsetup.appsetup import database
 from zope.app.appsetup.appsetup import multi_database
 
 from zope.app.publication.zopepublication import ZopePublication
-
 from ZODB.interfaces import IDatabase
 from ZODB.interfaces import IConnection
 
@@ -97,7 +96,8 @@ class OnboardingServer(object):
         
         assert root_db is dbs[0], 'Expect a single root db'
 
-        database(root_db)        
+        database(root_db)
+        self._db = root_db
 
 
 def spawn_sites_setup_state_watchdog(registry):
