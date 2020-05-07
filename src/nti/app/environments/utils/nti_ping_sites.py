@@ -22,7 +22,7 @@ from nti.app.environments.interfaces import IOnboardingServer
 from nti.app.environments.models.interfaces import SITE_STATUS_ACTIVE
 from nti.app.environments.models.utils import get_sites_folder
 
-from nti.app.environments.utils import run_with_onboarding
+from nti.app.environments.utils import run_as_onboarding_main
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -51,34 +51,19 @@ def _ping_site(siteid):
     finally:
         conn.close()    
 
-def _do_ping_sites(root, pool_size=5):
-    pool = Pool(pool_size)
+def _do_ping_sites(args, root):
+    pool = Pool(args.pool_size)
     rows = pool.map(_ping_site, [site.__name__ for site in get_sites_folder(root).values()
                                  if site.status == SITE_STATUS_ACTIVE])
     print(tabulate.tabulate(rows, headers=['ID', 'DNS', 'DS Site']))
             
 
 def main():
-    arg_parser = argparse.ArgumentParser(description="Ping sites")
-    arg_parser.add_argument('-v', '--verbose', help="Be verbose", action='store_true',
-                                                    dest='verbose')
-    arg_parser.add_argument('-c', '--config',
-                            dest='config',
-                            help="The config file",
-                            required=True)
-
-    arg_parser.add_argument('-p', '--pool-size',
+    with run_as_onboarding_main(_do_ping_sites, use_transaction_runner=False) as parser:
+        parser.add_argument('-p', '--pool-size',
                             dest='pool_size',
                             type=int,
                             default=5)
-    
-    args = arg_parser.parse_args()
-
-    run_with_onboarding(settings=args.config,
-                        verbose=args.verbose,
-                        use_transaction_runner=False,
-                        function=_do_ping_sites)
-    sys.exit(0)
 
 
 if __name__ == '__main__':

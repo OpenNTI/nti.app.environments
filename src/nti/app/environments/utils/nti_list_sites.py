@@ -19,33 +19,19 @@ from nti.app.environments.interfaces import IOnboardingServer
 
 from nti.app.environments.models.utils import get_sites_folder
 
-from nti.app.environments.utils import run_with_onboarding
+from nti.app.environments.utils import run_as_onboarding_main
 
 logger = __import__('logging').getLogger(__name__)
 
-def _do_list_sites(root):
+def _do_list_sites(args, root):
     sites = get_sites_folder(root)
 
     for site in sites.values():
         print(site.id)
 
 def main():
-    arg_parser = argparse.ArgumentParser(description="List sites")
-    arg_parser.add_argument('-v', '--verbose', help="Be verbose", action='store_true',
-                                                    dest='verbose')
-    arg_parser.add_argument('-c', '--config',
-                            dest='config',
-                            help="The config file",
-                            required=True)
-    
-    args = arg_parser.parse_args()
-
-    run_with_onboarding(settings=args.config,
-                        verbose=args.verbose,
-                        use_transaction_runner=True,
-                        function=_do_list_sites)
-    sys.exit(0)
-
+    with run_as_onboarding_main(_do_list_sites, use_transaction_runner=False) as parser:
+        parser.description = 'List all sites'
 
 if __name__ == '__main__':
     main()

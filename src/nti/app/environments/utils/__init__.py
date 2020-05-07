@@ -11,6 +11,8 @@ import os
 import sys
 import logging
 import functools
+import argparse
+import contextlib
 
 from zope import component
 from zope import interface
@@ -72,6 +74,25 @@ def _configure(self=None, set_up_packages=(), features=(), context=None, execute
 _user_function_failed = object() #marker
 
 class _OnboardingSetupFailed(Exception): pass
+
+def _parse_settings(settings):
+    config = ConfigParser()
+    config.read([settings])
+
+    # Out of convenience we will unwrap the
+    # app settings from the pserve configuration
+    if 'app:wsgiapp' in config:
+        config = config['app:wsgiapp']
+
+    # We've become accustomed to having access to the interpolation variable
+    # `here`. TODO should this be the location of the provided file?
+    config['here'] = os.getcwd()
+    interface.alsoProvides(config, IOnboardingSettings)
+    component.getGlobalSiteManager().registerUtility(config, IOnboardingSettings)
+
+    # Setup our lower level nti.environments.management settings. We
+    # assume that if we aren't asked to set up settings that this has already been done.
+    configure_settings(config)
 
 def run_with_onboarding(settings=None,
                         function=None,
@@ -170,23 +191,7 @@ def run_with_onboarding(settings=None,
                 pass
     
     if settings is not None:
-        config = ConfigParser()
-        config.read([settings])
-
-        # Out of convenience we will unwrap the
-        # app settings from the pserve configuration
-        if 'app:wsgiapp' in config:
-            config = config['app:wsgiapp']
-
-        # We've become accustomed to having access to the interpolation variable
-        # `here`. TODO should this be the location of the provided file?
-        config['here'] = os.getcwd()
-        interface.alsoProvides(config, IOnboardingSettings)
-        component.getGlobalSiteManager().registerUtility(config, IOnboardingSettings)
-
-        # Setup our lower level nti.environments.management settings. We
-        # assume that if we aren't asked to set up settings that this has already been done.
-        configure_settings(config)
+        _parse_settings(settings)
 
     return run( function=run_user_fun_transaction_wrapper, as_main=as_main,
                 verbose=verbose, config_features=config_features,
@@ -285,3 +290,48 @@ def run(function=None, as_main=True, verbose=False, config_features=(),
 
     return result
 
+def make_main_argparser(parser=None, **kwargs):
+    """
+    Build or augment an ArgumentParser for common options useful when invoking
+    run_with_onboarding.
+    """
+    if parser is None:
+        parser = argparse.ArgumentParser(**kwargs)
+
+    parser.add_argument('-v', '--verbose', help="Be verbose", action='store_true',
+                        dest='verbose')
+    
+    parser.add_argument('-c', '--config',
+                        dest='config',
+                        help="The config file",
+                        required=True)
+    return parser
+    
+
+@contextlib.contextmanager
+def run_as_onboarding_main(fn, parser=None, **kwargs):
+    """
+    A context manager running the provided ``fn`` in the context of an
+    IOnboardingServer setup. This context manager provides new argument parser (or an
+    augmented parser if one is provided as a kwarg). The ``fn`` is executed by way
+    of run_with_onboarding when the contextmanager exits. Additional kwargs to this method
+    are provided to run_with_onboarding.
+
+    ``fn`` should accept two arguments an ArgumentParser.Namespace and the IOnboardingRoot.
+    The return value is ignored.
+    """
+    parser = make_main_argparser(parser)
+    
+    yield parser
+
+    args = parser.parse_args()
+
+    kwargs.pop('settings', None)
+    kwargs.pop('verbose', None)
+    
+    run_with_onboarding(settings=args.config,
+                        verbose=args.verbose,
+                        function=functools.partial(fn, args), **kwargs)
+    sys.exit(0)
+
+    
