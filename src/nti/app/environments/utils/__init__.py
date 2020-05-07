@@ -77,7 +77,8 @@ class _OnboardingSetupFailed(Exception): pass
 
 def _parse_settings(settings):
     config = ConfigParser()
-    config.read([settings])
+    if not config.read([settings]):
+        return
 
     # Out of convenience we will unwrap the
     # app settings from the pserve configuration
@@ -309,7 +310,7 @@ def make_main_argparser(parser=None, **kwargs):
     
 
 @contextlib.contextmanager
-def run_as_onboarding_main(fn, parser=None, **kwargs):
+def run_as_onboarding_main(fn, parser=None, main_args=None, **kwargs):
     """
     A context manager running the provided ``fn`` in the context of an
     IOnboardingServer setup. This context manager provides new argument parser (or an
@@ -324,7 +325,7 @@ def run_as_onboarding_main(fn, parser=None, **kwargs):
     
     yield parser
 
-    args = parser.parse_args()
+    args = parser.parse_args(args=main_args)
 
     kwargs.pop('settings', None)
     kwargs.pop('verbose', None)
@@ -332,6 +333,5 @@ def run_as_onboarding_main(fn, parser=None, **kwargs):
     run_with_onboarding(settings=args.config,
                         verbose=args.verbose,
                         function=functools.partial(fn, args), **kwargs)
-    sys.exit(0)
 
     
