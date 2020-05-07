@@ -53,19 +53,8 @@ def _ping_site(siteid):
 
 def _do_ping_sites(root, pool_size=5):
     pool = Pool(pool_size)
-    jobs = []
-    sites = get_sites_folder(root)
-
-    for site in sites.values():
-        if site.status != SITE_STATUS_ACTIVE:
-            continue
-        # Spawn a greenlet to ping the site. Note we don't
-        # pass in the object, I believe it's important that
-        # each greenlet use objects from its own connection
-        jobs.append(pool.spawn(_ping_site, site.__name__))
-
-    gevent.joinall(jobs)
-    rows = [j.get() for j in jobs]
+    rows = pool.map(_ping_site, [site.__name__ for site in get_sites_folder(root).values()
+                                 if site.status == SITE_STATUS_ACTIVE])
     print(tabulate.tabulate(rows, headers=['ID', 'DNS', 'DS Site']))
             
 
