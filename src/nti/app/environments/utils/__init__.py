@@ -135,14 +135,8 @@ def run_with_onboarding(settings=None,
 
             server = OnboardingServer(dbs)
             component.provideUtility(server, IOnboardingServer)
-        except Exception:
-            # Reraise something we can deal with (in collusion with run), but with the
-            # original traceback. This traceback should be safe.
-            exc_info = sys.exc_info()
-
-            # TODO, nti.dataserver is raising a tuple here, which
-            # isn't supported in python 3
-            raise _OnboardingSetupFailed(exc_info[1])
+        except Exception as ex:
+            raise _OnboardingSetupFailed from ex
 
         try:
             if use_transaction_runner:
@@ -276,7 +270,7 @@ def run(function=None, as_main=True, verbose=False, config_features=(),
         result = _user_function_failed
         try:
             _user_ex_str = str(_user_ex)
-            _user_ex_repr = str(_user_ex_repr)
+            _user_ex_repr = repr(_user_ex)
         except:
             pass
 
