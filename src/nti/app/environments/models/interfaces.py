@@ -360,6 +360,7 @@ class IDedicatedEnvironment(IEnvironment):
 
     load_factor = Int(title="The load factor.",
                       default=1,
+                      min=0,
                       required=True)
 
 

@@ -21,6 +21,7 @@ from nti.app.environments.interfaces import IOnboardingSettings
 from nti.app.environments.models.interfaces import SITE_STATUS_ACTIVE
 from nti.app.environments.models.interfaces import SITE_STATUS_PENDING
 from nti.app.environments.models.interfaces import SITE_STATUS_OPTIONS
+from nti.app.environments.models.interfaces import SITE_STATUS_INACTIVE
 from nti.app.environments.models.interfaces import SETUP_STATE_STATUS_OPTIONS
 
 from nti.app.environments.models.interfaces import ILMSSite
@@ -238,6 +239,30 @@ def _update_host_load_on_site_environment_updated(event):
     for host in set([old_host, new_host]):
         if host:
             host.recompute_current_load()
+
+
+@component.adapter(ILMSSiteUpdatedEvent)
+def _update_load_factor_on_status_update(event):
+    """
+    When a site status changes, move the env load_factor
+    to an appropriate value.
+    """
+    if 'status' not in event.external_values:
+        return
+    lms_site = event.site
+
+    def update_load():
+        try:
+            lms_site.environment.host.recompute_current_load()
+        except AttributeError:
+            pass
+
+    if lms_site.status == SITE_STATUS_ACTIVE:
+        lms_site.environment.load_factor = 1
+        update_load()
+    elif lms_site.status == SITE_STATUS_INACTIVE:
+        lms_site.environment.load_factor = 0
+        update_load()
 
 
 @component.adapter(IHostLoadUpdatedEvent)
