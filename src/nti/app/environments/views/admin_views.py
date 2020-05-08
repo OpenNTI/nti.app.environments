@@ -18,7 +18,7 @@ from nti.mailer.interfaces import ITemplatedMailer
 
 from nti.environments.management.interfaces import ISettings
 
-from nti.app.environments.api.siteinfo import nt_client
+from nti.app.environments.api.siteinfo import NTClient
 
 from nti.app.environments.api.hubspotclient import get_hubspot_profile_url
 
@@ -169,7 +169,8 @@ class SitePendoAccountDetails(BaseTemplateView):
         if self.context.status != SITE_STATUS_ACTIVE:
             raise hexc.HTTPNotFound()
 
-        pong = nt_client.dataserver_ping(self.context.dns_names[0])
+        nt_client = NTClient(self.context)
+        pong = nt_client.dataserver_ping()
         if not pong:
             raise hexc.HTTPNotFound()
 
@@ -201,8 +202,11 @@ class SiteDetailView(BaseTemplateView):
     }
 
     def _site_extra_info(self):
-        hostname = self.context.dns_names[0] if self.context.dns_names else None
-        return nt_client.fetch_site_info(hostname) if hostname else None
+        if self.context.status != SITE_STATUS_ACTIVE:
+            return None
+        
+        nt_client = NTClient(self.context)
+        return nt_client.fetch_site_info()
 
     def _format_license(self, lic):
         edit_link = self.request.resource_url(self.context, '@@license') if self.request.has_permission(ACT_EDIT_SITE_LICENSE, self.context) else None

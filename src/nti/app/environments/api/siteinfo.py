@@ -49,15 +49,23 @@ def generate_jwt_token(username, realname=None, email=None,
 
 class NTClient(object):
 
-    def __init__(self):
+    def __init__(self, site, bearer=None):
+        self.site = site
         self.session = requests.Session()
+        if bearer is not None:
+            self.session.headers.update({'Authorization': f'Bearer {bearer}'})
+
+    @property
+    def _preferred_hostname(self):
+        return self.site.dns_names[0]
 
     def _logo_url(self, resp):
         assets = resp['assets']
         login_logo = assets.get('login_logo') if assets else None
         return login_logo['href'] if login_logo else None
 
-    def fetch_site_info(self, host_name):
+    def fetch_site_info(self):
+        host_name = self._preferred_hostname
         try:
             logger.info("Fetching site info: {}.".format(host_name))
             url = SITE_INFO_TPL.format(host_name=host_name)
@@ -82,7 +90,8 @@ class NTClient(object):
             logger.warn("Bad json data from site host: %s.", host_name)
             return None
 
-    def dataserver_ping(self, host_name):
+    def dataserver_ping(self):
+        host_name = self._preferred_hostname
         try:
             logger.info("Performing dataserver2 logon.ping for: {}.".format(host_name))
             url = SITE_DATASERVER_PING_TPL.format(host_name=host_name)
@@ -102,7 +111,8 @@ class NTClient(object):
             logger.warn("Bad json data from site host: %s.", host_name)
             return None
 
-    def fetch_site_invitation(self, host_name, invitation_code, adminUser='admin@nextthought.com'):
+    def fetch_site_invitation(self, invitation_code, adminUser='admin@nextthought.com'):
+        host_name = self._preferred_hostname
         url = SITE_INVITATION_TPL.format(host_name=host_name,
                                          code=invitation_code)
         jwt_token = generate_jwt_token(adminUser)
@@ -111,9 +121,6 @@ class NTClient(object):
         except requests.exceptions.ConnectionError:
             logger.warning("%s is offline?", host_name)
             return None
-
-# TODO this should be registered as a utility
-nt_client = NTClient()
 
 def query_invitation_status(sites):
     """
@@ -130,11 +137,13 @@ def query_invitation_status(sites):
             or x.status != SITE_STATUS_ACTIVE:
             continue
 
+        nt_client = NTClient(x)
+
         result['total'] += 1
 
         code = x.setup_state.site_info.admin_invitation_code
 
-        resp = nt_client.fetch_site_invitation(x.dns_names[0], code)
+        resp = nt_client.fetch_site_invitation(code)
         if resp is None:
             result['unknown'] += 1
             continue
