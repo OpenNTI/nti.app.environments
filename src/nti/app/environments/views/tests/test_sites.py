@@ -31,6 +31,8 @@ from nti.externalization.internalization.updater import update_from_external_obj
 
 from nti.environments.management.tasks import SiteInfo
 
+from nti.app.environments.api.interfaces import IBearerTokenFactory
+
 from nti.app.environments.models.customers import PersistentCustomer
 
 from nti.app.environments.models.hosts import PersistentHost
@@ -1356,8 +1358,11 @@ class TestSiteLoginView(BaseAppTest):
                                                    end_date=datetime.datetime(2020, 1, 9)))
 
         view = SiteLoginView(site, self.request)
-        result = view._get_jwt_token(username='test@nextthought.com', secret='test')
-        decoded = jwt.decode(result, 'test')
+        result = view._get_jwt_token(username='test@nextthought.com')
+
+        factory = IBearerTokenFactory(site)
+
+        decoded = jwt.decode(result, factory.secret)
         assert_that(decoded, has_entries({'login': 'test@nextthought.com',
                                   'realname': 'test user',
                                   'email': 'test@nextthought.com',
@@ -1365,21 +1370,6 @@ class TestSiteLoginView(BaseAppTest):
                                   'admin': 'true',
                                   'iss': None,
                                   'exp': not_none()}))
-
-        result = view._get_jwt_token(username='test@nextthought.com', secret='test', timeout=-1)
-        assert_that(calling(jwt.decode).with_args(result, 'test'),
-                    raises(jwt.exceptions.ExpiredSignatureError, pattern='Signature has expired'))
-
-        result = view._get_jwt_token(username='test@nextthought.com', secret='test')
-        assert_that(calling(jwt.decode).with_args(result, 'test', issuer="okc"),
-                    raises(jwt.exceptions.InvalidIssuerError, pattern='Invalid issuer'))
-
-        result = view._get_jwt_token(username='test@nextthought.com', secret='test', issuer='okc')
-        decoded = jwt.decode(result, 'test', issuer='okc')
-        assert_that(decoded, has_entries({'iss': 'okc'}))
-
-        assert_that(calling(jwt.decode).with_args(result, 'test', issuer="bad"),
-                    raises(jwt.exceptions.InvalidIssuerError, pattern='Invalid issuer'))
 
     @with_test_app()
     @mock.patch('nti.app.environments.models.utils.get_onboarding_root')

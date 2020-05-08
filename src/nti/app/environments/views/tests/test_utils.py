@@ -1,6 +1,5 @@
 import datetime
 import requests
-import jwt
 
 from unittest import mock
 
@@ -109,8 +108,8 @@ class TestUtils(BaseAppTest):
         settings = {}
         component.getGlobalSiteManager().registerUtility(settings, IOnboardingSettings)
         _result = []
-        def _mock_get(url, params):
-            _result.append((url, params))
+        def _mock_get(url):
+            _result.append((url,))
             return {"acceptedTime": 30}
 
         site = PersistentSite()
@@ -121,14 +120,6 @@ class TestUtils(BaseAppTest):
         mock_get.side_effect = _mock_get
         assert_that(nt_client.fetch_site_invitation('testcode'), is_({"acceptedTime": 30}))
         assert_that(_result[0][0], is_('https://demo.dev/dataserver2/Invitations/testcode'))
-        assert_that(_result[0][1], has_entries({'jwt':not_none()}))
-        decoded = jwt.decode(_result[0][1]['jwt'], '$Id$')
-        assert_that(decoded, has_entries({'login': 'admin@nextthought.com',
-                                         'realname': None,
-                                         'email': None,
-                                         'create': "true",
-                                         "admin": "true",
-                                         "iss": None}))
 
         mock_get.side_effect = requests.exceptions.ConnectionError
         assert_that(nt_client.fetch_site_invitation('testcode'), is_(None))

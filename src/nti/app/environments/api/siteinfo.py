@@ -4,10 +4,14 @@ import requests
 import jwt
 
 from zope import component
+from zope import interface
 
 from zope.event import notify
 
+from nti.app.environments.api.interfaces import IBearerTokenFactory
+
 from nti.app.environments.models.interfaces import ISetupStateSuccess
+from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import SITE_STATUS_ACTIVE
 
 from nti.app.environments.models.events import SiteOwnerCompletedSetupEvent
@@ -22,30 +26,50 @@ SITE_DATASERVER_PING_TPL = 'https://{host_name}/dataserver2/logon.ping'
 SITE_LOGO_TPL = 'https://{host_name}{uri}'
 SITE_INVITATION_TPL = 'https://{host_name}/dataserver2/Invitations/{code}'
 
-def generate_jwt_token(username, realname=None, email=None,
-                       secret=None, issuer=None, timeout=None):
+_default_timeout_marker = object()
+
+@interface.implementer(IBearerTokenFactory)
+class BearerTokenFactory(object):
+
+    algorithm = 'HS256'
+
+    def __init__(self, secret, issuer, default_ttl=None):
+        self.secret = secret
+        self.issuer = issuer
+        self.default_ttl = default_ttl
+
+    def make_bearer_token(self, username, realname=None, email=None, ttl=_default_timeout_marker):
+
+        payload = {
+           'login': username,
+           'realname': realname,
+           'email': email,
+           'create': "true",
+           "admin": "true",
+           "iss": self.issuer
+        }
+
+        # TODO should we even allow not having an expiration time?
+        if ttl is not None:
+            ttl = self.default_ttl if ttl is _default_timeout_marker else ttl
+            payload['exp'] = time.time() + float(ttl)
+
+        jwt_token = jwt.encode(payload,
+                               self.secret,
+                               algorithm=self.algorithm)
+        return jwt_token.decode('utf8')
+
+@component.adapter(ILMSSite)
+def _bearer_factory_for_site(unused_site):
+    """
+    Create an IBearerTokenFactory for the site. Right
+    now this isn't dependent on the site, but it's easy
+    to imagine it being dependent on the site in the future
+    """
     settings = component.getUtility(IOnboardingSettings)
-
-    secret = settings.get('jwt_secret', '$Id$') if secret is None else secret
-    issuer = settings.get('jwt_issuer', None) if issuer is None else issuer
-    timeout=settings.get('jwt_timeout', 30) if timeout is None else timeout
-
-    payload = {
-        'login': username,
-        'realname': realname,
-        'email': email,
-        'create': "true",
-        "admin": "true",
-        "iss": issuer
-    }
-    if timeout is not None:
-        payload['exp'] = time.time() + float(timeout)
-
-    jwt_token = jwt.encode(payload,
-                           secret,
-                           algorithm='HS256')
-    return jwt_token.decode('utf8')
-
+    return BearerTokenFactory(settings.get('jwt_secret', '$Id$'),
+                              settings.get('jwt_issuer', None),
+                              settings.get('jwt_timeout', 30))
 
 class NTClient(object):
 
@@ -111,13 +135,12 @@ class NTClient(object):
             logger.warn("Bad json data from site host: %s.", host_name)
             return None
 
-    def fetch_site_invitation(self, invitation_code, adminUser='admin@nextthought.com'):
+    def fetch_site_invitation(self, invitation_code):
         host_name = self._preferred_hostname
         url = SITE_INVITATION_TPL.format(host_name=host_name,
                                          code=invitation_code)
-        jwt_token = generate_jwt_token(adminUser)
         try:
-            return self.session.get(url, params={'jwt': jwt_token})
+            return self.session.get(url)
         except requests.exceptions.ConnectionError:
             logger.warning("%s is offline?", host_name)
             return None
@@ -136,6 +159,10 @@ def query_invitation_status(sites):
             or not x.setup_state.site_info.admin_invitation_code\
             or x.status != SITE_STATUS_ACTIVE:
             continue
+
+        # TODO Use an onboarding specific user here?
+        token_generator = IBearerTokenFactory(x)
+        jwt = token_generator.make_bearer_token('admin@nextthought.com')
 
         nt_client = NTClient(x)
 
