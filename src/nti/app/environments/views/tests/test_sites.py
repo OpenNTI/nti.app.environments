@@ -35,6 +35,10 @@ from nti.app.environments.models.customers import PersistentCustomer
 
 from nti.app.environments.models.hosts import PersistentHost
 
+from nti.app.environments.models.interfaces import SITE_STATUS_ACTIVE
+from nti.app.environments.models.interfaces import SITE_STATUS_UNKNOWN
+from nti.app.environments.models.interfaces import SITE_STATUS_INACTIVE
+
 from nti.app.environments.models.interfaces import ISiteUsage
 from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import ISharedEnvironment
@@ -100,9 +104,11 @@ class TestSiteCreationView(BaseAppTest):
         mock_store.return_value = True
         url = '/onboarding/sites'
         params = self._params()
+        admin_env = self._make_environ(username='admin001')
         self.testapp.post_json(url, params=params, status=302, extra_environ=self._make_environ(username=None))
         self.testapp.post_json(url, params=params, status=403, extra_environ=self._make_environ(username='user001'))
-        result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
+        result = self.testapp.post_json(url, params=params, status=422,
+                                        extra_environ=admin_env)
         result = result.json_body
         assert_that(result, has_entries({'message': 'No customer found with email: test@gmail.com.'}))
 
@@ -112,12 +118,14 @@ class TestSiteCreationView(BaseAppTest):
             getOrCreateCustomer(self._root().get('customers'), 'test@gmail.com', 'Test Name', 'Organization')
             mock_customers.return_value = self._root().get('customers')
 
-        result = self.testapp.post_json(url, params=params, status=201, extra_environ=self._make_environ(username='admin001'))
+        result = self.testapp.post_json(url, params=params,
+                                        status=201, extra_environ=admin_env)
         result = result.json_body
         assert_that(result, is_({}))
         assert_that(sites, has_length(1))
         site = [x for x in sites.values()][0]
-        assert_that(site, has_properties({'owner': has_properties({'email': 'test@gmail.com'}),
+        assert_that(site, has_properties({'owner':
+                                          has_properties({'email': 'test@gmail.com'}),
                                                            'environment': has_properties({'name': 'assoc'}),
                                                            'license': instance_of(TrialLicense),
                                                            'status': 'PENDING',
@@ -137,8 +145,8 @@ class TestSiteCreationView(BaseAppTest):
             'status': 'ACTIVE',
             'dns_names': ['s@Next.com']
         }
-        result = self.testapp.put_json(site_url, params=params, status=200,
-                                       extra_environ=self._make_environ(username='admin001'))
+        result = self.testapp.put_json(site_url, params=params,
+                                       extra_environ=admin_env)
         assert_that(site, has_properties({'status': 'ACTIVE',
                                           'dns_names': ['s@next.com']}))
 
@@ -151,7 +159,7 @@ class TestSiteCreationView(BaseAppTest):
         self.statsd.clear()
 
         # delete
-        self.testapp.delete(site_url, status=204, extra_environ=self._make_environ(username='admin001'))
+        self.testapp.delete(site_url, status=204, extra_environ=admin_env)
         with ensure_free_txn():
             sites = self._root().get('sites')
             assert_that(sites, has_length(0))
@@ -159,7 +167,7 @@ class TestSiteCreationView(BaseAppTest):
         params = self._params(env_type='application/vnd.nextthought.app.environments.dedicatedenvironment',
                               license_type="application/vnd.nextthought.app.environments.enterpriselicense",
                               site_id='S1id')
-        result = self.testapp.post_json(url, params=params, status=422, extra_environ=self._make_environ(username='admin001'))
+        result = self.testapp.post_json(url, params=params, status=422, extra_environ=admin_env)
         assert_that(result.json_body['message'], is_("No host found: okc.com"))
         with ensure_free_txn():
             hosts = self._root().get('hosts')
@@ -171,19 +179,22 @@ class TestSiteCreationView(BaseAppTest):
         self.statsd.clear()
 
         params['environment']['host'] = host.id
-        self.testapp.post_json(url, params=params, status=201, extra_environ=self._make_environ(username='admin001'))
+        self.testapp.post_json(url, params=params, status=201, extra_environ=admin_env)
         with ensure_free_txn():
             assert_that(host.current_load, is_(1))
             sites = self._root().get('sites')
             assert_that(sites, has_length(1))
             site = [x for x in sites.values()][0]
-            assert_that(site, has_properties({'owner': has_properties({'email': 'test@gmail.com'}),
-                                                               'id': 'S1id',
-                                                               'environment': has_properties({'pod_id': 'xxx',
-                                                                                              'host': has_properties({'host_name': 'okc.com'})}),
-                                                               'license': instance_of(EnterpriseLicense),
-                                                               'status': 'PENDING',
-                                                               'dns_names': ['t1.nextthought.com', 't2.nextthought.com']}))
+            # XXX: Why is this not == to site.__name__
+            site_name = tuple(sites)[0]
+            assert_that(site, has_properties({'owner':
+                                              has_properties({'email': 'test@gmail.com'}),
+                                                              'id': 'S1id',
+                                                              'environment': has_properties({'pod_id': 'xxx',
+                                                                                             'host': has_properties({'host_name': 'okc.com'})}),
+                                                              'license': instance_of(EnterpriseLicense),
+                                                              'status': 'PENDING',
+                                                              'dns_names': ['t1.nextthought.com', 't2.nextthought.com']}))
             external = to_external_object(site)
             assert_that(external, has_entries({'id': 'S1id'}))
 
@@ -192,6 +203,24 @@ class TestSiteCreationView(BaseAppTest):
                               is_gauge('nti.onboarding.host_capacity.okc.com', '5'),
                               is_gauge('nti.onboarding.host_current_load.okc.com', '1'),
                               is_gauge('nti.onboarding.lms_site_status_count.pending', '1')))
+
+        # Updating status updates host load
+        site_url = '/onboarding/sites/%s' % (site_name,)
+
+        self.testapp.put_json(site_url, params={'status': SITE_STATUS_UNKNOWN},
+                              extra_environ=admin_env)
+        with ensure_free_txn():
+            assert_that(host.current_load, is_(1))
+
+        self.testapp.put_json(site_url, params={'status': SITE_STATUS_INACTIVE},
+                              extra_environ=admin_env)
+        with ensure_free_txn():
+            assert_that(host.current_load, is_(0))
+
+        self.testapp.put_json(site_url, params={'status': SITE_STATUS_ACTIVE},
+                              extra_environ=admin_env)
+        with ensure_free_txn():
+            assert_that(host.current_load, is_(1))
 
 
 class TestSitePutView(BaseAppTest):

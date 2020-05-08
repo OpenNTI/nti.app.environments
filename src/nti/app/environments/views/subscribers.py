@@ -241,15 +241,14 @@ def _update_host_load_on_site_environment_updated(event):
             host.recompute_current_load()
 
 
-@component.adapter(ILMSSiteUpdatedEvent)
-def _update_load_factor_on_status_update(event):
+@component.adapter(ILMSSite, IObjectModifiedFromExternalEvent)
+def _update_load_factor_on_status_update(lms_site, event):
     """
     When a site status changes, move the env load_factor
     to an appropriate value.
     """
-    if 'status' not in event.external_values:
+    if 'status' not in event.external_value:
         return
-    lms_site = event.site
 
     def update_load():
         try:
