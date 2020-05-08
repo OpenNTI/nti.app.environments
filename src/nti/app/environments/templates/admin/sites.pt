@@ -215,7 +215,7 @@
                                    ['status', '#filter_by_status']]);
             });
 
-            $('#site_environment_load_factor').on('input', positiveNumbersOnly);
+            $('#site_environment_load_factor').on('input', NonNegtiveNumberOnly);
             $('input[name=site_license_seats]').on('input', positiveNumbersOnly);
 
             $('#filter_by_state .drop-btn').on('CustomSelectChanged', function(e) {

@@ -400,7 +400,7 @@
     <metal:block metal:fill-slot="script">
         <script src="/static/js/site_detail.js"></script>
         <script>
-            $('input[name=site_environment_load_factor]').on('input', positiveNumbersOnly);
+            $('input[name=site_environment_load_factor]').on('input', NonNegtiveNumberOnly);
             $('input[name=site_license_seats]').on('input', NonNegtiveNumberOnly);
             $('input[name=timeout]').on('input', function(e){
                 var old = $(this).attr('data-old-value') || '';
