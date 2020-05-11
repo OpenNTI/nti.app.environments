@@ -18,7 +18,7 @@ from zope.container.interfaces import InvalidItemType
 
 from zope.event import notify
 
-from nti.app.environments.api.siteinfo import generate_jwt_token
+from nti.app.environments.api.interfaces import IBearerTokenFactory
 
 from nti.app.environments.auth import ACT_ADMIN
 from nti.app.environments.auth import ACT_CREATE
@@ -820,18 +820,28 @@ class MarkInviteAcceptedView(BaseView):
 
 class JWTTokenViewMixin(object):
 
+    @property
+    def bearer_token_context(self):
+        return self.context # We expect this to be an ILMSSite
+
     def _get_realname(self):
         # Based on the session configuration, realname shouldn't expire.
         return self.request.session.get('login.realname')
 
-    def _get_jwt_token(self, username=None, secret=None, issuer=None, timeout=None):
+    def _get_jwt_token(self, username=None, timeout=None):
         username = username or self.request.authenticated_userid
-        token = generate_jwt_token(username=username,
-                                   realname=self._get_realname(),
-                                   email=username,
-                                   secret=secret,
-                                   issuer=issuer,
-                                   timeout=timeout)
+        generator = IBearerTokenFactory(self.bearer_token_context)
+
+        # Here Timeout of None actually means we want the default_ttl
+        # i.e. don't pass a timeout.
+        additional_kwargs = {}
+        if timeout is not None:
+            additional_kwargs['ttl'] = timeout
+        
+        token = generator.make_bearer_token(username=username,
+                                            realname=self._get_realname(),
+                                            email=username,
+                                            **additional_kwargs)
         return token
 
 

@@ -1,6 +1,5 @@
 import datetime
 import requests
-import jwt
 
 from unittest import mock
 
@@ -21,7 +20,7 @@ from zope.schema._bootstrapinterfaces import SchemaNotProvided
 from zope.schema._bootstrapinterfaces import ValidationError
 from zope.schema._bootstrapinterfaces import WrongContainedType
 
-from nti.app.environments.api.siteinfo import nt_client
+from nti.app.environments.api.siteinfo import NTClient
 from nti.app.environments.api.siteinfo import query_invitation_status
 
 from nti.app.environments.tasks.setup import query_setup_async_result
@@ -109,28 +108,26 @@ class TestUtils(BaseAppTest):
         settings = {}
         component.getGlobalSiteManager().registerUtility(settings, IOnboardingSettings)
         _result = []
-        def _mock_get(url, params):
-            _result.append((url, params))
+        def _mock_get(url):
+            _result.append((url,))
             return {"acceptedTime": 30}
+
+        site = PersistentSite()
+        site.dns_names = ['demo.dev']
+
+        nt_client = NTClient(site)
+        
         mock_get.side_effect = _mock_get
-        assert_that(nt_client.fetch_site_invitation('demo.dev', 'testcode'), is_({"acceptedTime": 30}))
+        assert_that(nt_client.fetch_site_invitation('testcode'), is_({"acceptedTime": 30}))
         assert_that(_result[0][0], is_('https://demo.dev/dataserver2/Invitations/testcode'))
-        assert_that(_result[0][1], has_entries({'jwt':not_none()}))
-        decoded = jwt.decode(_result[0][1]['jwt'], '$Id$')
-        assert_that(decoded, has_entries({'login': 'admin@nextthought.com',
-                                         'realname': None,
-                                         'email': None,
-                                         'create': "true",
-                                         "admin": "true",
-                                         "iss": None}))
 
         mock_get.side_effect = requests.exceptions.ConnectionError
-        assert_that(nt_client.fetch_site_invitation('demo.dev', 'testcode'), is_(None))
+        assert_that(nt_client.fetch_site_invitation('testcode'), is_(None))
 
         component.getGlobalSiteManager().unregisterUtility(settings, IOnboardingSettings)
 
     @with_test_app()
-    @mock.patch("nti.app.environments.api.siteinfo.nt_client.fetch_site_invitation")
+    @mock.patch("nti.app.environments.api.siteinfo.NTClient.fetch_site_invitation")
     def test_query_invitation_status(self, mock_fetch):
         with mock.patch('nti.app.environments.models.utils.get_onboarding_root') as mock_onboarding_root:
             mock_onboarding_root.return_value = self._root()
@@ -248,6 +245,6 @@ class TestUtils(BaseAppTest):
                      'S003': mock.MagicMock(status_code=200, json=lambda : {'acceptedTime': None,
                                                                                  'expiryTime': 1})
                                                                             }
-        mock_fetch.side_effect = lambda host_name, _: mock_body.get(host_name)
+        mock_fetch.side_effect = [mock_body['S002'], mock_body['S003']]
         assert_that(query_invitation_status([sites['S002'], sites['S003']]),
                     has_entries({'total': 2, 'accepted': 1, 'expired': 1}))

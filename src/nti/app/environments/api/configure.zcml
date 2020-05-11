@@ -22,5 +22,9 @@
 	<subscriber handler=".hubspotclient._sync_finished_site_to_hubspot" />
 	<subscriber handler=".hubspotclient._sync_setup_completed_to_hubspot" />
 
+	<adapter factory=".siteinfo._bearer_factory_for_site"
+		 for="nti.app.environments.models.interfaces.ILMSSite"
+		 provides=".interfaces.IBearerTokenFactory"/>
+
 
 </configure>
