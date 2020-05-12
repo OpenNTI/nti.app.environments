@@ -1,12 +1,5 @@
 from zope import interface
 
-
-class IHubspotClient(interface.Interface):
-
-    def __call__():
-        pass
-
-
 class IBearerTokenFactory(interface.Interface):
     """
     An object that can provide bearer tokens

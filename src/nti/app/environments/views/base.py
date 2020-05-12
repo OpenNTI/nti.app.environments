@@ -13,7 +13,7 @@ from zope.schema._bootstrapinterfaces import ValidationError
 from nti.externalization import new_from_external_object
 from nti.externalization import update_from_external_object
 
-from nti.app.environments.api.hubspotclient import get_hubspot_client
+from nti.app.environments.hubspot import get_hubspot_client
 
 from nti.app.environments.auth import ACT_READ
 from nti.app.environments.auth import ACT_DELETE

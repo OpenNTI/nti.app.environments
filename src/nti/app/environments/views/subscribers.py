@@ -13,7 +13,7 @@ from zope.event import notify
 from zope.lifecycleevent import IObjectAddedEvent
 from zope.lifecycleevent import IObjectRemovedEvent
 
-from nti.app.environments.api.hubspotclient import get_hubspot_client
+from nti.app.environments.hubspot import get_hubspot_client
 
 from nti.app.environments.interfaces import ITransactionRunner
 from nti.app.environments.interfaces import IOnboardingSettings

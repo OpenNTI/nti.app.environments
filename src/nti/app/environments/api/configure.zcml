@@ -7,21 +7,7 @@
 	<include package="zope.security" file="meta.zcml" />
 	<include package="zope.component" />
 	<include package="zope.security" />
-
-	<configure zcml:condition="have devmode">
-		<utility factory=".hubspotclient._devmode_hubspot_client_factory"
-			 	 provides=".interfaces.IHubspotClient" />
-	</configure>
-
-	<configure zcml:condition="not-have devmode">
-		<utility factory=".hubspotclient._hubspot_client_factory"
-			 	 provides=".interfaces.IHubspotClient" />
-	</configure>
-
-	<subscriber handler=".hubspotclient._sync_new_site_to_hubspot" />
-	<subscriber handler=".hubspotclient._sync_finished_site_to_hubspot" />
-	<subscriber handler=".hubspotclient._sync_setup_completed_to_hubspot" />
-
+	
 	<adapter factory=".siteinfo._bearer_factory_for_site"
 		 for="nti.app.environments.models.interfaces.ILMSSite"
 		 provides=".interfaces.IBearerTokenFactory"/>
