@@ -8,14 +8,14 @@ from hamcrest import raises
 from hamcrest import assert_that
 from hamcrest import has_entries
 
-from nti.app.environments.api.hubspotclient import HubspotClient
+from nti.app.environments.hubspot.client import HubspotClient
 
 from nti.app.environments.tests import BaseTest
 
 
 class TestHubspotClient(BaseTest):
 
-    @mock.patch("nti.app.environments.api.hubspotclient.Hubspot3")
+    @mock.patch("nti.app.environments.hubspot.client.Hubspot3")
     def test_fetch_contact_with_email(self, mockHub):
         mockcontacts = mock.Mock()
         mockcontacts.get_by_email.return_value = {'canonical-vid': 12630274,
@@ -80,7 +80,7 @@ class TestHubspotClient(BaseTest):
                                          'canonical-vid': 12630274}))
 
 
-    @mock.patch("nti.app.environments.api.hubspotclient.Hubspot3")
+    @mock.patch("nti.app.environments.hubspot.client.Hubspot3")
     def test_upsert_contact(self, mockHub):
         mockcontacts = mock.Mock()
         mockcontacts.get_by_email.return_value = None

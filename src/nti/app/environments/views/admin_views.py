@@ -20,7 +20,7 @@ from nti.environments.management.interfaces import ISettings
 
 from nti.app.environments.api.siteinfo import NTClient
 
-from nti.app.environments.api.hubspotclient import get_hubspot_profile_url
+from nti.app.environments.hubspot import get_hubspot_profile_url
 
 from nti.app.environments.auth import ACT_ADMIN
 from nti.app.environments.auth import ACT_READ
