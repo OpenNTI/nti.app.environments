@@ -276,13 +276,16 @@
         <div class="site-item">
             <h3>Site Usage</h3>
             <metal:block tal:omit-tag="" tal:condition="site.usage|nothing">
-                <p>Total Users: <span tal:content="site.usage.usage.total_user_count"></span></p>
-                <p>Admin Users: <span tal:content="site.usage.usage.total_admin_count"></span></p>
-                <p>Monthly Acitve Users: <span tal:content="site.usage.usage.monthly_active_users"></span></p>
-                <p>Last Modified: <span tal:content="site.usage.lastModified"></span></p>
+                <p>Licensable Seats: <span tal:content="site.usage.usage.used_seats"></span></p>
+		<p>Site Admin Count: <span tal:content="site.usage.usage.admin_count"></span></p>
+		<p>Instructor Count: <span tal:content="site.usage.usage.instructor_count"></span></p>
+		<p>Total User Count: <span tal:content="site.usage.usage.user_count"></span></p>
+		<p>Course Count: <span tal:content="site.usage.usage.course_count"></span></p>
+		<p>SCORM Package Count: <span tal:content="site.usage.usage.scorm_package_count"></span></p>
+                <p>Last Updated: <span tal:content="site.usage.lastModified"></span></p>
             </metal:block>
             <metal:block tal:omit-tag="" tal:condition="not:site.usage|nothing">
-                <p>No data.</p>
+                <p>No Information Found</p>
             </metal:block>
         </div>
 
