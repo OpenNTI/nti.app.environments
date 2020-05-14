@@ -396,6 +396,7 @@ class SiteUsageUpdater(object):
     def __call__(self):
         logger.info('Updating usage information for site %s', self.site)
         usage = ISiteUsage(self.site)
+        usage.updateLastMod()
         usage.user_count = self.user_count
         usage.admin_count = len(self.site_admin_usernames)
         usage.course_count = self.course_count
@@ -404,6 +405,7 @@ class SiteUsageUpdater(object):
             usage.used_seats = len(self.site_instructor_usernames.union(self.site_admin_usernames))
         usage.scorm_package_count = self.scorm_package_count
         logger.info('Updated usage information for site %s', self.site)
+        
         return usage
 
 @interface.provider(ISiteUsageUpdater)

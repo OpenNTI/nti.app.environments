@@ -12,6 +12,7 @@ from hamcrest import has_length
 from hamcrest import has_properties
 from hamcrest import assert_that
 from hamcrest import starts_with
+from hamcrest import greater_than
 
 from zope import interface
 
@@ -37,6 +38,7 @@ from nti.app.environments.models.sites import SetupStateFailure
 from nti.app.environments.models.sites import SetupStateSuccess
 from nti.app.environments.models.sites import SitesFolder
 from nti.app.environments.models.sites import _generate_site_id
+from nti.app.environments.models.sites import SiteUsage
 
 from nti.app.environments.models.hosts import PersistentHost, HostsFolder
 
@@ -394,3 +396,10 @@ class TestSites(BaseTest):
         _id = _generate_site_id()
         assert_that(_id, has_length(33))
         assert_that(_id, starts_with('S'))
+
+class TestSiteUsage(BaseTest):
+
+    def test_last_modified(self):
+        usage = SiteUsage()
+        usage.updateLastMod()
+        assert_that(usage.lastModified, greater_than(0))
