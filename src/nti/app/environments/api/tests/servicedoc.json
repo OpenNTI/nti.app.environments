@@ -1,0 +1,1257 @@
+{
+    "CapabilityList": [
+        "nti.platform.blogging.createblogentry",
+        "nti.platform.p2p.sharing",
+        "nti.platform.p2p.friendslists",
+        "nti.platform.customization.can_change_password",
+        "nti.platform.courseware.advanced_editing",
+        "nti.platform.p2p.dynamicfriendslists",
+        "nti.platform.forums.communityforums",
+        "nti.platform.p2p.chat",
+        "nti.platform.customization.avatar_upload",
+        "nti.platform.groups.can_manage_owned_groups",
+        "nti.platform.forums.dflforums"
+    ],
+    "Class": "Service",
+    "Items": [
+        {
+            "Class": "Workspace",
+            "Items": [],
+            "Links": [
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/ats_imis/@@GrantAccess",
+                    "method": "POST",
+                    "rel": "GrantAccess"
+                },
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/ats_imis/@@UserUpsert",
+                    "method": "POST",
+                    "rel": "UserUpsert"
+                }
+            ],
+            "Title": "ATS_IMIS"
+        },
+        {
+            "Class": "Workspace",
+            "Items": [
+                {
+                    "Class": "Collection",
+                    "Title": "Events",
+                    "accepts": [],
+                    "href": "/dataserver2/analytics/batch_events"
+                },
+                {
+                    "Class": "Collection",
+                    "Links": [
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/analytics/sessions/@@active_session_count",
+                            "rel": "active_session_count"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/analytics/sessions/@@analytics_session",
+                            "rel": "analytics_session"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/analytics/sessions/@@end_analytics_session",
+                            "rel": "end_analytics_session"
+                        }
+                    ],
+                    "Title": "Sessions",
+                    "accepts": [],
+                    "href": "/dataserver2/analytics/sessions"
+                }
+            ],
+            "Links": [
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/analytics/@@activity_by_date_summary",
+                    "rel": "activity_by_date_summary"
+                },
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/analytics/@@active_times_summary",
+                    "rel": "active_times_summary"
+                },
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/analytics/@@active_users",
+                    "rel": "active_users"
+                },
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/analytics/@@sync_params",
+                    "rel": "sync_params"
+                },
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/analytics/batch_events",
+                    "rel": "batch_events"
+                },
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/analytics/sessions",
+                    "rel": "sessions"
+                },
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/analytics/sessions/@@analytics_session",
+                    "rel": "analytics_session"
+                },
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/analytics/sessions/@@end_analytics_session",
+                    "rel": "end_analytics_session"
+                }
+            ],
+            "Title": "Analytics"
+        },
+        {
+            "Class": "Workspace",
+            "Items": [
+                {
+                    "Class": "Collection",
+                    "Title": "AllBadges",
+                    "accepts": [],
+                    "href": "/dataserver2/users/tony.tarleton@nextthought.com/Badges/AllBadges"
+                },
+                {
+                    "Class": "Collection",
+                    "Title": "EarnableBadges",
+                    "accepts": [],
+                    "href": "/dataserver2/users/tony.tarleton@nextthought.com/Badges/EarnableBadges"
+                },
+                {
+                    "Class": "Collection",
+                    "Title": "EarnedBadges",
+                    "accepts": [],
+                    "href": "/dataserver2/users/tony.tarleton@nextthought.com/Badges/EarnedBadges"
+                }
+            ],
+            "Links": [
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/OpenBadges",
+                    "rel": "OpenBadges"
+                },
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/OpenIssuers",
+                    "rel": "OpenIssuers"
+                },
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/OpenAssertions",
+                    "rel": "OpenAssertions"
+                }
+            ],
+            "Title": "Badges"
+        },
+        {
+            "Class": "Workspace",
+            "Items": [
+                {
+                    "Class": "Collection",
+                    "Links": [
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/users/tony.tarleton@nextthought.com/Catalog/Courses/@@Featured",
+                            "rel": "Featured"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/users/tony.tarleton@nextthought.com/Catalog/Courses/@@ByTag",
+                            "rel": "ByTag"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/users/tony.tarleton@nextthought.com/Catalog/Courses/@@Popular",
+                            "rel": "Popular"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/users/tony.tarleton@nextthought.com/Catalog/Courses/@@SuggestedTags",
+                            "rel": "SuggestedTags"
+                        }
+                    ],
+                    "Title": "Courses",
+                    "accepts": [],
+                    "href": "/dataserver2/users/tony.tarleton@nextthought.com/Catalog/Courses"
+                },
+                {
+                    "Class": "Collection",
+                    "Title": "Purchased",
+                    "accepts": [],
+                    "href": "/dataserver2/users/tony.tarleton@nextthought.com/Catalog/Purchased"
+                }
+            ],
+            "Links": [
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/GrantAccess",
+                    "method": "POST",
+                    "rel": "GrantAccess"
+                },
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/RemoveAccess",
+                    "method": "POST",
+                    "rel": "RemoveAccess"
+                },
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/users/tony.tarleton@nextthought.com/@@redeem_purchase_code",
+                    "method": "POST",
+                    "ntiid": "tag:nextthought.com,2011-10:system-NamedEntity:User-tony.tarleton@nextthought.com",
+                    "rel": "redeem_purchase_code"
+                }
+            ],
+            "Title": "Catalog"
+        },
+        {
+            "Class": "Workspace",
+            "Items": [
+                {
+                    "Class": "Collection",
+                    "Title": "AllCommunities",
+                    "accepts": [],
+                    "href": "/dataserver2/users/tony.tarleton@nextthought.com/Communities/AllCommunities"
+                },
+                {
+                    "Class": "Collection",
+                    "Title": "Communities",
+                    "accepts": [],
+                    "href": "/dataserver2/users/tony.tarleton@nextthought.com/Communities/Communities"
+                },
+                {
+                    "Class": "Collection",
+                    "Title": "AdministeredCommunities",
+                    "accepts": [],
+                    "href": "/dataserver2/users/tony.tarleton@nextthought.com/Communities/AdministeredCommunities"
+                }
+            ],
+            "Title": "Communities"
+        },
+        {
+            "Class": "Workspace",
+            "Items": [
+                {
+                    "Class": "Collection",
+                    "Title": "VisibleContentBundles",
+                    "accepts": [
+                        "application/vnd.nextthought.contentpackage",
+                        "application/vnd.nextthought.contentunit",
+                        "application/vnd.nextthought.persistentcontentpackage",
+                        "application/vnd.nextthought.persistentcontentunit",
+                        "application/vnd.nextthought.renderablecontentpackage",
+                        "application/vnd.nextthought.renderablecontentunit"
+                    ],
+                    "href": "/dataserver2/users/tony.tarleton@nextthought.com/ContentBundles/VisibleContentBundles"
+                }
+            ],
+            "Title": "ContentBundles"
+        },
+        {
+            "Class": "Workspace",
+            "Items": [
+                {
+                    "Class": "Collection",
+                    "Links": [
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/users/tony.tarleton@nextthought.com/Courses/AllCourses/@@WindowedAllCourses",
+                            "rel": "WindowedAllCourses"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/users/tony.tarleton@nextthought.com/Courses/AllCourses/@@WindowedAllCatalogEntries",
+                            "rel": "WindowedAllCatalogEntries"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/users/tony.tarleton@nextthought.com/Courses/AllCourses/@@Current",
+                            "rel": "Current"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/users/tony.tarleton@nextthought.com/Courses/AllCourses/@@Archived",
+                            "rel": "Archived"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/users/tony.tarleton@nextthought.com/Courses/AllCourses/@@Upcoming",
+                            "rel": "Upcoming"
+                        }
+                    ],
+                    "Title": "AllCourses",
+                    "accepts": [],
+                    "href": "/dataserver2/users/tony.tarleton@nextthought.com/Courses/AllCourses"
+                },
+                {
+                    "Class": "Collection",
+                    "Links": [
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/users/tony.tarleton@nextthought.com/Courses/EnrolledCourses/@@WindowedEnrolled",
+                            "rel": "WindowedEnrolled"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/users/tony.tarleton@nextthought.com/Courses/EnrolledCourses/@@Current",
+                            "rel": "Current"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/users/tony.tarleton@nextthought.com/Courses/EnrolledCourses/@@Archived",
+                            "rel": "Archived"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/users/tony.tarleton@nextthought.com/Courses/EnrolledCourses/@@Upcoming",
+                            "rel": "Upcoming"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/users/tony.tarleton@nextthought.com/Courses/EnrolledCourses/@@Favorites",
+                            "rel": "Favorites"
+                        }
+                    ],
+                    "Title": "EnrolledCourses",
+                    "accepts": [
+                        "application/json"
+                    ],
+                    "href": "/dataserver2/users/tony.tarleton@nextthought.com/Courses/EnrolledCourses"
+                },
+                {
+                    "Class": "Collection",
+                    "Links": [
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/users/tony.tarleton@nextthought.com/Courses/AdministeredCourses/@@WindowedAdministered",
+                            "rel": "WindowedAdministered"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/users/tony.tarleton@nextthought.com/Courses/AdministeredCourses/@@Current",
+                            "rel": "Current"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/users/tony.tarleton@nextthought.com/Courses/AdministeredCourses/@@Archived",
+                            "rel": "Archived"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/users/tony.tarleton@nextthought.com/Courses/AdministeredCourses/@@Upcoming",
+                            "rel": "Upcoming"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/users/tony.tarleton@nextthought.com/Courses/AdministeredCourses/@@Favorites",
+                            "rel": "Favorites"
+                        }
+                    ],
+                    "Title": "AdministeredCourses",
+                    "accepts": [],
+                    "href": "/dataserver2/users/tony.tarleton@nextthought.com/Courses/AdministeredCourses"
+                }
+            ],
+            "Links": [
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/++etc++hostsites/alpha.nextthought.com/++etc++site/Courses/@@AdminLevels",
+                    "rel": "AdminLevels"
+                },
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/++etc++hostsites/alpha.nextthought.com/++etc++site/Courses/@@AllCourseRosterReport",
+                    "rel": "AllCourseRosterReport"
+                }
+            ],
+            "Title": "Courses"
+        },
+        {
+            "Class": "Workspace",
+            "Items": [
+                {
+                    "Class": "Collection",
+                    "Title": "Objects",
+                    "accepts": [],
+                    "href": "/dataserver2/Objects"
+                },
+                {
+                    "Class": "Collection",
+                    "Title": "NTIIDs",
+                    "accepts": [],
+                    "href": "/dataserver2/NTIIDs"
+                },
+                {
+                    "Class": "Collection",
+                    "Title": "LibraryPath",
+                    "accepts": [],
+                    "href": "/dataserver2/LibraryPath"
+                },
+                {
+                    "Class": "Collection",
+                    "Title": "Reports",
+                    "accepts": [],
+                    "href": "/dataserver2/Reports"
+                },
+                {
+                    "Class": "Collection",
+                    "Title": "CreditDefinitions",
+                    "accepts": [
+                        "application/vnd.nextthought.credit.creditdefinition"
+                    ],
+                    "href": "/dataserver2/CreditDefinitions"
+                },
+                {
+                    "Class": "Collection",
+                    "Links": [
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/Credit/@@bulk_awarded_credit",
+                            "method": "POST",
+                            "rel": "bulk_awarded_credit"
+                        }
+                    ],
+                    "Title": "Credit",
+                    "accepts": [],
+                    "href": "/dataserver2/Credit"
+                }
+            ],
+            "Links": [
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/ResolveUser",
+                    "rel": "ResolveUser"
+                },
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/URLMetaDataExtractor",
+                    "rel": "URLMetaDataExtractor"
+                },
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/ResolveUsers",
+                    "rel": "ResolveUsers"
+                },
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/UserUpsert",
+                    "rel": "UserUpsert"
+                },
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/UserSearch",
+                    "rel": "UserSearch"
+                },
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/invitation-info",
+                    "method": "GET",
+                    "rel": "invitation-info"
+                },
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/Admins",
+                    "method": "GET",
+                    "rel": "Admins"
+                },
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/UserInfoExtract",
+                    "method": "GET",
+                    "rel": "UserInfoExtract"
+                },
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/SeatLimit",
+                    "rel": "SeatLimit"
+                }
+            ],
+            "Title": "Global"
+        },
+        {
+            "Class": "Workspace",
+            "Items": [
+                {
+                    "Class": "Collection",
+                    "Title": "Integrations",
+                    "accepts": [],
+                    "href": "/dataserver2/users/tony.tarleton@nextthought.com/Integration/Integrations"
+                }
+            ],
+            "Title": "Integration"
+        },
+        {
+            "Class": "Workspace",
+            "Items": [
+                {
+                    "Class": "Collection",
+                    "Links": [
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/users/tony.tarleton@nextthought.com/@@accept-invitations",
+                            "method": "POST",
+                            "ntiid": "tag:nextthought.com,2011-10:system-NamedEntity:User-tony.tarleton@nextthought.com",
+                            "rel": "accept-invitations"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/users/tony.tarleton@nextthought.com/@@accept-invitation",
+                            "method": "POST",
+                            "ntiid": "tag:nextthought.com,2011-10:system-NamedEntity:User-tony.tarleton@nextthought.com",
+                            "rel": "accept-invitation"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/users/tony.tarleton@nextthought.com/@@decline-invitation",
+                            "method": "POST",
+                            "ntiid": "tag:nextthought.com,2011-10:system-NamedEntity:User-tony.tarleton@nextthought.com",
+                            "rel": "decline-invitation"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/users/tony.tarleton@nextthought.com/@@redeem_purchase_code",
+                            "method": "POST",
+                            "ntiid": "tag:nextthought.com,2011-10:system-NamedEntity:User-tony.tarleton@nextthought.com",
+                            "rel": "redeem_purchase_code"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/users/tony.tarleton@nextthought.com/@@accept-course-invitations",
+                            "method": "POST",
+                            "ntiid": "tag:nextthought.com,2011-10:system-NamedEntity:User-tony.tarleton@nextthought.com",
+                            "rel": "accept-course-invitations"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/Invitations/@@send-site-invitation",
+                            "method": "POST",
+                            "rel": "send-site-invitation"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/Invitations/@@delete-site-invitations",
+                            "method": "POST",
+                            "rel": "delete-site-invitations"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/Invitations/@@pending-site-invitations",
+                            "method": "GET",
+                            "rel": "pending-site-invitations"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/Invitations/@@generic-site-invitation",
+                            "method": "POST",
+                            "rel": "set-generic-site-invitation"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/Invitations/@@generic-site-invitation",
+                            "method": "PUT",
+                            "rel": "update-generic-site-invitation"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/Invitations/@@generic-site-invitation",
+                            "method": "DELETE",
+                            "rel": "delete-generic-site-invitation"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/Invitations/@@generic-site-invitation",
+                            "method": "GET",
+                            "rel": "get-generic-site-invitation"
+                        }
+                    ],
+                    "Title": "Invitations",
+                    "accepts": [],
+                    "href": "/dataserver2/users/tony.tarleton@nextthought.com/Invitations/"
+                }
+            ],
+            "Title": "Invitations"
+        },
+        {
+            "Class": "Workspace",
+            "Items": [
+                {
+                    "Class": "Collection",
+                    "Title": "Main",
+                    "accepts": [
+                        "application/vnd.nextthought.contentpackage",
+                        "application/vnd.nextthought.contentunit",
+                        "application/vnd.nextthought.persistentcontentpackage",
+                        "application/vnd.nextthought.persistentcontentunit",
+                        "application/vnd.nextthought.renderablecontentpackage",
+                        "application/vnd.nextthought.renderablecontentunit"
+                    ],
+                    "href": "/dataserver2/users/tony.tarleton@nextthought.com/Library/Main"
+                }
+            ],
+            "Title": "Library"
+        },
+        {
+            "Class": "Workspace",
+            "Items": [
+                {
+                    "Class": "Collection",
+                    "Title": "SCORMInstances",
+                    "accepts": [],
+                    "href": "/dataserver2/users/tony.tarleton@nextthought.com/SCORM/SCORMInstances"
+                }
+            ],
+            "Title": "SCORM"
+        },
+        {
+            "Class": "Workspace",
+            "Items": [],
+            "Links": [
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/SiteAdmins",
+                    "rel": "SiteAdmins"
+                },
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/SiteMappings",
+                    "rel": "SiteMappings"
+                },
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/SiteBrand",
+                    "method": "PUT",
+                    "rel": "SiteBrand"
+                },
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/@@SyncAllLibraries",
+                    "rel": "SyncAllLibraries"
+                },
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/@@RemoveSyncLock",
+                    "rel": "RemoveSyncLock"
+                },
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/@@SyncMetadata",
+                    "rel": "SyncMetadata"
+                },
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/@@SyncableContentPackages",
+                    "rel": "SyncableContentPackages"
+                }
+            ],
+            "Title": "SiteAdmin"
+        },
+        {
+            "Class": "Workspace",
+            "Items": [
+                {
+                    "Class": "Collection",
+                    "Links": [
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/store/@@get_purchase_attempt",
+                            "rel": "get_purchase_attempt"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/store/@@get_pending_purchases",
+                            "rel": "get_pending_purchases"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/store/@@get_purchase_history",
+                            "rel": "get_purchase_history"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/store/@@get_purchasables",
+                            "rel": "get_purchasables"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/store/@@redeem_gift",
+                            "rel": "redeem_gift"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/store/@@redeem_purchase_code",
+                            "rel": "redeem_purchase_code"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/store/@@get_gift_pending_purchases",
+                            "rel": "get_gift_pending_purchases"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/store/@@get_gift_purchase_attempt",
+                            "rel": "get_gift_purchase_attempt"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/store/@@price_purchasable",
+                            "rel": "price_purchasable"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/store/stripe/@@gift_payment",
+                            "rel": "gift_stripe_payment"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/store/stripe/@@gift_payment_preflight",
+                            "rel": "gift_stripe_payment_preflight"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/store/stripe/@@price_purchasable",
+                            "rel": "price_purchasable_with_stripe_coupon"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/store/payeezy/@@gift_payment",
+                            "rel": "gift_payeezy_payment"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/store/payeezy/@@gift_payment_preflight",
+                            "rel": "gift_payeezy_payment_preflight"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/store/payeezy/@@price_purchasable",
+                            "rel": "price_purchasable_with_payeezy"
+                        }
+                    ],
+                    "Title": "store",
+                    "accepts": [],
+                    "href": "/dataserver2/users/tony.tarleton@nextthought.com/store/"
+                }
+            ],
+            "Title": "store"
+        },
+        {
+            "Class": "Workspace",
+            "Items": [
+                {
+                    "Class": "Collection",
+                    "Title": "Blog",
+                    "accepts": [
+                        "application/vnd.nextthought.forums.personalblogentrypost",
+                        "application/vnd.nextthought.forums.post"
+                    ],
+                    "href": "/dataserver2/users/tony.tarleton@nextthought.com/Blog"
+                },
+                {
+                    "Class": "Collection",
+                    "Links": [
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/Objects/tag%3Anextthought.com%2C2011-10%3Atesting_community-OID-0x36e039%3A5573657273",
+                            "ntiid": "tag:nextthought.com,2011-10:testing_community-OID-0x36e039:5573657273",
+                            "rel": "global.site.board"
+                        }
+                    ],
+                    "Title": "Boards",
+                    "accepts": [],
+                    "href": "/dataserver2/users/tony.tarleton@nextthought.com/Boards"
+                },
+                {
+                    "Class": "Collection",
+                    "Links": [
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/users/tony.tarleton@nextthought.com/Calendars/@@events",
+                            "method": "GET",
+                            "ntiid": "tag:nextthought.com,2011-10:system-NamedEntity:User-tony.tarleton@nextthought.com",
+                            "rel": "events"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/users/tony.tarleton@nextthought.com/Calendars/@@export",
+                            "method": "GET",
+                            "ntiid": "tag:nextthought.com,2011-10:system-NamedEntity:User-tony.tarleton@nextthought.com",
+                            "rel": "export"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/users/tony.tarleton@nextthought.com/Calendars/@@GenerateFeedURL",
+                            "method": "GET",
+                            "ntiid": "tag:nextthought.com,2011-10:system-NamedEntity:User-tony.tarleton@nextthought.com",
+                            "rel": "GenerateFeedURL"
+                        }
+                    ],
+                    "Title": "Calendars",
+                    "accepts": [],
+                    "href": "/dataserver2/users/tony.tarleton@nextthought.com/Calendars"
+                },
+                {
+                    "Class": "Collection",
+                    "Links": [
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/users/Credit/@@bulk_awarded_credit",
+                            "method": "POST",
+                            "rel": "bulk_awarded_credit"
+                        }
+                    ],
+                    "Title": "Credit",
+                    "accepts": [],
+                    "href": "/dataserver2/users/Credit"
+                },
+                {
+                    "Class": "Collection",
+                    "Title": "CreditDefinitions",
+                    "accepts": [
+                        "application/vnd.nextthought.credit.creditdefinition"
+                    ],
+                    "href": "/dataserver2/users/CreditDefinitions"
+                },
+                {
+                    "Class": "Collection",
+                    "Title": "Devices",
+                    "accepts": [
+                        "application/vnd.nextthought.device"
+                    ],
+                    "href": "/dataserver2/users/tony.tarleton@nextthought.com/Devices"
+                },
+                {
+                    "Class": "Collection",
+                    "Title": "DynamicMemberships",
+                    "accepts": [],
+                    "href": "/dataserver2/users/tony.tarleton@nextthought.com/DynamicMemberships"
+                },
+                {
+                    "Class": "Collection",
+                    "Title": "FriendsLists",
+                    "accepts": [
+                        "application/vnd.nextthought.dynamicfriendslist",
+                        "application/vnd.nextthought.friendslist"
+                    ],
+                    "href": "/dataserver2/users/tony.tarleton@nextthought.com/FriendsLists"
+                },
+                {
+                    "Class": "Collection",
+                    "Title": "Groups",
+                    "accepts": [],
+                    "href": "/dataserver2/users/tony.tarleton@nextthought.com/Groups"
+                },
+                {
+                    "Class": "Collection",
+                    "Links": [
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/users/tony.tarleton@nextthought.com/Search/RecursiveUserGeneratedData",
+                            "rel": "UGDSearch"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/users/tony.tarleton@nextthought.com/Search/UnifiedSearch",
+                            "rel": "UnifiedSearch"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/users/tony.tarleton@nextthought.com",
+                            "method": "GET",
+                            "ntiid": "tag:nextthought.com,2011-10:system-NamedEntity:User-tony.tarleton@nextthought.com",
+                            "rel": "ResolveSelf"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/users/@@SiteUsers",
+                            "method": "GET",
+                            "rel": "SiteUsers"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/SiteBrand",
+                            "rel": "SiteBrand"
+                        },
+                        {
+                            "Class": "Link",
+                            "href": "/dataserver2/users/tony.tarleton@nextthought.com",
+                            "method": "POST",
+                            "ntiid": "tag:nextthought.com,2011-10:system-NamedEntity:User-tony.tarleton@nextthought.com",
+                            "rel": "ImportCourse"
+                        }
+                    ],
+                    "Title": "Pages",
+                    "accepts": [
+                        "application/vnd.nextthought.analytics.activesessionstats",
+                        "application/vnd.nextthought.analytics.analyticsclientparams",
+                        "application/vnd.nextthought.analytics.analyticssession",
+                        "application/vnd.nextthought.analytics.analyticssessions",
+                        "application/vnd.nextthought.analytics.assignmentviewevent",
+                        "application/vnd.nextthought.analytics.batchevents",
+                        "application/vnd.nextthought.analytics.blogviewevent",
+                        "application/vnd.nextthought.analytics.coursecatalogviewevent",
+                        "application/vnd.nextthought.analytics.geographicallocation",
+                        "application/vnd.nextthought.analytics.noteviewevent",
+                        "application/vnd.nextthought.analytics.profileactivityviewevent",
+                        "application/vnd.nextthought.analytics.profilemembershipviewevent",
+                        "application/vnd.nextthought.analytics.profileviewevent",
+                        "application/vnd.nextthought.analytics.resourceevent",
+                        "application/vnd.nextthought.analytics.selfassessmentviewevent",
+                        "application/vnd.nextthought.analytics.skipvideoevent",
+                        "application/vnd.nextthought.analytics.surveyviewevent",
+                        "application/vnd.nextthought.analytics.topicviewevent",
+                        "application/vnd.nextthought.analytics.videoplayspeedchange",
+                        "application/vnd.nextthought.analytics.watchvideoevent",
+                        "application/vnd.nextthought.assessment._assignmenthistoryitemfeedbackfileconstraints",
+                        "application/vnd.nextthought.assessment.aggregatedpoll",
+                        "application/vnd.nextthought.assessment.aggregatedsurvey",
+                        "application/vnd.nextthought.assessment.assignment",
+                        "application/vnd.nextthought.assessment.assignmentpart",
+                        "application/vnd.nextthought.assessment.assignmentsubmission",
+                        "application/vnd.nextthought.assessment.conenctionsolution",
+                        "application/vnd.nextthought.assessment.connectingpart",
+                        "application/vnd.nextthought.assessment.discussionassignment",
+                        "application/vnd.nextthought.assessment.filepart",
+                        "application/vnd.nextthought.assessment.fillintheblankshortanswerpart",
+                        "application/vnd.nextthought.assessment.fillintheblankshortanswersolution",
+                        "application/vnd.nextthought.assessment.fillintheblankwithwordbankpart",
+                        "application/vnd.nextthought.assessment.fillintheblankwithwordbanksolution",
+                        "application/vnd.nextthought.assessment.freeresponsepart",
+                        "application/vnd.nextthought.assessment.freeresponsesolution",
+                        "application/vnd.nextthought.assessment.hint",
+                        "application/vnd.nextthought.assessment.htmlhint",
+                        "application/vnd.nextthought.assessment.latexsymbolicmathsolution",
+                        "application/vnd.nextthought.assessment.matchingpart",
+                        "application/vnd.nextthought.assessment.matchingsolution",
+                        "application/vnd.nextthought.assessment.mathpart",
+                        "application/vnd.nextthought.assessment.mathsolution",
+                        "application/vnd.nextthought.assessment.modeledcontentpart",
+                        "application/vnd.nextthought.assessment.modeledcontentresponse",
+                        "application/vnd.nextthought.assessment.multiplechoicemultipleanswerpart",
+                        "application/vnd.nextthought.assessment.multiplechoicemultipleanswersolution",
+                        "application/vnd.nextthought.assessment.multiplechoicepart",
+                        "application/vnd.nextthought.assessment.multiplechoicesolution",
+                        "application/vnd.nextthought.assessment.nongradableconnectingpart",
+                        "application/vnd.nextthought.assessment.nongradablefilepart",
+                        "application/vnd.nextthought.assessment.nongradablefillintheblankshortanswerpart",
+                        "application/vnd.nextthought.assessment.nongradablefillintheblankwithwordbankpart",
+                        "application/vnd.nextthought.assessment.nongradablefreeresponsepart",
+                        "application/vnd.nextthought.assessment.nongradablematchingpart",
+                        "application/vnd.nextthought.assessment.nongradablemathpart",
+                        "application/vnd.nextthought.assessment.nongradablemodeledcontentpart",
+                        "application/vnd.nextthought.assessment.nongradablemultiplechoicemultipleanswerpart",
+                        "application/vnd.nextthought.assessment.nongradablemultiplechoicepart",
+                        "application/vnd.nextthought.assessment.nongradableorderingpart",
+                        "application/vnd.nextthought.assessment.nongradablepart",
+                        "application/vnd.nextthought.assessment.numericmathpart",
+                        "application/vnd.nextthought.assessment.numericmathsolution",
+                        "application/vnd.nextthought.assessment.orderingpart",
+                        "application/vnd.nextthought.assessment.orderingsolution",
+                        "application/vnd.nextthought.assessment.part",
+                        "application/vnd.nextthought.assessment.pollsubmission",
+                        "application/vnd.nextthought.assessment.questionsetsubmission",
+                        "application/vnd.nextthought.assessment.questionsubmission",
+                        "application/vnd.nextthought.assessment.solution",
+                        "application/vnd.nextthought.assessment.surveysubmission",
+                        "application/vnd.nextthought.assessment.symbolicmathpart",
+                        "application/vnd.nextthought.assessment.symbolicmathsolution",
+                        "application/vnd.nextthought.assessment.texthint",
+                        "application/vnd.nextthought.assessment.timedassignment",
+                        "application/vnd.nextthought.assessment.userscourseassignmenthistoryitemfeedbackcontainer",
+                        "application/vnd.nextthought.assessment.userscourseinquiryitemresponse",
+                        "application/vnd.nextthought.assignmentref",
+                        "application/vnd.nextthought.autosubscribe.siteautosubscribe",
+                        "application/vnd.nextthought.bookmark",
+                        "application/vnd.nextthought.calendar.calendarevent",
+                        "application/vnd.nextthought.canvas",
+                        "application/vnd.nextthought.canvasaffinetransform",
+                        "application/vnd.nextthought.canvascircleshape",
+                        "application/vnd.nextthought.canvaspathshape",
+                        "application/vnd.nextthought.canvaspolygonshape",
+                        "application/vnd.nextthought.canvasshape",
+                        "application/vnd.nextthought.canvastextshape",
+                        "application/vnd.nextthought.canvasurlshape",
+                        "application/vnd.nextthought.completion.aggregatecompletionpolicy",
+                        "application/vnd.nextthought.completion.completableitemcontainer",
+                        "application/vnd.nextthought.completion.completioncontextcompletionpolicycontainer",
+                        "application/vnd.nextthought.completion.defaultrequiredpolicy",
+                        "application/vnd.nextthought.content.libraryrenderjob",
+                        "application/vnd.nextthought.content.packagerenderjob",
+                        "application/vnd.nextthought.content.packagerendermetadata",
+                        "application/vnd.nextthought.content.rstcodeblockerror",
+                        "application/vnd.nextthought.content.rstemptycodeblockerror",
+                        "application/vnd.nextthought.content.rstvalidationerror",
+                        "application/vnd.nextthought.content.validationerror",
+                        "application/vnd.nextthought.contentlibrary.contentpackagesyncmetadata",
+                        "application/vnd.nextthought.contentlibrary.contentpackagesyncresults",
+                        "application/vnd.nextthought.contentlibrary.contenttrackingredisclient",
+                        "application/vnd.nextthought.contentlibrary.contentvalidationerror",
+                        "application/vnd.nextthought.contentlibrary.synchronizationresults",
+                        "application/vnd.nextthought.contentpackagebundle",
+                        "application/vnd.nextthought.contentrange.contentpointer",
+                        "application/vnd.nextthought.contentrange.contentrangedescription",
+                        "application/vnd.nextthought.contentrange.domcontentpointer",
+                        "application/vnd.nextthought.contentrange.domcontentrangedescription",
+                        "application/vnd.nextthought.contentrange.elementdomcontentpointer",
+                        "application/vnd.nextthought.contentrange.textcontext",
+                        "application/vnd.nextthought.contentrange.textdomcontentpointer",
+                        "application/vnd.nextthought.contentrange.timecontentpointer",
+                        "application/vnd.nextthought.contentrange.timerangedescription",
+                        "application/vnd.nextthought.contentrange.transcriptcontentpointer",
+                        "application/vnd.nextthought.contentrange.transcriptrangedescription",
+                        "application/vnd.nextthought.contentunit.contents",
+                        "application/vnd.nextthought.courses.catalogfamily",
+                        "application/vnd.nextthought.courses.coursecataloginstructorlegacyinfo",
+                        "application/vnd.nextthought.courses.coursecreditlegacyinfo",
+                        "application/vnd.nextthought.courses.coursetabpreferences",
+                        "application/vnd.nextthought.courses.discussion",
+                        "application/vnd.nextthought.courses.grading.categorygradescheme",
+                        "application/vnd.nextthought.courses.grading.defaultpolicy",
+                        "application/vnd.nextthought.courses.grading.equalgroupgrader",
+                        "application/vnd.nextthought.courseware.coursecalendarevent",
+                        "application/vnd.nextthought.courseware.courseinvitation",
+                        "application/vnd.nextthought.courseware.ensyncimisexternalenrollmentoption",
+                        "application/vnd.nextthought.courseware.externalenrollmentoption",
+                        "application/vnd.nextthought.courseware_ims.courseconfiguredtoolcontainer",
+                        "application/vnd.nextthought.courseware_reports.instructorreport",
+                        "application/vnd.nextthought.courseware_scorm.scormactivity",
+                        "application/vnd.nextthought.courseware_scorm.scormcomment",
+                        "application/vnd.nextthought.courseware_scorm.scormcoursemetadata",
+                        "application/vnd.nextthought.courseware_scorm.scorminstance",
+                        "application/vnd.nextthought.courseware_scorm.scorminteraction",
+                        "application/vnd.nextthought.courseware_scorm.scormlearnerpreference",
+                        "application/vnd.nextthought.courseware_scorm.scormobjective",
+                        "application/vnd.nextthought.courseware_scorm.scormregistration",
+                        "application/vnd.nextthought.courseware_scorm.scormregistrationreport",
+                        "application/vnd.nextthought.courseware_scorm.scormresponse",
+                        "application/vnd.nextthought.courseware_scorm.scormruntime",
+                        "application/vnd.nextthought.courseware_scorm.scormstatic",
+                        "application/vnd.nextthought.courseware_store.courseprice",
+                        "application/vnd.nextthought.credit.awardablecredit",
+                        "application/vnd.nextthought.credit.courseawardablecredit",
+                        "application/vnd.nextthought.credit.creditdefinition",
+                        "application/vnd.nextthought.credit.userawardedcredit",
+                        "application/vnd.nextthought.discussionref",
+                        "application/vnd.nextthought.dynamicfriendslist",
+                        "application/vnd.nextthought.email",
+                        "application/vnd.nextthought.embeddedaudio",
+                        "application/vnd.nextthought.embeddedmedia",
+                        "application/vnd.nextthought.embeddedvideo",
+                        "application/vnd.nextthought.ensync_imis.ensyncimisuserprofile",
+                        "application/vnd.nextthought.forums.ace",
+                        "application/vnd.nextthought.forums.topicparticipationsummary",
+                        "application/vnd.nextthought.forums.usertopicparticipationcontext",
+                        "application/vnd.nextthought.forums.usertopicparticipationsummary",
+                        "application/vnd.nextthought.friendslist",
+                        "application/vnd.nextthought.genericsiteinvitation",
+                        "application/vnd.nextthought.gradebook",
+                        "application/vnd.nextthought.gradebook.booleangradescheme",
+                        "application/vnd.nextthought.gradebook.categorygradescheme",
+                        "application/vnd.nextthought.gradebook.cs1323coursegradingpolicy",
+                        "application/vnd.nextthought.gradebook.cs1323equalgroupgrader",
+                        "application/vnd.nextthought.gradebook.extendedlettergradescheme",
+                        "application/vnd.nextthought.gradebook.integergradescheme",
+                        "application/vnd.nextthought.gradebook.lettergradescheme",
+                        "application/vnd.nextthought.gradebook.letternumericgradescheme",
+                        "application/vnd.nextthought.gradebook.numericgradescheme",
+                        "application/vnd.nextthought.gradebook.simpletotalinggradingpolicy",
+                        "application/vnd.nextthought.gradebook.totalpointsgradescheme",
+                        "application/vnd.nextthought.highlight",
+                        "application/vnd.nextthought.ims.consumer.configuredtool",
+                        "application/vnd.nextthought.integration.gotowebinarauthorizedintegration",
+                        "application/vnd.nextthought.integration.gotowebinarintegration",
+                        "application/vnd.nextthought.invitationinfo",
+                        "application/vnd.nextthought.invitations.courseinvitation",
+                        "application/vnd.nextthought.joincourseinvitation",
+                        "application/vnd.nextthought.lesson.assignmentcompletionconstraint",
+                        "application/vnd.nextthought.lesson.publicationconstraints",
+                        "application/vnd.nextthought.lesson.surveycompletionconstraint",
+                        "application/vnd.nextthought.lti.persistenttoolconfig",
+                        "application/vnd.nextthought.ltiexternaltoolasset",
+                        "application/vnd.nextthought.media",
+                        "application/vnd.nextthought.messageinfo",
+                        "application/vnd.nextthought.metadata.contentmetadata",
+                        "application/vnd.nextthought.metadata.imagemetadata",
+                        "application/vnd.nextthought.namedfileconstraints",
+                        "application/vnd.nextthought.napoll",
+                        "application/vnd.nextthought.naqindexrange",
+                        "application/vnd.nextthought.naqregex",
+                        "application/vnd.nextthought.naquestion",
+                        "application/vnd.nextthought.naquestionbank",
+                        "application/vnd.nextthought.naquestionfillintheblankwordbank",
+                        "application/vnd.nextthought.naquestionset",
+                        "application/vnd.nextthought.naqwordbank",
+                        "application/vnd.nextthought.naqwordentry",
+                        "application/vnd.nextthought.narandomizedquestionset",
+                        "application/vnd.nextthought.nasurvey",
+                        "application/vnd.nextthought.note",
+                        "application/vnd.nextthought.ntiaudio",
+                        "application/vnd.nextthought.ntiaudioref",
+                        "application/vnd.nextthought.ntiaudioroll",
+                        "application/vnd.nextthought.ntiaudiosource",
+                        "application/vnd.nextthought.nticalendareventref",
+                        "application/vnd.nextthought.nticourseoverviewspacer",
+                        "application/vnd.nextthought.ntimediaroll",
+                        "application/vnd.nextthought.ntislidedeck",
+                        "application/vnd.nextthought.ntislidedeckref",
+                        "application/vnd.nextthought.ntislidevideo",
+                        "application/vnd.nextthought.ntitimeline",
+                        "application/vnd.nextthought.ntitimelineref",
+                        "application/vnd.nextthought.ntitranscript",
+                        "application/vnd.nextthought.ntivideo",
+                        "application/vnd.nextthought.ntivideoref",
+                        "application/vnd.nextthought.ntivideosource",
+                        "application/vnd.nextthought.persistentcontentpackage",
+                        "application/vnd.nextthought.persistentcontentunit",
+                        "application/vnd.nextthought.persistentsitemapping",
+                        "application/vnd.nextthought.pollref",
+                        "application/vnd.nextthought.predictedgrade",
+                        "application/vnd.nextthought.presenceinfo",
+                        "application/vnd.nextthought.presentation.lessoncompletionconstraint",
+                        "application/vnd.nextthought.profile.educationalexperience",
+                        "application/vnd.nextthought.profile.professionalposition",
+                        "application/vnd.nextthought.publishablecontentpackagebundle",
+                        "application/vnd.nextthought.qti.canvasassignmentsettings",
+                        "application/vnd.nextthought.qti.canvasquizmeta",
+                        "application/vnd.nextthought.questionref",
+                        "application/vnd.nextthought.questionsetref",
+                        "application/vnd.nextthought.recorder.transactionrecord",
+                        "application/vnd.nextthought.redaction",
+                        "application/vnd.nextthought.relatedworkref",
+                        "application/vnd.nextthought.relatedworkrefpointer",
+                        "application/vnd.nextthought.renderablecontentpackage",
+                        "application/vnd.nextthought.renderablecontentunit",
+                        "application/vnd.nextthought.reports.basereport",
+                        "application/vnd.nextthought.saml.samlnameid",
+                        "application/vnd.nextthought.scorm.scormcontentinfo",
+                        "application/vnd.nextthought.scormcontentref",
+                        "application/vnd.nextthought.site",
+                        "application/vnd.nextthought.site.siteseatlimit",
+                        "application/vnd.nextthought.siteadmininvitation",
+                        "application/vnd.nextthought.sitebrand",
+                        "application/vnd.nextthought.sitebrandassets",
+                        "application/vnd.nextthought.sitebrandimage",
+                        "application/vnd.nextthought.siteinvitation",
+                        "application/vnd.nextthought.slide",
+                        "application/vnd.nextthought.solr.assetdocument",
+                        "application/vnd.nextthought.solr.calendareventdocument",
+                        "application/vnd.nextthought.solr.contentunitdocument",
+                        "application/vnd.nextthought.solr.coursecatalogdocument",
+                        "application/vnd.nextthought.solr.entitydocument",
+                        "application/vnd.nextthought.solr.evaluationdocument",
+                        "application/vnd.nextthought.solr.metadatadocument",
+                        "application/vnd.nextthought.solr.transcriptdocument",
+                        "application/vnd.nextthought.solr.usergenerateddatadocument",
+                        "application/vnd.nextthought.store.defaultpurchasablevendorinfo",
+                        "application/vnd.nextthought.store.defaultpurchaseattemptcontext",
+                        "application/vnd.nextthought.store.payeezyconnectkey",
+                        "application/vnd.nextthought.store.payeezyfdtoken",
+                        "application/vnd.nextthought.store.payeezyoperationerror",
+                        "application/vnd.nextthought.store.payeezypurchaseerror",
+                        "application/vnd.nextthought.store.persistentstripeconnectkey",
+                        "application/vnd.nextthought.store.price",
+                        "application/vnd.nextthought.store.priceable",
+                        "application/vnd.nextthought.store.priceditem",
+                        "application/vnd.nextthought.store.pricingerror",
+                        "application/vnd.nextthought.store.pricingresults",
+                        "application/vnd.nextthought.store.purchasable",
+                        "application/vnd.nextthought.store.purchasablechoicebundle",
+                        "application/vnd.nextthought.store.purchasablecourse",
+                        "application/vnd.nextthought.store.purchasablecoursechoicebundle",
+                        "application/vnd.nextthought.store.purchaseerror",
+                        "application/vnd.nextthought.store.purchaseitem",
+                        "application/vnd.nextthought.store.purchaseorder",
+                        "application/vnd.nextthought.store.redemptionerror",
+                        "application/vnd.nextthought.store.refunderror",
+                        "application/vnd.nextthought.store.stripeaccountinfo",
+                        "application/vnd.nextthought.store.stripeconnectkey",
+                        "application/vnd.nextthought.store.stripeoperationerror",
+                        "application/vnd.nextthought.store.stripepriceable",
+                        "application/vnd.nextthought.store.stripepriceditem",
+                        "application/vnd.nextthought.store.stripepricedpurchasable",
+                        "application/vnd.nextthought.store.stripepurchaseerror",
+                        "application/vnd.nextthought.store.stripepurchaseitem",
+                        "application/vnd.nextthought.store.stripepurchaseorder",
+                        "application/vnd.nextthought.store.stripetoken",
+                        "application/vnd.nextthought.surveyref",
+                        "application/vnd.nextthought.userbundlerecord",
+                        "application/vnd.nextthought.users.address",
+                        "application/vnd.nextthought.users.completeuserprofile",
+                        "application/vnd.nextthought.users.emailrequireduserprofile",
+                        "application/vnd.nextthought.users.suggestedcontact",
+                        "application/vnd.nextthought.users.usercontactprofile",
+                        "application/vnd.nextthought.usertoken",
+                        "application/vnd.nextthought.userwebinarattendance",
+                        "application/vnd.nextthought.videoroll",
+                        "application/vnd.nextthought.webinar",
+                        "application/vnd.nextthought.webinar.userprogress",
+                        "application/vnd.nextthought.webinarasset",
+                        "application/vnd.nextthought.webinarcollection",
+                        "application/vnd.nextthought.webinarfield",
+                        "application/vnd.nextthought.webinarquestion",
+                        "application/vnd.nextthought.webinarquestionanswer",
+                        "application/vnd.nextthought.webinarregistrationfields",
+                        "application/vnd.nextthought.webinarregistrationmetadata",
+                        "application/vnd.nextthought.webinarsession",
+                        "application/vnd.nextthoughtenrollmentpurchaseattempt"
+                    ],
+                    "href": "/dataserver2/users/tony.tarleton@nextthought.com/Pages"
+                },
+                {
+                    "Class": "Collection",
+                    "Title": "Reports",
+                    "accepts": [],
+                    "href": "/dataserver2/users/Reports"
+                }
+            ],
+            "Links": [
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/users/tony.tarleton@nextthought.com/Search/RecursiveUserGeneratedData",
+                    "rel": "UGDSearch"
+                },
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/users/tony.tarleton@nextthought.com/Search/UnifiedSearch",
+                    "rel": "UnifiedSearch"
+                },
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/users/tony.tarleton@nextthought.com",
+                    "method": "GET",
+                    "ntiid": "tag:nextthought.com,2011-10:system-NamedEntity:User-tony.tarleton@nextthought.com",
+                    "rel": "ResolveSelf"
+                },
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/users/@@SiteUsers",
+                    "method": "GET",
+                    "rel": "SiteUsers"
+                },
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/SiteBrand",
+                    "rel": "SiteBrand"
+                },
+                {
+                    "Class": "Link",
+                    "href": "/dataserver2/users/tony.tarleton@nextthought.com",
+                    "method": "POST",
+                    "ntiid": "tag:nextthought.com,2011-10:system-NamedEntity:User-tony.tarleton@nextthought.com",
+                    "rel": "ImportCourse"
+                }
+            ],
+            "Title": "tony.tarleton@nextthought.com"
+        }
+    ],
+    "MimeType": "application/vnd.nextthought.service",
+    "SiteCommunity": "testing_community",
+    "href": "/dataserver2/service"
+}

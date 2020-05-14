@@ -15,3 +15,31 @@ class IBearerTokenFactory(interface.Interface):
         no ttl. A numeric value is the number of seconds from now that the token should
         expire. If the ttl kwarg is not provided it may be defaulted to a sensible value.
         """
+
+class ISiteUsageUpdater(interface.Interface):
+    """
+    A callable that can update the usage information of an associated site.
+    """
+
+    def __call__(site, nt_client):
+        """
+        Update the ISiteUsage information for the provided site, using
+        the given client.
+        """
+
+class PlatformException(Exception):
+    """
+    An exception raised when an error occurs interacting with the platform
+    """
+
+class AuthenticatedSessionRequiredException(PlatformException):
+    """
+    Raised when an authenticated session is required or the session
+    does not have the proper permissions.
+    """
+
+class MissingTargetException(PlatformException):
+    """
+    Raised when an expected target (workspace, collection, link, etc.)
+    can't be found.
+    """
