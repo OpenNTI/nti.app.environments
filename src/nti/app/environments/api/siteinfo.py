@@ -331,7 +331,7 @@ class SiteUsageUpdater(object):
         except rexc.HTTPError as e:
             # This is a pretty new api, so if it 404s we just won't give this data
             if e.response.status_code == 404:
-                logger.warn('When fetching AuditUsageInfo at %s a 404 was returned. Some usage info may be missing', self.course_audit_info)
+                logger.warn('When fetching AuditUsageInfo at %s a 404 was returned. Some usage info may be missing', self.course_audit_url)
                 return None
             raise
         return resp.json()
@@ -342,7 +342,7 @@ class SiteUsageUpdater(object):
         The number of courses in the catalog. note this currently includes courses
         inherited from parent catalogs as well as the global catalog.
         """
-        return self.course_audit_info['Total']
+        return self.course_audit_info['Total'] if self.course_audit_info else None
 
     @Lazy
     def site_admin_usernames(self):
@@ -364,6 +364,9 @@ class SiteUsageUpdater(object):
         """
         The set of usernames that have some sort of instructor role on any course in the site
         """
+        if not self.course_audit_info:
+            return None
+        
         instructor_usernames = set()
         for catalog_id, usage_info in self.course_audit_info['Items'].items():
             roles = usage_info.get('roles', {})
@@ -396,8 +399,9 @@ class SiteUsageUpdater(object):
         usage.user_count = self.user_count
         usage.admin_count = len(self.site_admin_usernames)
         usage.course_count = self.course_count
-        usage.instructor_count = len(self.site_instructor_usernames)
-        usage.used_seats = len(self.site_instructor_usernames.union(self.site_admin_usernames))
+        usage.instructor_count = len(self.site_instructor_usernames) if self.site_instructor_usernames is not None else None
+        if self.site_instructor_usernames is not None and self.site_admin_usernames is not None:
+            usage.used_seats = len(self.site_instructor_usernames.union(self.site_admin_usernames))
         usage.scorm_package_count = self.scorm_package_count
         logger.info('Updated usage information for site %s', self.site)
         return usage
