@@ -173,37 +173,51 @@ def main():
     with run_as_onboarding_main(_do_fetch_usage,
                                 use_transaction_runner=False,
                                 logging_verbose_level=logging.DEBUG) as parser:
-        # TODO better help here
-        parser.description = 'Grab Site Usage Information'
+        parser.description = '''Query usage information from active sites and
+                                optionally push that information to external sources.'''
+        
         parser.add_argument('-p', '--pool-size',
                             dest='pool_size',
                             type=int,
-                            default=5)
+                            default=5,
+                            help='The gevent pool size to use when querying sites.')
+
+        group = parser.add_argument_group('Authentication',
+                                          '''This is a privileged script that generates admin JWTs
+                                          for accessing the active sites.''')
         
-        parser.add_argument('-u', '--username',
-                            dest='jwt_username',
-                            required=True)
-        parser.add_argument('-e', '--email',
-                            dest='jwt_email',
-                            required=True)
-        parser.add_argument('-n', '--name',
-                            dest='jwt_name',
-                            required=True)
+        group.add_argument('-u', '--username',
+                           help='The username for the jwt payload',
+                           dest='jwt_username',
+                           required=True)
+        group.add_argument('-e', '--email',
+                           help='The email for the jwt payload',
+                           dest='jwt_email',
+                           required=True)
+        group.add_argument('-n', '--name',
+                           help='The realname for the jwt payload',
+                           dest='jwt_name',
+                           required=True)
 
         parser.add_argument('-d', '--dry-run',
+                            help='Fetch usage information but don\'t store it and don\'t push it externally.',
                             action='store_true')
 
-        parser.add_argument('--pendo-integration-key',
+        group = parser.add_argument_group('External Destinations',
+                                          'These options control where usage data is pushed to.')
+        
+        group.add_argument('--pendo-integration-key',
+                            help='If provided usage site usage information will be pushed to pendo as account metadata.',
                             dest='pendo_integration_key',
                             required=False)
 
-        parser.add_argument('--track',
+        group.add_argument('--track',
                             type=str,
                             action='store',
                             dest='push_gateway',
                             required=False,
                             help='The host:port for a prometheus push gateway')
-        parser.add_argument('-j', '--job-name',
+        group.add_argument('-j', '--job-name',
                             type=str,
                             action='store',
                             dest='job_name',
