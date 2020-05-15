@@ -24,6 +24,12 @@
 				  password_manager="SHA1"
 				  password="{SHA}AwBXpqbU5eDEjd8wbUaq8J0JRXI=" />
 
+	<sp:principal id="ops-lifecycle-helper@nextthought.com"
+				  login="ops-lifecycle-helper@nextthought.com"
+				  title="An operation's user for checking lifecycle information"
+				  password_manager="SHA1"
+				  password="{SHA}IB+jmiRTUCvCM0/AuTFnzpQiR4c=" />
+
 	<sp:principal id="alex.yang@nextthought.com"
 				  login="alex.yang@nextthought.com"
 				  title="Alex Yang" />
@@ -47,6 +53,9 @@
 	<!-- roles to principals -->
 	<sp:grant role="role:nti.roles.automated-reports"
 			  principal="automated.reports@nextthought.com" />
+
+	<sp:grant role="role:nti.roles.account-management"
+			  principal="ops-lifecycle-helper@nextthought.com" />
 
 	<sp:grant role="role:nti.roles.admin"
 			  principal="alex.yang@nextthought.com" />
