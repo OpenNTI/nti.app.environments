@@ -9,14 +9,9 @@ import functools
 
 from gevent.pool import Pool
 
-import requests
-
 from zope import component
 
 from nti.app.environments.api.siteinfo import NTClient
-from nti.app.environments.api.siteinfo import get_collection
-from nti.app.environments.api.siteinfo import get_workspace
-from nti.app.environments.api.siteinfo import get_link
 
 from nti.app.environments.api.interfaces import IBearerTokenFactory
 from nti.app.environments.api.interfaces import ISiteUsageUpdater
@@ -26,6 +21,14 @@ from nti.app.environments.interfaces import ITransactionRunner
 from nti.app.environments.models.interfaces import SITE_STATUS_ACTIVE
 from nti.app.environments.models.interfaces import ISiteUsage
 from nti.app.environments.models.utils import get_sites_folder
+
+from nti.app.environments.pendo import make_pendo_client
+from nti.app.environments.pendo import PENDO_USAGE_TOTAL_COURSE_COUNT
+from nti.app.environments.pendo import PENDO_USAGE_TOTAL_INSTRUCTOR_COUNT
+from nti.app.environments.pendo import PENDO_USAGE_TOTAL_SCORM_PACKAGE_COUNT
+from nti.app.environments.pendo import PENDO_USAGE_TOTAL_SITE_ADMIN_COUNT
+from nti.app.environments.pendo import PENDO_USAGE_TOTAL_USER_COUNT
+from nti.app.environments.pendo import PENDO_USAGE_USED_LICENSE_COUNT
 
 from nti.app.environments.utils import run_as_onboarding_main
 
@@ -61,66 +64,37 @@ def _fetch_site_usage(siteid, username, realname, email, dry_run=False):
         logger.exception('Failed to update site usage for %s', siteid)
         return siteid, None
 
-PENDO_FIELD_NAMES = (('usagetotalsiteadmincount', 'admin_count'),
-                     ('usagetotalinstructorcount', 'instructor_count'),
-                     ('usagetotalusercount', 'user_count'),
-                     ('usagetotalcoursecount', 'course_count'),
-                     ('usagetotalscormpackagecount', 'scorm_package_count'),
-                     ('usageusedlicensecount', 'used_seats'))
+PENDO_FIELD_NAMES = ((PENDO_USAGE_TOTAL_SITE_ADMIN_COUNT, 'admin_count'),
+                     (PENDO_USAGE_TOTAL_INSTRUCTOR_COUNT, 'instructor_count'),
+                     (PENDO_USAGE_TOTAL_USER_COUNT, 'user_count'),
+                     (PENDO_USAGE_TOTAL_COURSE_COUNT, 'course_count'),
+                     (PENDO_USAGE_TOTAL_SCORM_PACKAGE_COUNT, 'scorm_package_count'),
+                     (PENDO_USAGE_USED_LICENSE_COUNT, 'used_seats'))
 
 def _pendo_usage_entry(site):
-    # TODO Fill in the account id from somewhere
-    entry = {
-        'accountId': '',
-        'values': {}
-    }
-
     usage = ISiteUsage(site)
+    return {pendo: getattr(usage, attr, None) for (pendo, attr) in PENDO_FIELD_NAMES}
 
-    # TODO map usage information to pendo fields
-    for pendo, attr in PENDO_FIELD_NAMES:
-        entry['values'][pendo] = getattr(usage, attr, None)
-
-    return entry
-    
 def _push_to_pendo(siteids, root, key, dry_run=False):
     """
-    Before pushing to pendo, making sure all custom fields created in pendo.
-    https://developers.pendo.io/docs/?python#set-value-for-a-set-of-agent-or-custom-fields
-
-    TODO move this to a utility
+    Push usage information for each site to pendo.
     """
+    pendo = make_pendo_client(key)
 
-    payload = []
+    payload = {}
     
     sites = get_sites_folder(root)
     for siteid in siteids:
         site = sites[siteid]
         payload_for_site = _pendo_usage_entry(site)
         if payload_for_site:
-            payload.append(payload_for_site)
-
-    session = requests.Session()
-    session.headers.update({'X-PENDO-INTEGRATION-KEY': key})
-
-    logger.debug('Pendo payload is %s', payload)
+            payload[site] = payload_for_site
 
     if dry_run:
-        logger.warn('Not pushing %i items to pendo due to dry run', len(payload))
+        logger.warn('Skipping push to pendo because this is a dry run')
         return
 
-    logger.info('Pushing data for %i sites to pendo', len(payload))
-    start = time.time()
-    resp = session.post('https://app.pendo.io/api/v1/metadata/account/custom/value', json=payload)
-    resp.raise_for_status()
-    result = resp.json()
-    elapsed = time.time() - start
-    logger.info('Pushed data to pendo in %s seconds. total=%s, updated=%s, failed=%s',
-                elapsed, result['total'], result['updated'], result['failed'])
-    
-    if result['failed']:
-        logger.warn('Errors during pendo push. missing=(%s) errors=(%s)',
-                    result.get('missing', ''), result.get('errors', ''))
+    pendo.set_metadata_for_accounts(payload)
 
 PROMETHEUS_METRIC_NAMES = (('usage_total_site_admin_count', 'admin_count'),
                           ('usage_total_instructor_count', 'instructor_count'),
