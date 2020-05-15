@@ -147,7 +147,7 @@ def _do_fetch_usage(args, root):
                                  args.jwt_username,
                                  args.jwt_name,
                                  args.jwt_email,
-                                 root)
+                                 args.dry_run)
     
     results = pool.map(_call_fetch_site_usage, [site.__name__ for site in get_sites_folder(root).values() \
                                                 if site.status == SITE_STATUS_ACTIVE])
