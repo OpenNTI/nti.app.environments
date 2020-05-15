@@ -292,6 +292,7 @@ class SiteDetailView(BaseTemplateView):
                 'hosts_options': _host_options(self._onboarding_root),
                 'license_frequency_options': LICENSE_FREQUENCY_OPTIONS,
                 'site': {'created': formatDateToLocal(self.context.created),
+                         'ds_site_id': self.context.ds_site_id,
                          'creator': self.context.creator,
                          'owner': self._format_owner(self.context.owner),
                          'site_id': self.context.id,
