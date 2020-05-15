@@ -586,20 +586,20 @@ class ISiteUsage(IContained, ILastModified):
     in particular those values that may affect billing.
     """
 
-    admin_count = Int(title="The total number of admin in a site",
+    admin_count = Int(title="The total number of admins in a site",
                       required=False)
 
-    instructor_count = Int(title="The total number of admin in a site",
+    instructor_count = Int(title="The total number of unique instructors in a site",
                            required=False)
 
     user_count = Int(title="The total number of users in a site",
                      required=False)
 
-    course_count = Int(title="The total number of users in a site",
+    course_count = Int(title="The total number of courses in a site",
                        required=False)
 
-    scorm_package_count = Int(title="The total number of users in a site",
+    scorm_package_count = Int(title="The total number of scorm packages in a site",
                               required=False)
 
-    used_seats = Int(title="The total number of users in a site",
+    used_seats = Int(title="The total number of licensed seats in use",
                      required=False)
