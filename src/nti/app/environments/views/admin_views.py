@@ -70,6 +70,8 @@ from nti.app.environments.resources import RolesResource
 
 from nti.app.environments.common import formatDateToLocal
 
+from nti.app.environments.pendo.interfaces import IPendoAccount
+
 from nti.app.environments.tasks.setup import query_setup_state
 
 from nti.app.environments.views.base import BaseTemplateView
@@ -169,21 +171,8 @@ class SitePendoAccountDetails(BaseTemplateView):
         if self.context.status != SITE_STATUS_ACTIVE:
             raise hexc.HTTPNotFound()
 
-        nt_client = NTClient(self.context)
-        pong = nt_client.dataserver_ping()
-        if not pong:
-            raise hexc.HTTPNotFound()
-
-        # TODO rather than fetching this dynamically, the ds
-        # site seems like something that would be nice to persistently
-        # cache. It's immutable so that should be fine.
-        # We fetch the canonical site directly from the ds because for
-        # envs in shared sites it's difficult to infer what the ds site is.
-        site = pong.get('Site', '').lower()
-        if not site:
-            raise hexc.HTTPNotFound()
-
-        location = 'https://app.pendo.io/parentAccount/{}'.format(site)
+        pendo = IPendoAccount(self.context)
+        location = pendo.account_web_url
         
         return hexc.HTTPSeeOther(location=location)
 
