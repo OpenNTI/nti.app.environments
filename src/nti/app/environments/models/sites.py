@@ -261,7 +261,7 @@ def _generate_site_id():
 @interface.implementer(ISiteUsage)
 class SiteUsage(SchemaConfigured, PersistentCreatedModDateTrackingObject, Contained):
 
-    createFieldProperties(ISiteUsage, omit=('lastModified', ))
+    createDirectFieldProperties(ISiteUsage)
 
     mimeType = mime_type = 'application/vnd.nextthought.app.environments.siteusage'
 
