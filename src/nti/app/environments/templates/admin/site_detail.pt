@@ -32,6 +32,7 @@
                 <div id="view_site_info">
                     <p>Site ID: <span tal:content="python: site.site_id|nothing"></span></p>
                     <p>Site Name: <span tal:content="python: site.brand_name|nothing"></span></p>
+		    <p>Dataserver Site Name: <span tal:content="python: site.ds_site_id|nothing"></span></p>
                     <p>Status: <span class="site_status" tal:content="site.status"></span></p>
                     <p>Created: <span tal:content="site.created"></span></p>
                     <p>Last Modified: <span tal:content="site.lastModified"></span></p>
