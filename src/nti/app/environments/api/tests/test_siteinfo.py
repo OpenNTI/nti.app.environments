@@ -1,4 +1,6 @@
+import json
 import jwt
+import os
 import requests
 import unittest
 
@@ -14,6 +16,9 @@ from hamcrest import raises
 
 from nti.app.environments.api.siteinfo import NTClient
 from nti.app.environments.api.siteinfo import BearerTokenFactory
+from nti.app.environments.api.siteinfo import get_workspace
+from nti.app.environments.api.siteinfo import get_collection
+from nti.app.environments.api.siteinfo import get_link
 
 from nti.app.environments.models.sites import PersistentSite
 
@@ -47,6 +52,50 @@ class TestSiteInfo(unittest.TestCase):
         client = NTClient(site)
         result = client.fetch_site_info()
         assert_that(result, is_(None))
+
+    def test_make_url(self):
+
+        class MockSite(object):
+
+            @property
+            def dns_names(self):
+                return ['nt.com']
+
+        link = {'href': '/dataserver2/dict'}
+
+        class HrefObject(object):
+
+            href = '/dataserver2/obj'
+
+        client = NTClient(MockSite())
+
+        assert_that(client.make_url('https://google.com'), is_('https://google.com'))
+        assert_that(client.make_url(link), is_('https://nt.com/dataserver2/dict'))
+        assert_that(client.make_url(HrefObject()), is_('https://nt.com/dataserver2/obj'))
+        assert_that(client.make_url('/dataserver2/foo'), is_('https://nt.com/dataserver2/foo'))
+     
+
+class TestPlatformJsonObjects(unittest.TestCase):
+
+    def setUp(self):
+        with open(os.path.join(os.path.dirname(__file__), 'servicedoc.json')) as f:
+            self.service = json.load(f)
+    
+    def test_get_workspace(self):
+        assert_that(self.service, has_entries('Class', 'Service'))
+        assert_that(get_workspace(self.service, 'FOO'), is_(None))
+        assert_that(get_workspace(self.service, 'Analytics'), has_entries('Title', 'Analytics'))
+
+    def test_get_collection(self):
+        analytics = get_workspace(self.service, 'Analytics')
+        assert_that(get_collection(analytics, 'foo'), is_(None))
+        assert_that(get_collection(analytics, 'Sessions'), has_entries('Title', 'Sessions'))
+
+    def test_get_link(self):
+        sessions = get_collection(get_workspace(self.service, 'Analytics'), 'Sessions')
+        assert_that(get_link(sessions, 'foo'), is_(None))
+        assert_that(get_link(sessions, 'active_session_count'),
+                    has_entries('href', '/dataserver2/analytics/sessions/@@active_session_count'))
 
 
 class TestBearerTokenFactory(unittest.TestCase):

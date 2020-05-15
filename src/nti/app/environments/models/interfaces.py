@@ -23,6 +23,7 @@ from zope.interface.interfaces import IObjectEvent
 from nti.i18n.locales.interfaces import ICcTLDInformation
 
 from nti.base.interfaces import ICreatedTime
+from nti.base.interfaces import ILastModified
 
 from nti.schema.interfaces import InvalidValue
 
@@ -579,13 +580,26 @@ class ICustomerVerifiedEvent(IObjectEvent):
     """
 
 
-class ISiteUsage(IContained):
+class ISiteUsage(IContained, ILastModified):
+    """
+    Some useful metrics that indicate how much usage a site has
+    in particular those values that may affect billing.
+    """
 
-    total_admin_count = Int(title="The total number of admin in a site",
-                            required=False)
+    admin_count = Int(title="The total number of admins in a site",
+                      required=False)
 
-    total_user_count = Int(title="The total number of users in a site",
+    instructor_count = Int(title="The total number of unique instructors in a site",
                            required=False)
 
-    monthly_active_users = Int(title="The number of monthly active users",
-                               required=False)
+    user_count = Int(title="The total number of users in a site",
+                     required=False)
+
+    course_count = Int(title="The total number of courses in a site",
+                       required=False)
+
+    scorm_package_count = Int(title="The total number of scorm packages in a site",
+                              required=False)
+
+    used_seats = Int(title="The total number of licensed seats in use",
+                     required=False)
