@@ -77,6 +77,8 @@
 
 	<include package=".hubspot" file="configure.zcml" />
 
+	<include package=".pendo" file="configure.zcml" />
+
 	<adapter factory=".appserver.root_folder"
 		 for="pyramid.interfaces.IRequest"
 		 provides=".models.interfaces.IOnboardingRoot"/>
