@@ -118,6 +118,9 @@ setup(
         ],
         'postgresql-dev': [
             'psycopg2-binary'
+        ],
+        'prometheus': [
+            'prometheus_client'
         ]
     },
     install_requires=requires,
@@ -131,7 +134,8 @@ setup(
         'console_scripts': [
             "nti_pserve=nti.app.environments.nti_gunicorn:main",
             "nti_list_sites=nti.app.environments.utils.nti_list_sites:main",
-            "nti_ping_sites=nti.app.environments.utils.nti_ping_sites:main"
+            "nti_ping_sites=nti.app.environments.utils.nti_ping_sites:main",
+            "nti_grab_site_usage=nti.app.environments.utils.nti_grab_site_usage:main"
         ],
     },
 )
