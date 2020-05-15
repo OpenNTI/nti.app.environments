@@ -434,6 +434,9 @@ class ILMSSite(IContained, IAttributeAnnotatable):
                        max_length=40,
                        required=False)
 
+    ds_site_id = ValidTextLine(title="The dataserver site name/id.",
+                               required=False)
+
     owner = Object(ICustomer,
                    title=u'The customer that owns this site',
                    required=False)

@@ -418,6 +418,10 @@ def _on_site_setup_finished(event):
         return
 
     setup_info = site.setup_state.site_info
+
+    if not site.ds_site_id:
+        site.ds_site_id = setup_info.ds_site_id
+
     if not setup_info.host:
         return
 
