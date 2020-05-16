@@ -87,4 +87,10 @@ def _on_site_modified(site, event):
     
 @component.adapter(ISiteLicense, IObjectModifiedEvent)
 def _on_site_license_modified(license, event):
-    _send_site_status_to_pendo(license.__parent__)
+    site = component.queryAdapter(license, ILMSSite)
+    # We may not be able to find a site when a new license is created.
+    # in that case IObjectModifiedEvent fires on the license is given
+    # to the site. We can ignore that here, becuase we will get an
+    # IObjectModifiedEvent on the site when the new license gets set.
+    if site is not None:
+        _send_site_status_to_pendo(site)
