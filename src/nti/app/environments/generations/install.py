@@ -1,15 +1,6 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
-Generations for managing courses.
-
-.. $Id$
 """
-
-from __future__ import division
-from __future__ import print_function
-from __future__ import absolute_import
-
+import contextlib
 from zope.app.publication.zopepublication import ZopePublication
 
 from zope.generations.generations import SchemaManager
@@ -24,7 +15,7 @@ from ..models.customers import CustomersFolder
 from ..models.sites import SitesFolder
 from ..models.hosts import HostsFolder
 
-generation = 0
+generation = 1
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -83,3 +74,4 @@ def install_root_folders(context):
 
 def evolve(context):
     install_root_folders(context)
+    

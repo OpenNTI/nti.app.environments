@@ -70,6 +70,9 @@ def site_usage_factory(site, create=True):
 def get_site_usage(site):
     return site_usage_factory(site, create=False)
 
+def site_from_license(license):
+    return license.__parent__
+
 
 @component.adapter(ICustomer)
 @interface.implementer(ISiteAuthTokenContainer)

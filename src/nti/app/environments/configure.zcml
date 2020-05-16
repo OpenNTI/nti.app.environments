@@ -36,6 +36,8 @@
 
 	<include package="zope.annotation" />
 
+	<include package="nti.schema" />
+
 	<include package="nti.wref"/>
 
 	<include package="nti.links" />

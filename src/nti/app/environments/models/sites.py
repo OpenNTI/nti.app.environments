@@ -3,11 +3,14 @@ import uuid
 from pyramid.security import Allow
 from pyramid.security import ALL_PERMISSIONS
 
+from zope import component
 from zope import interface
 
 from zope.cachedescriptors.property import readproperty
 
 from zope.container.contained import Contained
+
+from zope.schema.fieldproperty import FieldPropertyStoredThroughField
 
 from nti.containers.containers import CaseInsensitiveCheckingLastModifiedBTreeContainer
 
@@ -15,6 +18,8 @@ from nti.dublincore.datastructures import PersistentCreatedModDateTrackingObject
 
 from nti.property.property import alias
 from nti.property.property import LazyOnClass
+
+from nti.schema.interfaces import IBeforeSchemaFieldAssignedEvent
 
 from nti.schema.fieldproperty import createFieldProperties
 from nti.schema.fieldproperty import createDirectFieldProperties
@@ -33,6 +38,7 @@ from nti.app.environments.auth import ACT_SITE_LOGIN
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ISiteUsage
 from nti.app.environments.models.interfaces import ISetupState
+from nti.app.environments.models.interfaces import ISiteLicense
 from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import IStarterLicense
 from nti.app.environments.models.interfaces import IGrowthLicense
@@ -127,6 +133,10 @@ class GrowthLicense(SchemaConfigured, PersistentCreatedModDateTrackingObject, Co
         SchemaConfigured.__init__(self, *args, **kwargs)
         PersistentCreatedModDateTrackingObject.__init__(self)
 
+@component.adapter(ISiteLicense, ILMSSite, IBeforeSchemaFieldAssignedEvent) 
+def _attach_license_to_site(license, site, event):
+    license.__parent__ = site
+
 
 @interface.implementer(ISetupState)
 class AbstractSetupState(SchemaConfigured,
@@ -182,7 +192,9 @@ class SetupStateFailure(AbstractSetupState):
 @interface.implementer(ILMSSite)
 class PersistentSite(SchemaConfigured, PersistentCreatedModDateTrackingObject, Contained):
 
-    createFieldProperties(ILMSSite)
+    createFieldProperties(ILMSSite, omit='license')
+
+    license = FieldPropertyStoredThroughField(ILMSSite['license'])
 
     mimeType = mime_type = 'application/vnd.nextthought.app.environments.site'
 

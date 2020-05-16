@@ -84,6 +84,17 @@ class TestSites(BaseTest):
 
         assert_that(calling(SharedEnvironment).with_args(name='xxx'), raises(ConstraintNotSatisfied))
 
+    def testLicenseAssignsParent(self):
+        site = PersistentSite()
+
+        _start = datetime.datetime(2019, 12, 11, 0, 0, 0)
+        _end = datetime.datetime(2019, 12, 12, 0, 0, 0)
+        inst = TrialLicense(start_date=_start,
+                            end_date=_end)
+        site.license = inst
+
+        assert_that(ILMSSite(inst), is_(site))
+
     @mock.patch('nti.app.environments.models.adapters.get_hosts_folder')
     def testDedicatedEnvironment(self, mock_hosts):
         mock_hosts.return_value = hosts = HostsFolder()
