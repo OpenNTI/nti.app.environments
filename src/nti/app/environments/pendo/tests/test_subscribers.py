@@ -1,3 +1,5 @@
+import fudge
+
 import unittest
 
 from hamcrest import assert_that
@@ -25,6 +27,8 @@ class TestPendoSiteStatusPayload(unittest.TestCase):
 
     def setUp(self):
         site = PersistentSite()
+        site.__name__ = 'S1234'
+        site.ds_site_id = 's1234' #Note the case is different here
         site.status = SITE_STATUS_ACTIVE
 
         _start = datetime.datetime(2019, 12, 11, 0, 0, 0)
@@ -59,3 +63,14 @@ class TestPendoSiteStatusPayload(unittest.TestCase):
                                          'sitelicensefrequency', 'monthly',
                                          'sitelicenseseats', 3))
         assert_that(payload, not_(has_key('sitetrialenddate')))
+
+    @fudge.patch('nti.app.environments.pendo.client._NoopPendoClient.update_metadata_set')
+    def test_sets_metadata(self, mock_update_metadata):
+        publisher = PendoSiteStatusPublisher(self.site)
+        
+        mock_update_metadata.expects_call().with_args('account', 'custom', [{'accountId': 's1234',
+                                                                             'values': publisher._build_payload()}])
+        
+        publisher()
+
+        

@@ -22,6 +22,10 @@ class TestPendoAccount(unittest.TestCase):
     def test_adapter(self):
         assert_that(IPendoAccount.providedBy(self.account), is_(True))
 
+    def test_account_prefers_dsid(self):
+        self.site.ds_site_id = 'bar'
+        assert_that(IPendoAccount(self.site).account_id, is_('bar'))
+
     @fudge.patch('nti.app.environments.pendo.account.NTClient.dataserver_ping')
     def test_account_id(self, client):
         client.expects_call().returns({'Site': 'Foo.nt.io'})
