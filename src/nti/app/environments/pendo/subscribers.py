@@ -59,6 +59,13 @@ class PendoSiteStatusPublisher(object):
         return pendo.set_metadata_for_accounts({self._site: self._build_payload()})
 
 def _publish_to_pendo(success, siteid):
+    """
+    Called as an afterCommitHook to push site status
+    and license information to pendo. This executes
+    in a greenlet after the request transaction has committed
+    and returned. We could also throw this out on to a celery
+    queue at some point.
+    """
 
     if not success:
         return
@@ -67,6 +74,10 @@ def _publish_to_pendo(success, siteid):
 
     def _publish():
         def _do_publish(root):
+            # TODO we may want to capture the last modified times
+            # here and abort if those changed since we were spawned?
+            # There's a subtle race condition here as we can't
+            # guarentee anything about the order we are executing in. 
             sites = get_sites_folder(root)
             site = sites[siteid]
             PendoSiteStatusPublisher(site)()
@@ -89,8 +100,8 @@ def _on_site_modified(site, event):
 def _on_site_license_modified(license, event):
     site = component.queryAdapter(license, ILMSSite)
     # We may not be able to find a site when a new license is created.
-    # in that case IObjectModifiedEvent fires on the license is given
-    # to the site. We can ignore that here, becuase we will get an
+    # in that case IObjectModifiedEvent fire on the license before it is given
+    # to the site. We can ignore that here, because we will get an
     # IObjectModifiedEvent on the site when the new license gets set.
     if site is not None:
         _send_site_status_to_pendo(site)
