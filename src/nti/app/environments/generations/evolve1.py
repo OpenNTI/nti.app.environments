@@ -8,6 +8,9 @@ generation = 1
 
 def migrate_site_license(site):
     site._p_activate()
+    # In general this probably isn't exactly right
+    # we would want to reset a None value, but in our case
+    # this is required. It won't be in the dict and be None
     license = site.__dict__.pop('license', None)
     if license is not None:
         site.license = license
