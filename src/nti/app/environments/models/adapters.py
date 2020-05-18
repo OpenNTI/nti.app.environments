@@ -17,6 +17,8 @@ from nti.app.environments.models.utils import get_sites_folder
 from nti.app.environments.models.utils import get_hosts_folder
 from nti.app.environments.models.customers import SiteAuthTokenContainer
 
+from nti.traversal.traversal import find_interface
+
 SITE_USAGE_ANNOTATION_KEY = 'SiteUsage'
 SITE_AUTHTOKEN_CONTAINER_ANNOTATION_KEY = 'SiteAuthTokenContainer'
 
@@ -71,7 +73,7 @@ def get_site_usage(site):
     return site_usage_factory(site, create=False)
 
 def site_from_license(license):
-    return license.__parent__
+    return find_interface(license, ILMSSite, strict=False)
 
 
 @component.adapter(ICustomer)
