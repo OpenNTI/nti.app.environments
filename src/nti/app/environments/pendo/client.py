@@ -1,10 +1,13 @@
 import requests
 import time
 
+from zope import component
 from zope import interface
 
 from .interfaces import IPendoAccount
 from .interfaces import IPendoClient
+
+from nti.app.environments.interfaces import IOnboardingSettings
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -14,6 +17,11 @@ class PendoV1Client(object):
     def __init__(self, key):
         self.session = requests.Session()
         self.session.headers.update({'X-PENDO-INTEGRATION-KEY': key})
+
+    def _account_id(self, account):
+        if isinstance(account, str):
+            return account
+        return IPendoAccount(account).account_id
 
     def update_metadata_set(self, kind, group, payload):
         logger.info('Updating pendo %s metadata fields for %s. Sending payload of length %i', group, kind, len(payload))
@@ -41,6 +49,25 @@ class PendoV1Client(object):
 
         # Pendo wants a list of objects with an accountId and values so we have to pivot our metadata
         # mapping
-        payload = [{'accountId': IPendoAccount(account).account_id,
+        payload = [{'accountId': self._account_id(account),
                     'values': values} for (account, values) in metadata.items()]
         return self.update_metadata_set('account', 'custom', payload)
+
+class _NoopPendoClient(PendoV1Client):
+
+    def update_metadata_set(self, kind, group, payload):
+        logger.info('Simulating post to pendo %s %s',
+                  f'https://app.pendo.io/api/v1/metadata/{kind}/{group}/value',
+                  payload)
+
+
+def _dev_pendo_client():
+    return _NoopPendoClient('secret')
+
+def _live_pendo_client():
+    settings = component.getUtility(IOnboardingSettings)
+    try:
+        key = settings['pendo_integration_key']
+    except KeyError:
+        return None
+    return PendoV1Client(key)

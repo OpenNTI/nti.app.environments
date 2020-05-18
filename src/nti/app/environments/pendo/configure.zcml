@@ -12,5 +12,19 @@
 		 for="nti.app.environments.models.interfaces.ILMSSite"
 		 provides=".interfaces.IPendoAccount"/>
 
+	<configure zcml:condition="not-have prod">
+          <utility
+              factory=".client._dev_pendo_client"
+	      provides=".interfaces.IPendoClient"/>
+	</configure>
+	<configure zcml:condition="have prod">
+          <utility
+              factory=".client._live_pendo_client"
+	      provides=".interfaces.IPendoClient"/>
+	</configure>
+
+	<subscriber handler=".subscribers._on_site_modified" />
+	<subscriber handler=".subscribers._on_site_license_modified" />
+
 
 </configure>
