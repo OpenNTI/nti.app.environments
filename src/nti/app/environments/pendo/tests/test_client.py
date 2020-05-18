@@ -41,5 +41,9 @@ class TestPendoClient(unittest.TestCase):
         
         mock_updater.expects_call().with_args('account', 'custom', [{'accountId': 'foo', 'values': {'bar': 1}}])
         self.client.set_metadata_for_accounts({MockAccount(): {'bar': 1}})
-        
+
+    @fudge.patch('nti.app.environments.pendo.client.PendoV1Client.update_metadata_set')
+    def test_set_metadata(self, mock_updater):       
+        mock_updater.expects_call().with_args('account', 'custom', [{'accountId': 'foo', 'values': {'bar': 1}}])
+        self.client.set_metadata_for_accounts({'foo': {'bar': 1}})    
 

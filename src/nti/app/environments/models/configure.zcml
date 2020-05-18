@@ -27,6 +27,10 @@
 			 for=".interfaces.ILMSSite"
 			 provides=".interfaces.ISiteUsage" />
 
+	<adapter factory=".adapters.site_from_license"
+			 for=".interfaces.ISiteLicense"
+			 provides=".interfaces.ILMSSite" />
+
 	<adapter factory=".adapters.auth_token_container_factory"
              for=".interfaces.ICustomer"
              provides=".interfaces.ISiteAuthTokenContainer" />
@@ -84,5 +88,8 @@
     <adapter factory=".internalization.DedicatedEnvironmentInternalizer"
              for=".interfaces.IDedicatedEnvironment"
              provides="nti.externalization.interfaces.IInternalObjectUpdater"/>
+
+    <subscriber handler=".sites._attach_license_to_site"
+		for=".interfaces.ISiteLicense .interfaces.ILMSSite nti.schema.interfaces.IBeforeSchemaFieldAssignedEvent"/>
 
 </configure>

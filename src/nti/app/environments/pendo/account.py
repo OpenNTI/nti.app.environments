@@ -27,7 +27,13 @@ class PendoAccount(object):
         # right now can we???
 
         # UGH and if the site isn't active we can't figure that out?
-        
+        if self._site.ds_site_id:
+            return self._site.ds_site_id
+
+        # If we haven't captured a ds_site_id we can try and ping the site
+        # ping the site for it. This is a shim until we get all the data fixed
+        # up approrpiately.
+        # TODO remove this when possible
         client = NTClient(self._site)
         return client.dataserver_ping()['Site']
 

@@ -249,10 +249,9 @@ class SiteDetailView(BaseTemplateView):
 
     def _format_usage(self, context):
         usage = get_site_usage(context)
-        if usage is None:
-            return None
         return {'usage': usage,
-                'lastModified': formatDateToLocal(usage.lastModified)}
+                'historical': 'https://alerts.nextthought.io/d/KrY-wPRGk/site-usage?var-Site=%s' % context.id,
+                'lastModified': formatDateToLocal(usage.lastModified) if usage else None}
 
     def _format_setup_state(self, state):
         result = {'state_name': state.state_name,
