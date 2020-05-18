@@ -275,8 +275,8 @@
         </div>
 
         <div class="site-item">
-            <h3>Site Usage</h3>
-            <metal:block tal:omit-tag="" tal:condition="site.usage|nothing">
+            <h3>Site Usage <a class="historical-usage" target="_blank" tal:attributes="href site.usage.historical"><i class="icofont-chart-bar-graph"></i></a></h3>
+            <metal:block tal:omit-tag="" tal:condition="site.usage.usage|nothing">
                 <p>Licensable Seats: <span tal:content="site.usage.usage.used_seats"></span></p>
 		<p>Site Admin Count: <span tal:content="site.usage.usage.admin_count"></span></p>
 		<p>Instructor Count: <span tal:content="site.usage.usage.instructor_count"></span></p>
@@ -285,7 +285,7 @@
 		<p>SCORM Package Count: <span tal:content="site.usage.usage.scorm_package_count"></span></p>
                 <p>Last Updated: <span tal:content="site.usage.lastModified"></span></p>
             </metal:block>
-            <metal:block tal:omit-tag="" tal:condition="not:site.usage|nothing">
+            <metal:block tal:omit-tag="" tal:condition="not:site.usage.usage|nothing">
                 <p>No Information Found</p>
             </metal:block>
         </div>
