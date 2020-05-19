@@ -34,6 +34,7 @@ requires = [
     'nti.ntiids @ git+ssh://git@github.com/NextThought/nti.ntiids',
     'nti.traversal @ git+ssh://git@github.com/NextThought/nti.traversal',
     'nti.environments.management @ git+ssh://git@github.com/NextThought/nti.environments.management',
+    'nti.common @ git+ssh://git@github.com/NextThought/nti.common',
     'pyramid-chameleon',
     'pyramid-mako',
     'pyramid-zcml',
@@ -65,7 +66,8 @@ requires = [
     'hubspot3',
     'z3c.rml',
     'zope.cachedescriptors',
-    'tabulate'
+    'tabulate',
+    'stripe'
 ]
 
 tests_require = [
