@@ -72,6 +72,8 @@ from nti.app.environments.common import formatDateToLocal
 
 from nti.app.environments.pendo.interfaces import IPendoAccount
 
+from nti.app.environments.stripe.interfaces import IStripeCustomer
+
 from nti.app.environments.tasks.setup import query_setup_state
 
 from nti.app.environments.views.base import BaseTemplateView
@@ -132,8 +134,13 @@ class CustomerDetailView(BaseTemplateView, TableViewMixin):
         sites = self._get_sites_folder()
         table = make_specific_table(SitesTable, sites, self.request, email=self.context.email)
         return {'customers_list_link': self.request.resource_url(self.context.__parent__, '@@list'),
-                'customer': {'customer': self.context,
-                             'hubspot': self._format_hubspot(self.context.hubspot_contact) if self.context.hubspot_contact else None},
+                'customer':
+                {
+                    'customer': self.context,
+
+                    'hubspot': self._format_hubspot(self.context.hubspot_contact) if self.context.hubspot_contact else None,
+                    'stripe': IStripeCustomer(self.context)
+                },
                 'table': table,
                 'is_deletion_allowed': self._is_deletion_allowed(table),
                 'format_date': formatDateToLocal}

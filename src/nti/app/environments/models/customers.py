@@ -1,4 +1,6 @@
 from pyramid.security import Allow
+from pyramid.security import Deny
+from pyramid.security import Everyone
 from pyramid.security import ALL_PERMISSIONS
 
 from zope import interface
@@ -24,6 +26,9 @@ from nti.app.environments.models.interfaces import ISiteAuthToken
 from nti.app.environments.models.interfaces import IHubspotContact
 from nti.app.environments.models.interfaces import ICustomersContainer
 from nti.app.environments.models.interfaces import ISiteAuthTokenContainer
+
+from nti.app.environments.subscriptions.auth import ACT_STRIPE_LINK_CUSTOMER
+from nti.app.environments.subscriptions.auth import ACT_STRIPE_MANAGE_BILLING
 
 
 @interface.implementer(IHubspotContact)
@@ -60,7 +65,10 @@ class CustomersFolder(CaseInsensitiveCheckingLastModifiedBTreeContainer):
 
     @LazyOnClass
     def __acl__(self):
-        return [(Allow, ADMIN_ROLE, ALL_PERMISSIONS),
+        return [(Allow, ADMIN_ROLE, ACT_STRIPE_LINK_CUSTOMER),
+                (Deny, Everyone, ACT_STRIPE_LINK_CUSTOMER),
+                (Deny, Everyone, ACT_STRIPE_MANAGE_BILLING),
+                (Allow, ADMIN_ROLE, ALL_PERMISSIONS),
                 (Allow, ACCOUNT_MANAGEMENT_ROLE, ACT_READ),
                 (Allow, OPS_ROLE, ACT_READ)]
 
@@ -82,3 +90,8 @@ class PersistentCustomer(SchemaConfigured, PersistentCreatedModDateTrackingObjec
     def __init__(self, *args, **kwargs):
         SchemaConfigured.__init__(self, *args, **kwargs)
         PersistentCreatedModDateTrackingObject.__init__(self)
+
+    def __acl__(self):
+        return [(Allow, self.email, ACT_STRIPE_MANAGE_BILLING)]
+
+        
