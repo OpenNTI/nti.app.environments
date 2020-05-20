@@ -86,6 +86,8 @@ def _push_to_pendo(siteids, root, key, dry_run=False):
     sites = get_sites_folder(root)
     for siteid in siteids:
         site = sites[siteid]
+        if not IPendoAccount(site).account_id:
+            continue
         payload_for_site = _pendo_usage_entry(site)
         if payload_for_site:
             payload[site] = payload_for_site

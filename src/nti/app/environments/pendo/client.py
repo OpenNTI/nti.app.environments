@@ -19,9 +19,11 @@ class PendoV1Client(object):
         self.session.headers.update({'X-PENDO-INTEGRATION-KEY': key})
 
     def _account_id(self, account):
-        if isinstance(account, str):
-            return account
-        return IPendoAccount(account).account_id
+        if not isinstance(account, str):
+            account = IPendoAccount(account).account_id
+        if not account:
+            raise ValueError('Must provide an account id or IPendoAccount with an account_id', account)
+        return account
 
     def update_metadata_set(self, kind, group, payload):
         logger.info('Updating pendo %s metadata fields for %s. Sending payload of length %i', group, kind, len(payload))
