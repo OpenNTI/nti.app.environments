@@ -1,8 +1,10 @@
 import unittest
 
 from hamcrest import assert_that
+from hamcrest import calling
 from hamcrest import is_
 from hamcrest import has_entries
+from hamcrest import raises
 
 import fudge
 
@@ -45,5 +47,14 @@ class TestPendoClient(unittest.TestCase):
     @fudge.patch('nti.app.environments.pendo.client.PendoV1Client.update_metadata_set')
     def test_set_metadata(self, mock_updater):       
         mock_updater.expects_call().with_args('account', 'custom', [{'accountId': 'foo', 'values': {'bar': 1}}])
-        self.client.set_metadata_for_accounts({'foo': {'bar': 1}})    
+        self.client.set_metadata_for_accounts({'foo': {'bar': 1}})
 
+    
+    @fudge.patch('nti.app.environments.pendo.client.PendoV1Client.update_metadata_set')
+    def test_set_metadata_without_account(self, mock_updater):
+
+        @interface.implementer(IPendoAccount)
+        class MockAccount(object):
+            account_id = None
+        
+        assert_that(calling(self.client.set_metadata_for_accounts).with_args({MockAccount(): {'bar': 1}}), raises(ValueError))
