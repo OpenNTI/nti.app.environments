@@ -20,7 +20,7 @@ from ..auth import ACT_STRIPE_MANAGE_BILLING
              permission=ACT_STRIPE_LINK_CUSTOMER,
              request_method='PUT',
              context=IStripeCustomer)
-class CustomerAuthTokenVerifyView(BaseView):
+class ManageStripeCustomerInfoView(BaseView):
 
     def __call__(self):
         self.context.customer_id = self.body_params['customer_id']
