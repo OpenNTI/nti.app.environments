@@ -30,6 +30,8 @@ from nti.app.environments.pendo import PENDO_USAGE_TOTAL_SITE_ADMIN_COUNT
 from nti.app.environments.pendo import PENDO_USAGE_TOTAL_USER_COUNT
 from nti.app.environments.pendo import PENDO_USAGE_USED_LICENSE_COUNT
 
+from nti.app.environments.pendo.interfaces import IPendoAccount
+
 from nti.app.environments.utils import run_as_onboarding_main
 
 from nti.externalization import to_external_object
