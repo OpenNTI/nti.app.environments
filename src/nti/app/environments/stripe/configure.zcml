@@ -23,8 +23,17 @@
           <stripe:registerStripeKey
 		publishable_key="pk_test_gsyBVYVrN6NNdMDxj6rGX3hc"
 		secret_key="PVgnADEbRCpXLSV1EQ8La0FDNRFEAzMMRmlpOQ1nNA4=" />
+	  <stripe:registerWebhookSecret
+	      secret="whsec_LulnYuA9QeNmS4DII4h97fv78x30Enpc"
+	      name="default" />
+	  <stripe:registerWebhookSecret
+	      secret="OVsLETc3CSQCJhlyFQcHekwcbV9WAw=="
+	      name="_testing" />
 	</configure>
 
+	<class class="stripe.api_resources.event.Event">
+	  <implements interface=".interfaces.IStripeEvent" />
+	</class>
 
 	<class class="stripe.api_resources.billing_portal.session.Session">
 	  <implements interface=".interfaces.IStripeBillingPortalSession" />
