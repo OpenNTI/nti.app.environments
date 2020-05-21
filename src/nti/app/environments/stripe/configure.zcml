@@ -26,4 +26,10 @@
 	</configure>
 
 
+	<class class="stripe.api_resources.billing_portal.session.Session">
+	  <implements interface=".interfaces.IStripeBillingPortalSession" />
+	</class>
+
+	
+
 </configure>

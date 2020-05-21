@@ -30,9 +30,6 @@ class IStripeBillingPortalSession(interface.Interface):
 
     id = ValidTextLine(title='The session identifier')
 
-    customer = Object(IStripeCustomer,
-                      title='The stripe customer for this session')
-
     url = HTTPURL(title='The url to launch the billing portal.',
                   description='The portal url is one time use and has a short lifetime')
     

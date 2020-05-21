@@ -3,15 +3,15 @@ import unittest
 from hamcrest import assert_that
 from hamcrest import is_
 
-from nti.testing.matchers import verifiably_provides
+from nti.testing.matchers import provides
 
 import fudge
+
+from stripe.util import convert_to_stripe_object
 
 from zope import component
 
 from nti.app.environments.tests import BaseConfiguringLayer
-
-from ..billing import StripeBillingPortalSession
 
 from ..interfaces import IStripeCustomer
 from ..interfaces import IStripeKey
@@ -33,13 +33,9 @@ class TestBillingSession(unittest.TestCase):
     layer = BaseConfiguringLayer
 
     def test_session_from_stripe(self):
-        session = StripeBillingPortalSession(_raw=SESSION_EXAMPLE)
+        session = convert_to_stripe_object(SESSION_EXAMPLE)
 
-        assert_that(session, verifiably_provides(IStripeBillingPortalSession))
-
-        assert_that(session.id, is_('bps_1GkZmRJSl3QXdEfxVVbCVU3I'))
-        assert_that(session.customer.customer_id, is_('cus_HJCALoxCODL3uv'))
-        assert_that(session.url, is_('https://billing.stripe.com/session/{SESSION_SECRET}'))
+        assert_that(session, provides(IStripeBillingPortalSession))
 
     @fudge.patch('stripe.billing_portal.Session.create')
     def test_generate_session(self, mock_create_session):
@@ -50,12 +46,8 @@ class TestBillingSession(unittest.TestCase):
 
         mock_create_session.expects_call().with_args(customer=customer.customer_id,
                                                      return_url=return_url,
-                                                     api_key=key.secret_key).returns(SESSION_EXAMPLE)
+                                                     api_key=key.secret_key).returns_fake()
 
         portal = IStripeBillingPortal(key)
         session = portal.generate_session(customer, return_url)
 
-        assert_that(session, verifiably_provides(IStripeBillingPortalSession))
-        assert_that(session.id, is_('bps_1GkZmRJSl3QXdEfxVVbCVU3I'))
-        assert_that(session.customer.customer_id, is_('cus_HJCALoxCODL3uv'))
-        assert_that(session.url, is_('https://billing.stripe.com/session/{SESSION_SECRET}'))

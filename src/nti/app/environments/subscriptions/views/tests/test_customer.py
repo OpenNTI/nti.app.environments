@@ -5,8 +5,9 @@ from hamcrest import has_entry
 import fudge
 from fudge.inspector import arg
 
+from stripe.util import convert_to_stripe_object
+
 from nti.app.environments.stripe.interfaces import IStripeCustomer
-from nti.app.environments.stripe.billing import StripeBillingPortalSession
 
 from nti.app.environments.views.tests import BaseAppTest
 from nti.app.environments.views.tests import with_test_app
@@ -70,10 +71,8 @@ class TestManageBillingView(BaseAppTest):
                           status=403,
                           extra_environ=self._make_environ(username='admin001'))
 
-        mock_session = StripeBillingPortalSession(_raw=SESSION_EXAMPLE)
-
         mock_generate_session.expects_call().with_args(arg.has_attr(customer_id='cus_1234'),
-                                                       arg.contains(email)).returns(mock_session)
+                                                       arg.contains(email)).returns(convert_to_stripe_object(SESSION_EXAMPLE))
 
         resp = self.testapp.post(url,
                                  status=303,
