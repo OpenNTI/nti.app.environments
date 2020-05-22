@@ -46,6 +46,7 @@ class ManageStripeCustomerInfoView(BaseView):
 class ManageBillingView(BaseView):
 
     def __call__(self):
+
         key = component.getUtility(IStripeKey)
         portal = IStripeBillingPortal(key)
 

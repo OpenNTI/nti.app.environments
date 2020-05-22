@@ -1,7 +1,9 @@
 import uuid
 
 from pyramid.security import Allow
+from pyramid.security import Deny
 from pyramid.security import ALL_PERMISSIONS
+from pyramid.security import Everyone
 
 from zope import component
 from zope import interface
@@ -50,6 +52,8 @@ from nti.app.environments.models.interfaces import ILMSSitesContainer
 from nti.app.environments.models.interfaces import ISetupStatePending
 from nti.app.environments.models.interfaces import ISetupStateSuccess
 from nti.app.environments.models.interfaces import ISetupStateFailure
+
+from nti.app.environments.subscriptions.auth import ACT_STRIPE_MANAGE_SUBSCRIPTION
 
 from nti.traversal.traversal import find_interface
 
@@ -202,11 +206,12 @@ class PersistentSite(SchemaConfigured, PersistentCreatedModDateTrackingObject, C
     site_id = alias('id')
 
     def __acl__(self):
-        result = [(Allow, ADMIN_ROLE, ALL_PERMISSIONS),
+        result = [(Deny, Everyone, ACT_STRIPE_MANAGE_SUBSCRIPTION),
+                  (Allow, ADMIN_ROLE, ALL_PERMISSIONS),
                   (Allow, ACCOUNT_MANAGEMENT_ROLE, (ACT_READ,)),
                   (Allow, OPS_ROLE, (ACT_READ,))]
         if self.owner:
-            result.insert(0, (Allow, self.owner.email, (ACT_READ,)))
+            result.insert(0, (Allow, self.owner.email, (ACT_READ, ACT_STRIPE_MANAGE_SUBSCRIPTION)))
         return result
 
     def __init__(self, parent_site=None, *args, **kwargs):
@@ -252,7 +257,8 @@ class SitesFolder(CaseInsensitiveCheckingLastModifiedBTreeContainer):
 
     @LazyOnClass
     def __acl__(self):
-        return [(Allow, ADMIN_ROLE, ALL_PERMISSIONS),
+        return [(Deny, Everyone, ACT_STRIPE_MANAGE_SUBSCRIPTION),
+                (Allow, ADMIN_ROLE, ALL_PERMISSIONS),
                 (Allow, ACCOUNT_MANAGEMENT_ROLE, (ACT_READ, ACT_REQUEST_TRIAL_SITE)),
                 (Allow, OPS_ROLE, (ACT_READ, ACT_REQUEST_TRIAL_SITE, ACT_SITE_LOGIN))]
 

@@ -1,0 +1,16 @@
+<!-- Load Stripe.js on your website. -->
+<html>
+    <head>
+    </head>
+    <body>
+	
+	<form action="${submit}" method="POST">
+	    <input type="submit" value="Submit">
+	</form>
+
+    </body>
+</html>
+
+
+
+

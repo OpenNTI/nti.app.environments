@@ -15,4 +15,6 @@
 		 for="nti.app.environments.models.interfaces.ICustomer pyramid.interfaces.IRequest"
 		 factory=".views.traversal.StripeCustomerPathAdapter"
 		 provides="zope.traversing.interfaces.IPathAdapter"/>
+
+	<subscriber handler=".subscribers._checkout_session_completed" />
 </configure>
