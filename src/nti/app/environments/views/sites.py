@@ -138,6 +138,47 @@ class SiteBaseView(BaseView):
 
         return customer
 
+@view_config(renderer='json',
+             context=ILMSSitesContainer,
+             request_method='GET',
+             name='redirect_to_details')
+class ResolveSiteView(SiteBaseView):
+    """
+    A view that redirects to the site details page based on a given identifier.
+    This is useful to link other internal operations systems back to the details page
+    even if they don't have the SiteID. We support taking an id query param
+    that can be a SiteID, and DS Site ID, or a dns_name.
+
+    NOTE this view has no authentication. This is a potential data leak that would
+    let someone tell if some string is known to us in some way. In the case of dns that's public
+    and queryable already. In the case of siteids and ds site ids, you can't do much with that
+    anyway? I don't believe this is a problem, but it is something to be mindful of.
+    """
+
+    def __call__(self):
+        try:
+            search_id = self.request.params['search']
+        except KeyError:
+            raise hexc.HTTPBadRequest()
+
+        # do the quick check by id first
+        site = self.context.get(search_id, None)
+        
+        if site is None:
+            # We don't have an index currently so we resort to a linear search
+            # TODO this is fine for now but will become an issue when we are succesful
+            # and have thousands of sites...
+            def _matches(potential_site, search):
+                return potential_site.ds_site_id == search or search in potential_site.dns_names
+
+            site = next( (s for s in self.context.values() if _matches(s, search_id)), None)
+
+
+        if site is None:
+            return hexc.HTTPNotFound()
+        return hexc.HTTPSeeOther(location=self.request.resource_url(site, '@@details'))
+
+
 
 @view_config(renderer='json',
              context=ILMSSitesContainer,
