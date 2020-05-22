@@ -10,12 +10,15 @@ from nti.app.environments.auth import ACT_READ
 from nti.app.environments.subscriptions.auth import ACT_STRIPE_MANAGE_SUBSCRIPTION
 
 from nti.app.environments.models.interfaces import ILMSSite
+from nti.app.environments.models.utils import get_onboarding_root
 
 from nti.app.environments.views.base import BaseView
 
 from nti.app.environments.stripe.interfaces import IStripeKey
 from nti.app.environments.stripe.interfaces import IStripeCheckout
 from nti.app.environments.stripe.interfaces import IStripeCustomer
+
+from nti.app.environments.subscriptions.interfaces import ICheckoutSessionStorage
 
 @view_config(renderer='templates/manage_subscription.pt',
              permission=ACT_STRIPE_MANAGE_SUBSCRIPTION,
@@ -58,12 +61,17 @@ class SubscriptionCheckout(BaseView):
 
         owner = self.context.owner
         assert owner
+
+        checkout_storage = ICheckoutSessionStorage(get_onboarding_root(self.request))
+        checkout_item = checkout_storage.track_session(owner, self.context)
+        
         stripe_customer = component.queryAdapter(owner, IStripeCustomer)
 
         checkout = IStripeCheckout(self.stripe_key)
         session = checkout.generate_subscription_session([mockplan()],
                                                          self.request.url,
                                                          self.request.url,
+                                                         client_reference_id=checkout_item.id,
                                                          customer=stripe_customer,
                                                          customer_email=owner.email if stripe_customer is None else None,
                                                          metadata={'SiteId': self.context.id}

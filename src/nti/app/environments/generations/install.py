@@ -15,7 +15,7 @@ from ..models.customers import CustomersFolder
 from ..models.sites import SitesFolder
 from ..models.hosts import HostsFolder
 
-generation = 1
+generation = 2
 
 logger = __import__('logging').getLogger(__name__)
 

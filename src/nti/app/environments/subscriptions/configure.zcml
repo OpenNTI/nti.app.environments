@@ -16,5 +16,9 @@
 		 factory=".views.traversal.StripeCustomerPathAdapter"
 		 provides="zope.traversing.interfaces.IPathAdapter"/>
 
+	<adapter for="nti.app.environments.models.interfaces.IOnboardingRoot"
+		 factory=".sessions._sessions_from_root"
+		 provides=".interfaces.ICheckoutSessionStorage"/>
+
 	<subscriber handler=".subscribers._checkout_session_completed" />
 </configure>

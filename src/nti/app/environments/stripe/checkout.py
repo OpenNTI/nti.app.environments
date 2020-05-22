@@ -35,7 +35,7 @@ class StripeCheckout(object):
             customer_email=customer_email,
             success_url=success_url,
             cancel_url=cancel_url,
+            client_reference_id=client_reference_id,
             api_key=self._keys.secret_key
         )
-        from IPython.core.debugger import Tracer; Tracer()()
         return session
