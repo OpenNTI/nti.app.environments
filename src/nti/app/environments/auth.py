@@ -2,7 +2,7 @@ from pyramid.interfaces import IAuthenticationPolicy
 
 from pyramid_authstack import AuthenticationStackPolicy
 
-from pyramid.authentication import AuthTktAuthenticationPolicy as _AuthTktAuthenticationPolicy
+from pyramid.authentication import AuthTktAuthenticationPolicy
 from pyramid.authentication import BasicAuthAuthenticationPolicy
 
 from zope import interface
@@ -64,18 +64,6 @@ def _registered_roles(userid, request):
                 yield role
 
 
-@interface.implementer(IAuthenticationPolicy)
-class AuthTktAuthenticationPolicy(_AuthTktAuthenticationPolicy):
-
-    def effective_principals(self, request):
-        result = _AuthTktAuthenticationPolicy.effective_principals(self, request)
-        userid = self.unauthenticated_userid(request)
-        if userid:
-            roles = _registered_roles(userid, request)
-            result.extend([x for x in roles])
-        return result
-
-
 def check_credentials(username, password, request):
     try:
         principal = principalRegistry.getPrincipal(username)
@@ -90,9 +78,17 @@ def check_credentials(username, password, request):
     result.extend([x for x in roles])
     return result
 
+def groups_callback(userid, request):
+    result = [userid]
+    if userid:
+        roles = _registered_roles(userid, request)
+        result.extend([x for x in roles])
+    return result
 
 def create_authentication_policy():
     auth_policy = AuthenticationStackPolicy()
     auth_policy.add_policy('basic', BasicAuthAuthenticationPolicy(check_credentials))
-    auth_policy.add_policy('auth_tkt', AuthTktAuthenticationPolicy('foo', hashalg='sha512'))
+    auth_policy.add_policy('auth_tkt', AuthTktAuthenticationPolicy('foo',
+                                                                   hashalg='sha512',
+                                                                   callback=groups_callback))
     return auth_policy

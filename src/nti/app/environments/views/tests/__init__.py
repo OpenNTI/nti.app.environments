@@ -85,14 +85,21 @@ class DummyCookieHelper(object):
     def forget(self, request):
         return []
 
+TEST_USERS = {
+    'admin001': ['role:nti.roles.admin'],
+    'manager001': ['role:nti.roles.account-management'],
+    'user001': [],
+    'user001@example.com': [],
+    'user002@example.com': []
+}
 
 def dummy_callback(userid='admin001', request=None):
-    if userid == 'admin001':
-        return ['role:nti.roles.admin']
-    elif userid in ('manager001',):
-        return ['role:nti.roles.account-management']
-    elif userid in ('user001', 'user001@example.com', 'user002@example.com'):
-        return []
+    if userid not in TEST_USERS:
+        return [userid]
+    
+    groups = [userid]
+    groups.extend(TEST_USERS[userid])
+    return groups
 
 
 def with_test_app(auth_cookie=True, callback=dummy_callback):
@@ -106,6 +113,9 @@ def with_test_app(auth_cookie=True, callback=dummy_callback):
                 if auth_cookie:
                     authn_policy.policies['auth_tkt'].cookie = DummyCookieHelper({})
                 if callback:
+                    # TODO this doesn't look right to me, we are completely
+                    # bypassing the callback configured in the actual policy,
+                    # which could be non-trival.
                     authn_policy.policies['auth_tkt'].callback = callback
 
                 assert component.getSiteManager() is app.registry
