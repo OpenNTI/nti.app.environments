@@ -1336,3 +1336,34 @@ class TestSiteLoginView(BaseAppTest):
         self.testapp.get(url, status=403, extra_environ=self._make_environ(username='user001@example.com'))
         self.testapp.get(url, status=403, extra_environ=self._make_environ(username='manager001'))
         self.testapp.get(url, status=303, extra_environ=self._make_environ(username='admin001'))
+
+class TestRedirectToSiteDetails(BaseAppTest):
+
+    @with_test_app()
+    @mock.patch('nti.app.environments.models.utils.get_onboarding_root')
+    def test_search(self, mock_onboarding_root):
+        mock_onboarding_root.return_value = root = self._root()
+        with ensure_free_txn():
+            customer = root.get('customers').addCustomer(PersistentCustomer(email='user001@example.com',
+                                                                            name="testname"))
+
+            site = PersistentSite(license=TrialLicense(start_date=datetime.datetime(2019, 12, 12, 0, 0, 0),
+                                                                     end_date=datetime.datetime(2019, 12, 13, 0, 0, 0)),
+                                                environment=SharedEnvironment(name='test'),
+                                                created=datetime.datetime(2019, 12, 11, 0, 0, 0),
+                                                status='ACTIVE',
+                                                dns_names=['example.com'],
+                                                owner=customer)
+            site.ds_site_id = 's001'
+
+            root.get('sites').addSite(site, siteId='S001')
+
+        url = '/onboarding/sites/@@redirect_to_details'
+
+        self.testapp.get(url, status=400, extra_environ=self._make_environ(username=None))
+        self.testapp.get(url, params={'search': 'S001'},
+                         status=303, extra_environ=self._make_environ(username=None))
+        self.testapp.get(url, params={'search': 's001'},
+                         status=303, extra_environ=self._make_environ(username=None))
+        self.testapp.get(url, params={'search': 'example.com'},
+                         status=303, extra_environ=self._make_environ(username=None))
