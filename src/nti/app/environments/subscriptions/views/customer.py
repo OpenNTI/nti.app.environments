@@ -16,6 +16,8 @@ from nti.app.environments.stripe.interfaces import IStripeKey
 from ..auth import ACT_STRIPE_LINK_CUSTOMER
 from ..auth import ACT_STRIPE_MANAGE_BILLING
 
+logger = __import__('logging').getLogger(__name__)
+
 @view_config(renderer='rest',
              permission=ACT_STRIPE_LINK_CUSTOMER,
              request_method='PUT',
@@ -23,11 +25,17 @@ from ..auth import ACT_STRIPE_MANAGE_BILLING
 class ManageStripeCustomerInfoView(BaseView):
 
     def __call__(self):
+        old = self.context.customer_id
         self.context.customer_id = self.body_params['customer_id']
         res = LocatedExternalDict()
         res.__parent__ = self.context.__parent__
         res.__name__ = self.context.__name__
         res['customer_id'] = self.context.customer_id
+        logger.info('%s changed %s stripe customer id from %s to %s',
+                    self.request.authenticated_userid,
+                    self.context.__parent__.email,
+                    old,
+                    self.context.customer_id)
         return res
 
 @view_config(renderer='rest',
