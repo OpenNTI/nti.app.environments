@@ -290,6 +290,10 @@ class IHostsContainer(IContainer):
         Remove a given host.
         """
 
+class ISiteLicenseFactory(interface.Interface):
+    """
+    A callable factory producing an ISiteLicense
+    """
 
 class ISiteLicense(interface.Interface):
     """

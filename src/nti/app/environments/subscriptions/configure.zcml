@@ -26,5 +26,13 @@
 		 factory=".sessions._sessions_from_root"
 		 provides=".interfaces.ICheckoutSessionStorage"/>
 
+	<utility component=".license.starter_factory"
+		 provides="nti.app.environments.models.interfaces.ISiteLicenseFactory"
+		 name="prod_H0SPYsV5S9DzdZ"/>
+
+	<utility component=".license.growth_factory"
+		 provides="nti.app.environments.models.interfaces.ISiteLicenseFactory"
+		 name="prod_H0SQlxRwqs0BOg"/>
+
 	<subscriber handler=".subscribers._checkout_session_completed" />
 </configure>
