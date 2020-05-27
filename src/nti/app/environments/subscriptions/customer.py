@@ -1,8 +1,6 @@
 from zope import component
 from zope import interface
 
-from zope.annotation import factory as an_factory
-
 from zope.annotation.interfaces import IAnnotations
 
 from nti.app.environments.models.interfaces import ICustomer

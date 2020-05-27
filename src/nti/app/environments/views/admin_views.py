@@ -73,6 +73,9 @@ from nti.app.environments.common import formatDateToLocal
 from nti.app.environments.pendo.interfaces import IPendoAccount
 
 from nti.app.environments.stripe.interfaces import IStripeCustomer
+from nti.app.environments.stripe.interfaces import IStripeKey
+from nti.app.environments.stripe.interfaces import IStripeSubscription
+from nti.app.environments.stripe.interfaces import IStripeSubscriptionBilling
 
 from nti.app.environments.tasks.setup import query_setup_state
 
@@ -197,6 +200,13 @@ class SiteDetailView(BaseTemplateView):
         'alpha': 'alpha_v3'
     }
 
+    def format_date(self, datetime):
+        return formatDateToLocal(datetime)
+
+    def format_currency(self, amount):
+        # TODO assuming usd here
+        return "$%.2f" % round(amount/100,2)
+
     def _site_extra_info(self):
         if self.context.status != SITE_STATUS_ACTIVE:
             return None
@@ -283,6 +293,23 @@ class SiteDetailView(BaseTemplateView):
                              "Unknown setup_state: {}.".format(state))
         return result
 
+    def _format_stripe(self):
+        sub = IStripeSubscription(self.context, None)
+        if sub is None or not sub.id:
+            return None
+
+        billing = IStripeSubscriptionBilling(component.queryUtility(IStripeKey), None)
+        if billing is None:
+            return None
+
+        sub = billing.get_subscription(sub)
+        upcoming = billing.get_upcoming_invoice(sub)
+        
+        return {
+            'subscription': sub,
+            'upcoming_invoice': upcoming 
+        }
+
     def __call__(self):
         request = self.request
         extra_info = self._site_extra_info() or {}
@@ -305,6 +332,7 @@ class SiteDetailView(BaseTemplateView):
                          'status': self.context.status,
                          'dns_names': self.context.dns_names,
                          'license': self._format_license(self.context.license),
+                         'stripe': self._format_stripe(),
                          'environment': self._format_env(self.context.environment) if self.context.environment else None,
                          'environment_edit_link': request.resource_url(self.context, '@@environment') if request.has_permission(ACT_EDIT_SITE_ENVIRONMENT, self.context) else None,
                          'site_login_link': request.resource_url(self.context, '@@login') if request.has_permission(ACT_SITE_LOGIN, self.context) else None,

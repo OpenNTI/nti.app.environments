@@ -237,8 +237,25 @@
                         <button type="button" class="btn btnCustom" onclick="saveLicenseView(this, '${site.license.edit_link}');">Save</button>
                         <button type="button" class="btn btnCustom" onclick="cancelLicenseEditView();">Cancel</button>
                     </div>
-                </div><!-- end form group-->
+                 </div><!-- end form group-->
             </div> <!-- end edit license-->
+        </div>
+	<div class="site-item">
+            <h3>Stripe</h3>
+	    <metal:block tal:omit-tag="" tal:condition="site.stripe|nothing">
+                <p>Subscription ID: <span tal:content="site.stripe.subscription.id"></span></p>
+		<p>Subscription Status: <span tal:content="site.stripe.subscription.status"></span></p>
+		<p>Subscription Start: <span tal:content="python: view.format_date(site.stripe.subscription.start_date)"></span></p>
+		<p>Plan: <span tal:content="site.stripe.subscription.plan.id"></span></p>
+		<p>Quantity: <span tal:content="site.stripe.subscription.quantity"></span></p>
+		<metal:block tal:omit-tag="" tal:condition="site.stripe.upcoming_invoice|nothing">
+		    <p>Next Charge Date: <span tal:content="python: view.format_date(site.stripe.upcoming_invoice.next_payment_attempt)"></span></p>
+		    <p>Next Charge Ammount: <span tal:content="python: view.format_currency(site.stripe.upcoming_invoice.amount_due)"></span></p>
+		</metal:block>
+            </metal:block>
+            <metal:block tal:omit-tag="" tal:condition="not:site.stripe|nothing">
+                <p>No Information Found</p>
+            </metal:block>
         </div>
 
         <div class="site-item">

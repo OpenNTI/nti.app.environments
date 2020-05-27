@@ -54,6 +54,7 @@ from nti.app.environments.models.interfaces import ISetupStateSuccess
 from nti.app.environments.models.interfaces import ISetupStateFailure
 
 from nti.app.environments.subscriptions.auth import ACT_STRIPE_MANAGE_SUBSCRIPTION
+from nti.app.environments.subscriptions.auth import ACT_STRIPE_LINK_SUBSCRIPTION
 
 from nti.traversal.traversal import find_interface
 
@@ -257,7 +258,9 @@ class SitesFolder(CaseInsensitiveCheckingLastModifiedBTreeContainer):
 
     @LazyOnClass
     def __acl__(self):
-        return [(Deny, Everyone, ACT_STRIPE_MANAGE_SUBSCRIPTION),
+        return [(Allow, ADMIN_ROLE, ACT_STRIPE_LINK_SUBSCRIPTION),
+                (Deny, Everyone, ACT_STRIPE_LINK_SUBSCRIPTION),
+                (Deny, Everyone, ACT_STRIPE_MANAGE_SUBSCRIPTION),
                 (Allow, ADMIN_ROLE, ALL_PERMISSIONS),
                 (Allow, ACCOUNT_MANAGEMENT_ROLE, (ACT_READ, ACT_REQUEST_TRIAL_SITE)),
                 (Allow, OPS_ROLE, (ACT_READ, ACT_REQUEST_TRIAL_SITE, ACT_SITE_LOGIN))]
