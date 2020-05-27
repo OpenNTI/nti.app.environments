@@ -1,0 +1,35 @@
+<!-- -*- mode: nxml -*- -->
+<configure	xmlns="http://namespaces.zope.org/zope"
+			xmlns:i18n="http://namespaces.zope.org/i18n"
+			xmlns:zcml="http://namespaces.zope.org/zcml"
+			xmlns:stripe="http://nextthought.com/ntp/stripe">
+
+	<include package="zope.component" file="meta.zcml" />
+	<include package="zope.security" file="meta.zcml" />
+	<include package="zope.component" />
+	<include package="zope.security" />
+
+	<adapter factory=".customer.MinimalStripeCustomer"
+		 for="str"
+		 provides=".interfaces.IStripeCustomer"/>
+
+	<adapter factory=".billing.StripeBillingPortal"
+		 for=".interfaces.IStripeKey"
+		 provides=".interfaces.IStripeBillingPortal"/>
+
+	<include package="." file="meta.zcml" />
+
+	<configure zcml:condition="not-have prod">
+          <stripe:registerStripeKey
+		publishable_key="pk_test_gsyBVYVrN6NNdMDxj6rGX3hc"
+		secret_key="PVgnADEbRCpXLSV1EQ8La0FDNRFEAzMMRmlpOQ1nNA4=" />
+	</configure>
+
+
+	<class class="stripe.api_resources.billing_portal.session.Session">
+	  <implements interface=".interfaces.IStripeBillingPortalSession" />
+	</class>
+
+	
+
+</configure>
