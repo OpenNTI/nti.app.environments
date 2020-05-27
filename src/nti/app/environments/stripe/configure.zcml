@@ -21,6 +21,10 @@
 		 for=".interfaces.IStripeKey"
 		 provides=".interfaces.IStripeCheckout"/>
 
+	<adapter factory=".billing.StripeSubscriptionBilling"
+		 for=".interfaces.IStripeKey"
+		 provides=".interfaces.IStripeSubscriptionBilling"/>
+
 	<include package="." file="meta.zcml" />
 
 	<configure zcml:condition="not-have prod">
@@ -45,6 +49,10 @@
 
 	<class class="stripe.api_resources.billing_portal.session.Session">
 	  <implements interface=".interfaces.IStripeBillingPortalSession" />
+	</class>
+
+	<class class="stripe.api_resources.subscription.Subscription">
+	  <implements interface=".interfaces.IStripeSubscription" />
 	</class>
 
 	

@@ -63,6 +63,24 @@ class IStripeBillingPortal(interface.Interface):
         changes via webhooks or polling.
         """
 
+class IStripeSubscription(interface.Interface):
+
+    id = ValidTextLine(title='The subscription identifier')
+
+
+class IStripeSubscriptionBilling(interface.Interface):
+
+    def get_subscription(subscription):
+        """
+        Fetch the full subscription for subscription.id
+        from stripe.
+        """
+
+    def get_upcoming_invoice(subscription):
+        """
+        Get the next invoice for this subscription.
+        """
+
 class IStripeCheckoutSession(interface.Interface):
 
     id = ValidTextLine(title='The session identifier')
