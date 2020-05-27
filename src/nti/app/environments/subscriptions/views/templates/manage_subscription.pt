@@ -1,14 +1,441 @@
 <!-- Load Stripe.js on your website. -->
 <html>
     <head>
+	<style>
+	 h1 {
+	     color: #494949;
+	     font-family: "Open Sans";
+	     font-size: 48px;
+	     font-weight: 300;
+	     letter-spacing: -0.75px;
+	     line-height: 65px;
+	 }
+
+	 * {
+	     box-sizing: border-box;
+	 }
+	 .plans {
+	     display: flex;
+	     flex-direction: row;
+	     align-items: stretch;
+	     justify-content: space-between;
+	     margin-left: -10px;
+	     width: 648px;
+	 }
+	 .plan {
+	     border-radius: 2px;
+	     width: 49%;
+	     max-width: 142px;
+	     height: 177px;
+	     box-shadow: 0 0 2px 0 rgba(0, 0, 0, 0.2);
+	     padding: 5px 5px 15px;
+	     margin: 0 10px;
+	     cursor: pointer;
+	     position: relative;
+	 }
+
+	 .plan .annual-only-lock {
+	     position: absolute;
+	     height: 26px;
+	     width: 19px;
+	     color: #b0b7c3;
+	     top: 8px;
+	     right: 4px;
+	 }
+	 
+	 .planwrapper {
+	     height: 100%;
+	     display: flex;
+	     flex-direction: column;
+	     align-items: center;
+	     justify-content: flex-end;
+	 }
+	 .plan.selected {
+	     box-shadow: 0 0 3px 0 #3FB34F;
+	     background-color: rgba(63, 179, 79, 0.1);
+	     cursor: default;
+	 }
+
+	 .plan.disabled {
+	     cursor: default;
+	 }
+
+	 .plan.disabled .planwrapper {
+	     opacity: .2;
+	 }
+	 
+	 .plan .planname {
+	     flex: 1 1 auto;
+	     display: flex;
+	     align-items: center;
+	     justify-content: center;
+	     color: #757474;
+	     font-family: "Open Sans", Arial, sans-serif;
+	     font-size: 18px;
+	     letter-spacing: 0;
+	     line-height: 24px;
+	     text-align: center;
+	 }
+	 .plan.selected .planname {
+	     color: #3FB34F;
+	     font-weight: bold;
+	 }
+	 .plan .price {
+	     flex: 0 0 auto;
+	     margin-bottom: 15px;
+	 }
+	 .plan .price .currency {
+	     color: #757474;
+	     font-family: Lato;
+	     font-size: 18px;
+	     font-weight: 500;
+	     line-height: 22px;
+	     text-align: center;
+	     vertical-align: top;
+	 }
+	 .plan .price .cost {
+	     color: #494949;
+	     font-family: Lato;
+	     font-size: 48px;
+	     font-weight: 500;
+	     letter-spacing: -0.75px;
+	     line-height: 57px;
+	     text-align: center;
+	     vertical-align: middle;
+	 }
+	 .hidden {
+	     visibility: hidden;
+	     display: none;
+	 }
+	 .plan .price .frequency {
+	     color: #757474;
+	     font-family: Lato;
+	     font-size: 12px;
+	     font-weight: 500;
+	     letter-spacing: -0.19px;
+	     line-height: 15px;
+	     text-align: center;
+	     vertical-align: middle;
+	 }
+	 .plan .details {
+	     color: #778679;
+	     font-family: "Open Sans";
+	     font-size: 12px;
+	     letter-spacing: 0;
+	     line-height: 17px;
+	     text-align: center;
+	 }
+
+	 .plan[data-plan="trial"] .details {
+	     color: #EF9600;
+	     font-family: "Open Sans";
+	     font-size: 12px;
+	     font-weight: bold;
+	     letter-spacing: 0;
+	     line-height: 17px;
+	     text-align: center;
+	 }
+
+	 a#moreinfo,
+	 a#needhelp,
+	 a#managepayment {
+	     color: #757474;
+	     font-family: "Open Sans";
+	     font-size: 14px;
+	     letter-spacing: 0;
+	     line-height: 19px;
+	     padding: 4px;
+	 }
+
+	 form {
+	     padding-top: 40px;
+	 }
+
+	 form label {
+	     color: #757474;
+	     font-family: "Open Sans";
+	     font-size: 14px;
+	     letter-spacing: 0;
+	     line-height: 19px;
+	     padding: 4px;
+	     margin-bottom: 4px;
+	 }
+
+	 form select {
+	     height: 50px;
+	     width: 304px;
+	     color: #494949;
+	     font-family: "Open Sans";
+	     font-size: 16px;
+	     letter-spacing: 0;
+	     line-height: 22px;
+	     margin-top: 6px;
+	 }
+
+	 form input[type=submit]{
+	     border-radius: 3px;
+	     background-color: #3FB34F;
+	     color: #FFFFFF;
+	     font-family: "Open Sans";
+	     font-size: 16px;
+	     font-weight: 600;
+	     letter-spacing: 0;
+	     line-height: 22px;
+	     margin-top: 20px;
+	     padding: 16px 32px;
+	     min-width: 360px;
+	 }
+
+	 form input[type=text] {
+	     box-sizing: border-box;
+	     height: 50px;
+	     width: 304px;
+	     border: 1px solid #979797;
+	     background-color: #FFFFFF;
+	     color: #B8B8B8;
+	     font-family: "Open Sans";
+	     font-size: 16px;
+	     letter-spacing: 0;
+	     line-height: 22px;
+	     margin-top: 6px;
+	 }
+
+	 a.button {
+	     box-sizing: border-box;
+	     border: 1px solid #3FB34F;
+	     border-radius: 3px;
+	     background-color: #3FB34F;
+	     color: #FFFFFF;
+	     font-family: "Open Sans";
+	     font-size: 16px;
+	     font-weight: 600;
+	     letter-spacing: 0;
+	     line-height: 22px;
+	     text-align: center;
+	     text-decoration: none;
+	     padding: 16px 32px;
+	     min-width: 360px;
+	 }
+
+	 form div.selectwrapper {
+	     display: inline-block;
+	     padding-right: 20px;
+	 }
+
+	 .logout {
+	     color: #757474;
+	     font-family: "Open Sans";
+	     font-size: 14px;
+	     letter-spacing: 0;
+	     line-height: 19px;
+	     text-align: right;
+	 }
+	</style>
+	<script src="https://code.jquery.com/jquery-3.4.1.min.js"
+		integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+		crossorigin="anonymous"></script>
+	<script>
+
+	 (function($, window) {
+	     $.fn.replaceOptions = function(options) {
+		 var self, $option;
+
+		 this.empty();
+		 self = this;
+
+		 $.each(options, function(index, option) {
+		     $option = $("<option></option>")
+			 .attr("value", option.value)
+			 .text(option.text);
+		     self.append($option);
+		 });
+	     };
+	 })(jQuery, window);
+
+	 function updatePrice(){
+	     var option = $('form:not(.hidden) select[name="plan"] :selected')
+	     if (option) {
+		 option = option.data('billingperiod');
+	     }
+	     if(!option){
+		 option = 'annual';
+	     }
+	     $('.plan .price .cost').addClass('hidden');
+	     $('.plan .price .cost'+'.'+option).removeClass('hidden');
+	 }
+
+	 function updateSelected(plan){
+	     $('.plan').removeClass('selected')
+	     plan.addClass('selected')
+	     var product_id = plan.data('plan')
+
+	     $('form').addClass('hidden')
+	     $('form#'+product_id).removeClass('hidden')
+	     
+	     updatePrice();
+	 }
+
+	 $(document).ready(function(){
+	     updateSelected($('.plan[data-plan="trial"]'));
+	     $('.plan').on('click', function(event){
+		 var plan = $(event.target).closest('.plan');
+		 if(!plan.hasClass('disabled')){
+		     updateSelected(plan);
+		 }
+	     })
+	 });
+	 
+	</script>
     </head>
     <body>
+	<metal:block tal:condition="username">
+            <div class="logout">Not ${username}? <a href="">Log Out</a></div>
+        </metal:block>
+
+	<metal:block tal:condition="trial">
+            <h1 tal:condition="trial['ended']">Your trial has ended. Select a paid plan to retain access to your site.</h1>
+	    <h1 tal:condition="not:trial['ended']">Select a new plan to use
+		once your free trial ends in <metal:block tal:content="python: trial['remaining_days']">1</metal:block> day<metal:block tal:condition="python: trial['remaining_days'] != 1">s</metal:block>.</h1>
+        </metal:block>
+	<metal:block tal:condition="not:trial">
+            <h1>You are currently enrolled in the <metal:block tal:content="python: license.license_name.capitalize()">Enterprise</metal:block> plan.</h1>
+        </metal:block>
 	
-	<form action="${submit}" method="POST">
-	    <input type="submit" value="Submit">
+	<div class="plans">
+	    <div class="plan" data-plan="trial">
+		<div class="planwrapper">
+		    <div class="planname">14-Day<br/>Free Trial</div>
+		    <div class="price">
+			<span class="currency">$</span>
+			<span class="cost monthly hidden">0</span>
+			<span class="cost annual">0</span>
+			<span class="frequency">mo</span>
+		    </div>
+		    <div class="details">
+			<metal:block tal:condition="trial">
+			    <metal:block tal:content="python: trial['remaining_days']">1</metal:block> day<metal:block tal:condition="python: trial['remaining_days'] != 1">s</metal:block> left!
+			</metal:block>
+			<metal:block tal:condition="not:trial">
+			    Per Admin or Instructor, Per Month
+			</metal:block>
+		    </div>
+		</div>
+	    </div>
+	    <div class="plan selected" data-plan="starter">
+		<div class="planwrapper">
+		    <div class="planname">Starter</div>
+		    <div class="price">
+			<span class="currency">$</span>
+			<span class="cost monthly hidden">119</span>
+			<span class="cost annual">99</span>
+			<span class="frequency">mo</span>
+		    </div>
+		    <div class="details">Per Admin or Instructor, Per Month</div>
+		</div>
+	    </div>
+	    <div class="plan" data-plan="growth">
+		<div class="planwrapper">
+		    <div class="planname">Growth</div>
+		    <div class="price">
+			<span class="currency">$</span>
+			<span class="cost monthly hidden">239</span>
+			<span class="cost annual">199</span>
+			<span class="frequency">mo</span>
+		    </div>
+		    <div class="details">Per Admin or Instructor, Per Month</div>
+		</div>
+	    </div>
+	    <div class="plan" data-plan="enterprise">
+		<div class="planwrapper">
+		    <div class="annual-only-lock">
+			<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="#b0b7c3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-lock">
+			    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+			    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+			</svg>
+		    </div>
+		    <div class="planname">Enterprise</div>
+		    <div class="price">
+			<span class="currency">$</span>
+			<span class="cost monthly hidden">299</span>
+			<span class="cost annual">299</span>
+			<span class="frequency">mo</span>
+		    </div>
+		    <div class="details">Per Admin or Instructor, Per Month</div>
+		</div>
+	    </div>
+	</div>
+	<a href="https://nextthought.com/pricing" id="moreinfo">Need more details? Review each plan here.</a>
+	<form id="trial">
+	</form>
+	<form id="starter" action="${submit}" method="POST">
+	    <div class="selectwrapper">
+		<label for="starterbillingperiod">Monthly or Annual Payment</label><br>
+		<select id="starterbillingperiod" name="plan" onchange="updatePrice()">
+		    <option value="plan_H0mGI267Ns0dle" data-billingperiod="annual">Annual</option>
+		    <option value="plan_H0mGeIfpAIA8EY" data-billingperiod="monthly">Monthly</option>
+		</select>
+	    </div>
+	    <div class="selectwrapper">	
+		<label for="starterseats">How many Administrators and Instructors</label><br>
+		<select id="starterseats" name="seats">
+		    <option value="1">1</option>
+		    <option value="2">2</option>
+		    <option value="3">3</option>
+		</select>
+	    </div>
+	    <br/>
+	    <input id="submit" type="submit" value="Continue">
+	</form>
+	<form id="growth" action="${submit}" method="POST">
+	    <div class="selectwrapper">
+		<label for="growthbillingperiod">Monthly or Annual Payment</label><br>
+		<select id="growthbillingperiod" name="plan" onchange="updatePrice()">
+		    <option value="plan_H0mFrbr2v0gKKh" data-billingperiod="annual">Annual</option>
+		    <option value="plan_H0mF4xaJYoOvpz" data-billingperiod="monthly">Monthly</option>
+		</select>
+	    </div>
+	    <div class="selectwrapper">	
+		<label for="growthseats">How many Administrators and Instructors</label><br>
+		<select id="growthseats" name="seats">
+		    <option value="1">1</option>
+		    <option value="2">2</option>
+		    <option value="3">3</option>
+		    <option value="4">4</option>
+		    <option value="5">5</option>
+		    <option value="6">6</option>
+		    <option value="7">7</option>
+		    <option value="8">8</option>
+		    <option value="9">9</option>
+		    <option value="10">10</option>
+		</select>
+	    </div>
+	    <br/>
+	    <input id="growthsubmit" type="submit" value="Continue">
+	</form>
+	<form id="enterprise" action="mailto:sales@nextthought.com">
+	    <div class="selectwrapper">	
+		<label for="enterprisebillingperiod">Only Available in Annual Payments</label><br>
+		<input type="text" id="enterprisebillingperiod" value="Annual" disabled>
+	    </div>
+	    <div class="selectwrapper">	
+		<label for="enterpriseseats">How many Administrators and Instructors?</label><br>
+		<input type="text" id="enterprisebillingperiodenterpriseseats" value="Minimum of 3" disabled>
+	    </div>
+	    <br/>
+	    <input id="submit" type="submit" value="Contact us to enroll in the Enterprise plan.">
 	</form>
 
+	<a  tal:condition="not:trial" id="contactforchanges" href="mailto:sales@nextthought.com" class="button">
+	    Contact our team to change your plan.
+	</a>
+	<a tal:condition="trial" href="mailto:sales@nextthought.com" id="needhelp">Have questions? Connect with our team.</a>
+
+	<form tal:condition="manage_billing" id="manage_billing" method="POST" action=${manage_billing}>
+	    <!-- Your Form -->    
+	    <a id="managepayment" href="javascript:{}" onclick="document.getElementById('manage_billing').submit(); return false;">Manage Payment Info</a>
+	</form>
     </body>
+
 </html>
 
 
