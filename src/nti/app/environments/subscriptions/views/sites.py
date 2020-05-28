@@ -11,6 +11,9 @@ from pyramid.view import view_config
 from nti.externalization.interfaces import LocatedExternalDict
 
 from nti.app.environments.auth import ACT_READ
+
+from nti.app.environments.common import formatDateToLocal
+
 from nti.app.environments.subscriptions.auth import ACT_STRIPE_MANAGE_SUBSCRIPTION
 from nti.app.environments.subscriptions.auth import ACT_STRIPE_LINK_SUBSCRIPTION
 
@@ -24,6 +27,7 @@ from nti.app.environments.stripe.interfaces import IStripeKey
 from nti.app.environments.stripe.interfaces import IStripeCheckout
 from nti.app.environments.stripe.interfaces import IStripeCustomer
 from nti.app.environments.stripe.interfaces import IStripeSubscription
+from nti.app.environments.stripe.interfaces import IStripeSubscriptionBilling
 
 from nti.app.environments.subscriptions.auth import ACT_STRIPE_MANAGE_BILLING
 from nti.app.environments.subscriptions.interfaces import ICheckoutSessionStorage
@@ -61,11 +65,79 @@ class ManageSubscriptionPage(BaseView):
         now = datetime.datetime.utcnow()
         delta = license.end_date - now
 
-        return {'remaining_days': min(delta.days, 1),
+        return {'remaining_days': max(delta.days, 0),
                 'ended': license.end_date < now}
 
+    def format_date(self, datetime):
+        return formatDateToLocal(datetime, _format='%B %-d, %Y')
+
+    def format_currency(self, amount):
+        # TODO assuming usd here. Also not correctly
+        # dealing with other i18n issues like seperators
+        return "${:0,.2f}".format(round(amount/100,2))
+    
+    @Lazy
+    def license(self):
+        return self.context.license
+
+    @Lazy
+    def upcoming_invoice(self):
+        subscription = IStripeSubscription(self.context, None)
+        if not subscription.id:
+            return None
+        billing = IStripeSubscriptionBilling(self.stripe_key)
+        return billing.get_upcoming_invoice(subscription)
+    
+    def plan_classes(self, plan):
+        classes = ['plan']
+
+        if plan == self.license.license_name:
+            classes.append('selected')
+        elif not ITrialLicense.providedBy(self.license):
+            classes.append('disabled')
+
+        return ' '.join(classes)
+
+    def allows_plan_updates(self):
+        return ITrialLicense.providedBy(self.license)
+
     def plan_options(self):
-        pass
+        return {
+            'products': ['trial', 'starter', 'growth', 'enterprise'],
+            'product_details': {
+                'trial': {
+                    'cost': 0
+                },
+                'starter': {
+                    'seat_options': [x+1 for x in range(0, 5)],
+                    'plans': [{
+                        'plan_id': 'plan_H0mGeIfpAIA8EY',
+                        'frequency': 'yearly',
+                        'cost': 99
+                    },{
+                        'plan_id': 'plan_H0mGeIfpAIA8EY',
+                        'frequency': 'monthly',
+                        'cost': 119
+                    }]
+                },
+                'growth': {
+                    'seat_options': [x+1 for x in range(0, 10)],
+                    'plans': [{
+                        'plan_id': 'plan_H0mFrbr2v0gKKh',
+                        'frequency': 'yearly',
+                        'cost': 199
+                    },{
+                        'plan_id': 'plan_H0mF4xaJYoOvpz',
+                        'frequency': 'monthly',
+                        'cost': 239
+                    }]
+                },
+                'enterprise': {
+                    'cost': 299
+                },
+            }
+            
+        }
     
     def __call__(self):
         if self.stripe_key is None:
@@ -82,7 +154,9 @@ class ManageSubscriptionPage(BaseView):
             'username': self.request.authenticated_userid,
             'trial': self.trial_data(),
             'license': self.context.license,
-            'manage_billing': billing_link if not ITrialLicense.providedBy(self.context.license) else None
+            'upcoming_invoice': self.upcoming_invoice,
+            'manage_billing': billing_link if not ITrialLicense.providedBy(self.context.license) else None,
+            'plans': self.plan_options()
         }
 
 @view_config(renderer='templates/trigger_checkout.pt',
@@ -99,6 +173,20 @@ class SubscriptionCheckout(BaseView):
     def __call__(self):
         if self.stripe_key is None:
             raise hexc.HTTPNotFound()
+
+        # We only let you subscribe online if you are currently in a trial license
+        # with no associated subscription.
+        #
+        # User's should be able to get this far unless they are trying to let themselves
+        # in the backdoor. This acts as a safety check.
+        if not ITrialLicense.providedBy(self.context.license):
+            logger.warn('Can only subscribe online if you are a trial license')
+            raise hexc.HTTPBadRequest()
+
+        subscription = IStripeSubscription(self.context)
+        if subscription.id:
+            logger.warn('Site already has a subscription %s', subscription.id)
+            raise hexc.HTTPBadRequest()
 
         class Plan(object):
             plan = None

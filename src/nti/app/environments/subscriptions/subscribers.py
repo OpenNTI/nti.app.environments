@@ -63,10 +63,12 @@ def _checkout_session_completed(event):
             # adjust the license accordingly.
             if ITrialLicense.providedBy(site.license):
 
-                # Look through the subscription for the plan, and look for an ILicenseFactory registered as an adapter
-                # with a name for the plan id, followed by the product id. If one is found, call it and set the license
-                # on the site.
-                # NOTE we only deal with subscriptions for single items
+                # Look through the subscription for the plan, and look
+                # for an ILicenseFactory registered as as a named
+                # utility for the plan id, followed by the product
+                # id. If one is found, call it and set the license on
+                # the site.  NOTE we only deal with subscriptions for
+                # single items
                 billing = IStripeSubscriptionBilling(component.getUtility(IStripeKey))
                 subscription = billing.get_subscription(stripe_subscription_id)
                 plan = subscription.plan
