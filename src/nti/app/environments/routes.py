@@ -6,3 +6,5 @@ def includeme(config):
 
     config.add_route('roles','/onboarding/roles/*traverse',
                      factory='nti.app.environments.resources.RolesResource')
+
+    config.add_route('stripe.hooks', '/stripe/hooks')

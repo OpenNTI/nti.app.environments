@@ -5,6 +5,10 @@
 		<meta:directive	name="registerStripeKey"
 						schema=".zcml.IRegisterStripeKeyDirective"
 						handler=".zcml.registerStripeKey" />
+
+		<meta:directive	name="registerWebhookSecret"
+				schema=".zcml.IRegisterStripeWebhookSigningSecretDirective"
+				handler=".zcml.registerWebhookSecret" />
 	</meta:directives>
 
 </configure>

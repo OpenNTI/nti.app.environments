@@ -11,6 +11,9 @@ from nti.common.cypher import get_plaintext
 from .client import StripeKey
 
 from .interfaces import IStripeKey
+from .interfaces import IWebhookSigningSecret
+
+from .hooks import WebhookSigningSecret
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -40,3 +43,19 @@ def registerStripeKey(_context, publishable_key, secret_key):
     """
     sk = StripeKey(publishable_key, decode_key(secret_key))
     utility(_context, provides=IStripeKey, component=sk)
+
+class IRegisterStripeWebhookSigningSecretDirective(interface.Interface):
+    """
+    Arguments needed for registering a new webhook by name
+    """
+    
+    secret = TextLine(title=u"The secret key value. Should not contain spaces",
+                          required=True)
+
+    name = TextLine(title=u"The name this secret should be registered with",
+                    required=True)
+
+
+def registerWebhookSecret(_context, secret, name):
+    wk = WebhookSigningSecret(decode_key(secret))
+    utility(_context, provides=IWebhookSigningSecret, component=wk, name=name)
