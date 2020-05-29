@@ -7,13 +7,17 @@ logger = __import__('logging').getLogger(__name__)
 
 generation = 1
 
+def install_stripe_sessions(root):
+    if STRIPE_CHECKOUT_SESSIONS_KEY not in root:
+        root[STRIPE_CHECKOUT_SESSIONS_KEY] = CheckoutSessionStorage()
+        logger.info('Installed sessions container')
+    else:
+        logger.info('Sessions container already installed')
+    
+
 def do_evolve(context, generation=generation):
     with evolve_context(context, generation) as root:
-        if STRIPE_CHECKOUT_SESSIONS_KEY not in root:
-            root[STRIPE_CHECKOUT_SESSIONS_KEY] = CheckoutSessionStorage()
-            logger.info('Installed sessions container')
-        else:
-            logger.info('Sessions container already installed')
+        install_stripe_sessions(root)
         
 
 def evolve(context):
