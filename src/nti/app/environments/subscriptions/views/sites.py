@@ -31,6 +31,7 @@ from nti.app.environments.stripe.interfaces import IStripeSubscriptionBilling
 
 from nti.app.environments.subscriptions.auth import ACT_STRIPE_MANAGE_BILLING
 from nti.app.environments.subscriptions.interfaces import ICheckoutSessionStorage
+from nti.app.environments.subscriptions.interfaces import IProduct
 
 @view_config(renderer='rest',
              permission=ACT_STRIPE_LINK_SUBSCRIPTION,
@@ -45,6 +46,9 @@ class ManageStripSubscriptionInfoView(BaseView):
         res.__name__ = self.context.__name__
         res['subscription_id'] = self.context.id
         return res
+
+
+_KNOWN_PRODUCTS = ['trial', 'starter', 'growth', 'enterprise']
 
 @view_config(renderer='templates/manage_subscription.pt',
              permission=ACT_STRIPE_MANAGE_SUBSCRIPTION,
@@ -102,41 +106,51 @@ class ManageSubscriptionPage(BaseView):
         return ITrialLicense.providedBy(self.license)
 
     def plan_options(self):
+        # Find registered utilities for IProduct. We look for products
+        # with specific ids here as a shortcut of completely generalizing the UI
+        # If our offerings change we will need to address that, but we don't expect
+        # that to be frequent. This is very tightly coupled with the template we render
+        # and the configuration of products we expect to be in place.
+
+        #First gather all our products
+        products = {pid:component.getUtility(IProduct, name=pid) for pid in _KNOWN_PRODUCTS}
+        details = {}
+
+        from IPython.core.debugger import Tracer; Tracer()()
+
+        for pid in _KNOWN_PRODUCTS:
+            product = products[pid]
+            detail = {}
+
+            if product.max_seats is not None:
+                detail['seat_options'] = [x+1 for x in range(product.min_seats, product.max_seats)]
+
+            plans = []
+
+            # We only deal with monthly and yearly prices currently
+            for freq in ('yearly', 'monthly'):
+                price = getattr(product, freq+'_price', None)
+                if price is None:
+                    continue
+
+                # UI doesn't show decimals right now (no room given design) but prices are in cents
+                # so make sure we only have exact dollars
+                assert price.cost % 100 == 0
+                plans.append({'plan_id': price.stripe_plan_id, 'cost': int(price.cost/100), 'frequency': freq})
+
+            if len(plans) > 1:
+                detail['plans'] = plans
+            else:
+                try:
+                    cost = plans[0]['cost']
+                except IndexError:
+                    cost = 0
+                detail['cost'] = 0
+            details[pid] = detail
+        
         return {
-            'products': ['trial', 'starter', 'growth', 'enterprise'],
-            'product_details': {
-                'trial': {
-                    'cost': 0
-                },
-                'starter': {
-                    'seat_options': [x+1 for x in range(0, 5)],
-                    'plans': [{
-                        'plan_id': 'plan_H0mGeIfpAIA8EY',
-                        'frequency': 'yearly',
-                        'cost': 99
-                    },{
-                        'plan_id': 'plan_H0mGeIfpAIA8EY',
-                        'frequency': 'monthly',
-                        'cost': 119
-                    }]
-                },
-                'growth': {
-                    'seat_options': [x+1 for x in range(0, 10)],
-                    'plans': [{
-                        'plan_id': 'plan_H0mFrbr2v0gKKh',
-                        'frequency': 'yearly',
-                        'cost': 199
-                    },{
-                        'plan_id': 'plan_H0mF4xaJYoOvpz',
-                        'frequency': 'monthly',
-                        'cost': 239
-                    }]
-                },
-                'enterprise': {
-                    'cost': 299
-                },
-            }
-            
+            'products': _KNOWN_PRODUCTS,
+            'product_details': details           
         }
     
     def __call__(self):

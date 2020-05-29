@@ -5,6 +5,12 @@ from zope import interface
 
 from zope.annotation.interfaces import IAnnotations
 
+from nti.schema.eqhash import EqHash
+
+from nti.schema.fieldproperty import createDirectFieldProperties
+
+from nti.schema.schema import SchemaConfigured
+
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ISiteLicenseFactory
 from nti.app.environments.models.interfaces import IRestrictedLicense
@@ -16,6 +22,9 @@ from nti.app.environments.models.sites import GrowthLicense
 
 from nti.app.environments.stripe.interfaces import IStripeSubscription
 from nti.app.environments.stripe.billing import MinimalStripeSubscription
+
+from .interfaces import IPrice
+from .interfaces import IProduct
 
 STRIPE_SUBSCRIPTION_ANNOTATION_KEY = 'stripe_subscription'
 
@@ -53,4 +62,54 @@ def make_factory(factory):
 
 starter_factory = make_factory(StarterLicense)
 growth_factory = make_factory(GrowthLicense)
+
+
+@EqHash('id')
+@interface.implementer(IPrice)
+class RegistryBackedPrice(SchemaConfigured):
+
+    createDirectFieldProperties(IPrice, omit=('product'))
+
+    _prodcut_id = None
+
+    def __init__(self, *args, **kwargs):
+        product = kwargs.pop('product', None)
+        if product:
+            self._prodcut_id = getattr(product, 'id', product)
+        super(RegistryBackedPrice, self).__init__(*args, **kwargs)
+
+    @property
+    def product(self):
+        return component.queryUtility(IProduct, name=self._prodcut_id) if self._prodcut_id else None
+
+    
+@EqHash('id')
+@interface.implementer(IProduct)
+class RegistryBackedProduct(SchemaConfigured):
+
+    createDirectFieldProperties(IProduct, omit=('monthly_plan', 'yearly_plan'))
+
+    _monthly_id = None
+    _yearly_id = None
+
+    def __init__(self, *args, **kwargs):
+        monthly = kwargs.pop('monthly_price', None)
+        yearly = kwargs.pop('yearly_price', None)
+        
+        if monthly:
+            self._monthly_id = getattr(monthly, 'id', monthly)
+
+        if yearly:
+            self._yearly_id = getattr(yearly, 'id', yearly)
+        super(RegistryBackedProduct, self).__init__(*args, **kwargs)
+
+    @property
+    def monthly_price(self):
+        return component.queryUtility(IPrice, name=self._monthly_id) if self._monthly_id else None
+
+    @property
+    def yearly_price(self):
+        return component.queryUtility(IPrice, name=self._yearly_id) if self._yearly_id else None
+
+
 
