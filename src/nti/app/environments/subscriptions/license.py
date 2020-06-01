@@ -1,4 +1,5 @@
 import datetime
+from datetime import timezone
 
 from zope import component
 from zope import interface
@@ -52,7 +53,7 @@ def make_factory(factory):
 
     def _f(subscription):
         license = factory()
-        license.start_date = datetime.datetime.utcfromtimestamp(subscription.start_date)
+        license.start_date = datetime.datetime.fromtimestamp(subscription.start_date, timezone.utc)
         if IRestrictedLicense.providedBy(license):
             license.seats = subscription.quantity
             license.frequency = _FREQUENCY_MAP.get(subscription.plan.interval)
