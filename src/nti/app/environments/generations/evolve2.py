@@ -5,7 +5,7 @@ from . import evolve_context
 
 logger = __import__('logging').getLogger(__name__)
 
-generation = 1
+generation = 2
 
 def install_stripe_sessions(root):
     if STRIPE_CHECKOUT_SESSIONS_KEY not in root:
