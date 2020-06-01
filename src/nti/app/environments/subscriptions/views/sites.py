@@ -116,8 +116,6 @@ class ManageSubscriptionPage(BaseView):
         products = {pid:component.getUtility(IProduct, name=pid) for pid in _KNOWN_PRODUCTS}
         details = {}
 
-        from IPython.core.debugger import Tracer; Tracer()()
-
         for pid in _KNOWN_PRODUCTS:
             product = products[pid]
             detail = {}
