@@ -7,6 +7,8 @@ from pyramid.view import view_config
 
 from pyramid import httpexceptions as hexc
 
+from stripe.error import InvalidRequestError
+
 from zope.cachedescriptors.property import Lazy
 
 from zope import component
@@ -303,8 +305,13 @@ class SiteDetailView(BaseTemplateView):
             return None
 
         sub = billing.get_subscription(sub)
-        upcoming = billing.get_upcoming_invoice(sub)
         
+        try:
+            upcoming = billing.get_upcoming_invoice(sub)
+        except InvalidRequestError:
+            logger.exception('Unable to get upcoming invoice')
+            upcoming = None
+            
         return {
             'subscription': sub,
             'upcoming_invoice': upcoming 

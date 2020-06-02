@@ -8,6 +8,8 @@ from pyramid import httpexceptions as hexc
 
 from pyramid.view import view_config
 
+from stripe.error import InvalidRequestError
+
 from nti.externalization.interfaces import LocatedExternalDict
 
 from nti.app.environments.auth import ACT_READ
@@ -32,6 +34,7 @@ from nti.app.environments.stripe.interfaces import IStripeSubscriptionBilling
 from nti.app.environments.subscriptions.auth import ACT_STRIPE_MANAGE_BILLING
 from nti.app.environments.subscriptions.interfaces import ICheckoutSessionStorage
 from nti.app.environments.subscriptions.interfaces import IProduct
+logger = __import__('logging').getLogger(__name__)
 
 @view_config(renderer='rest',
              permission=ACT_STRIPE_LINK_SUBSCRIPTION,
@@ -89,8 +92,14 @@ class ManageSubscriptionPage(BaseView):
         subscription = IStripeSubscription(self.context, None)
         if not subscription.id:
             return None
-        billing = IStripeSubscriptionBilling(self.stripe_key)
-        return billing.get_upcoming_invoice(subscription)
+
+        try:
+            billing = IStripeSubscriptionBilling(self.stripe_key)
+            return billing.get_upcoming_invoice(subscription)
+        except InvalidRequestError:
+            logger.exception('Unable to fetch upcoming invoice')
+            return None
+            
     
     def plan_classes(self, plan):
         classes = ['plan']
