@@ -158,7 +158,7 @@ class ManageSubscriptionPage(BaseView):
         billing_link = None
         sc = IStripeCustomer(self.context.owner, None)
         if sc and self.request.has_permission(ACT_STRIPE_MANAGE_BILLING, sc):
-            billing_link = self.request.resource_url(sc, '@@manage_billing')
+            billing_link = self.request.resource_url(sc, '@@manage_billing', query={'return': self.request.url})
         
         return {
             'stripe_pk': self.stripe_key.publishable_key,
