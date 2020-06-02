@@ -21,6 +21,7 @@ from nti.app.environments.subscriptions.auth import ACT_STRIPE_LINK_SUBSCRIPTION
 
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ITrialLicense
+from nti.app.environments.models.interfaces import SITE_STATUS_ACTIVE
 from nti.app.environments.models.utils import get_onboarding_root
 
 from nti.app.environments.views.base import BaseView
@@ -34,6 +35,8 @@ from nti.app.environments.stripe.interfaces import IStripeSubscriptionBilling
 from nti.app.environments.subscriptions.auth import ACT_STRIPE_MANAGE_BILLING
 from nti.app.environments.subscriptions.interfaces import ICheckoutSessionStorage
 from nti.app.environments.subscriptions.interfaces import IProduct
+from nti.app.environments.subscriptions.interfaces import IPrice
+
 logger = __import__('logging').getLogger(__name__)
 
 @view_config(renderer='rest',
@@ -164,6 +167,9 @@ class ManageSubscriptionPage(BaseView):
         if self.stripe_key is None:
             raise hexc.HTTPNotFound()
 
+        if self.context.status != SITE_STATUS_ACTIVE:
+            raise hexc.HTTPNotFound()
+
         billing_link = None
         sc = IStripeCustomer(self.context.owner, None)
         if sc and self.request.has_permission(ACT_STRIPE_MANAGE_BILLING, sc):
@@ -190,15 +196,39 @@ class SubscriptionCheckout(BaseView):
     @Lazy
     def stripe_key(self):
         return component.queryUtility(IStripeKey)
+
+    def _validate_plan(self, plan):
+        if not plan.plan or not plan.quantity:
+            logger.error('Missing plan %s or quantity %s', plan.plan, plan.quantity)
+            raise hexc.HTTPBadRequest()
+
+        # The plan we are given is an IPrice that should be registered
+        price = component.queryUtility(IPrice, name=plan.plan)
+        if not price:
+            logger.error('No IPrice for %s', plan.plan)
+            raise hexc.HTTPBadRequest('Invalid plan %s' % plan.plan)
+
+        product = price.product
+        if product.min_seats is not None and plan.quantity < product.min_seats:
+            logger.error('Plan requires at least %i seats', product.min_seats)
+            raise hexc.HTTPBadRequest('Plan requires at least %i seats', product.min_seats)
+
+        if product.max_seats is not None and plan.quantity > product.max_seats:
+            logger.error('Plan allows at most %i seats', product.max_seats)
+            raise hexc.HTTPBadRequest('Plan allows at most %i seats', product.max_seats)
+        
     
     def __call__(self):
         if self.stripe_key is None:
             raise hexc.HTTPNotFound()
 
+        if self.context.status != SITE_STATUS_ACTIVE:
+            raise hexc.HTTPNotFound()
+
         # We only let you subscribe online if you are currently in a trial license
         # with no associated subscription.
         #
-        # User's should be able to get this far unless they are trying to let themselves
+        # User's shouldn't be able to get this far unless they are trying to let themselves
         # in the backdoor. This acts as a safety check.
         if not ITrialLicense.providedBy(self.context.license):
             logger.warn('Can only subscribe online if you are a trial license')
@@ -220,10 +250,7 @@ class SubscriptionCheckout(BaseView):
         plan = Plan(self.request.params.get('plan'),
                     int(self.request.params.get('seats')))
 
-        # TODO validate the plan here. Is it a valid plan to transition
-        # to. Is the number of seats appropriate?
-        # lookup by plan_id, validate min and max seats against product
-        
+        self._validate_plan(plan)
 
         owner = self.context.owner
         assert owner
