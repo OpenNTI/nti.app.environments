@@ -73,7 +73,7 @@ def _checkout_session_completed(event):
                 subscription = billing.get_subscription(stripe_subscription_id)
                 plan = subscription.plan
                 if plan is None:
-                    logger.warn('No plan associated with subscription %s. Not updating license')
+                    logger.warn('No plan associated with subscription %s. Not updating license', stripe_subscription_id)
                 else:
                     factory = component.queryUtility(ISiteLicenseFactory, name=plan.id)
                     if factory is None:
