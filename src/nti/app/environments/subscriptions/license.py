@@ -76,12 +76,12 @@ class RegistryBackedPrice(SchemaConfigured):
     def __init__(self, *args, **kwargs):
         product = kwargs.pop('product', None)
         if product:
-            self._prodcut_id = getattr(product, 'id', product)
+            self._product_id = getattr(product, 'id', product)
         super(RegistryBackedPrice, self).__init__(*args, **kwargs)
 
     @property
     def product(self):
-        return component.queryUtility(IProduct, name=self._prodcut_id) if self._prodcut_id else None
+        return component.queryUtility(IProduct, name=self._product_id) if self._product_id else None
 
     
 @EqHash('id')
