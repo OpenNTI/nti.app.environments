@@ -29,15 +29,11 @@ from nti.app.environments.models.interfaces import SITE_STATUS_INACTIVE
 
 from nti.app.environments.subscriptions.interfaces import IProduct
 
+from nti.app.environments.subscriptions.views.sites import ManageSubscriptionPage
+
 from nti.app.environments.tests import BaseConfiguringLayer
 
-class BaseSubscriptionTest(BaseAppTest):
-
-    def setUp(self):
-        super(BaseSubscriptionTest, self).setUp()
-
-        self.customer_email = 'customer@example.com'
-        self.siteid = 'S1234'
+class BaseSubscriptionMixin(object):
 
     def _do_setup_site(self):
         customers = self._root().get('customers')
@@ -56,6 +52,31 @@ class BaseSubscriptionTest(BaseAppTest):
                                             dns_names=['x', 'y'],
                                             owner=customer), siteId=self.siteid)
         return site
+
+    def make_site(self):
+        customer = PersistentCustomer(email=self.customer_email,
+                                      name="Test Customer")
+
+        trial = TrialLicense(start_date=datetime.datetime(2019, 12, 12, 0, 0, 0),
+                             end_date=datetime.datetime(2019, 12, 13, 0, 0, 0))
+
+        site = PersistentSite(license=trial,
+                              environment=SharedEnvironment(name='test'),
+                              created=datetime.datetime(2019, 12, 11, 0, 0, 0),
+                              status=SITE_STATUS_ACTIVE,
+                              dns_names=['x', 'y'],
+                              owner=customer)
+
+        return site
+        
+
+class BaseSubscriptionTest(BaseSubscriptionMixin):
+
+    def setUp(self):
+        super(BaseSubscriptionTest, self).setUp()
+
+        self.customer_email = 'customer@example.com'
+        self.siteid = 'S1234'
             
 
 class TestAssociateSubscriptionInfo( BaseSubscriptionTest ):
@@ -167,9 +188,12 @@ class TestManageSubscriptionInfo( BaseSubscriptionTest ):
 
     
 
-class TestProductRegistration(unittest.TestCase):
+class TestProductRegistration(BaseSubscriptionMixin, unittest.TestCase):
 
     layer = BaseConfiguringLayer
+
+    customer_email = 'customer@example.com'
+    siteid = 'S1234'
     
     def test_registered_products(self):
         products = component.getAllUtilitiesRegisteredFor(IProduct)
@@ -180,6 +204,40 @@ class TestProductRegistration(unittest.TestCase):
         assert_that(product.yearly_price, not_none())
         assert_that(product.monthly_price, not_none())
         assert_that(product.monthly_price.product, is_(product))
+
+    def test_view_data(self):
+        site = self.make_site()
+        view = ManageSubscriptionPage(site, None)
+        product_info = view.plan_options()
+
+        assert_that(product_info, is_({'product_details':
+                                       {'enterprise': {'cost': 0},
+                                        'growth': {
+                                            'plans': [
+                                                {'cost': 199,
+                                                 'frequency': 'yearly',
+                                                 'plan_id': 'growth_yearly'},
+                                                {'cost': 239,
+                                                 'frequency': 'monthly',
+                                                 'plan_id': 'growth_monthly'}
+                                            ],
+                                            'seat_options': [x+1 for x in range(0,10)]
+                                        },
+                                        'starter': {
+                                            'plans': [
+                                                {'cost': 99,
+                                                 'frequency': 'yearly',
+                                                 'plan_id': 'starter_yearly'},
+                                                {'cost': 119,
+                                                 'frequency': 'monthly',
+                                                 'plan_id': 'starter_monthly'}],
+                                            'seat_options': [x+1 for x in range(0,5)]
+                                        },
+                                        'trial': {'cost': 0}},
+                                       'products': ['trial', 'starter', 'growth', 'enterprise']}
+        ))
+
+    
 
     
         
