@@ -146,7 +146,7 @@ class ManageSubscriptionPage(BaseView):
                 # UI doesn't show decimals right now (no room given design) but prices are in cents
                 # so make sure we only have exact dollars
                 assert price.cost % 100 == 0
-                plans.append({'plan_id': price.stripe_plan_id, 'cost': int(price.cost/100), 'frequency': freq})
+                plans.append({'plan_id': price.id, 'cost': int(price.cost/100), 'frequency': freq})
 
             if len(plans) > 1:
                 detail['plans'] = plans
@@ -186,6 +186,14 @@ class ManageSubscriptionPage(BaseView):
             'plans': self.plan_options()
         }
 
+class _Plan(object):
+    plan = None
+    quantity = None
+
+    def __init__(self, p, q):
+        self.plan = p
+        self.quantity = q
+    
 @view_config(renderer='templates/trigger_checkout.pt',
              permission=ACT_STRIPE_MANAGE_SUBSCRIPTION,
              request_method='POST',
@@ -197,26 +205,21 @@ class SubscriptionCheckout(BaseView):
     def stripe_key(self):
         return component.queryUtility(IStripeKey)
 
-    def _validate_plan(self, plan):
-        if not plan.plan or not plan.quantity:
-            logger.error('Missing plan %s or quantity %s', plan.plan, plan.quantity)
-            raise hexc.HTTPBadRequest()
-
-        # The plan we are given is an IPrice that should be registered
-        price = component.queryUtility(IPrice, name=plan.plan)
-        if not price:
-            logger.error('No IPrice for %s', plan.plan)
-            raise hexc.HTTPBadRequest('Invalid plan %s' % plan.plan)
-
-        product = price.product
-        if product.min_seats is not None and plan.quantity < product.min_seats:
-            logger.error('Plan requires at least %i seats', product.min_seats)
-            raise hexc.HTTPBadRequest('Plan requires at least %i seats', product.min_seats)
-
-        if product.max_seats is not None and plan.quantity > product.max_seats:
-            logger.error('Plan allows at most %i seats', product.max_seats)
-            raise hexc.HTTPBadRequest('Plan allows at most %i seats', product.max_seats)
+    def _as_subscribable_plan(self, price, seats):
+        if not price.stripe_plan_id:
+            logger.error('Plan %s is not a subscribable stripe plan', price.id)
+            raise hexc.HTTPBadRequest('Plan %s is not a subscribable stripe plan' % price.id)
         
+        product = price.product
+        if product.min_seats is not None and seats < product.min_seats:
+            logger.error('Plan requires at least %i seats', product.min_seats)
+            raise hexc.HTTPBadRequest('Plan requires at least %i seats' % product.min_seats)
+
+        if product.max_seats is not None and seats > product.max_seats:
+            logger.error('Plan allows at most %i seats', product.max_seats)
+            raise hexc.HTTPBadRequest('Plan allows at most %i seats' % product.max_seats)
+        
+        return _Plan(price.stripe_plan_id, seats)
     
     def __call__(self):
         if self.stripe_key is None:
@@ -239,18 +242,16 @@ class SubscriptionCheckout(BaseView):
             logger.warn('Site already has a subscription %s', subscription.id)
             raise hexc.HTTPBadRequest()
 
-        class Plan(object):
-            plan = None
-            quantity = 0
+        plan_id = self.request.params.get('plan', '')
+        price = component.queryUtility(IPrice, name=plan_id)
+        if not price:
+            logger.error('Missing plan with id %s', plan_id)
+            raise hexc.HTTPBadRequest()
 
-            def __init__(self, plan, quantity):
-                self.plan = plan
-                self.quantity = quantity
+        seats = int(self.request.params.get('seats', 1))
+            
 
-        plan = Plan(self.request.params.get('plan'),
-                    int(self.request.params.get('seats')))
-
-        self._validate_plan(plan)
+        plan = self._as_subscribable_plan(price, seats)
 
         owner = self.context.owner
         assert owner

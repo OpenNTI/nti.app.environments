@@ -1,12 +1,18 @@
 from hamcrest import assert_that
 from hamcrest import is_
+from hamcrest import not_none
 from hamcrest import has_entry
+from hamcrest import has_length
 
 import fudge
+
+import unittest
 
 from nti.app.environments.views.tests import BaseAppTest
 from nti.app.environments.views.tests import with_test_app
 from nti.app.environments.views.tests import ensure_free_txn
+
+from zope import component
 
 import datetime
 
@@ -16,8 +22,12 @@ from nti.app.environments.models.sites import PersistentSite
 from nti.app.environments.models.sites import TrialLicense
 from nti.app.environments.models.sites import SharedEnvironment
 
+from nti.app.environments.stripe.interfaces import IStripeCustomer
+
 from nti.app.environments.models.interfaces import SITE_STATUS_ACTIVE
 from nti.app.environments.models.interfaces import SITE_STATUS_INACTIVE
+
+from nti.app.environments.subscriptions.interfaces import IProduct
 
 from nti.app.environments.tests import BaseConfiguringLayer
 
@@ -72,7 +82,7 @@ class TestAssociateSubscriptionInfo( BaseSubscriptionTest ):
         resp = resp.json_body
         assert_that(resp, has_entry('subscription_id', sub_id))
 
-class TestAssociateSubscriptionInfo( BaseSubscriptionTest ):    
+class TestManageSubscriptionInfo( BaseSubscriptionTest ):
 
     @property
     def manage_subscription_url(self):
@@ -101,4 +111,77 @@ class TestAssociateSubscriptionInfo( BaseSubscriptionTest ):
         self.testapp.get(self.manage_subscription_url,
                          status=404,
                          extra_environ=self._make_environ(username=self.customer_email))
+
+    @with_test_app()
+    def test_checkout_only_owner(self):
+        with ensure_free_txn():
+            self._do_setup_site()
+
+        #valid plan and seats
+        params = {'plan': 'starter_monthly', 'seats': 3}
+
+        # Only owner gets a 200, all else gets 403
+        self.testapp.post(self.manage_subscription_url,
+                          params=params,
+                          status=403,
+                          extra_environ=self._make_environ(username='admin001'))
+
+        self.testapp.post(self.manage_subscription_url,
+                          params=params,
+                          status=200,
+                          extra_environ=self._make_environ(username=self.customer_email))
+        
+    @with_test_app()
+    def test_checkout_validates_seats(self):
+        with ensure_free_txn():
+            self._do_setup_site()
+
+        #too many seats
+        params = {'plan': 'starter_monthly', 'seats': 22}
+        self.testapp.post(self.manage_subscription_url,
+                          params=params,
+                          status=400,
+                          extra_environ=self._make_environ(username=self.customer_email))
+
+    @with_test_app()
+    def test_checkout_requires_good_plan(self):
+        with ensure_free_txn():
+            self._do_setup_site()
+
+        #not a valid plan
+        params = {'plan': 'starter_weekly', 'seats': 3}
+        self.testapp.post(self.manage_subscription_url,
+                          params=params,
+                          status=400,
+                          extra_environ=self._make_environ(username=self.customer_email))
+
+    @with_test_app()
+    def test_checkout_requires_active(self):
+        with ensure_free_txn():
+            site = self._do_setup_site()
+            site.status = SITE_STATUS_INACTIVE
+        
+        self.testapp.get(self.manage_subscription_url,
+                         status=404,
+                         extra_environ=self._make_environ(username=self.customer_email))
+
+    
+
+class TestProductRegistration(unittest.TestCase):
+
+    layer = BaseConfiguringLayer
+    
+    def test_registered_products(self):
+        products = component.getAllUtilitiesRegisteredFor(IProduct)
+        assert_that(products, has_length(4))
+
+    def test_finds_prices(self):
+        product = component.getUtility(IProduct, name="starter")
+        assert_that(product.yearly_price, not_none())
+        assert_that(product.monthly_price, not_none())
+        assert_that(product.monthly_price.product, is_(product))
+
+    
+        
+        
     

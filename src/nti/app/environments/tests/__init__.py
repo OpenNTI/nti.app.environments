@@ -48,10 +48,11 @@ class BaseConfiguringLayer(ZopeComponentLayer, ConfiguringLayerMixin):
             'hubspot_api_key': 'zzz',
             'hubspot_portal_id': 'kkk',
             'nti.environments.management.config': os.path.join(os.path.dirname(tests.__file__), 'test.ini'),
-            'zodbconn.uri': 'memory://'
+            'zodbconn.uri': 'memory://',
+            'zcml.features': 'devmode'
         }
 
-        configure_settings(settings)
+        cls.__config = configure_settings(settings)
 
         component.getGlobalSiteManager().registerUtility(settings, IOnboardingSettings)
 

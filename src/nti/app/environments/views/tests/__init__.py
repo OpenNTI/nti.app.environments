@@ -29,18 +29,21 @@ from nti.fakestatsd import FakeStatsDClient
 class BaseAppTest(unittest.TestCase):
 
     testapp = None
+    app = None
     request = None
 
     def setUp(self):
         self.request = testing.DummyRequest()
         self.request._set_registry(component.getGlobalSiteManager())
+
         self.settings={
             'zodbconn.uri' : 'memory://',
             'google_client_id': 'xxx',
             'google_client_secret': 'yyy',
             'new_site_request_notification_email': 'test@example.com',
             'site_setup_failure_notification_email': 'test@example.com',
-            'nti.environments.management.config': os.path.join(os.path.dirname(tests.__file__), 'test.ini')
+            'nti.environments.management.config': os.path.join(os.path.dirname(tests.__file__), 'test.ini'),
+            'zcml.features': 'devmode'
         }
         self.statsd = FakeStatsDClient()
         statsd_client_stack.push(self.statsd)
@@ -108,18 +111,19 @@ def with_test_app(auth_cookie=True, callback=dummy_callback):
         def func_wrapper(self):
             with ensure_free_txn():
                 settings = self.settings
-                app = main({}, **settings)
-                authn_policy = app.registry.getUtility(IAuthenticationPolicy)
-                if auth_cookie:
-                    authn_policy.policies['auth_tkt'].cookie = DummyCookieHelper({})
-                if callback:
-                    # TODO this doesn't look right to me, we are completely
-                    # bypassing the callback configured in the actual policy,
-                    # which could be non-trival.
-                    authn_policy.policies['auth_tkt'].callback = callback
+                if self.app is None:
+                    self.app = main({}, **settings)
+                    authn_policy = self.app.registry.getUtility(IAuthenticationPolicy)
+                    if auth_cookie:
+                        authn_policy.policies['auth_tkt'].cookie = DummyCookieHelper({})
+                    if callback:
+                        # TODO this doesn't look right to me, we are completely
+                        # bypassing the callback configured in the actual policy,
+                        # which could be non-trival.
+                        authn_policy.policies['auth_tkt'].callback = callback
 
-                assert component.getSiteManager() is app.registry
-                self.testapp = TestApp(app)
+                assert component.getSiteManager() is self.app.registry
+                self.testapp = TestApp(self.app)
             func(self)
         return func_wrapper
     return decorator
