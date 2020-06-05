@@ -17,9 +17,17 @@
 		 for=".interfaces.IStripeKey"
 		 provides=".interfaces.IStripeBillingPortal"/>
 
+	<adapter factory=".checkout.StripeCheckout"
+		 for=".interfaces.IStripeKey"
+		 provides=".interfaces.IStripeCheckout"/>
+
+	<adapter factory=".billing.StripeSubscriptionBilling"
+		 for=".interfaces.IStripeKey"
+		 provides=".interfaces.IStripeSubscriptionBilling"/>
+
 	<include package="." file="meta.zcml" />
 
-	<configure zcml:condition="not-have prod">
+	<configure zcml:condition="have devmode">
           <stripe:registerStripeKey
 		publishable_key="pk_test_gsyBVYVrN6NNdMDxj6rGX3hc"
 		secret_key="PVgnADEbRCpXLSV1EQ8La0FDNRFEAzMMRmlpOQ1nNA4=" />
@@ -35,8 +43,16 @@
 	  <implements interface=".interfaces.IStripeEvent" />
 	</class>
 
+	<class class="stripe.api_resources.checkout.session.Session">
+	  <implements interface=".interfaces.IStripeCheckoutSession" />
+	</class>
+
 	<class class="stripe.api_resources.billing_portal.session.Session">
 	  <implements interface=".interfaces.IStripeBillingPortalSession" />
+	</class>
+
+	<class class="stripe.api_resources.subscription.Subscription">
+	  <implements interface=".interfaces.IStripeSubscription" />
 	</class>
 
 	

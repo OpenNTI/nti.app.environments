@@ -2,7 +2,8 @@
 <!-- -*- mode: nxml -*- -->
 <configure	xmlns="http://namespaces.zope.org/zope"
 			xmlns:i18n="http://namespaces.zope.org/i18n"
-			xmlns:zcml="http://namespaces.zope.org/zcml">
+			xmlns:zcml="http://namespaces.zope.org/zcml"
+			xmlns:subs="http://nextthought.com/ntp/subscriptions">
 
 	<include package="zope.component" file="meta.zcml" />
 	<include package="zope.security" file="meta.zcml" />
@@ -10,9 +11,78 @@
 	<include package="zope.security" />
 
 	<adapter factory=".customer.stripe_customer_factory" />
+	<adapter factory=".license.stripe_subcription_factory" />
 
 	<adapter name="stripe_customer"
 		 for="nti.app.environments.models.interfaces.ICustomer pyramid.interfaces.IRequest"
 		 factory=".views.traversal.StripeCustomerPathAdapter"
 		 provides="zope.traversing.interfaces.IPathAdapter"/>
+
+	<adapter name="stripe_subscription"
+		 for="nti.app.environments.models.interfaces.ILMSSite pyramid.interfaces.IRequest"
+		 factory=".views.traversal.StripeSubscriptionPathAdapter"
+		 provides="zope.traversing.interfaces.IPathAdapter"/>
+
+	<adapter for="nti.app.environments.models.interfaces.IOnboardingRoot"
+		 factory=".sessions._sessions_from_root"
+		 provides=".interfaces.ICheckoutSessionStorage"/>
+
+	<utility component=".license.starter_factory"
+		 provides="nti.app.environments.models.interfaces.ISiteLicenseFactory"
+		 name="prod_H0SPYsV5S9DzdZ"/>
+
+	<utility component=".license.growth_factory"
+		 provides="nti.app.environments.models.interfaces.ISiteLicenseFactory"
+		 name="prod_H0SQlxRwqs0BOg"/>
+
+	<subscriber handler=".subscribers._checkout_session_completed" />
+
+	<include package="." file="meta.zcml" />
+
+	<subs:registerProduct id="trial"
+			      name="trial"/>
+	
+	<subs:registerProduct id="starter"
+			      name="starter"
+			      monthly_price="starter_monthly"
+			      yearly_price="starter_yearly"
+			      max_seats="5"/>
+	
+	<subs:registerProduct id="growth"
+			      name="growth"
+			      monthly_price="growth_monthly"
+			      yearly_price="growth_yearly"
+			      max_seats="10"/>
+	
+        <subs:registerProduct id="enterprise"
+			      name="enterprise"
+			      yearly_price="enterprise_yearly"
+			      min_seats="3"/>
+
+	<configure zcml:condition="have devmode">
+	  <subs:registerPrice id="starter_monthly"
+			      name="Monthly"
+			      cost="11900"
+			      stripe_plan_id="plan_H0mGeIfpAIA8EY"
+			      product="starter"/>
+	  <subs:registerPrice id="starter_yearly"
+			      name="Yearly"
+			      cost="9900"
+			      stripe_plan_id="plan_H0mGI267Ns0dle"
+			      product="starter"/>
+	  <subs:registerPrice id="growth_monthly"
+			      name="Monthly"
+			      cost="23900"
+			      stripe_plan_id="plan_H0mF4xaJYoOvpz"
+			      product="growth"/>
+	  <subs:registerPrice id="growth_yearly"
+			      name="Yearly"
+			      cost="19900"
+			      stripe_plan_id="plan_H0mFrbr2v0gKKh"
+			      product="growth"/>
+	  <subs:registerPrice id="enterprice_yearly"
+			      name="Yearly"
+			      cost="29900"
+			      product="enterprise"/>
+	</configure>
 </configure>

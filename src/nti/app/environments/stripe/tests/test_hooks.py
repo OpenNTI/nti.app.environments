@@ -164,6 +164,14 @@ class TestStripeWebhooks(BaseAppTest):
 
     @with_test_app()
     def test_sig_match_returns_200(self):
+        root = self._root()
+        # XXX We should absolutely not be doing this here, but the test
+        # infrastructure is missing some key things to be able to make this pass
+        # without large changes in tests right now. Need to come back to that in a different
+        # branch
+        with ensure_free_txn():
+            from nti.app.environments.generations.evolve2 import install_stripe_sessions
+            install_stripe_sessions(root)
         event = convert_to_stripe_object(SESSION_COMPLETED_EVENT)
 
         webhook_secret = component.getUtility(IWebhookSigningSecret, name='default')
@@ -177,6 +185,14 @@ class TestStripeWebhooks(BaseAppTest):
 
     @with_test_app()
     def test_notifies(self):
+        root = self._root()
+        # XXX We should absolutely not be doing this here, but the test
+        # infrastructure is missing some key things to be able to make this pass
+        # without large changes in tests right now. Need to come back to that in a different
+        # branch
+        with ensure_free_txn():
+            from nti.app.environments.generations.evolve2 import install_stripe_sessions
+            install_stripe_sessions(root)
         event = convert_to_stripe_object(SESSION_COMPLETED_EVENT)
 
         webhook_secret = component.getUtility(IWebhookSigningSecret, name='default')

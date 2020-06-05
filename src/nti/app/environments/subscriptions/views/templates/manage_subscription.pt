@@ -1,0 +1,536 @@
+<!-- Load Stripe.js on your website. -->
+<html>
+    <head>
+	<title>Manage Plan</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+	<meta charset="utf-8">
+	<meta http-equiv="Content-Type" content="Type=text/html; charset=utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="msapplication-tap-highlight" content="no">
+	<meta http-equiv="cleartype" content="on">
+	<meta name="viewport" content="user-scalable=no,width=device-width,initial-scale=1,maximum-scale=1">
+	<!-- android -->
+	<meta name="mobile-web-app-capable" content="yes">
+	<!-- iOS -->
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="apple-mobile-web-app-title" content="nextthought app">
+	<style>
+	 h1 {
+	     color: #494949;
+	     font-family: "Open Sans";
+	     font-size: 48px;
+	     font-weight: 300;
+	     letter-spacing: -0.75px;
+	     line-height: 65px;
+	 }
+
+	 div.wrapper {
+	     max-width: 900px;
+	     margin: auto;
+	     text-align: center;
+	     margin-top: 45px;
+	 }
+
+	 * {
+	     box-sizing: border-box;
+	 }
+	 .plans {
+	     display: flex;
+	     flex-wrap: wrap;
+	     justify-content: center;
+	     align-content: space-between;
+	 }
+	 .plan {
+	     border-radius: 2px;
+	     width: 142px;
+	     height: 177px;
+	     box-shadow: 0 0 2px 0 rgba(0, 0, 0, 0.2);
+	     padding: 5px 5px 15px;
+	     margin: 0 10px;
+	     cursor: pointer;
+	     position: relative;
+	     margin-bottom: 20px;
+	 }
+
+	 .plan .annual-only-lock {
+	     position: absolute;
+	     height: 26px;
+	     width: 19px;
+	     color: #b0b7c3;
+	     top: 8px;
+	     right: 4px;
+	 }
+	 
+	 .planwrapper {
+	     height: 100%;
+	     display: flex;
+	     flex-direction: column;
+	     align-items: center;
+	     justify-content: flex-end;
+	 }
+	 .plan.selected {
+	     box-shadow: 0 0 3px 0 #3FB34F;
+	     background-color: rgba(63, 179, 79, 0.1);
+	     cursor: default;
+	 }
+
+	 .plan.disabled {
+	     cursor: default;
+	 }
+
+	 .plan.disabled .planwrapper {
+	     opacity: .2;
+	 }
+	 
+	 .plan .planname {
+	     flex: 1 1 auto;
+	     display: flex;
+	     align-items: center;
+	     justify-content: center;
+	     color: #757474;
+	     font-family: "Open Sans", Arial, sans-serif;
+	     font-size: 18px;
+	     letter-spacing: 0;
+	     line-height: 24px;
+	     text-align: center;
+	 }
+	 .plan.selected .planname {
+	     color: #3FB34F;
+	     font-weight: bold;
+	 }
+	 .plan .price {
+	     flex: 0 0 auto;
+	     margin-bottom: 15px;
+	 }
+	 .plan .price .currency {
+	     color: #757474;
+	     font-family: Lato;
+	     font-size: 18px;
+	     font-weight: 500;
+	     line-height: 22px;
+	     text-align: center;
+	     vertical-align: top;
+	 }
+	 .plan .price .cost {
+	     color: #494949;
+	     font-family: Lato;
+	     font-size: 48px;
+	     font-weight: 500;
+	     letter-spacing: -0.75px;
+	     line-height: 57px;
+	     text-align: center;
+	     vertical-align: middle;
+	 }
+	 .hidden {
+	     visibility: hidden;
+	     display: none;
+	 }
+	 .plan .price .frequency {
+	     color: #757474;
+	     font-family: Lato;
+	     font-size: 12px;
+	     font-weight: 500;
+	     letter-spacing: -0.19px;
+	     line-height: 15px;
+	     text-align: center;
+	     vertical-align: middle;
+	 }
+	 .plan .details {
+	     color: #778679;
+	     font-family: "Open Sans";
+	     font-size: 12px;
+	     letter-spacing: 0;
+	     line-height: 17px;
+	     text-align: center;
+	 }
+
+	 .plan[data-plan="trial"] .details {
+	     color: #EF9600;
+	     font-family: "Open Sans";
+	     font-size: 12px;
+	     font-weight: bold;
+	     letter-spacing: 0;
+	     line-height: 17px;
+	     text-align: center;
+	 }
+
+	 a#moreinfo,
+	 a#needhelp,
+	 a#managepayment {
+	     color: #757474;
+	     font-family: "Open Sans";
+	     font-size: 14px;
+	     letter-spacing: 0;
+	     line-height: 19px;
+	     padding: 4px;
+	 }
+
+	 p.moredetails {
+	     color: #757474;
+	     font-family: "Open Sans";
+	     font-size: 14px;
+	     letter-spacing: 0;
+	     line-height: 19px;
+	     padding: 4px;
+	     margin-top: -18px;
+	 }
+
+	 form {
+	     padding-top: 40px;
+	 }
+
+	 form label {
+	     color: #757474;
+	     font-family: "Open Sans";
+	     font-size: 14px;
+	     letter-spacing: 0;
+	     line-height: 19px;
+	     padding: 4px;
+	     margin-bottom: 4px;
+	 }
+
+	 form select {
+	     height: 50px;
+	     width: 100%;
+	     color: #494949;
+	     font-family: "Open Sans";
+	     font-size: 16px;
+	     letter-spacing: 0;
+	     line-height: 22px;
+	     margin-top: 6px;
+	     text-transform: capitalize;
+	 }
+
+	 form input[type=submit]{
+	     border-radius: 3px;
+	     background-color: #3FB34F;
+	     color: #FFFFFF;
+	     font-family: "Open Sans";
+	     font-size: 16px;
+	     font-weight: 600;
+	     letter-spacing: 0;
+	     line-height: 22px;
+	     margin-top: 20px;
+	     padding: 16px 32px;
+	     min-width: 360px;
+	 }
+
+	 form input[type=text] {
+	     box-sizing: border-box;
+	     height: 50px;
+	     width: 100%;
+	     border: 1px solid #979797;
+	     background-color: #FFFFFF;
+	     color: #B8B8B8;
+	     font-family: "Open Sans";
+	     font-size: 16px;
+	     letter-spacing: 0;
+	     line-height: 22px;
+	     margin-top: 6px;
+	     padding: 12px;
+	     text-transform: capitalize;
+	 }
+
+	 a.button {
+	     box-sizing: border-box;
+	     border: 1px solid #3FB34F;
+	     border-radius: 3px;
+	     background-color: #3FB34F;
+	     color: #FFFFFF;
+	     font-family: "Open Sans";
+	     font-size: 16px;
+	     font-weight: 600;
+	     letter-spacing: 0;
+	     line-height: 22px;
+	     text-align: center;
+	     text-decoration: none;
+	     padding: 16px 32px;
+	     min-width: 360px;
+	 }
+
+	 a.secondary-button {
+	     box-sizing: border-box;
+	     border: 1px solid #3FB34F;
+	     border-radius: 3px;
+	     background-color: #3FB34F;
+	     color: #FFFFFF;
+	     font-family: "Open Sans";
+	     font-size: 16px;
+	     font-weight: 600;
+	     letter-spacing: 0;
+	     line-height: 22px;
+	     text-align: center;
+	     text-decoration: none;
+	     padding: 16px 32px;
+	     min-width: 360px;
+	 }
+
+	 form div.selectwrapper {
+	     display: inline-block;
+	     max-width: 80%;
+	     width: 304px;
+	     margin-bottom: 22px;
+	     text-align: start;
+	 }
+
+	 form#manage_billing {
+	     padding-top: 0px;
+	 }
+
+	 form#paynow {
+	     padding-top: 0px;
+	 }
+
+	 form#paynow input#submit {
+	     margin-bottom: 13px;
+	 }
+
+	 .logout {
+	     color: #757474;
+	     font-family: "Open Sans";
+	     font-size: 14px;
+	     letter-spacing: 0;
+	     line-height: 19px;
+	     text-align: right;
+	 }
+
+	</style>
+	<script src="https://code.jquery.com/jquery-3.4.1.min.js"
+		integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+		crossorigin="anonymous"></script>
+	<script>
+
+	 var PLANS = ${plans};
+	 var LICENSE = '${license.license_name}';
+	 var allows_updates = LICENSE == 'trial';
+
+	 (function($, window) {
+	     $.fn.replaceOptions = function(options) {
+		 var self, $option;
+
+		 this.empty();
+		 self = this;
+
+		 $.each(options, function(index, option) {
+		     $option = $("<option></option>")
+			 .attr("value", option.value)
+			 .text(option.text)
+		         .attr(option.data || {})
+		     self.append($option);
+		 });
+	     };
+	 })(jQuery, window);
+
+	 function updatePrice(option){
+	     if(!option){
+		 option = $('form:not(.hidden) select[name="plan"] :selected')
+		 option = (option && option.text()) || 'yearly';
+	     }
+	     $('.plan .price .cost[data-frequency]').addClass('hidden');
+	     if (option) {
+		 $('.plan .price .cost[data-frequency='+option+']').removeClass('hidden');
+	     }
+	     
+	 }
+
+	 function setupPayNow(plan){
+	     var product_id = plan.data('plan');
+	     var product_details = PLANS.product_details[product_id];
+
+	     var selected_seats = $('form#paynow select#seats').val()
+	     
+	     var seat_options = []
+	     for(var i=0; i<product_details.seat_options.length; i++){
+		 var seat_option = product_details.seat_options[i];
+		 seat_options.push({'value': seat_option, 'text': seat_option})
+	     }
+	     $('form#paynow select#seats').replaceOptions(seat_options);
+
+	     if(selected_seats){
+		 option = $('form#paynow select#seats option[value='+selected_seats+']')
+		 if(!option.length){
+		     option = $('form#paynow select#seats option').last()
+		 }
+		 $('form#paynow select#seats').val(option.val())
+	     }
+
+	     var selected_frequency = $('form#paynow select#frequency :selected').data('frequency')
+	     
+	     var plan_options = []
+	     for(var i=0; i<product_details.plans.length; i++){
+		 var plan_option = product_details.plans[i];
+		 plan_options.push({value: plan_option.plan_id,
+				    text: plan_option.frequency,
+				    data: {'data-frequency': plan_option.frequency}});
+	     }
+	     $('form#paynow select#frequency').replaceOptions(plan_options);
+
+	     if(selected_frequency){
+		 $('form#paynow select#frequency option[data-frequency='+selected_frequency+']').attr('selected', 'selected');
+	     }
+	 }
+
+	 function updateSelected(plan){
+	     $('.plan').removeClass('selected');
+	     plan.addClass('selected');
+	     var product_id = plan.data('plan');
+
+	     $('form:not(#nochanges)').addClass('hidden');
+	     var special_form = $('form#'+product_id);
+	     if(special_form.length){
+		 special_form.removeClass('hidden')
+	     }
+	     else{
+		 $('form#paynow').removeClass('hidden')
+		 setupPayNow(plan)
+	     }
+	     
+	     updatePrice();
+	 }
+
+	 $(document).ready(function(){
+	     if(!allows_updates){
+		 updatePrice($('form#nochanges input#frequency').val())
+		 return;
+	     }
+	     
+	     updateSelected($('.plan[data-plan='+LICENSE+']'));
+	     $('.plan').on('click', function(event){
+		 var plan = $(event.target).closest('.plan');
+		 if(!plan.hasClass('disabled') && !plan.hasClass('selected')){
+		     updateSelected(plan);
+		 }
+	     })
+	 });
+	 
+	</script>
+    </head>
+    <body>
+	
+	<div class="wrapper">
+	    <div class="header">
+	    <img class="logo" src="/static/image/nt-logo.svg"/>
+	    <metal:block tal:condition="username">
+		<div class="logout">Not ${username}? <a href="">Log Out</a></div>
+            </metal:block>
+	    </div>
+
+	    <metal:block tal:condition="trial">
+		<h1 tal:condition="trial['ended']">Your free trial has ended.<br/>Select a paid plan to retain access to your data.</h1>
+		<h1 tal:condition="not:trial['ended']">Your free trial ends soon.<br/>Upgrade to a paid plan.</h1>
+            </metal:block>
+	    <metal:block tal:condition="not:trial">
+		<h1>You are currently enrolled<br/>in the <metal:block tal:content="python: license.license_name.capitalize()">Enterprise</metal:block> plan.</h1>
+            </metal:block>
+	    <div class="planscontainer">
+		<div class="plans">
+		    <div tal:repeat="product plans.products"
+			 tal:attributes="class python:view.plan_classes(product);
+				     data-plan product">
+			<div class="planwrapper" tal:define="product_details python:plans['product_details'][product]">
+			    <div tal:condition="product == 'trial'" class="planname">14-Day<br/>Free Trial</div>
+			    <div tal:condition="product != 'trial'" class="planname" tal:content="python: product.capitalize()"></div>
+			    <div class="price">
+				<span class="currency">$</span>
+				<span class="cost" tal:condition="python: product_details.get('cost') != None"
+				      tal:content="product_details.cost">0</span>
+				<metal:block tal:condition="product_details.plans | nothing" tal:repeat="plan product_details.plans">
+				    <span tal:content="plan.cost"
+					  tal:attributes="data-frequency plan.frequency;
+						       class string:cost hidden"></span>
+				</metal:block>
+				<span class="frequency">mo</span>
+			    </div>
+			    <div class="details">
+				<metal:block tal:condition="python:trial and product =='trial'">
+				    <metal:block tal:content="python: trial['remaining_days']">1</metal:block> day<metal:block tal:condition="python: trial['remaining_days'] != 1">s</metal:block> left!<br/>&nbsp;
+				</metal:block>
+				<metal:block tal:condition="not:python:trial and product =='trial'">
+				<metal:block tal:condition="python: product !='trial'">
+				    Per Admin or Instructor, Per Month
+				</metal:block>
+				<metal:block tal:condition="python: product =='trial'">
+				    &nbsp;<br/>&nbsp;
+				</metal:block>
+				</metal:block>
+			    </div>
+			    <div tal:condition="product=='enterprise'" class="annual-only-lock">
+				<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="#b0b7c3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-lock">
+				    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+				    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+				</svg>
+			    </div>
+			</div>
+		    </div>
+		</div>
+		<p class="moredetails">Need more details? <a href="https://nextthought.com/pricing" id="moreinfo">Review each plan here.</a></p>
+	    </div>
+	    <metal:block tal:condition="python:not view.allows_plan_updates()">
+		<form id="nochanges" action="mailto:sales@nextthought.com">
+		    <div class="selectwrapper">	
+			<label for="frequency">Monthly or Yearly Payment</label><br>
+			<input tal:attributes="value license.frequency" type="text" id="frequency" disabled>
+		    </div>
+		    <div class="selectwrapper">	
+			<label for="seats">How many Administrators and Instructors?</label><br>
+			<input tal:attributes="value license.seats" type="text" id="seats" disabled>
+		    </div>
+		    <metal:block tal:condition="upcoming_invoice | nothing">
+			<div class="selectwrapper">	
+			    <label for="next_charge">Next Billing Date</label><br>
+			    <input tal:attributes="value python:view.format_date(upcoming_invoice.next_payment_attempt)"
+				   type="text" id="next_charge" disabled>
+			</div>
+			<div class="selectwrapper">	
+			    <label for="next_charge_amount">Amount Due</label><br>
+			    <input tal:attributes="value python:view.format_currency(upcoming_invoice.amount_due)"
+				   type="text" id="next_charge_amount" disabled>
+			</div>
+		    </metal:block>
+		    <input id="submit" type="submit" value="Contact our team to change your plan.">
+		</form>
+	    </metal:block>
+	    <metal:block tal:condition="python:view.allows_plan_updates()">
+		<form id="trial" class="hidden">
+		    <a class="secondary-button" href="mailto:sales@nextthought.com">Have a question? Contact our team.</a>
+		</form>
+		<form id="paynow" action="${submit}" method="POST" class="hidden">
+		    <div class="selectwrapper">
+			<label for="frequency">Monthly or Yearly Payment</label><br>
+			<select id="frequency" name="plan" onchange="updatePrice()">
+			</select>
+		    </div>
+		    <div class="selectwrapper">	
+			<label for="seats">How many Administrators and Instructors</label><br>
+			<select id="seats" name="seats">
+			</select>
+		    </div>
+		    <br/>
+		    <input id="submit" type="submit" value="Continue">
+		    <br/>
+		    <a tal:condition="trial" href="mailto:sales@nextthought.com" id="needhelp">Have questions? Connect with our team.</a>
+		</form>
+		<form id="enterprise" action="mailto:sales@nextthought.com" class="hidden">
+		    <div class="selectwrapper">	
+			<label for="enterprisebillingperiod">Only Available in Yearly Payments</label><br>
+			<input type="text" id="enterprisebillingperiod" value="Yearly" disabled>
+		    </div>
+		    <div class="selectwrapper">	
+			<label for="enterpriseseats">How many Administrators and Instructors?</label><br>
+			<input type="text" id="enterprisebillingperiodenterpriseseats" value="Minimum of 3" disabled>
+		    </div>
+		    <br/>
+		    <input id="submit" type="submit" value="Contact us to enroll in the Enterprise plan.">
+		</form>
+	    </metal:block>
+	    <form tal:condition="manage_billing" id="manage_billing" method="POST" action=${manage_billing}>
+		<!-- Your Form -->    
+		<a id="managepayment" href="javascript:{}" onclick="document.getElementById('manage_billing').submit(); return false;">Manage Payment Info</a>
+	    </form>
+	</div>
+    </body>
+
+</html>
+
+
+
+

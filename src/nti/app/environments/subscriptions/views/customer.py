@@ -46,10 +46,13 @@ class ManageStripeCustomerInfoView(BaseView):
 class ManageBillingView(BaseView):
 
     def __call__(self):
+
         key = component.getUtility(IStripeKey)
         portal = IStripeBillingPortal(key)
 
-        return_url = self.request.resource_url(self.context.__parent__, '@@details')
+        return_url = self.request.params.get('return')
+        if not return_url:
+            return_url = self.request.resource_url(self.context.__parent__, '@@details')
         session = portal.generate_session(self.context, return_url)
 
         return hexc.HTTPSeeOther(location=session.url)

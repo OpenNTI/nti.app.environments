@@ -79,4 +79,25 @@ class TestManageBillingView(BaseAppTest):
                                  extra_environ=self._make_environ(username=email))
 
 
+    @with_test_app()
+    @fudge.patch('nti.app.environments.stripe.billing.StripeBillingPortal.generate_session')
+    def test_manage_billing(self, mock_generate_session):
+        email = '123@gmail.com'
+        with ensure_free_txn():
+            customers = self._root().get('customers')
+            customer = PersistentCustomer(email=email,
+                                          name="testname")
+            customers.addCustomer(customer)
+            IStripeCustomer(customer).customer_id = 'cus_1234'
+
+        url = f'/onboarding/customers/{email}/stripe_customer/@@manage_billing?return=https%3A%2F%2Fexample.com%2Freturn'
+
+        mock_generate_session.expects_call().with_args(arg.has_attr(customer_id='cus_1234'),
+                                                       'https://example.com/return').returns(convert_to_stripe_object(SESSION_EXAMPLE))
+
+        resp = self.testapp.post(url,
+                                 status=303,
+                                 extra_environ=self._make_environ(username=email))    
+
+
 

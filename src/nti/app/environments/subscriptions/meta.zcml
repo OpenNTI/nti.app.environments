@@ -1,0 +1,14 @@
+<configure	xmlns="http://namespaces.zope.org/zope"
+			xmlns:meta="http://namespaces.zope.org/meta">
+
+	<meta:directives namespace="http://nextthought.com/ntp/subscriptions">
+		<meta:directive	name="registerPrice"
+				schema=".zcml.IRegisterPriceDirective"
+				handler=".zcml.registerPrice" />
+
+		<meta:directive	name="registerProduct"
+				schema=".zcml.IRegisterProductDirective"
+				handler=".zcml.registerProduct" />
+	</meta:directives>
+
+</configure>

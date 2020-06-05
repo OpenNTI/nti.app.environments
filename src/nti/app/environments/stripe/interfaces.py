@@ -1,9 +1,15 @@
+import sys
+
 from zope import interface
+
+from zope.interface import Attribute
+
 
 from nti.schema.field import HTTPURL
 from nti.schema.field import Object
 from nti.schema.field import ValidTextLine
 from nti.schema.field import Integral
+from nti.schema.field import Mapping
 
 class IStripeKey(interface.Interface):
 
@@ -56,6 +62,56 @@ class IStripeBillingPortal(interface.Interface):
         Note: Do not rely on the return_url being called. Handle consuming
         changes via webhooks or polling.
         """
+
+class IStripeSubscription(interface.Interface):
+
+    id = ValidTextLine(title='The subscription identifier')
+
+
+class IStripeSubscriptionBilling(interface.Interface):
+
+    def get_subscription(subscription):
+        """
+        Fetch the full subscription for subscription.id
+        from stripe.
+        """
+
+    def get_upcoming_invoice(subscription):
+        """
+        Get the next invoice for this subscription.
+        """
+
+class IStripeCheckoutSession(interface.Interface):
+
+    id = ValidTextLine(title='The session identifier')
+
+class IStripeSubscriptionItem(interface.Interface):
+
+    plan = ValidTextLine(title='The plan identifier',
+                         required=True)
+
+    quantity = Integral(title='The quantity of the subscription',
+                        required=True,
+                        default=1)
+
+class IStripeCheckout(interface.Interface):
+
+    def generate_subscription_session(subscription_items,
+                                      cancel_url,
+                                      success_url,
+                                      customer=None,
+                                      customer_email=None,
+                                      client_reference_id=None,
+                                      metadata=None):
+        """
+        Start a checkout session to subscribe to a list of IStripeSubscriptionItem objects.
+        An optional IStripeCustomer can be provided, in which case the subscription will be tied
+        to an existing customer.
+
+        The returned IStripeCheckoutSession.id can be used to launch a client side stripe
+        checkout flow. See: https://stripe.com/docs/payments/checkout/set-up-a-subscription
+        """
+
 class IStripeEventData(interface.Interface):
 
     object = Attribute('The stripe object relevant to the event')

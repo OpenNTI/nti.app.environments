@@ -5,6 +5,8 @@ from zope.app.publication.zopepublication import ZopePublication
 
 from zope.generations.generations import SchemaManager
 
+from .evolve2 import install_stripe_sessions
+
 from ..models import OnboardingRoot
 from ..models import ROOT_KEY
 from ..models import CUSTOMERS
@@ -15,7 +17,7 @@ from ..models.customers import CustomersFolder
 from ..models.sites import SitesFolder
 from ..models.hosts import HostsFolder
 
-generation = 1
+generation = 2
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -70,7 +72,8 @@ def _install_root(zodb_root, key=ROOT_KEY):
 def install_root_folders(context):
     logger.info('Installing root folders via schema manager')
     root_folder = context.connection.root()[ZopePublication.root_name]
-    _install_root(root_folder)
+    root = _install_root(root_folder)
+    install_stripe_sessions(root)
 
 def evolve(context):
     install_root_folders(context)
