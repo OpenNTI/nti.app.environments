@@ -35,6 +35,14 @@
 		 provides="nti.app.environments.models.interfaces.ISiteLicenseFactory"
 		 name="prod_H0SQlxRwqs0BOg"/>
 
+	<utility component=".license.starter_factory"
+		 provides="nti.app.environments.models.interfaces.ISiteLicenseFactory"
+		 name="prod_HPUw84COSnKMmx"/>
+
+	<utility component=".license.growth_factory"
+		 provides="nti.app.environments.models.interfaces.ISiteLicenseFactory"
+		 name="prod_HPUxMKa4uXXHuN"/>
+
 	<subscriber handler=".subscribers._checkout_session_completed" />
 
 	<include package="." file="meta.zcml" />
