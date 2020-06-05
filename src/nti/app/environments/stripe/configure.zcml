@@ -27,7 +27,7 @@
 
 	<include package="." file="meta.zcml" />
 
-	<configure zcml:condition="not-have prod">
+	<configure zcml:condition="have devmode">
           <stripe:registerStripeKey
 		publishable_key="pk_test_gsyBVYVrN6NNdMDxj6rGX3hc"
 		secret_key="PVgnADEbRCpXLSV1EQ8La0FDNRFEAzMMRmlpOQ1nNA4=" />
