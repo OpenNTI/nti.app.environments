@@ -39,6 +39,15 @@
 	      name="_testing" />
 	</configure>
 
+	<configure zcml:condition="have asci-test">
+          <stripe:registerStripeKey
+		publishable_key="pk_test_LIpQyLD7p5FmspOs6pPW9gWG"
+		secret_key="PVgnADEbRCpUI013awU3VRJEOy95OA5fNURGcAZ9OgQ=" />
+	  <stripe:registerWebhookSecret
+	      secret="OVsLETc3CAYWOwx1GA0qSg1GJh5FGi9dME5wOShZOg0XMQE9LC8="
+	      name="default" />
+	</configure>
+
 	<class class="stripe.api_resources.event.Event">
 	  <implements interface=".interfaces.IStripeEvent" />
 	</class>

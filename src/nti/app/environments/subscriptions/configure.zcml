@@ -85,4 +85,31 @@
 			      cost="29900"
 			      product="enterprise"/>
 	</configure>
+
+	<configure zcml:condition="have asci-test">
+	  <subs:registerPrice id="starter_monthly"
+			      name="Monthly"
+			      cost="11900"
+			      stripe_plan_id="price_0GqfwCfWolyj2wJcolqIzojG"
+			      product="starter"/>
+	  <subs:registerPrice id="starter_yearly"
+			      name="Yearly"
+			      cost="9900"
+			      stripe_plan_id="price_0GqfwCfWolyj2wJcSRAUybZr"
+			      product="starter"/>
+	  <subs:registerPrice id="growth_monthly"
+			      name="Monthly"
+			      cost="23900"
+			      stripe_plan_id="price_0GqfxpfWolyj2wJc4Wo0mIAt"
+			      product="growth"/>
+	  <subs:registerPrice id="growth_yearly"
+			      name="Yearly"
+			      cost="19900"
+			      stripe_plan_id="price_0GqfxpfWolyj2wJczvnBEFLc"
+			      product="growth"/>
+	  <subs:registerPrice id="enterprice_yearly"
+			      name="Yearly"
+			      cost="29900"
+			      product="enterprise"/>
+	</configure>
 </configure>
