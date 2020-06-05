@@ -155,7 +155,7 @@ class ManageSubscriptionPage(BaseView):
                     cost = plans[0]['cost']
                 except IndexError:
                     cost = 0
-                detail['cost'] = 0
+                detail['cost'] = cost
             details[pid] = detail
         
         return {

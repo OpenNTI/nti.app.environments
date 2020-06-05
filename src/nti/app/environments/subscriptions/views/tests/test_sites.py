@@ -211,7 +211,7 @@ class TestProductRegistration(BaseSubscriptionMixin, unittest.TestCase):
         product_info = view.plan_options()
 
         assert_that(product_info, is_({'product_details':
-                                       {'enterprise': {'cost': 0},
+                                       {'enterprise': {'cost': 299},
                                         'growth': {
                                             'plans': [
                                                 {'cost': 199,
