@@ -80,7 +80,7 @@
 			      cost="19900"
 			      stripe_plan_id="plan_H0mFrbr2v0gKKh"
 			      product="growth"/>
-	  <subs:registerPrice id="enterprice_yearly"
+	  <subs:registerPrice id="enterprise_yearly"
 			      name="Yearly"
 			      cost="29900"
 			      product="enterprise"/>
@@ -107,7 +107,7 @@
 			      cost="19900"
 			      stripe_plan_id="price_0GqfxpfWolyj2wJczvnBEFLc"
 			      product="growth"/>
-	  <subs:registerPrice id="enterprice_yearly"
+	  <subs:registerPrice id="enterprise_yearly"
 			      name="Yearly"
 			      cost="29900"
 			      product="enterprise"/>
