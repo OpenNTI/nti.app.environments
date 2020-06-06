@@ -35,7 +35,7 @@ def formatDateToLocal(dt, _format='%Y-%m-%d %H:%M:%S', default='', local_tz='US/
     if isinstance(dt, (float, int)):
         dt = datetime.datetime.utcfromtimestamp(dt)
 
-    if dt and not dt.tzinfo:
+    if dt and dt.tzinfo is None:
         dt = pytz.utc.localize(dt)
 
     if dt and local_tz:
