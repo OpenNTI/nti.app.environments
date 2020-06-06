@@ -1,5 +1,6 @@
 import unittest
 import datetime
+from datetime import timezone
 
 from hamcrest import calling
 from hamcrest import raises
@@ -37,3 +38,7 @@ class TestCommon(unittest.TestCase):
         assert_that(formatDateToLocal(datetime.datetime(2020,1,13,0,0,1)), is_('2020-01-12 18:00:01'))
         assert_that(formatDateToLocal(datetime.datetime(2020,1,13,0,0,0), '%Y-%m-%dT%H:%M:%S'), is_('2020-01-12T18:00:00'))
         assert_that(formatDateToLocal(datetime.datetime(2020,1,13,0,0,1), local_tz="Asia/ShangHai"), is_('2020-01-13 08:00:01'))
+
+    def testformatTZDateToLocal(self):
+        tzaware = datetime.datetime(2020,1,13,0,0,1, tzinfo=timezone.utc)
+        assert_that(formatDateToLocal(tzaware), is_('2020-01-12 18:00:01'))
