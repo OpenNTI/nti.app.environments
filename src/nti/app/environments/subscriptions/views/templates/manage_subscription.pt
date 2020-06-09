@@ -20,7 +20,28 @@
 	     font-size: 48px;
 	     font-weight: 300;
 	     letter-spacing: -0.75px;
-	     line-height: 65px;
+	     line-height: 4rem;
+	 }
+
+	 .logout {
+	     color: #757474;
+	     font-family: "Open Sans";
+	     font-size: 14px;
+	     letter-spacing: 0;
+	     line-height: 19px;
+	     text-align: right;
+	 }
+
+	 @media screen and (max-width: 588px) {
+	     h1 {
+		 font-size: 30px;
+		 line-height: 2rem;
+	     }
+
+	     .logout {
+		 text-align: center;
+	     }
+
 	 }
 
 	 div.wrapper {
@@ -284,14 +305,7 @@
 	     margin-bottom: 13px;
 	 }
 
-	 .logout {
-	     color: #757474;
-	     font-family: "Open Sans";
-	     font-size: 14px;
-	     letter-spacing: 0;
-	     line-height: 19px;
-	     text-align: right;
-	 }
+	 
 
 	</style>
 	<script src="https://code.jquery.com/jquery-3.4.1.min.js"
