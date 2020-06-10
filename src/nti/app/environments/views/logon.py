@@ -4,16 +4,33 @@ import requests
 
 from pyramid import httpexceptions as hexc
 
-from pyramid.security import remember
-from pyramid.security import forget
-
 from pyramid.view import view_config
 
 from six.moves import urllib_parse
 
 from zope import component
 
+from nti.mailer.interfaces import ITemplatedMailer
+
+from nti.externalization.interfaces import LocatedExternalDict
+
+from nti.app.environments.authentication import forget
+from nti.app.environments.authentication import remember
+from nti.app.environments.authentication import setup_challenge_for_customer
+from nti.app.environments.authentication import validate_challenge_for_customer
+
 from nti.app.environments.interfaces import IOnboardingSettings
+from nti.app.environments.interfaces import IOTPGenerator
+
+from nti.app.environments.models.interfaces import IOnboardingRoot
+from nti.app.environments.models.interfaces import checkEmailAddress
+
+from nti.app.environments.models.utils import get_customers_folder
+
+from .base import BaseView
+from .customers import EmailChallengeView
+from .customers import EmailChallengeVerifyView
+from .utils import raise_json_error
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -50,7 +67,6 @@ _DEFAULT_SUCCESS_URL = '/onboarding'
 
 def _success_url(request):
     return request.params.get('success') or _DEFAULT_SUCCESS_URL
-
 
 @view_config(request_method='GET',
              name=LOGON_GOOGLE_VIEW)
@@ -141,10 +157,10 @@ def google_oauth2(context, request):
             if domain != hosted_domain:
                 raise hexc.HTTPUnprocessableEntity('Invalid domain')
 
-        headers = remember(request, email)
+        remember(request, email)
         request.session['login.realname'] = profile.get('name') or 'Unknown Name'
         success = request.session.get('google.success') or _DEFAULT_SUCCESS_URL
-        return hexc.HTTPFound(location=success, headers=headers)
+        return hexc.HTTPFound(location=success, headers=request.response.headers)
 
     except Exception as e:
         logger.exception('Failed to login with google')
@@ -161,12 +177,68 @@ def login(context, request):
     return {'rel_logon': urllib_parse.urljoin(request.application_url, LOGON_GOOGLE_VIEW),
             'success': success}
 
+@view_config(context=IOnboardingRoot,
+             request_method='POST',
+             name='login.email',
+             renderer='rest')
+class LoginWithEmailView(EmailChallengeView):
+
+    _email_template = 'nti.app.environments:email_templates/login_with_email'
+
+    def _do_call(self, params):        
+        forget(self.request)
+
+        email = self._get_value('email', params, None)
+        if not email or not checkEmailAddress(email):
+            raise_json_error(hexc.HTTPUnprocessableEntity, 'Invalid Email.')
+
+        customers = get_customers_folder(request=self.request)
+        try:
+            customer = customers[email]
+        except:
+            customer = None
+
+        if customer:
+            code = setup_challenge_for_customer(customer)
+        else:
+            otp = component.getUtility(IOTPGenerator)
+            code = otp.generate_passphrase()
+
+        code_prefix = code[:6]
+        code_suffix = code[6:].upper()
+
+        template_args = {
+            'name': customer.name,
+            'email': customer.email,
+            'code_suffix': code_suffix
+        }
+
+        self._send_mail('nti.app.environments:email_templates/login_with_email',
+                        subject=self._email_subject(code_suffix),
+                        recipients=[customer.email],
+                        template_args=template_args)
+
+        return {'email': email,
+                'code_prefix': code_prefix}
+
+@view_config(context=IOnboardingRoot,
+             renderer='rest',
+             request_method='POST',
+             name='login.email.verify')
+class LoginWithEmailVerifyView(EmailChallengeVerifyView):
+
+    @property
+    def customers(self):
+        return get_customers_folder(request=self.request)
+
+    def __call__(self):
+        return self.verify_from_api()
+
 
 @view_config(request_method='GET',
              name=LOGOUT_VIEW)
 def logout(context, request):
     request.session.invalidate()
-    headers = forget(request)
+    forget(request)
     url = urllib_parse.urljoin(request.application_url, LOGIN_VIEW)
-    return hexc.HTTPFound(location=url,
-                          headers=headers)
+    return hexc.HTTPFound(location=url, headers=request.response.headers)

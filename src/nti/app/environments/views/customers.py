@@ -182,12 +182,16 @@ class RecoveryChallengeFailed(ValueError):
                context=ICustomersContainer)
 class EmailChallengeVerifyView(BaseView):
 
+    @property
+    def customers(self):
+        return self.context
+
     def do_verify(self, params):
         email = self._get_value('email', params, required=True)
         code = self._get_value('code', params, required=True)
 
         # Get the customer
-        customer = self.context.get(email)
+        customer = self.customers.get(email)
 
         # This should exist
         if customer is None:
