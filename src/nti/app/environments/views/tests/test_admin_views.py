@@ -1,5 +1,8 @@
 import time
 import datetime
+from datetime import timedelta
+
+import fudge
 
 from unittest import mock
 from hamcrest import is_
@@ -8,15 +11,21 @@ from hamcrest import assert_that
 from hamcrest import has_length
 from hamcrest import has_entries
 from hamcrest import instance_of
+from hamcrest import has_key
+from hamcrest import all_of
 
+from nti.app.environments.models.interfaces import ISiteUsage
+from nti.app.environments.models.interfaces import SITE_STATUS_ACTIVE
 from nti.app.environments.models.interfaces import SITE_STATUS_OPTIONS
 from nti.app.environments.models.interfaces import SITE_STATUS_INACTIVE
 from nti.app.environments.models.interfaces import SHARED_ENV_NAMES
 
 from nti.app.environments.models.customers import PersistentCustomer
 from nti.app.environments.models.customers import HubspotContact
-from nti.app.environments.models.sites import PersistentSite, TrialLicense,\
-    SharedEnvironment
+from nti.app.environments.models.sites import PersistentSite
+from nti.app.environments.models.sites import TrialLicense
+from nti.app.environments.models.sites import StarterLicense
+from nti.app.environments.models.sites import SharedEnvironment
 
 from nti.app.environments.views.admin_views import SitesListView
 from nti.app.environments.views.admin_views import SiteDetailView
@@ -186,3 +195,111 @@ class TestTrialSitesDigestEmailView(BaseAppTest):
         assert_that(inst.get_past_due_trial_sites(_d(4,14)), has_length(0))
         assert_that(inst.get_past_due_trial_sites(_d(4,15)), has_length(1))
         assert_that(inst.get_past_due_trial_sites(_d(4,18)), has_length(3))
+
+class TestLicenseAuditView(BaseAppTest):
+
+    @property
+    def url(self):
+        return '/onboarding/sites/@@license_audit'
+
+    def setUp(self):
+        super(TestLicenseAuditView, self).setUp()
+        self.now = datetime.datetime.utcnow()
+
+    def _create_site(self, **kwargs):
+        if 'environment' not in kwargs:
+            kwargs['environment'] = SharedEnvironment(name='test')
+        if 'status' not in kwargs:
+            kwargs['status'] = SITE_STATUS_ACTIVE
+        if 'dns_names' not in kwargs:
+            kwargs['dns_names'] = ['foo.bar.com']
+        if 'license' not in kwargs:
+            kwargs['license'] = TrialLicense(start_date=self.now-timedelta(days=7),
+                                             end_date=self.now+timedelta(days=7))
+        
+        return PersistentSite(**kwargs)
+
+    def _init_data(self):
+        root = self._root()
+        customers = root.get('customers')
+        customer = PersistentCustomer(email='123@gmail.com',
+                                      name="testname",
+                                      hubspot_contact=HubspotContact(contact_vid='vid001'))
+        customer = customers.addCustomer(customer)
+
+        sites = root.get('sites')
+
+        # Setup 4 sites. One inactive, one trial within 3 days of expiration,
+        # one starter over the usage limit and one starter in the limits
+        sites.addSite(self._create_site(status=SITE_STATUS_INACTIVE, owner=customer), 'inactive')
+        sites.addSite(self._create_site(owner=customer), 'threeday')
+        sites.addSite(self._create_site(owner=customer), 'overlimit')
+        sites.addSite(self._create_site(owner=customer), 'good')
+
+        site = sites['threeday']
+        site.license = TrialLicense(start_date=self.now-timedelta(days=7),
+                                    end_date=self.now+timedelta(days=3))
+
+        for id, usage in (('overlimit', 99), ('good', 3)):
+            site = sites[id]
+            site.license = StarterLicense(start_date=self.now-timedelta(days=7),
+                                          frequency='yearly',
+                                          seats=5)
+
+            ISiteUsage(site).used_seats = usage
+
+    @with_test_app()
+    def test_requires_reporting(self):
+        with ensure_free_txn():
+            self._init_data()
+        
+        self.testapp.get(self.url,
+                         status=403,
+                         extra_environ=self._make_environ(username='user001'))
+
+        self.testapp.get(self.url,
+                         status=200,
+                         extra_environ=self._make_environ(username='admin001'))
+        
+    @with_test_app()
+    def test_license_audit(self):
+        with ensure_free_txn():
+            self._init_data()
+
+        resp = self.testapp.get(self.url,
+                                status=200,
+                                extra_environ=self._make_environ(username='admin001'))
+        resp = resp.json
+        assert_that(resp, has_entries('Items', has_length(2)))
+        assert_that(resp, has_entries('Items', all_of(has_key('threeday'),
+                                                      has_key('overlimit'))))
+        
+
+    @with_test_app()
+    def test_date_threshold_override(self):
+        with ensure_free_txn():
+            self._init_data()
+
+        resp = self.testapp.get(self.url,
+                                params={'trial_threshold_days': 1},
+                                status=200,
+                                extra_environ=self._make_environ(username='admin001'))
+        resp = resp.json
+        assert_that(resp, has_entries('Items', has_length(1)))
+        assert_that(resp, has_entries('Items', has_key('overlimit')))
+
+    @with_test_app()
+    @fudge.patch('nti.app.environments.views.admin_views._do_fetch_site_usage')
+    def test_can_force_usage_query(self, mock_usage_query):
+        with ensure_free_txn():
+            self._init_data()
+
+        mock_usage_query.expects_call()
+
+        self.testapp.get(self.url,
+                         params={'query_usage': True},
+                         status=200,
+                         extra_environ=self._make_environ(username='admin001'))
+        
+        
+        
