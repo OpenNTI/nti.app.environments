@@ -1,0 +1,83 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:metal="http://xml.zope.org/namespaces/metal" xmlns:tal="http://xml.zope.org/namespaces/tal" xmlns:i18n="http://xml.zope.org/namespaces/i18n" i18n:domain="nti.app.environments" i18n:source="en">
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600" rel="stylesheet">
+	<title>
+	    Confirm Your Email Address
+	</title>
+	<style>
+	 body {
+	     background-color: #F9F9F9;
+	     color: #494949;
+	     font-family: 'Open Sans', sans-serif, Helvetica, Arial;
+	     padding-top: 20px;
+	     padding-bottom: 20px;
+	 }
+	 .container {
+	     max-width: 610px;
+	     margin: 0 auto;
+	     padding: 47px 60px 50px 60px;
+	     font-size: 17px;
+	     background-color: #FFFFFF;
+	     border-top: 3px solid #3FB34F;
+	 }
+	 .title {
+	     margin-top: 20px;
+	     font-size: 26px;
+	     font-weight: 600;
+	     letter-spacing: -0.5px;
+	     line-height: 36px;
+	 }
+	 .content {
+	     font-size: 16px;
+	     line-height: 24px;
+	 }
+	 .code {
+	     margin-top: 33px;
+	     text-align:center;
+	     background-color:#f4f4f4;
+	     padding: 20px 0;
+	     font-size: 24px;
+	     letter-spacing: 2px;
+	     line-height: 33px;
+	     border-radius: 4px;
+	 }
+	 hr {
+	     margin-top: 120px;
+	     border:1px solid rgba(0,0,0,0.07);
+	     border-bottom: 0;
+	 }
+	 .footer {
+	     margin-top: 18px;
+	     font-size: 12px;
+	     line-height: 17px;
+	 }
+	</style>
+    </head>
+    <body>
+	<div class="container">
+	    <img src="https://assets.nextthought.com/images/nextthought/platform/email/logo_trans_square.png" width="41.87" height="40"/>
+	    <div class="title">Confirm Your Email Address</div>
+	    <div i18n:translate="" class="content" style="margin-top: 12px;">
+		In order to continue with your request we need to confirm your email.
+	    </div>
+	    <div i18n:translate="" class="content" style="margin-top: 17px;">
+		Enter the following code in the window when prompted.
+		This confirmation code will expire soon.
+	    </div>
+	    <div class="code">
+		${code_suffix}
+	    </div>
+	    <div class="content" style="margin-top: 34px;">
+		<span i18n:translate="">
+		    This email contains private information for your account - please don't forward it.
+		</span>
+	    </div>
+	    <hr />
+	    <div class="footer">
+		If you did not request this email it is safe to ignore.
+	    </div>
+	</div>
+    </body>
+</html>
