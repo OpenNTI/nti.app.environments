@@ -100,7 +100,7 @@ class SiteCreatedEmailNotifier(BaseEmailNotifier):
     def _recipients(self):
         settings = component.getUtility(IOnboardingSettings)
         setting = settings['new_site_request_notification_email']
-        return setting.split() if setting else []
+        return setting.split(',') if setting else []
 
     def _template_args(self):
         template_args = {
