@@ -192,6 +192,12 @@ class LoginWithEmailView(EmailChallengeView):
         if not email or not checkEmailAddress(email):
             raise_json_error(hexc.HTTPUnprocessableEntity, 'Invalid Email.')
 
+        # *Important* Note the care taken here to keep the flows
+        # as close to possible whether or not we have a customer.
+        # We don't want don't the response to vary in data or
+        # other noticible ways (ideally even in timing) or this becomes a method
+        # to farm valid customer emails.
+
         customers = get_customers_folder(request=self.request)
         try:
             customer = customers[email]
@@ -209,13 +215,20 @@ class LoginWithEmailView(EmailChallengeView):
 
         template_args = {
             'email': email,
-            'code_suffix': code_suffix
+            'code_suffix': code_suffix,
+            'app_link': self.request.application_url
         }
 
-        self._send_mail('nti.app.environments:email_templates/login_with_email',
-                        subject=self._email_subject(code_suffix),
-                        recipients=[customer.email],
-                        template_args=template_args)
+        if customer is None:
+            self._send_mail('nti.app.environments:email_templates/customer_not_found',
+                            subject=f'Your account is not found: {email}',
+                            recipients=[email],
+                            template_args=template_args)
+        else:
+            self._send_mail('nti.app.environments:email_templates/login_with_email',
+                            subject=self._email_subject(code_suffix),
+                            recipients=[customer.email],
+                            template_args=template_args)
 
         return {'email': email,
                 'code_prefix': code_prefix}
