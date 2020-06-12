@@ -208,8 +208,7 @@ class LoginWithEmailView(EmailChallengeView):
         code_suffix = code[6:].upper()
 
         template_args = {
-            'name': customer.name,
-            'email': customer.email,
+            'email': email,
             'code_suffix': code_suffix
         }
 

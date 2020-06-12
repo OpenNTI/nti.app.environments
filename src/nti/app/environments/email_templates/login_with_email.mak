@@ -1,5 +1,3 @@
-Hi ${name},
-
 In order to continue with your request we need to confirm your email.
 
 Enter the following code in the window when prompted. 
