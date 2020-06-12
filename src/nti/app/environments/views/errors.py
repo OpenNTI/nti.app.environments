@@ -42,6 +42,10 @@ def is_browser_request(request):
 @forbidden_view_config(renderer='../templates/error.pt')
 class ForbiddenView(ErrorView):
 
+    def _build_login_url(self, return_url):
+        params = urlencode({'success': return_url})
+        return f'/login?{params}'
+
     def __call__(self):
         if not self.request.authenticated_userid:
             if not is_browser_request(self.request):
@@ -50,13 +54,17 @@ class ForbiddenView(ErrorView):
 
             self.request.response.status_code = self.context.status_code
             success = self.request.path_qs
-
-            params =  urlencode({'success': success})            
-            login_path = '/login'
-            if IEndUserBrowserRequest.providedBy(self.request):
-                params = urlencode({'params': success})
-                login_path = '/email-auth'
+            location = self._build_login_url(success)
             
-            return hexc.HTTPFound(location=f'{login_path}?{params}')
+            return hexc.HTTPFound(location=location)
         else:
             return super(ForbiddenView, self).__call__()
+
+
+@forbidden_view_config(renderer='../templates/error.pt',
+                       request_type=IEndUserBrowserRequest)
+class EndUserForbiddenView(ForbiddenView):
+    
+    def _build_login_url(self, return_url):
+        params = urlencode({'return': return_url})
+        return f'/email-auth?{params}'
