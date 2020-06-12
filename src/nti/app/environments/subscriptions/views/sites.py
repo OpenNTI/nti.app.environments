@@ -12,6 +12,8 @@ from stripe.error import InvalidRequestError
 
 from nti.externalization.interfaces import LocatedExternalDict
 
+from nti.traversal.traversal import find_interface
+
 from nti.app.environments.auth import ACT_READ
 
 from nti.app.environments.common import formatDateToLocal
@@ -59,19 +61,23 @@ _KNOWN_PRODUCTS = ['trial', 'starter', 'growth', 'enterprise']
 @view_config(renderer='templates/manage_subscription.pt',
              permission=ACT_STRIPE_MANAGE_SUBSCRIPTION,
              request_method='GET',
-             context=ILMSSite,
-             name='manage_subscription')
+             context=IStripeSubscription,
+             name='manage')
 class ManageSubscriptionPage(BaseView):
+
+    @Lazy
+    def site(self):
+        return find_interface(self.context, ILMSSite)
 
     @Lazy
     def stripe_key(self):
         return component.queryUtility(IStripeKey)
 
     def trial_data(self):
-        if not ITrialLicense.providedBy(self.context.license):
+        if not ITrialLicense.providedBy(self.site.license):
             return None
 
-        license = self.context.license
+        license = self.site.license
         now = datetime.datetime.utcnow()
         delta = license.end_date - now
 
@@ -88,11 +94,11 @@ class ManageSubscriptionPage(BaseView):
     
     @Lazy
     def license(self):
-        return self.context.license
+        return self.site.license
 
     @Lazy
     def upcoming_invoice(self):
-        subscription = IStripeSubscription(self.context, None)
+        subscription = IStripeSubscription(self.site, None)
         if not subscription.id:
             return None
 
@@ -167,22 +173,22 @@ class ManageSubscriptionPage(BaseView):
         if self.stripe_key is None:
             raise hexc.HTTPNotFound()
 
-        if self.context.status != SITE_STATUS_ACTIVE:
+        if self.site.status != SITE_STATUS_ACTIVE:
             raise hexc.HTTPNotFound()
 
         billing_link = None
-        sc = IStripeCustomer(self.context.owner, None)
+        sc = IStripeCustomer(self.site.owner, None)
         if sc and self.request.has_permission(ACT_STRIPE_MANAGE_BILLING, sc):
             billing_link = self.request.resource_url(sc, '@@manage_billing', query={'return': self.request.url})
         
         return {
             'stripe_pk': self.stripe_key.publishable_key,
-            'submit': self.request.resource_url(self.context, '@@manage_subscription'),
+            'submit': self.request.url,
             'username': self.request.authenticated_userid,
             'trial': self.trial_data(),
-            'license': self.context.license,
+            'license': self.site.license,
             'upcoming_invoice': self.upcoming_invoice,
-            'manage_billing': billing_link if not ITrialLicense.providedBy(self.context.license) else None,
+            'manage_billing': billing_link if not ITrialLicense.providedBy(self.site.license) else None,
             'plans': self.plan_options()
         }
 
@@ -197,9 +203,13 @@ class _Plan(object):
 @view_config(renderer='templates/trigger_checkout.pt',
              permission=ACT_STRIPE_MANAGE_SUBSCRIPTION,
              request_method='POST',
-             context=ILMSSite,
-             name='manage_subscription')
+             context=IStripeSubscription,
+             name='manage')
 class SubscriptionCheckout(BaseView):
+
+    @Lazy
+    def site(self):
+        return find_interface(self.context, ILMSSite)
 
     @Lazy
     def stripe_key(self):
@@ -225,7 +235,7 @@ class SubscriptionCheckout(BaseView):
         if self.stripe_key is None:
             raise hexc.HTTPNotFound()
 
-        if self.context.status != SITE_STATUS_ACTIVE:
+        if self.site.status != SITE_STATUS_ACTIVE:
             raise hexc.HTTPNotFound()
 
         # We only let you subscribe online if you are currently in a trial license
@@ -233,11 +243,11 @@ class SubscriptionCheckout(BaseView):
         #
         # User's shouldn't be able to get this far unless they are trying to let themselves
         # in the backdoor. This acts as a safety check.
-        if not ITrialLicense.providedBy(self.context.license):
+        if not ITrialLicense.providedBy(self.site.license):
             logger.warn('Can only subscribe online if you are a trial license')
             raise hexc.HTTPBadRequest()
 
-        subscription = IStripeSubscription(self.context)
+        subscription = IStripeSubscription(self.site)
         if subscription.id:
             logger.warn('Site already has a subscription %s', subscription.id)
             raise hexc.HTTPBadRequest()
@@ -253,11 +263,11 @@ class SubscriptionCheckout(BaseView):
 
         plan = self._as_subscribable_plan(price, seats)
 
-        owner = self.context.owner
+        owner = self.site.owner
         assert owner
 
         checkout_storage = ICheckoutSessionStorage(get_onboarding_root(self.request))
-        checkout_item = checkout_storage.track_session(owner, self.context)
+        checkout_item = checkout_storage.track_session(owner, self.site)
         
         stripe_customer = component.queryAdapter(owner, IStripeCustomer)
 
@@ -268,7 +278,7 @@ class SubscriptionCheckout(BaseView):
                                                          client_reference_id=checkout_item.id,
                                                          customer=stripe_customer,
                                                          customer_email=owner.email if stripe_customer is None else None,
-                                                         metadata={'SiteId': self.context.id}
+                                                         metadata={'SiteId': self.site.id}
         )
         
         return {

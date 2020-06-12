@@ -11,6 +11,7 @@
 	<include package="." file="configure_tables.zcml" />
 
 	<!-- handlers -->
+	<subscriber handler=".subscribers._possibly_add_skinlayer" />
 	<subscriber handler=".subscribers._update_site_hosts" />
 	<subscriber handler=".subscribers._site_created_event" />
 	<subscriber handler=".subscribers._update_host_load_stats" />
@@ -22,8 +23,8 @@
 	<subscriber handler=".subscribers._update_host_load_on_site_added" />
 	<subscriber handler=".subscribers._update_host_load_on_site_removed" />
 	<subscriber handler=".subscribers._update_stats_on_customer_added" />
-    <subscriber handler=".subscribers._update_stats_on_customer_removed" />
-    <subscriber handler=".subscribers._update_load_factor_on_status_update" />
+	<subscriber handler=".subscribers._update_stats_on_customer_removed" />
+	<subscriber handler=".subscribers._update_load_factor_on_status_update" />
 	<subscriber handler=".subscribers._update_host_load_on_site_environment_updated" />
 
 	<subscriber handler=".subscribers._setup_newly_created_site" />
@@ -64,5 +65,9 @@
 		 for="nti.app.environments.models.interfaces.ICustomer pyramid.interfaces.IRequest"
 		 factory=".traversal.CustomerSitesPathAdapter"
 		 provides="zope.traversing.interfaces.IPathAdapter"/>
+
+	<adapter for="nti.app.environments.stripe.interfaces.IStripeSubscription pyramid.interfaces.IRequest"
+		 factory="nti.app.environments.views.interfaces.IEndUserBrowserRequest"
+		 provides="zope.publisher.interfaces.ISkinType" />
 
 </configure>

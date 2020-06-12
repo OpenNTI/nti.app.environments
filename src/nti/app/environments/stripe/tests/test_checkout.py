@@ -25,7 +25,7 @@ SESSION_JSON = {
     "id": "cs_test_SKyGKH9hY4nW5csGTvkVj5zW4s7bcDqGESQzB2KJpXTjllhNrgko3Iaf",
     "object": "checkout.session",
     "billing_address_collection": None,
-    "cancel_url": "http://localhost:6543/onboarding/sites/Sacf3b74fb53749bfabc506291c918b86/@@manage_subscription",
+    "cancel_url": "http://localhost:6543/onboarding/sites/Sacf3b74fb53749bfabc506291c918b86/stripe_subscription/@@manage",
     "client_reference_id": "80e2dba62a7946a5a963e28a7bf6f371",
     "customer": "cus_H5fik8W6pPm0HB",
     "customer_email": None,
@@ -74,7 +74,7 @@ SESSION_JSON = {
     "shipping_address_collection": None,
     "submit_type": None,
     "subscription": "sub_HMtfhyfX4jq6Nj",
-    "success_url": "http://localhost:6543/onboarding/sites/Sacf3b74fb53749bfabc506291c918b86/@@manage_subscription"
+    "success_url": "http://localhost:6543/onboarding/sites/Sacf3b74fb53749bfabc506291c918b86/stripe_subscription/@@manage"
 }
 
 SUBSCRIPTION_ITEM = namedtuple('SubscriptionItem', ['plan', 'quantity'])
