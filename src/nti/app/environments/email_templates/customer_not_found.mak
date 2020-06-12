@@ -1,13 +1,15 @@
 Dear ${email},
 
-We can not find an account associated with that email address,
-please create your account here:
+We were unable to find an account associated with this email address.
+If you believe this is in error please reach out to us at support@nextthought.com.
+
+% if app_link:
+
+You may also create your account here:
 
 ${app_link}
 
-This email contains private information for your account - please don't forward it.
-Questions about setting up your new NextThought site? Email us at support@nextthought.com.
-
+% endif
 
 Thanks,
 

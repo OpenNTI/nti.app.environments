@@ -216,7 +216,7 @@ class LoginWithEmailView(EmailChallengeView):
         template_args = {
             'email': email,
             'code_suffix': code_suffix,
-            'app_link': self.request.application_url
+            'app_link': None
         }
 
         if customer is None:

@@ -4,7 +4,7 @@
         <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600" rel="stylesheet">
 		<title>
-			Your account is not found!
+			Your account was not found!
 		</title>
 		<style>
 			body {
@@ -60,27 +60,20 @@
 	<body>
 		<div class="container">
 			<img src="https://assets.nextthought.com/images/nextthought/platform/email/logo_trans_square.png" width="41.87" height="40"/>
-			<div class="title">Your account is not found!</div>
+			<div class="title">Your account was not found!</div>
 			<div i18n:translate="" class="content" style="margin-top: 17px;">
-				We can not find an account associated with that email address,
-				please create your account here:
+			    We were unable to find an account associated with this email address.
+			    If you believe this is in error please reach out to us at <a href="mailto:support@nextthought.com" tal:content="support_email|default" tal:attributes="href string:mailto:${support_email|default}" style="text-decoration: none;color: #3FB34F;">
+			    support@nextthought.com</a>.
 			</div>
-            <div style="margin-top:30px; padding: 0 auto;">
-                <a href="${app_link}" class="btn-link" target="_blank">Create Your Account</a>
-            </div>
-			<div class="content" style="margin-top: 34px;">
-				<span i18n:translate="">
-					This email contains private information for your account - please don't forward it.
-					Questions about setting up your new NextThought site? Email us at
-					<a href="mailto:support@nextthought.com" tal:content="support_email|default" tal:attributes="href string:mailto:${support_email|default}" style="text-decoration: none;color: #3FB34F;">
-						support@nextthought.com</a>.
-				</span>
+			<div tal:condition="app_link" i18n:translate="" class="content" style="margin-top: 17px;">
+			    <div style="margin-top:30px; padding: 0 auto;">
+				<a href="${app_link}" class="btn-link" target="_blank">Create Your Account</a>
+			    </div>
 			</div>
 			<hr />
 			<div class="footer">
-				If you feel this email was sent in error, or this account was created without your consent,<br/>you may email
-				<a href="mailto:support@nextthought.com" tal:content="support_email|default" tal:attributes="href string:mailto:${support_email|default}" style="color: #494949;">
-					support@nextthought.com</a>.
+			    If you did not request this email it is safe to ignore.
 			</div>
 		</div>
 	</body>
