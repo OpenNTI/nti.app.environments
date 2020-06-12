@@ -2,6 +2,7 @@ import time
 import urllib.parse
 
 from datetime import datetime
+from datetime import timedelta
 
 from pyramid.view import view_config
 
@@ -16,9 +17,13 @@ from zope import component
 from zope.securitypolicy.interfaces import Allow as zopeAllow
 from zope.securitypolicy.interfaces import IPrincipalRoleManager
 
+from nti.common.string import is_true
+
 from nti.mailer.interfaces import ITemplatedMailer
 
 from nti.environments.management.interfaces import ISettings
+
+from nti.app.environments.api.interfaces import ISiteUsageUpdater
 
 from nti.app.environments.api.siteinfo import NTClient
 
@@ -61,6 +66,9 @@ from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import IStarterLicense
 from nti.app.environments.models.interfaces import IGrowthLicense
 from nti.app.environments.models.interfaces import IEnterpriseLicense
+from nti.app.environments.models.interfaces import IStandardLicense
+from nti.app.environments.models.interfaces import IRestrictedLicense
+from nti.app.environments.models.interfaces import ISiteUsage
 from nti.app.environments.models.interfaces import SITE_STATUS_ACTIVE
 from nti.app.environments.models.interfaces import SITE_STATUS_PENDING
 
@@ -79,6 +87,8 @@ from nti.app.environments.stripe.interfaces import IStripeKey
 from nti.app.environments.stripe.interfaces import IStripeSubscription
 from nti.app.environments.stripe.interfaces import IStripeSubscriptionBilling
 
+from nti.app.environments.utils.nti_grab_site_usage import _do_fetch_site_usage
+
 from nti.app.environments.tasks.setup import query_setup_state
 
 from nti.app.environments.views.base import BaseTemplateView
@@ -95,8 +105,15 @@ from nti.app.environments.views._table_utils import make_specific_table
 from nti.app.environments.views.utils import raise_json_error
 
 from nti.traversal.traversal import find_interface
-from nti.externalization.interfaces import LocatedExternalDict
 
+from nti.externalization.interfaces import LocatedExternalDict
+from nti.externalization.interfaces import StandardExternalFields
+
+
+ITEMS = StandardExternalFields.ITEMS
+TOTAL = StandardExternalFields.TOTAL
+
+logger = __import__('logging').getLogger(__name__)
 
 def _host_options(onboarding):
     hosts = get_hosts_folder(onboarding)
@@ -633,4 +650,92 @@ class TrialSitesDigestEmailView(BaseView):
             "ending": len(ending_items),
             "past_due": len(past_items)
         })
+        return result
+
+@view_config(renderer='rest',
+             request_method='GET',
+             context=ILMSSitesContainer,
+             permission=ACT_AUTOMATED_REPORTS,
+             name="license_audit")
+class LicenseAuditView(BaseView):
+    """
+    Loop through ACTIVE sites and check their licenses.
+    For IStandardLicense we check if the license date is within
+    x days based on provided query params. For IRestrictedLicense
+    we poll their usage and compare that to the configured seats.
+
+    # TODO check stripe subscription status when necessary
+    """
+
+    DEFAULT_THRESHOLD_DAYS = 5 #5 Days
+
+    @property
+    def sites(self):
+        return self.context
+
+    @Lazy
+    def now(self):
+        return datetime.utcnow()
+
+    @Lazy
+    def query_usage(self):
+        return is_true(self.request.params.get('query_usage'))
+    
+    def threshold_for_license(self, license):
+        ln = license.license_name
+        return int(self.request.params.get(f'{ln}_threshold_days', self.DEFAULT_THRESHOLD_DAYS))
+
+    def audit_site(self, siteid):
+        site = self.sites[siteid]
+        if site.status != SITE_STATUS_ACTIVE:
+            return None
+
+        if self.query_usage:
+            try:
+                _do_fetch_site_usage(siteid,
+                                     'onboarding@nextthought.com',
+                                     'Onboarding Usage',
+                                     'onboarding@nextthought.com',
+                                     find_interface(self.context, IOnboardingRoot))
+            except:
+                logger.warn('Unable to query usage for %s', siteid)
+
+        issues = []
+
+        audit = {}
+
+        if IStandardLicense.providedBy(site.license):
+            days_threshold = self.threshold_for_license(site.license)
+            if self.now > site.license.end_date - timedelta(days=days_threshold):
+                issues.append(('site.license.end_date past threshold of %i days' % days_threshold))
+
+
+        usage = ISiteUsage(site)
+        if IRestrictedLicense.providedBy(site.license):
+            if usage.used_seats and usage.used_seats > site.license.seats:
+                issues.append('site.usage using %i of %i allowed seats' %
+                              (usage.used_seats, site.license.seats))
+
+        if issues:
+            audit['Site'] = site
+            audit['License'] = site.license
+            audit['Usage'] = usage
+            audit['Issues'] = issues
+
+        return audit if issues else None
+
+    def __call__(self):
+
+        failed_sites = {}
+
+        for sid in self.sites:
+            res = self.audit_site(sid)
+            if res:
+                failed_sites[sid] = res
+
+        result = LocatedExternalDict()
+        result.__name__ = self.request.view_name
+        result.__parent__ = self.context
+        result[ITEMS] = failed_sites
+        result[TOTAL] = len(failed_sites)
         return result
