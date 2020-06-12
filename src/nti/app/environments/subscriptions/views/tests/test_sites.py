@@ -107,7 +107,7 @@ class TestManageSubscriptionInfo( BaseSubscriptionTest ):
 
     @property
     def manage_subscription_url(self):
-        return '/onboarding/sites/%s/@@manage_subscription' % self.siteid
+        return '/onboarding/sites/%s/stripe_subscription/@@manage' % self.siteid
     
     @with_test_app()
     def test_only_owner_can_see(self):
