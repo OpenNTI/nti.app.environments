@@ -424,7 +424,7 @@
 	    <div class="header">
 	    <img class="logo" src="/static/image/nt-logo.svg"/>
 	    <metal:block tal:condition="username">
-		<div class="logout">Not ${username}? <a href="">Log Out</a></div>
+		<div class="logout">Not ${username}? <a href="/logout">Log Out</a></div>
             </metal:block>
 	    </div>
 
