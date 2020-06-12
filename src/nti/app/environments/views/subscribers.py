@@ -6,7 +6,14 @@ from datetime import datetime
 
 from perfmetrics import statsd_client
 
+from pyramid.interfaces import IContextFound
+
 from zope import component
+from zope import interface
+
+from zope.publisher.interfaces import ISkinType
+
+from zope.publisher.skinnable import applySkin
 
 from zope.event import notify
 
@@ -49,6 +56,8 @@ from nti.app.environments.models.sites import DedicatedEnvironment
 from nti.app.environments.models.utils import get_sites_folder
 from nti.app.environments.models.utils import get_hosts_folder
 
+from nti.app.environments.views.interfaces import IEndUserBrowserRequest
+
 from nti.app.environments.views.notification import SiteSetupEmailNotifier
 from nti.app.environments.views.notification import SiteCreatedEmailNotifier
 from nti.app.environments.views.notification import SiteSetupFailureEmailNotifier
@@ -61,6 +70,21 @@ from nti.externalization.interfaces import IObjectModifiedFromExternalEvent
 
 
 logger = __import__('logging').getLogger(__name__)
+
+@component.adapter(IContextFound)
+def _possibly_add_skinlayer(event):
+    request = event.request
+    context = request.context
+
+    # Lookup a ISkinType based on adapting the request and context.
+    # Note this looks a little different than our typical adapter lookup.
+    # We don't want our factory (Interface) to be called, we're just looking
+    # for the Interface class itself.
+    adapters = component.getSiteManager().adapters
+    skin = adapters.lookup((interface.providedBy(context),
+                            interface.providedBy(request)), ISkinType)
+    if skin is not None:
+        applySkin(request, skin)
 
 
 @component.adapter(ICustomerVerifiedEvent)
