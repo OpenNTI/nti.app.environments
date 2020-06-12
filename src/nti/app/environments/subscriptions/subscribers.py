@@ -1,6 +1,14 @@
 import datetime
 
+from pyramid.interfaces import IContextFound
+
 from zope import component
+
+from zope.interface.interfaces import ComponentLookupError
+
+from zope.publisher.interfaces import ISkinType
+
+from zope.publisher.skinnable import applySkin
 
 from nti.app.environments.models.interfaces import ISiteLicenseFactory
 from nti.app.environments.models.interfaces import ITrialLicense
@@ -14,6 +22,8 @@ from nti.app.environments.stripe.interfaces import IStripeSubscriptionBilling
 from nti.app.environments.subscriptions.interfaces import ICheckoutSessionStorage
 
 from nti.app.environments.models.utils import get_onboarding_root
+
+from nti.app.environments.views.interfaces import IEndUserBrowserRequest
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -91,3 +101,13 @@ def _checkout_session_completed(event):
     
 
     # notify internally that we had a payment
+
+@component.adapter(IContextFound)
+def _possibly_add_skinlayer(event):
+    request = event.request
+    context = request.context
+
+    # TODO can we figure out how to get the ISkinType from an adapter?
+    # We can't register the iface itself as a factory
+    if IStripeSubscription.providedBy(context):
+        applySkin(request, IEndUserBrowserRequest)

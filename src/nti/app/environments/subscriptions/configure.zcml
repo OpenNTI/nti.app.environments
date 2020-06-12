@@ -44,6 +44,7 @@
 		 name="prod_HPUxMKa4uXXHuN"/>
 
 	<subscriber handler=".subscribers._checkout_session_completed" />
+	<subscriber handler=".subscribers._possibly_add_skinlayer" />
 
 	<include package="." file="meta.zcml" />
 

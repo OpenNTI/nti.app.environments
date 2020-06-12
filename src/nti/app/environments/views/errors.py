@@ -1,9 +1,13 @@
 from pyramid import httpexceptions as hexc
 
+from pyramid.url import urlencode
+
 from pyramid.view import forbidden_view_config
 from pyramid.view import notfound_view_config
 
 from nti.app.environments.views.base import BaseTemplateView
+
+from nti.app.environments.views.interfaces import IEndUserBrowserRequest
 
 SUB_MESSAGES = {
     404: 'It looks like you stumbled on something that does not exist.',
@@ -46,6 +50,13 @@ class ForbiddenView(ErrorView):
 
             self.request.response.status_code = self.context.status_code
             success = self.request.path_qs
-            return hexc.HTTPFound(location='/login?success={}'.format(success))
+            param_name = 'success'
+            
+            login_path = f'/login'
+            if IEndUserBrowserRequest.providedBy(self.request):
+                param_name = 'return'
+                login_path = '/email-auth'
+            
+            return hexc.HTTPFound(location='%s?%s' % (login_path, urlencode({param_name: success})))
         else:
             return super(ForbiddenView, self).__call__()
