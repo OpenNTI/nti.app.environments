@@ -50,13 +50,13 @@ class ForbiddenView(ErrorView):
 
             self.request.response.status_code = self.context.status_code
             success = self.request.path_qs
-            param_name = 'success'
-            
-            login_path = f'/login'
+
+            params =  urlencode({'success': success})            
+            login_path = '/login'
             if IEndUserBrowserRequest.providedBy(self.request):
-                param_name = 'return'
+                params = urlencode({'params': success})
                 login_path = '/email-auth'
             
-            return hexc.HTTPFound(location='%s?%s' % (login_path, urlencode({param_name: success})))
+            return hexc.HTTPFound(location=f'{login_path}?{params}')
         else:
             return super(ForbiddenView, self).__call__()
