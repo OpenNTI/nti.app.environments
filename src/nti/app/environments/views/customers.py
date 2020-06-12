@@ -157,7 +157,7 @@ class RecoveryEmailChallengeView(EmailChallengeView):
         if customer is None:
             logger.info("Notifying user that account doesn't exist: %s.", email)
             self._send_mail('nti.app.environments:email_templates/customer_not_found',
-                            subject="Your account is not found: {}".format(email),
+                            subject="Your account was not found: {}".format(email),
                             recipients=[email],
                             template_args={'email': email,
                                            'app_link': self.request.application_url})
