@@ -221,7 +221,7 @@ class LoginWithEmailView(EmailChallengeView):
 
         if customer is None:
             self._send_mail('nti.app.environments:email_templates/customer_not_found',
-                            subject=f'Your account is not found: {email}',
+                            subject=f'Your account was not found: {email}',
                             recipients=[email],
                             template_args=template_args)
         else:
