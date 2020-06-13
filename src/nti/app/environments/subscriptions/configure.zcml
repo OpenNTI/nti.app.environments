@@ -120,4 +120,31 @@
 			      cost="29900"
 			      product="enterprise"/>
 	</configure>
+
+	<configure zcml:condition="have prod">
+	  <subs:registerPrice id="starter_monthly"
+			      name="Monthly"
+			      cost="11900"
+			      stripe_plan_id="price_0GtK64fWolyj2wJc5y6oLz2D"
+			      product="starter"/>
+	  <subs:registerPrice id="starter_yearly"
+			      name="Yearly"
+			      cost="9900"
+			      stripe_plan_id="price_0GtK64fWolyj2wJcZYbB2aVQ"
+			      product="starter"/>
+	  <subs:registerPrice id="growth_monthly"
+			      name="Monthly"
+			      cost="23900"
+			      stripe_plan_id="price_0GtK5xfWolyj2wJcX4AiUtvu"
+			      product="growth"/>
+	  <subs:registerPrice id="growth_yearly"
+			      name="Yearly"
+			      cost="19900"
+			      stripe_plan_id="price_0GtK5xfWolyj2wJc8k5eE6Md"
+			      product="growth"/>
+	  <subs:registerPrice id="enterprise_yearly"
+			      name="Yearly"
+			      cost="29900"
+			      product="enterprise"/>
+	</configure>
 </configure>
