@@ -398,11 +398,9 @@ class SiteUsageUpdater(object):
         usage = ISiteUsage(self.site)
         usage.updateLastMod()
         usage.user_count = self.user_count
-        usage.admin_count = len(self.site_admin_usernames)
         usage.course_count = self.course_count
-        usage.instructor_count = len(self.site_instructor_usernames) if self.site_instructor_usernames is not None else None
-        if self.site_instructor_usernames is not None and self.site_admin_usernames is not None:
-            usage.used_seats = len(self.site_instructor_usernames.union(self.site_admin_usernames))
+        usage.admin_usernames = frozenset(self.site_admin_usernames)
+        usage.instructor_usernames = frozenset(self.site_instructor_usernames) if self.site_instructor_usernames is not None else None
         usage.scorm_package_count = self.scorm_package_count
         logger.info('Updated usage information for site %s', self.site)
         
