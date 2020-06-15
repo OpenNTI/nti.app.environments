@@ -286,6 +286,20 @@ class SiteUsage(SchemaConfigured, PersistentCreatedModDateTrackingObject, Contai
 
     mimeType = mime_type = 'application/vnd.nextthought.app.environments.siteusage'
 
+    @property
+    def admin_count(self):
+        return None if self.admin_usernames is None else len(self.admin_usernames)
+
+    @property
+    def instructor_count(self):
+        return None if self.instructor_usernames is None else len(self.instructor_usernames)
+
+    @property
+    def used_seats(self):
+        if self.instructor_usernames is None or self.admin_usernames is None:
+            return None
+        return len(self.admin_usernames.union(self.instructor_usernames))
+
     def __init__(self, *args, **kwargs):
         SchemaConfigured.__init__(self, *args, **kwargs)
         PersistentCreatedModDateTrackingObject.__init__(self)
