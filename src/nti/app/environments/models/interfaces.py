@@ -592,9 +592,14 @@ class ISiteUsage(IContained, ILastModified):
     Some useful metrics that indicate how much usage a site has
     in particular those values that may affect billing.
     """
+    admin_usernames = UniqueIterable(title="The unique admin usernames using seats",
+                                     required=False)
 
     admin_count = Int(title="The total number of admins in a site",
                       required=False)
+
+    instructor_usernames = UniqueIterable(title="The unique instructor usernames using seats",
+                                          required=False)
 
     instructor_count = Int(title="The total number of unique instructors in a site",
                            required=False)
