@@ -48,6 +48,15 @@
 	      name="default" />
 	</configure>
 
+	<configure zcml:condition="have prod">
+          <stripe:registerStripeKey
+		publishable_key="pk_live_Ord6w0IdxYSX9P3X6dXf8Yt5"
+		secret_key="PVgnGD0eVSpSWB5ARhE2fC9GZDF0Ez0eRBhCDARZKhk=" />
+	  <stripe:registerWebhookSecret
+	      secret="OVsLETc3ADEPBT5bFAEsXw85AR97IwsxMk8QcgdmNDkeWWEkASk="
+	      name="default" />
+	</configure>
+
 	<class class="stripe.api_resources.event.Event">
 	  <implements interface=".interfaces.IStripeEvent" />
 	</class>
