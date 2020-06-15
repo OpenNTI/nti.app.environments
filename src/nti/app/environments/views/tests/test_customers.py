@@ -99,7 +99,7 @@ class TestChallengeView(BaseAppTest):
 
         assert_that(_result, has_length(1))
         assert_that(_result[0][0], is_(('nti.app.environments:email_templates/customer_not_found',)))
-        assert_that(_result[0][1], has_entries({'subject': 'Your account is not found: test@example.com',
+        assert_that(_result[0][1], has_entries({'subject': 'Your account was not found: test@example.com',
                                                 'recipients': ['test@example.com'],
                                                 'template_args': has_entries({'email': 'test@example.com', 'app_link': 'http://localhost'}),
                                                 'text_template_extension': '.mak'}))

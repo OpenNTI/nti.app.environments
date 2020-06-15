@@ -246,7 +246,8 @@ class TestLicenseAuditView(BaseAppTest):
                                           frequency='yearly',
                                           seats=5)
 
-            ISiteUsage(site).used_seats = usage
+            ISiteUsage(site).admin_usernames = frozenset([f'admin_f{idx}' for idx in range(0,usage)])
+            ISiteUsage(site).instructor_usernames = {}
 
     @with_test_app()
     def test_requires_reporting(self):
