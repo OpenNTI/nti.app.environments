@@ -85,7 +85,8 @@ tests_require = [
 docs_require = [
     'sphinx',
     'repoze.sphinx.autointerface',
-    'zope.testrunner'
+    'zope.testrunner',
+    'nti_sphinx_questions'
 ]
 
 setup(

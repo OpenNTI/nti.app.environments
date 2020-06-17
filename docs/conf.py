@@ -43,7 +43,7 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.autodoc',
     'repoze.sphinx.autointerface',
-    'question'
+    'nti_sphinx_questions'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
