@@ -1,11 +1,7 @@
-from pyramid.interfaces import IAuthenticationPolicy
-
 from pyramid_authstack import AuthenticationStackPolicy
 
 from pyramid.authentication import AuthTktAuthenticationPolicy
 from pyramid.authentication import BasicAuthAuthenticationPolicy
-
-from zope import interface
 
 from zope.authentication.interfaces import PrincipalLookupError
 
@@ -27,6 +23,7 @@ ACT_EDIT_SITE_LICENSE = 'nti.app.environments.actions.edit_site_license'
 ACT_EDIT_SITE_ENVIRONMENT = 'nti.app.environments.actions.edit_site_environment'
 ACT_REQUEST_TRIAL_SITE = 'nti.app.environments.actions.request_trial_site'
 ACT_SITE_LOGIN = 'nti.app.environments.actions.site_login'
+ACT_SITE_JWT_TOKEN = 'nti.app.environments.actions.site_jwt_token'
 
 ADMIN_ROLE = 'role:nti.roles.admin'
 ACCOUNT_MANAGEMENT_ROLE = 'role:nti.roles.account-management'
