@@ -36,6 +36,7 @@ from nti.app.environments.auth import OPS_ROLE
 from nti.app.environments.auth import ACT_READ
 from nti.app.environments.auth import ACT_REQUEST_TRIAL_SITE
 from nti.app.environments.auth import ACT_SITE_LOGIN
+from nti.app.environments.auth import ACT_SITE_JWT_TOKEN
 
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ISiteUsage
@@ -138,7 +139,7 @@ class GrowthLicense(SchemaConfigured, PersistentCreatedModDateTrackingObject, Co
         SchemaConfigured.__init__(self, *args, **kwargs)
         PersistentCreatedModDateTrackingObject.__init__(self)
 
-@component.adapter(ISiteLicense, ILMSSite, IBeforeSchemaFieldAssignedEvent) 
+@component.adapter(ISiteLicense, ILMSSite, IBeforeSchemaFieldAssignedEvent)
 def _attach_license_to_site(license, site, event):
     license.__parent__ = site
 
@@ -263,7 +264,7 @@ class SitesFolder(CaseInsensitiveCheckingLastModifiedBTreeContainer):
                 (Deny, Everyone, ACT_STRIPE_MANAGE_SUBSCRIPTION),
                 (Allow, ADMIN_ROLE, ALL_PERMISSIONS),
                 (Allow, ACCOUNT_MANAGEMENT_ROLE, (ACT_READ, ACT_REQUEST_TRIAL_SITE)),
-                (Allow, OPS_ROLE, (ACT_READ, ACT_REQUEST_TRIAL_SITE, ACT_SITE_LOGIN))]
+                (Allow, OPS_ROLE, (ACT_READ, ACT_REQUEST_TRIAL_SITE, ACT_SITE_LOGIN, ACT_SITE_JWT_TOKEN))]
 
     def addSite(self, site, siteId=None):
         siteId = site.__name__ or siteId or _generate_site_id()

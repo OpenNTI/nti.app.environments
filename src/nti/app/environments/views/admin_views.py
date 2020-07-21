@@ -39,6 +39,7 @@ from nti.app.environments.auth import ACT_EDIT_SITE_LICENSE
 from nti.app.environments.auth import ACT_EDIT_SITE_ENVIRONMENT
 from nti.app.environments.auth import ACT_REQUEST_TRIAL_SITE
 from nti.app.environments.auth import ACT_SITE_LOGIN
+from nti.app.environments.auth import ACT_SITE_JWT_TOKEN
 from nti.app.environments.auth import ADMIN_ROLE
 from nti.app.environments.auth import ACCOUNT_MANAGEMENT_ROLE
 from nti.app.environments.auth import OPS_ROLE
@@ -202,7 +203,7 @@ class SitePendoAccountDetails(BaseTemplateView):
 
         pendo = IPendoAccount(self.context)
         location = pendo.account_web_url
-        
+
         return hexc.HTTPSeeOther(location=location)
 
 @view_config(renderer='../templates/admin/site_detail.pt',
@@ -229,7 +230,7 @@ class SiteDetailView(BaseTemplateView):
     def _site_extra_info(self):
         if self.context.status != SITE_STATUS_ACTIVE:
             return None
-        
+
         nt_client = NTClient(self.context)
         return nt_client.fetch_site_info()
 
@@ -264,7 +265,7 @@ class SiteDetailView(BaseTemplateView):
 
         if self.context.status == SITE_STATUS_ACTIVE:
             formatted_env['pendo_account_link'] = self.request.resource_url(self.context, '@@pendo_account_link')
-        
+
         if ISharedEnvironment.providedBy(env):
             formatted_env['type'] = 'shared'
         elif IDedicatedEnvironment.providedBy(env):
@@ -322,16 +323,16 @@ class SiteDetailView(BaseTemplateView):
             return None
 
         sub = billing.get_subscription(sub)
-        
+
         try:
             upcoming = billing.get_upcoming_invoice(sub)
         except InvalidRequestError:
             logger.exception('Unable to get upcoming invoice')
             upcoming = None
-            
+
         return {
             'subscription': sub,
-            'upcoming_invoice': upcoming 
+            'upcoming_invoice': upcoming
         }
 
     def __call__(self):
@@ -360,7 +361,7 @@ class SiteDetailView(BaseTemplateView):
                          'environment': self._format_env(self.context.environment) if self.context.environment else None,
                          'environment_edit_link': request.resource_url(self.context, '@@environment') if request.has_permission(ACT_EDIT_SITE_ENVIRONMENT, self.context) else None,
                          'site_login_link': request.resource_url(self.context, '@@login') if request.has_permission(ACT_SITE_LOGIN, self.context) else None,
-                         'generate_token_link': request.resource_url(self.context, '@@generate_token') if request.has_permission(ACT_ADMIN, self.context) else None,
+                         'generate_token_link': request.resource_url(self.context, '@@generate_token') if request.has_permission(ACT_SITE_JWT_TOKEN, self.context) else None,
                          'client_name': self.context.client_name,
                          'site_edit_link': request.resource_url(self.context) if request.has_permission(ACT_UPDATE, self.context) else None,
                          'site_delete_link': request.resource_url(self.context) if request.has_permission(ACT_DELETE, self.context) else None,
@@ -680,7 +681,7 @@ class LicenseAuditView(BaseView):
     @Lazy
     def query_usage(self):
         return is_true(self.request.params.get('query_usage'))
-    
+
     def threshold_for_license(self, license):
         ln = license.license_name
         return int(self.request.params.get(f'{ln}_threshold_days', self.DEFAULT_THRESHOLD_DAYS))

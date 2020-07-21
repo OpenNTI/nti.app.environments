@@ -20,7 +20,6 @@ from zope.event import notify
 
 from nti.app.environments.api.interfaces import IBearerTokenFactory
 
-from nti.app.environments.auth import ACT_ADMIN
 from nti.app.environments.auth import ACT_CREATE
 from nti.app.environments.auth import ACT_DELETE
 from nti.app.environments.auth import ACT_EDIT_SITE_ENVIRONMENT
@@ -29,6 +28,7 @@ from nti.app.environments.auth import ACT_READ
 from nti.app.environments.auth import ACT_REQUEST_TRIAL_SITE
 from nti.app.environments.auth import ACT_UPDATE
 from nti.app.environments.auth import ACT_SITE_LOGIN
+from nti.app.environments.auth import ACT_SITE_JWT_TOKEN
 from nti.app.environments.auth import is_admin_or_manager
 
 from nti.app.environments.interfaces import ISitesCollection
@@ -48,7 +48,6 @@ from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ILMSSitesContainer
 from nti.app.environments.models.interfaces import IOnboardingRoot
 from nti.app.environments.models.interfaces import ISharedEnvironment
-from nti.app.environments.models.interfaces import ISiteUsage
 from nti.app.environments.models.interfaces import SITE_STATUS_PENDING
 from nti.app.environments.models.interfaces import SITE_STATUS_UNKNOWN
 from nti.app.environments.models.interfaces import checkEmailAddress
@@ -163,7 +162,7 @@ class ResolveSiteView(SiteBaseView):
 
         # do the quick check by id first
         site = self.context.get(search_id, None)
-        
+
         if site is None:
             # We don't have an index currently so we resort to a linear search
             # TODO this is fine for now but will become an issue when we are succesful
@@ -841,7 +840,7 @@ class JWTTokenViewMixin(object):
         additional_kwargs = {}
         if timeout is not None:
             additional_kwargs['ttl'] = timeout
-        
+
         token = generator.make_bearer_token(username=username,
                                             realname=self._get_realname(),
                                             email=username,
@@ -875,7 +874,7 @@ class SiteLoginView(BaseView, JWTTokenViewMixin):
 @view_config(renderer='rest',
              context=ILMSSite,
              request_method='GET',
-             permission=ACT_ADMIN,
+             permission=ACT_SITE_JWT_TOKEN,
              name="generate_token")
 class GenerateSiteJWTTokenView(BaseView, JWTTokenViewMixin):
     """
