@@ -298,7 +298,7 @@ class BaseSitesTable(BaseTable, _FilterMixin):
         params = self.request.params
         term = self._get_filter('search', params)
         filterBy = self._get_filter_by(params,
-                                       _allow_fields=('setup_state', 'status'),
+                                       _allow_fields=('setup_state', 'status', 'license_type'),
                                        _normalize={'setup_state': self._normalize_setup_state,
                                                    'license_type': self._normalize_license_type,
                                                    'status': self._normalize_status},
