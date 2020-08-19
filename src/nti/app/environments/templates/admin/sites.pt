@@ -12,7 +12,21 @@
         <h1>Sites</h1>
 
         <div class="toolbar">
-            <input type="text" id='search' name="search" placeHolder="Search" class="search-input" onkeypress="return search(event);" style="width:300px;"/>
+            <input type="text" id='search' name="search" placeHolder="Search" class="search-input"
+                   onkeypress="return search(event);" style="width:190px;"/>
+            <div class="drop-select" id="filter_by_license">
+                <div class="drop-toggle">
+                    <div class="drop-btn">Nothing selected</div>
+                </div>
+                <div class="drop-menu">
+                    <div class="drop-item nothing" value=""><span class="text"></span></div>
+                    <div class="drop-item" value="none"><span class="text">none</span></div>
+                    <div class="drop-item" value="trial"><span class="text">trial</span></div>
+                    <div class="drop-item" value="starter"><span class="text">starter</span></div>
+                    <div class="drop-item" value="growth"><span class="text">growth</span></div>
+                    <div class="drop-item" value="enterprise"><span class="text">enterprise</span></div>
+                </div>
+            </div>
             <div class="drop-select" id="filter_by_state">
                 <div class="drop-toggle">
                     <div class="drop-btn">Nothing selected</div>
@@ -212,6 +226,7 @@
 
                 // update filterBy dropdown selects
                 updateDropSelects([['setup_state', '#filter_by_state'],
+                                   ['license_type', '#filter_by_license'],
                                    ['status', '#filter_by_status']]);
             });
 
@@ -226,6 +241,12 @@
 
             $('#filter_by_status .drop-btn').on('CustomSelectChanged', function(e) {
                 var filterBy = updateFilterBy(["status", $(this).attr('value') || ''])
+                var url = updateUrlParameter('filterBy', filterBy);
+                window.location.href = url;
+            });
+
+            $('#filter_by_license .drop-btn').on('CustomSelectChanged', function(e) {
+                var filterBy = updateFilterBy(["license_type", $(this).attr('value') || ''])
                 var url = updateUrlParameter('filterBy', filterBy);
                 window.location.href = url;
             });
