@@ -272,12 +272,26 @@ class BaseSitesTable(BaseTable, _FilterMixin):
             status = [x for x in status if x in SITE_STATUS_OPTIONS]
         return status
 
+    def _normalize_license_type(self, license_type):
+        if license_type:
+            license_type = license_type.split(',')
+            license_type = [x for x in license_type if x in ('trial', 'starter', 'growth', 'enterprise', 'none')]
+        return license_type
+
     def _filter_by_setup_state(self, item, state):
         current = 'none' if not item.setup_state else item.setup_state.state_name
         return current in state
 
     def _filter_by_status(self, item, status):
         return item.status in status
+
+    def _filter_by_license_type(self, item, license_type):
+        current = 'none'
+        try:
+            current = item.license.license_name
+        except AttributeError:
+            pass
+        return current.lower() in license_type
 
     @property
     def values(self):
@@ -286,8 +300,10 @@ class BaseSitesTable(BaseTable, _FilterMixin):
         filterBy = self._get_filter_by(params,
                                        _allow_fields=('setup_state', 'status'),
                                        _normalize={'setup_state': self._normalize_setup_state,
+                                                   'license_type': self._normalize_license_type,
                                                    'status': self._normalize_status},
                                        _filter={'setup_state': self._filter_by_setup_state,
+                                                'license_type': self._filter_by_license_type,
                                                 'status': self._filter_by_status})
 
         result = self._raw_values
@@ -346,7 +362,7 @@ class SiteLicenseColumn(column.GetAttrColumn):
 
 
 class SiteStatusColumn(column.GetAttrColumn):
-    
+
     weight = 2
     header = 'Status'
     attrName = 'status'
