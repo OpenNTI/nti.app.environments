@@ -24,14 +24,14 @@ class TestPendoAccount(unittest.TestCase):
 
     def test_account_prefers_dsid(self):
         self.site.ds_site_id = 'bar'
-        assert_that(IPendoAccount(self.site).account_id, is_('bar'))
+        assert_that(IPendoAccount(self.site).account_id, is_('bar::bar'))
 
     @fudge.patch('nti.app.environments.pendo.account.NTClient.dataserver_ping')
     def test_account_id(self, client):
         client.expects_call().returns({'Site': 'Foo.nt.io'})
-        assert_that(self.account.account_id, is_('Foo.nt.io'))
+        assert_that(self.account.account_id, is_('Foo.nt.io::Foo.nt.io'))
 
     @fudge.patch('nti.app.environments.pendo.account.NTClient.dataserver_ping')
     def test_account_url(self, client):
-        client.expects_call().returns({'Site': 'Foo.nt.io'})
-        assert_that(self.account.account_web_url, is_('https://app.pendo.io/parentAccount/Foo.nt.io'))
+        client.expects_call().returns({'Site': 'beta.nextthought.com'})
+        assert_that(self.account.account_web_url, is_('https://app.pendo.io/account/beta.nextthought.com%3A%3Abeta.nextthought.com'))
