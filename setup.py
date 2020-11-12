@@ -68,7 +68,7 @@ requires = [
     'zope.cachedescriptors',
     'tabulate',
     'stripe',
-	'urllib3<1.26,>=1.25.4'
+	'urllib3<1.26,>=1.25.4'# https://github.com/boto/boto3/issues/2659
 ]
 
 tests_require = [
