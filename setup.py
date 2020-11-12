@@ -45,8 +45,8 @@ requires = [
     'nti.externalization',
     'nti.property',
     'nti.schema',
-    'nti.transactions==3.1.0',
-    'nti.wref==1.0.0',
+    'nti.transactions',
+    'nti.wref',
     'zope.container',
     'zope.site',
     'zope.generations',
@@ -67,7 +67,8 @@ requires = [
     'z3c.rml',
     'zope.cachedescriptors',
     'tabulate',
-    'stripe'
+    'stripe',
+	'urllib3<1.26,>=1.25.4'# https://github.com/boto/boto3/issues/2659
 ]
 
 tests_require = [
@@ -107,7 +108,7 @@ setup(
     keywords='web pyramid pylons',
     packages=find_packages('src'),
     package_dir={'': 'src'},
-    namespace_packages=['nti'],
+    namespace_packages=['nti', 'nti.app'],
     include_package_data=True,
     package_data={
         '': ['*.ini','*.mako', '*.zcml'],
