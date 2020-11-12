@@ -68,7 +68,7 @@ class TestPendoSiteStatusPayload(unittest.TestCase):
     def test_sets_metadata(self, mock_update_metadata):
         publisher = PendoSiteStatusPublisher(self.site)
         
-        mock_update_metadata.expects_call().with_args('account', 'custom', [{'accountId': 's1234',
+        mock_update_metadata.expects_call().with_args('account', 'custom', [{'accountId': 's1234::s1234',
                                                                              'values': publisher._build_payload()}])
         
         publisher()
