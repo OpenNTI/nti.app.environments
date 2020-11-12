@@ -20,7 +20,8 @@
             <p>Email: <a href="mailto:${customer.customer.email}">${customer.customer.email}</a></p>
             <p>Phone: <span tal:content="customer.customer.phone or 'Unknown'"></span></p>
             <p>Organization: <span tal:content="customer.customer.organization or 'Unknown'"></span></p>
-	    <p>Stripe: <span tal:content="customer.stripe.customer_id or 'Unknown'"></span></p>
+	    <p tal:condition="customer.stripe.customer_id">Stripe: <a target="_blank" href="https://dashboard.stripe.com/customers/${customer.stripe.customer_id}"
+								      tal:content="customer.stripe.customer_id"></a></p>
             <metal:block tal:omit-tag="" tal:condition="customer.hubspot">
                 <metal:block tal:omit-tag="" tal:condition="customer.hubspot.profile_url">
                     <p>Hubspot: <a href="${customer.hubspot.profile_url}" target="_blank">${customer.hubspot.contact_vid}</a></p>
