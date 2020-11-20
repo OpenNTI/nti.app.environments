@@ -330,8 +330,15 @@ class IRestrictedLicense(ISiteLicense):
                        values=LICENSE_FREQUENCY_OPTIONS,
                        required=True)
 
-    seats = Int(title="The seats.",
-                required=True)
+    seats = Int(title="The number of licensed seats allowed.",
+                description="These seats may be used for site admins, or instructors. A value of None indicates no limit",
+                required=True,
+                min=1)
+
+    additional_instructor_seats = Int(title="The number of instructor add-on seats allowed.",
+                                      description="These seats may only be used for instructors. A value of None indicates no additional instructor seats.",
+                                      required=False,
+                                      min=1)
 
 
 class IStarterLicense(IRestrictedLicense):

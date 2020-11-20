@@ -245,7 +245,8 @@ class SiteDetailView(BaseTemplateView):
             return result
         elif IStarterLicense.providedBy(lic) or IGrowthLicense.providedBy(lic):
             result.update({'frequency': lic.frequency,
-                           'seats': lic.seats})
+                           'seats': lic.seats,
+                           'additional_instructor_seats': lic.additional_instructor_seats})
             return result
         raise ValueError("Unknown license type.")
 

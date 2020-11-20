@@ -29,10 +29,13 @@ function hideEditGroupItems(items, edit) {
 function showEditGroupItems(items, edit, view) {
     items.forEach(function(selector){
         $(edit.find(selector[0])).css('display', 'block');
-        var original = $(view.find(selector[1])).attr('original_value');
-        var elem = $(edit).find(selector[1]);
-        $(elem).css('display', 'inline-block');
-        $(elem).val( original ? original : '' );
+	selector.slice(1).forEach(function(field){
+	    var original = $(view.find(field)).attr('original_value');
+            var elem = $(edit).find(field);
+            $(elem).css('display', 'inline-block');
+            $(elem).val( original ? original : '' );
+	});
+        
     });
 }
 
@@ -149,7 +152,7 @@ function getStandardSelectors() {
 function getNonStandardSelectors() {
     return [['.start_group_item', '.site_license_start_date'],
             ['.frequency_group_item', '.site_license_frequency'],
-            ['.seats_group_item', '.site_license_seats']];
+            ['.seats_group_item', '.site_license_seats', '.site_license_additional_instructor_seats']];
 }
 
 function showLicenseEditView() {
@@ -223,8 +226,8 @@ function getLicenseDataByView(view_selector, original) {
             data[field] = tmp ? tmp : null;
         });
     } else {
-        var names = ['start_date', 'frequency', 'seats'];
-        var klasses = ['.site_license_start_date', '.site_license_frequency', '.site_license_seats'];
+        var names = ['start_date', 'frequency', 'seats', 'additional_instructor_seats'];
+        var klasses = ['.site_license_start_date', '.site_license_frequency', '.site_license_seats', '.site_license_additional_instructor_seats'];
         names.forEach(function(field, index){
             var tmp = original ? $(view.find(klasses[index])).attr('original_value'): $(view.find(klasses[index])).val().trim();
             data[field] = tmp ? tmp : null;
