@@ -428,17 +428,4 @@ class TestSiteUsage(BaseTest):
         assert_that(self.usage.instructor_count, is_(None))
         
         self.usage.instructor_usernames = frozenset({'admin1', 'inst1234'})
-        assert_that(self.usage.instructor_count, is_(2))
-
-    def test_seat_count(self):
-        self.usage.admin_usernames = frozenset({'admin1', 'admin2'})
-
-        # No known instructors so we have no opinion
-        assert_that(self.usage.instructor_count, is_(None))
-        assert_that(self.usage.used_seats, is_(None))
-
-        self.usage.instructor_usernames = frozenset({'admin1', 'inst1234'})
-
-        # Now we have the full picture
-        assert_that(self.usage.used_seats, is_(3))
-        
+        assert_that(self.usage.instructor_count, is_(2))       

@@ -619,6 +619,3 @@ class ISiteUsage(IContained, ILastModified):
 
     scorm_package_count = Int(title="The total number of scorm packages in a site",
                               required=False)
-
-    used_seats = Int(title="The total number of licensed seats in use",
-                     required=False)

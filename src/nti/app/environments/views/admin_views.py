@@ -713,10 +713,6 @@ class LicenseAuditView(BaseView):
 
 
         usage = ISiteUsage(site)
-        if IRestrictedLicense.providedBy(site.license):
-            if usage.used_seats and usage.used_seats > site.license.seats:
-                issues.append('site.usage using %i of %i allowed seats' %
-                              (usage.used_seats, site.license.seats))
 
         if issues:
             audit['Site'] = site

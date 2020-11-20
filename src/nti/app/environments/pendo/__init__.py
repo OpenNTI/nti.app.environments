@@ -5,7 +5,6 @@ PENDO_USAGE_TOTAL_INSTRUCTOR_COUNT = 'usagetotalinstructorcount'
 PENDO_USAGE_TOTAL_USER_COUNT = 'usagetotalusercount'
 PENDO_USAGE_TOTAL_COURSE_COUNT = 'usagetotalcoursecount'
 PENDO_USAGE_TOTAL_SCORM_PACKAGE_COUNT = 'usagetotalscormpackagecount'
-PENDO_USAGE_USED_LICENSE_COUNT = 'usageusedlicensecount'
 
 PENDO_SITE_STATUS = 'sitestatus'
 PENDO_SITE_LICENSE_TYPE = 'sitelicensetype'

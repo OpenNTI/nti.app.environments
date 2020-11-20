@@ -299,7 +299,6 @@
         <div class="site-item">
             <h3>Site Usage <a class="historical-usage" target="_blank" tal:attributes="href site.usage.historical"><i class="icofont-chart-bar-graph"></i></a></h3>
             <metal:block tal:omit-tag="" tal:condition="site.usage.usage|nothing">
-                <p>Licensable Seats: <span tal:content="site.usage.usage.used_seats"></span></p>
 		<p>Site Admin Count: <span tal:content="site.usage.usage.admin_count"></span></p>
 		<p>Instructor Count: <span tal:content="site.usage.usage.instructor_count"></span></p>
 		<p>Total User Count: <span tal:content="site.usage.usage.user_count"></span></p>
