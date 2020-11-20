@@ -714,6 +714,20 @@ class LicenseAuditView(BaseView):
 
         usage = ISiteUsage(site)
 
+        if IRestrictedLicense.providedBy(site.license) \
+           and usage.instructor_count != None \
+           and usage.admin_count != None:
+            
+            # Validate we have enough licensed seats for admins
+            if usage.admin_count > site.license.seats:
+                issues.append(('Admin count %i exceeds limit %i' % (usage.admin_count, site.license.seats)))
+
+            allowed_instructors = max(site.license.seats - usage.admin_count, 0)
+            allowed_instructors += (site.license.additional_instructor_seats or 0)
+            if usage.instructor_count > allowed_instructors:
+               issues.append(('Instructor count %i exceeds limit %i' % (usage.instructor_count, allowed_instructors))) 
+            
+
         if issues:
             audit['Site'] = site
             audit['License'] = site.license

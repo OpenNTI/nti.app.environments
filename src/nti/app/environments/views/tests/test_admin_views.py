@@ -247,7 +247,7 @@ class TestLicenseAuditView(BaseAppTest):
                                           seats=5)
 
             ISiteUsage(site).admin_usernames = frozenset([f'admin_f{idx}' for idx in range(0,usage)])
-            ISiteUsage(site).instructor_usernames = {}
+            ISiteUsage(site).instructor_usernames = frozenset()
 
     @with_test_app()
     def test_requires_reporting(self):
@@ -271,8 +271,10 @@ class TestLicenseAuditView(BaseAppTest):
                                 status=200,
                                 extra_environ=self._make_environ(username='admin001'))
         resp = resp.json
-        assert_that(resp, has_entries('Items', has_length(1)))
-        assert_that(resp, has_entries('Items', all_of(has_key('threeday'))))
+
+        assert_that(resp, has_entries('Items', has_length(2)))
+        assert_that(resp, has_entries('Items', all_of(has_key('threeday'),
+                                                      has_key('overlimit'))))
         
 
     @with_test_app()
@@ -285,7 +287,90 @@ class TestLicenseAuditView(BaseAppTest):
                                 status=200,
                                 extra_environ=self._make_environ(username='admin001'))
         resp = resp.json
+        assert_that(resp, has_entries('Items', has_length(1)))
+        assert_that(resp, has_entries('Items', has_key('overlimit')))
+
+    @with_test_app()
+    def test_instructor_admin_alert_interaction(self):
+        with ensure_free_txn():
+            self._init_data()
+
+            # for this test we only care about the site with id 'good' so blast the rest
+            root = self._root()
+            sites = root.get('sites')
+            for key in tuple(sites):
+                if key != 'good':
+                    del sites[key]
+
+        # No issues
+        resp = self.testapp.get(self.url,
+                                status=200,
+                                extra_environ=self._make_environ(username='admin001'))
+        resp = resp.json
         assert_that(resp, has_entries('Items', has_length(0)))
+
+        # Our seats is 5 and we have 3 admins. so we have room for 2 instructors
+        with ensure_free_txn():
+            root = self._root()
+            sites = root.get('sites')
+            site = sites['good']
+            ISiteUsage(site).instructor_usernames =  frozenset(['inst1', 'inst2'])
+
+        # Still no issues
+        resp = self.testapp.get(self.url,
+                                status=200,
+                                extra_environ=self._make_environ(username='admin001'))
+        resp = resp.json
+        assert_that(resp, has_entries('Items', has_length(0)))
+
+        # However if we add a third instructor, we are over the limit
+        with ensure_free_txn():
+            root = self._root()
+            sites = root.get('sites')
+            site = sites['good']
+            ISiteUsage(site).instructor_usernames =  frozenset(['inst1', 'inst2', 'inst3'])
+
+        # Now we have an alert about usage
+        resp = self.testapp.get(self.url,
+                                status=200,
+                                extra_environ=self._make_environ(username='admin001'))
+        resp = resp.json
+        assert_that(resp, has_entries('Items', has_length(1)))
+        assert_that(resp, has_entries('Items', has_key('good')))    
+
+        # Which we can resolve by adding an instructor seat add-on
+        with ensure_free_txn():
+            root = self._root()
+            sites = root.get('sites')
+            site = sites['good']
+            site.license.additional_instructor_seats = 1
+
+        # Again we are in compliance
+        resp = self.testapp.get(self.url,
+                                status=200,
+                                extra_environ=self._make_environ(username='admin001'))
+        resp = resp.json
+        assert_that(resp, has_entries('Items', has_length(0)))
+
+        # But instructor addons don't allow extra admins
+        with ensure_free_txn():
+            root = self._root()
+            sites = root.get('sites')
+            site = sites['good']
+            site.license.additional_instructor_seats = 2
+            site.license.seats = 3
+            ISiteUsage(site).admin_usernames =  frozenset(['admin1', 'admin2', 'admin3', 'admin4'])
+            ISiteUsage(site).instructor_usernames =  frozenset(['inst1'])
+
+        # Now we have an alert about usage
+        resp = self.testapp.get(self.url,
+                                status=200,
+                                extra_environ=self._make_environ(username='admin001'))
+        resp = resp.json
+        assert_that(resp, has_entries('Items', has_length(1)))
+        assert_that(resp, has_entries('Items', has_key('good')))
+            
+        
 
     @with_test_app()
     @fudge.patch('nti.app.environments.views.admin_views._do_fetch_site_usage')
