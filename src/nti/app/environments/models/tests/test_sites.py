@@ -426,6 +426,7 @@ class TestSiteUsage(BaseTest):
 
     def test_instructor_count(self):
         assert_that(self.usage.instructor_count, is_(None))
-        
+
+        self.usage.admin_usernames = frozenset({'admin1', 'admin2'})
         self.usage.instructor_usernames = frozenset({'admin1', 'inst1234'})
-        assert_that(self.usage.instructor_count, is_(2))       
+        assert_that(self.usage.instructor_count, is_(1))
