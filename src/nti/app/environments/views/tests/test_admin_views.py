@@ -271,9 +271,8 @@ class TestLicenseAuditView(BaseAppTest):
                                 status=200,
                                 extra_environ=self._make_environ(username='admin001'))
         resp = resp.json
-        assert_that(resp, has_entries('Items', has_length(2)))
-        assert_that(resp, has_entries('Items', all_of(has_key('threeday'),
-                                                      has_key('overlimit'))))
+        assert_that(resp, has_entries('Items', has_length(1)))
+        assert_that(resp, has_entries('Items', all_of(has_key('threeday'))))
         
 
     @with_test_app()
@@ -286,8 +285,7 @@ class TestLicenseAuditView(BaseAppTest):
                                 status=200,
                                 extra_environ=self._make_environ(username='admin001'))
         resp = resp.json
-        assert_that(resp, has_entries('Items', has_length(1)))
-        assert_that(resp, has_entries('Items', has_key('overlimit')))
+        assert_that(resp, has_entries('Items', has_length(0)))
 
     @with_test_app()
     @fudge.patch('nti.app.environments.views.admin_views._do_fetch_site_usage')
