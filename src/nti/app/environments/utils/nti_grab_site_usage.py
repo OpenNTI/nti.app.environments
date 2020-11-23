@@ -28,7 +28,6 @@ from nti.app.environments.pendo import PENDO_USAGE_TOTAL_INSTRUCTOR_COUNT
 from nti.app.environments.pendo import PENDO_USAGE_TOTAL_SCORM_PACKAGE_COUNT
 from nti.app.environments.pendo import PENDO_USAGE_TOTAL_SITE_ADMIN_COUNT
 from nti.app.environments.pendo import PENDO_USAGE_TOTAL_USER_COUNT
-from nti.app.environments.pendo import PENDO_USAGE_USED_LICENSE_COUNT
 
 from nti.app.environments.pendo.interfaces import IPendoAccount
 
@@ -70,8 +69,7 @@ PENDO_FIELD_NAMES = ((PENDO_USAGE_TOTAL_SITE_ADMIN_COUNT, 'admin_count'),
                      (PENDO_USAGE_TOTAL_INSTRUCTOR_COUNT, 'instructor_count'),
                      (PENDO_USAGE_TOTAL_USER_COUNT, 'user_count'),
                      (PENDO_USAGE_TOTAL_COURSE_COUNT, 'course_count'),
-                     (PENDO_USAGE_TOTAL_SCORM_PACKAGE_COUNT, 'scorm_package_count'),
-                     (PENDO_USAGE_USED_LICENSE_COUNT, 'used_seats'))
+                     (PENDO_USAGE_TOTAL_SCORM_PACKAGE_COUNT, 'scorm_package_count'))
 
 def _pendo_usage_entry(site):
     usage = ISiteUsage(site)
@@ -104,8 +102,7 @@ PROMETHEUS_METRIC_NAMES = (('usage_total_site_admin_count', 'admin_count'),
                           ('usage_total_instructor_count', 'instructor_count'),
                           ('usage_total_user_count', 'user_count'),
                           ('usage_total_course_count', 'course_count'),
-                          ('usage_total_scorm_package_count', 'scorm_package_count'),
-                          ('usage_used_license_count', 'used_seats'))
+                          ('usage_total_scorm_package_count', 'scorm_package_count'))
 
 def _push_to_prometheus(siteids, root, gateway, job_name, dry_run=False):
     from prometheus_client import CollectorRegistry, push_to_gateway, Gauge

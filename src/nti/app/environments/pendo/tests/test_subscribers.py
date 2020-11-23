@@ -52,7 +52,8 @@ class TestPendoSiteStatusPayload(unittest.TestCase):
     def test_starter_payload(self):
         inst = StarterLicense(start_date=datetime.datetime(2019, 12, 11, 0, 0, 0),
                               frequency='monthly',
-                              seats=3)
+                              seats=3,
+                              additional_instructor_seats=2)
         self.site.license = inst
 
         publisher = PendoSiteStatusPublisher(self.site)
@@ -61,7 +62,8 @@ class TestPendoSiteStatusPayload(unittest.TestCase):
         assert_that(payload, has_entries('sitestatus', 'ACTIVE',
                                          'sitelicensetype', 'starter',
                                          'sitelicensefrequency', 'monthly',
-                                         'sitelicenseseats', 3))
+                                         'sitelicenseseats', 3,
+                                         'sitelicenseinstructoraddonseats', 2))
         assert_that(payload, not_(has_key('sitetrialenddate')))
 
     @fudge.patch('nti.app.environments.pendo.client._NoopPendoClient.update_metadata_set')

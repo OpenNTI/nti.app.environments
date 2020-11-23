@@ -190,7 +190,10 @@
                     <p>Frequency: <span class="site_license_frequency" tal:content="site.license.frequency" original_value="${site.license.frequency}"></span></p>
                 </metal:block>
                 <metal:block tal:omit-tag="" tal:condition="exists:site.license.seats">
-                    <p>Seats: <span class="site_license_seats" tal:content="site.license.seats" original_value="${site.license.seats}"></span></p>
+                    <p>Full Seats: <span class="site_license_seats" tal:content="site.license.seats" original_value="${site.license.seats}"></span></p>
+                </metal:block>
+		<metal:block tal:omit-tag="" tal:condition="exists:site.license.additional_instructor_seats">
+                    <p>Instructor Addon Seats: <span class="site_license_additional_instructor_seats" tal:content="site.license.additional_instructor_seats" original_value="${site.license.additional_instructor_seats}"></span></p>
                 </metal:block>
                 <p>Last Modified: <span tal:content="site.license.lastModified"/></p>
                 <metal:block tal:omit-tag="" tal:condition="site.license.edit_link|nothing">
@@ -226,8 +229,12 @@
                         </select>
                     </div>
                     <div class="form-group-item seats_group_item">
-                        <label>Seats</label>
+                        <label>Full Seats</label>
                         <input type="text" class="site_license_seats" name="site_license_seats"/>
+                    </div>
+		    <div class="form-group-item seats_group_item">
+                        <label>Additional Addon Instructors</label>
+                        <input type="text" class="site_license_additional_instructor_seats" name="site_license_additional_instructor_seats"/>
                     </div>
                     <div class="form-group-item">
                         <div class="success success-edit-license" style="display:none;"></div>
@@ -272,7 +279,7 @@
                 </metal:block>
             </div>
             <div id="edit_parent_site" style="display:none;">
-                 <div class="form-group">
+                <div class="form-group">
                     <div class="form-group-item">
                         <label>Parent Site ID</label>
                         <input type="text" class="site_parent_id"/>
@@ -292,7 +299,6 @@
         <div class="site-item">
             <h3>Site Usage <a class="historical-usage" target="_blank" tal:attributes="href site.usage.historical"><i class="icofont-chart-bar-graph"></i></a></h3>
             <metal:block tal:omit-tag="" tal:condition="site.usage.usage|nothing">
-                <p>Licensable Seats: <span tal:content="site.usage.usage.used_seats"></span></p>
 		<p>Site Admin Count: <span tal:content="site.usage.usage.admin_count"></span></p>
 		<p>Instructor Count: <span tal:content="site.usage.usage.instructor_count"></span></p>
 		<p>Total User Count: <span tal:content="site.usage.usage.user_count"></span></p>
@@ -308,34 +314,34 @@
         <div class="site-item">
             <h3>Site Setup State</h3>
             <metal:block tal:omit-tag="" tal:condition="site.setup_state|nothing">
-            <div style="display:flex;">
-                <div style="width:50%;">
-                    <p>Status: <span tal:content="site.setup_state.state_name"></span></p>
-                    <p>State Created Time: <span tal:content="site.setup_state.start_time"></span></p>
-                    <p>State Changed Time: <span tal:content="site.setup_state.end_time"></span></p>
-                    <p>Total Elapsed Time (seconds): <span tal:content="site.setup_state.elapsed_time"></span></p>
-                    <metal:block tal:omit-tag="" tal:condition="site.setup_state.exception|nothing">
-                        <p>Exception: <span tal:content="site.setup_state.exception"></span></p>
-                    </metal:block>
-                    <metal:block tal:omit-tag="" tal:condition="site.setup_state.task_start_time|nothing">
-                        <p>Task Start Time: <span tal:content="site.setup_state.task_start_time"></span></p>
-                    </metal:block>
-                    <metal:block tal:omit-tag="" tal:condition="site.setup_state.task_end_time|nothing">
-                        <p>Task End Time: <span tal:content="site.setup_state.task_end_time"></span></p>
-                    </metal:block>
-                    <metal:block tal:omit-tag="" tal:condition="site.setup_state.task_elapsed_time|nothing">
-                        <p>Task Elapsed Time (seconds): <span tal:content="site.setup_state.task_elapsed_time"></span></p>
-                    </metal:block>
-                </div>
-                <div style="width:50%;">
-                    <metal:block tal:omit-tag="" tal:condition="site.setup_state.invitation_status|nothing">
-                        <p>Admin Invitation Status: <span tal:content="site.setup_state.invitation_status"></span></p>
-                    </metal:block>
-                    <metal:block tal:omit-tag="" tal:condition="site.setup_state.invite_accepted_date|nothing">
-                        <p>Admin Invitation Accepted Time: <span tal:content="site.setup_state.invite_accepted_date"></span></p>
-                    </metal:block>
-                </div>
-            </div>
+		<div style="display:flex;">
+                    <div style="width:50%;">
+			<p>Status: <span tal:content="site.setup_state.state_name"></span></p>
+			<p>State Created Time: <span tal:content="site.setup_state.start_time"></span></p>
+			<p>State Changed Time: <span tal:content="site.setup_state.end_time"></span></p>
+			<p>Total Elapsed Time (seconds): <span tal:content="site.setup_state.elapsed_time"></span></p>
+			<metal:block tal:omit-tag="" tal:condition="site.setup_state.exception|nothing">
+                            <p>Exception: <span tal:content="site.setup_state.exception"></span></p>
+			</metal:block>
+			<metal:block tal:omit-tag="" tal:condition="site.setup_state.task_start_time|nothing">
+                            <p>Task Start Time: <span tal:content="site.setup_state.task_start_time"></span></p>
+			</metal:block>
+			<metal:block tal:omit-tag="" tal:condition="site.setup_state.task_end_time|nothing">
+                            <p>Task End Time: <span tal:content="site.setup_state.task_end_time"></span></p>
+			</metal:block>
+			<metal:block tal:omit-tag="" tal:condition="site.setup_state.task_elapsed_time|nothing">
+                            <p>Task Elapsed Time (seconds): <span tal:content="site.setup_state.task_elapsed_time"></span></p>
+			</metal:block>
+                    </div>
+                    <div style="width:50%;">
+			<metal:block tal:omit-tag="" tal:condition="site.setup_state.invitation_status|nothing">
+                            <p>Admin Invitation Status: <span tal:content="site.setup_state.invitation_status"></span></p>
+			</metal:block>
+			<metal:block tal:omit-tag="" tal:condition="site.setup_state.invite_accepted_date|nothing">
+                            <p>Admin Invitation Accepted Time: <span tal:content="site.setup_state.invite_accepted_date"></span></p>
+			</metal:block>
+                    </div>
+		</div>
             </metal:block>
             <metal:block tal:omit-tag="" tal:condition="not:site.setup_state|nothing">
                 <p>No data.</p>
@@ -377,59 +383,60 @@
 
         <!--Generate Token Modal-->
         <metal:block tal:omit-tag="" tal:condition="site.generate_token_link|nothing">
-        <div id="tokenModal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Generating Site Token</h3>
-                </div>
-                <div class="modal-body">
-                    <div class="form">
-                        <div class="input-row">
-                            <label class="input-col-1">Time Limit (mins)</label>
-                            <div class="input-col-3">
-                                <input type="text" id="timeout" name="timeout" value="30" data-old-value="30"
-                                       placeHolder="Please provide a value between 1 and 360."/>
-                                <span class="field-error"></span>
+            <div id="tokenModal" class="modal">
+		<div class="modal-content">
+                    <div class="modal-header">
+			<h3>Generating Site Token</h3>
+                    </div>
+                    <div class="modal-body">
+			<div class="form">
+                            <div class="input-row">
+				<label class="input-col-1">Time Limit (mins)</label>
+				<div class="input-col-3">
+                                    <input type="text" id="timeout" name="timeout" value="30" data-old-value="30"
+					   placeHolder="Please provide a value between 1 and 360."/>
+                                    <span class="field-error"></span>
+				</div>
                             </div>
-                        </div>
-                        <div class="success success-token" style="display:none;"></div>
-                        <div class="error error-token" style="display:none;"></div>
+                            <div class="success success-token" style="display:none;"></div>
+                            <div class="error error-token" style="display:none;"></div>
+			</div>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <div>
-                        <button class='btn btnSave' onclick="generateToken(this, '${site.generate_token_link}');">Generate</button>
-                        <button class='btn btnNO' style="margin-right:0px;" onclick="closeSiteTokenModal();">Close</button>
-                    </div>
-                    <div class="token-result-wrapper" id="token-result-wrapper">
-                        <div class="token-result">
-                            <div class="clipboard">
-                                <span class="tooltiptext">Copied!</span>
-                                <button class="btnCopy" onclick="copyToken(this);">Copy</button>
+                    <div class="modal-footer">
+			<div>
+                            <button class='btn btnSave' onclick="generateToken(this, '${site.generate_token_link}');">Generate</button>
+                            <button class='btn btnNO' style="margin-right:0px;" onclick="closeSiteTokenModal();">Close</button>
+			</div>
+			<div class="token-result-wrapper" id="token-result-wrapper">
+                            <div class="token-result">
+				<div class="clipboard">
+                                    <span class="tooltiptext">Copied!</span>
+                                    <button class="btnCopy" onclick="copyToken(this);">Copy</button>
+				</div>
+				<div class="highlight" id="highlight"></div>
                             </div>
-                            <div class="highlight" id="highlight"></div>
-                        </div>
+			</div>
                     </div>
-                </div>
+		</div>
             </div>
-        </div>
         </metal:block>
 
     </metal:block>
     <metal:block metal:fill-slot="script">
         <script src="/static/js/site_detail.js"></script>
         <script>
-            $('input[name=site_environment_load_factor]').on('input', NonNegtiveNumberOnly);
-            $('input[name=site_license_seats]').on('input', NonNegtiveNumberOnly);
-            $('input[name=timeout]').on('input', function(e){
-                var old = $(this).attr('data-old-value') || '';
-                positiveFloatOnly(e);
-                var curr = $(this).val().trim();
-                if(old!==curr){
-                    clearFieldError($(this));
-                }
-                $(this).attr('data-old-value', curr);
-            });
+         $('input[name=site_environment_load_factor]').on('input', NonNegtiveNumberOnly);
+         $('input[name=site_license_seats]').on('input', NonNegtiveNumberOnly);
+	 $('input[name=site_license_additional_instructor_seats]').on('input', NonNegtiveNumberOnly);
+         $('input[name=timeout]').on('input', function(e){
+             var old = $(this).attr('data-old-value') || '';
+             positiveFloatOnly(e);
+             var curr = $(this).val().trim();
+             if(old!==curr){
+                 clearFieldError($(this));
+             }
+             $(this).attr('data-old-value', curr);
+         });
         </script>
     </metal:block>
 </metal:block>

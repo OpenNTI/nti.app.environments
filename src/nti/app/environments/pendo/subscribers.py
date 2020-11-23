@@ -10,6 +10,7 @@ from . import PENDO_SITE_STATUS
 from . import PENDO_SITE_LICENSE_TYPE
 from . import PENDO_SITE_LICENSE_FREQUENCY
 from . import PENDO_SITE_LICENSE_SEATS
+from . import PENDO_SITE_LICENSE_INSTRUCTOR_ADDON_SEATS
 from . import PENDO_SITE_TRIAL_ENDDATE
 
 from . import serialize_datetime
@@ -42,6 +43,7 @@ class PendoSiteStatusPublisher(object):
         payload[PENDO_SITE_LICENSE_TYPE] = license.license_name
         payload[PENDO_SITE_LICENSE_FREQUENCY] = getattr(license, 'frequency', 'unknown')
         payload[PENDO_SITE_LICENSE_SEATS] = getattr(license, 'seats', UNLIMITED_SEATS)
+        payload[PENDO_SITE_LICENSE_INSTRUCTOR_ADDON_SEATS] = getattr(license, 'additional_instructor_seats', 0)
 
         if ITrialLicense.providedBy(license):
             payload[PENDO_SITE_TRIAL_ENDDATE] = serialize_datetime(license.end_date)
