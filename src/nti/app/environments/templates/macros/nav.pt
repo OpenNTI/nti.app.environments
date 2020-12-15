@@ -12,6 +12,7 @@
                     <div class="dropdown-content">
                         <a href="/onboarding/dashboards/@@trialsites?table-sortOn=table-site_license_end_date-2&table-sortOrder=ascending">Trial Sites</a>
                         <a href="/onboarding/dashboards/@@renewals?table-sortOn=table-site_days_to_renew-3&table-sortOrder=ascending">Sites Renewals</a>
+			<a href="/onboarding/dashboards/@@license_audit?table-sortOn=table-site_days_to_renew-3&table-sortOrder=ascending">License Audit</a>
                     </div>
                 </div>
             </metal:block>

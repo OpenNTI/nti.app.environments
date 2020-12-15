@@ -193,6 +193,42 @@
 	<adapter factory="._table_utils.SiteColumnHeader"
 			 for="* * * ._table_utils.SiteDaysToRenewColumn"
 			 provides="z3c.table.interfaces.IColumnHeader"/>
+	
+	<adapter factory="._table_utils.SiteColumnHeader"
+			 for="* * * ._table_utils.SiteUsageAttrColumn"
+			 provides="z3c.table.interfaces.IColumnHeader"/>
+
+
+	<!-- Dashboard License Audit Table-->
+	<adapter factory="._table_utils.SiteURLColumn"
+			 for="* * ._table_utils.DashboardLicenseAuditTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="site" />
+
+	<adapter factory="._table_utils.SiteLicenseColumn"
+			 for="* * ._table_utils.DashboardLicenseAuditTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="license" />
+
+	<adapter factory="._table_utils.SiteLicenseEndDateColumn"
+			 for="* * ._table_utils.DashboardLicenseAuditTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="site_license_end_date" />
+
+	<adapter factory="._table_utils.SiteUsageAdminColumn"
+			 for="* * ._table_utils.DashboardLicenseAuditTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="site_usage_admin_count" />
+
+	<adapter factory="._table_utils.SiteLicenseAlertColumn"
+			 for="* * ._table_utils.DashboardLicenseAuditTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="site_usage_instructor_count" />
+
+	<adapter factory="._table_utils.SiteUsageInstructorColumn"
+			 for="* * ._table_utils.DashboardLicenseAuditTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="site_license_issues" />
 
 	<!-- Role Principals table -->
 	<adapter factory="._table_utils.PrincipalColumn"

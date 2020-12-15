@@ -99,6 +99,7 @@ from nti.app.environments.views.base import TableViewMixin
 from nti.app.environments.views._table_utils import CustomersTable
 from nti.app.environments.views._table_utils import RolePrincipalsTable
 from nti.app.environments.views._table_utils import SitesTable
+from nti.app.environments.views._table_utils import DashboardLicenseAuditTable
 from nti.app.environments.views._table_utils import DashboardTrialSitesTable
 from nti.app.environments.views._table_utils import DashboardRenewalsTable
 from nti.app.environments.views._table_utils import make_specific_table
@@ -751,3 +752,32 @@ class LicenseAuditView(BaseView):
         result[ITEMS] = failed_sites
         result[TOTAL] = len(failed_sites)
         return result
+
+@view_config(route_name='dashboards',
+             renderer='../templates/admin/dashboard_license_audit.pt',
+             request_method='GET',
+             context=DashboardsResource,
+             permission=ACT_READ,
+             name='license_audit')
+class DashboardLicenseAuditView(BaseTemplateView, LicenseAuditView):
+
+    DEFAULT_THRESHOLD_DAYS = 0
+
+    @property
+    def sites(self):
+        return get_sites_folder(request=self.request)
+
+    def __call__(self):
+
+        failed_sites = {}
+        for sid in self.sites:
+            res = self.audit_site(sid)
+            if res:
+                failed_sites[sid] = res
+
+        table = make_specific_table(DashboardLicenseAuditTable,
+                                    self.sites,
+                                    self.request,
+                                    alerts=failed_sites)
+        
+        return {'table': table}

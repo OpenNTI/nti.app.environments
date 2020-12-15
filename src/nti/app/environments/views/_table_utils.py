@@ -23,6 +23,7 @@ from nti.app.environments.auth import ACT_DELETE, ACT_UPDATE
 from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import IStandardLicense
 from nti.app.environments.models.interfaces import IDedicatedEnvironment
+from nti.app.environments.models.interfaces import ISiteUsage
 from nti.app.environments.models.interfaces import SITE_STATUS_ACTIVE
 from nti.app.environments.models.interfaces import SITE_STATUS_OPTIONS
 
@@ -84,7 +85,6 @@ def make_specific_table(tableClassName, container, request, **kwargs):
         the_table.update()
 
     return the_table
-
 
 class DefaultColumnHeader(header.SortingColumnHeader):
 
@@ -377,6 +377,68 @@ class SiteSetupStateColumn(column.GetAttrColumn):
     def getValue(self, obj):
         return obj.setup_state.state_name if obj.setup_state else ''
 
+class SiteUsageAttrColumn(column.GetAttrColumn):
+
+    weight = 5
+
+    def getValue(self, obj):
+        res = super(SiteUsageAttrColumn, self).getValue(ISiteUsage(obj))
+        if res is None:
+            return ''
+        return res
+
+    def getSortKey(self, item):
+        try:
+            return int(self.getValue(item))
+        except ValueError:
+            return -1
+
+
+class SiteUsageAdminColumn(SiteUsageAttrColumn):
+
+    attrName = 'admin_count'
+
+    header = 'Admin Seats'
+
+
+    def renderCell(self, item):
+        usage = ISiteUsage(item).admin_count
+        try:
+            limit = item.license.seats
+        except AttributeError:
+            limit = '∞'
+        return f'{usage} / {limit}'
+
+class SiteUsageInstructorColumn(SiteUsageAttrColumn):
+
+    attrName = 'instructor_count'
+
+    header = 'Instructor Addons'
+
+    def renderCell(self, item):
+        usage = ISiteUsage(item).instructor_count
+        try:
+            limit = item.license.additional_instructor_seats
+        except AttributeError:
+            limit = '∞'
+
+        if limit == None:
+            limit = 0
+        
+        return f'{usage} / {limit}'
+
+class SiteLicenseAlertColumn(column.Column):
+
+    weight = 10
+
+    def renderCell(self, item):
+        alerts = self.table.alerts
+        issues = alerts[item.id]['Issues']
+        return '<br/>'.join(issues)
+
+    def renderHeadCell(self):
+        return 'Issues'
+
 
 class SiteCreatedColumn(CreatedColumn):
 
@@ -426,6 +488,17 @@ class DashboardRenewalsTable(BaseSitesTable):
     @Lazy
     def _raw_filter(self):
         return lambda x: bool(IStandardLicense.providedBy(x.license) and x.status == SITE_STATUS_ACTIVE)
+
+
+class DashboardLicenseAuditTable(BaseSitesTable):
+
+    def __init__(self, context, request, alerts={}):
+        super(DashboardLicenseAuditTable, self).__init__(context, request)
+        self.alerts = alerts
+
+    @Lazy
+    def _raw_values(self):
+        return [self.context[k] for k in self.alerts]
 
 
 class SiteURLAliasColumn(SiteURLColumn):
