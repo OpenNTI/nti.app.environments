@@ -51,6 +51,7 @@ class TestPendoSiteStatusPayload(unittest.TestCase):
 
     def test_starter_payload(self):
         inst = StarterLicense(start_date=datetime.datetime(2019, 12, 11, 0, 0, 0),
+                              end_date=datetime.datetime(2020, 1, 11, 0, 0, 0),
                               frequency='monthly',
                               seats=3,
                               additional_instructor_seats=2)

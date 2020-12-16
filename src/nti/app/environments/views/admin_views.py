@@ -71,7 +71,6 @@ from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import IStarterLicense
 from nti.app.environments.models.interfaces import IGrowthLicense
 from nti.app.environments.models.interfaces import IEnterpriseLicense
-from nti.app.environments.models.interfaces import IStandardLicense
 from nti.app.environments.models.interfaces import IRestrictedLicense
 from nti.app.environments.models.interfaces import ISiteUsage
 from nti.app.environments.models.interfaces import SITE_STATUS_ACTIVE
@@ -669,7 +668,7 @@ class TrialSitesDigestEmailView(BaseView):
 class LicenseAuditView(CSVBaseView):
     """
     Loop through ACTIVE sites and check their licenses.
-    For IStandardLicense we check if the license date is within
+    We check if the license date is within
     x days based on provided query params. For IRestrictedLicense
     we poll their usage and compare that to the configured seats.
 
@@ -717,10 +716,9 @@ class LicenseAuditView(CSVBaseView):
 
         audit = {}
 
-        if IStandardLicense.providedBy(site.license):
-            days_threshold = self.threshold_for_license(site.license)
-            if self.now > site.license.end_date - timedelta(days=days_threshold):
-                issues.append(('site.license.end_date past threshold of %i days' % days_threshold))
+        days_threshold = self.threshold_for_license(site.license)
+        if self.now > site.license.end_date - timedelta(days=days_threshold):
+            issues.append(('site.license.end_date past threshold of %i days' % days_threshold))
 
 
         usage = ISiteUsage(site)

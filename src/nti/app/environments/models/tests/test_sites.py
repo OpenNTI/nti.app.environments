@@ -184,16 +184,21 @@ class TestSites(BaseTest):
                                           'frequency': None,
                                           'seats': None}))
         errors = getValidationErrors(IStarterLicense, inst)
-        assert_that(errors, has_length(3))
+        assert_that(errors, has_length(4))
         assert_that(errors, has_items(('start_date', RequiredMissing('start_date')),
+                                      ('end_date', RequiredMissing('end_date')),
                                       ('frequency', RequiredMissing('frequency')),
                                       ('seats', RequiredMissing('seats'))))
 
         _start = datetime.datetime(2019, 12, 11, 0, 0, 0)
+        _end = datetime.datetime(2020, 1, 11, 0, 0, 0)
+        
         inst = StarterLicense(start_date=_start,
+                              end_date=_end,
                               frequency='monthly',
                               seats=1)
         assert_that(inst, has_properties({'start_date': _start,
+                                          'end_date': _end,
                                           'frequency': 'monthly',
                                           'seats': 1}))
         errors = getValidationErrors(IStarterLicense, inst)
@@ -203,6 +208,7 @@ class TestSites(BaseTest):
         assert_that(result, has_entries({'Class': 'StarterLicense',
                                          'MimeType': 'application/vnd.nextthought.app.environments.starterlicense',
                                          'start_date': '2019-12-11T00:00:00Z',
+                                         'end_date': '2020-01-11T00:00:00Z',
                                          'frequency': 'monthly',
                                          'seats': 1}))
 
@@ -212,19 +218,24 @@ class TestSites(BaseTest):
     def testGrowthLicense(self):
         inst = GrowthLicense()
         assert_that(inst, has_properties({'start_date': None,
+                                          'end_date': None,
                                           'frequency': None,
                                           'seats': None}))
         errors = getValidationErrors(IGrowthLicense, inst)
-        assert_that(errors, has_length(3))
+        assert_that(errors, has_length(4))
         assert_that(errors, has_items(('start_date', RequiredMissing('start_date')),
+                                      ('end_date', RequiredMissing('end_date')),
                                       ('frequency', RequiredMissing('frequency')),
                                       ('seats', RequiredMissing('seats'))))
 
         _start = datetime.datetime(2019, 12, 11, 0, 0, 0)
+        _end = datetime.datetime(2020, 1, 11, 0, 0, 0)
         inst = GrowthLicense(start_date=_start,
+                             end_date=_end,
                              frequency='monthly',
                              seats=2)
         assert_that(inst, has_properties({'start_date': _start,
+                                          'end_date': _end,
                                           'frequency': 'monthly',
                                           'seats': 2}))
         errors = getValidationErrors(IGrowthLicense, inst)
@@ -234,6 +245,7 @@ class TestSites(BaseTest):
         assert_that(result, has_entries({'Class': 'GrowthLicense',
                                          'MimeType': 'application/vnd.nextthought.app.environments.growthlicense',
                                          'start_date': '2019-12-11T00:00:00Z',
+                                         'end_date': '2020-01-11T00:00:00Z',
                                          'frequency': 'monthly',
                                          'seats': 2}))
 

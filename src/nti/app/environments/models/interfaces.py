@@ -305,20 +305,17 @@ class ISiteLicense(interface.Interface):
     start_date = DateTime(title='The datetime this license starts.',
                           required=True)
 
-
-class IStandardLicense(ISiteLicense):
-
     end_date = DateTime(title='The datetime this license ends.',
                         required=True)
 
 
-class ITrialLicense(IStandardLicense):
+class ITrialLicense(ISiteLicense):
     """
     A temporary trial license used for evaluation.
     """
 
 
-class IEnterpriseLicense(IStandardLicense):
+class IEnterpriseLicense(ISiteLicense):
     """
     An enterprise level license.
     """
