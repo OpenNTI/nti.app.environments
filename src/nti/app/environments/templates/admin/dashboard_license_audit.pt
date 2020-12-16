@@ -11,6 +11,9 @@
 
         <div class="toolbar">
             <input type="text" id='search' name="search" placeHolder="Search" class="search-input" onkeypress="return search(event);"/>
+	    <div style="float: right;">
+                <a href="${audit_export_url}" style="margin-left: 6px;" target="_blank">Export</a>
+            </div>
         </div>
 
 	<table tal:condition="python: len(table.context)" tal:replace="structure python: table.render()" />

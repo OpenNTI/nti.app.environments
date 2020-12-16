@@ -350,6 +350,17 @@ class SiteURLColumn(column.LinkColumn):
     def getLinkContent(self, item):
         return self.getValue(item)
 
+class SiteOwnerColumn(EmailColumn):
+
+    weight = 1
+    header = 'Owner'
+
+    def getLinkURL(self, item):
+        return super(SiteOwnerColumn, self).getLinkURL(item.owner)
+
+    def getLinkContent(self, item):
+        return super(SiteOwnerColumn, self).getLinkContent(item.owner)
+
 
 class SiteLicenseColumn(column.GetAttrColumn):
 
@@ -487,7 +498,9 @@ class DashboardRenewalsTable(BaseSitesTable):
 
     @Lazy
     def _raw_filter(self):
-        return lambda x: bool(IStandardLicense.providedBy(x.license) and x.status == SITE_STATUS_ACTIVE)
+        return lambda x: bool(IStandardLicense.providedBy(x.license) \
+                              and not ITrialLicense.providedBy(x.license) \
+                              and x.status == SITE_STATUS_ACTIVE)
 
 
 class DashboardLicenseAuditTable(BaseSitesTable):

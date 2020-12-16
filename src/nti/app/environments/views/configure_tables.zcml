@@ -138,6 +138,11 @@
 			 provides="z3c.table.interfaces.IColumn"
 			 name="site" />
 
+	<adapter factory="._table_utils.SiteOwnerColumn"
+			 for="* * ._table_utils.DashboardTrialSitesTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="owner" />
+
 	<adapter factory="._table_utils.SiteCreatedColumn"
 			 for="* * ._table_utils.DashboardTrialSitesTable"
 			 provides="z3c.table.interfaces.IColumn"
@@ -167,10 +172,10 @@
 			 provides="z3c.table.interfaces.IColumn"
 			 name="site" />
 
-	<adapter factory="._table_utils.SiteURLAliasColumn"
+	<adapter factory="._table_utils.SiteLicenseColumn"
 			 for="* * ._table_utils.DashboardRenewalsTable"
 			 provides="z3c.table.interfaces.IColumn"
-			 name="site_alias" />
+			 name="license" />
 
 	<adapter factory="._table_utils.SiteRenewalDateColumn"
 			 for="* * ._table_utils.DashboardRenewalsTable"
