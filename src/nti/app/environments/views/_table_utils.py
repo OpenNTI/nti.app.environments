@@ -23,9 +23,12 @@ from nti.app.environments.auth import ACT_DELETE, ACT_UPDATE
 from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import IStandardLicense
 from nti.app.environments.models.interfaces import IDedicatedEnvironment
+from nti.app.environments.models.interfaces import IRestrictedLicense
 from nti.app.environments.models.interfaces import ISiteUsage
 from nti.app.environments.models.interfaces import SITE_STATUS_ACTIVE
 from nti.app.environments.models.interfaces import SITE_STATUS_OPTIONS
+
+from nti.app.environments.stripe.interfaces import IStripeSubscription
 
 from nti.app.environments.common import formatDateToLocal
 
@@ -361,6 +364,26 @@ class SiteOwnerColumn(EmailColumn):
     def getLinkContent(self, item):
         return super(SiteOwnerColumn, self).getLinkContent(item.owner)
 
+class SiteBillingColumn(column.LinkColumn):
+
+    weight = 2
+    header = 'Billing'
+    attrName = 'billing'
+
+    def getValue(self, obj):
+        sub = IStripeSubscription(obj, None)
+        return sub.id if sub and sub.id else ''
+
+    def getSortKey(self, item):
+        return self.getValue(item)
+
+    def getLinkURL(self, item):
+        sub = self.getValue(item)
+        return f'https://dashboard.stripe.com/subscriptions/{sub}' if sub else ''
+
+    def getLinkContent(self, item):
+        return self.getValue(item)
+
 
 class SiteLicenseColumn(column.GetAttrColumn):
 
@@ -369,7 +392,12 @@ class SiteLicenseColumn(column.GetAttrColumn):
     attrName = 'license'
 
     def getValue(self, obj):
-        return obj.license.license_name
+        license_dn = [obj.license.license_name]
+
+        if IRestrictedLicense.providedBy(obj.license):
+            license_dn.append(obj.license.frequency)
+
+        return ' - '.join(license_dn)
 
 
 class SiteStatusColumn(column.GetAttrColumn):
@@ -498,8 +526,7 @@ class DashboardRenewalsTable(BaseSitesTable):
 
     @Lazy
     def _raw_filter(self):
-        return lambda x: bool(IStandardLicense.providedBy(x.license) \
-                              and not ITrialLicense.providedBy(x.license) \
+        return lambda x: bool(not ITrialLicense.providedBy(x.license) \
                               and x.status == SITE_STATUS_ACTIVE)
 
 
@@ -539,7 +566,13 @@ class SiteDaysToRenewColumn(column.Column):
     header = 'Days to Renewal'
 
     def renderCell(self, item):
-        return (item.license.end_date - self.table._current_time).days
+        if IStandardLicense.providedBy(item.license):
+            return (item.license.end_date - self.table._current_time).days
+        return ''
+
+    def getSortKey(self, item):
+        rendered = self.renderCell(item)
+        return rendered or -1
 
 
 class RolePrincipalsTable(BaseTable, _FilterMixin):

@@ -130,6 +130,10 @@
 
 	<adapter factory="._table_utils.SiteColumnHeader"
              for="* * * ._table_utils.SiteLicenseEndDateColumn"
+	     provides="z3c.table.interfaces.IColumnHeader"/>
+
+	<adapter factory="._table_utils.SiteColumnHeader"
+			 for="* * * ._table_utils.SiteBillingColumn"
 			 provides="z3c.table.interfaces.IColumnHeader"/>
 
 	<!-- Dashboard TrialSites table -->
@@ -176,6 +180,11 @@
 			 for="* * ._table_utils.DashboardRenewalsTable"
 			 provides="z3c.table.interfaces.IColumn"
 			 name="license" />
+
+	<adapter factory="._table_utils.SiteBillingColumn"
+			 for="* * ._table_utils.DashboardRenewalsTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="billing" />
 
 	<adapter factory="._table_utils.SiteRenewalDateColumn"
 			 for="* * ._table_utils.DashboardRenewalsTable"
