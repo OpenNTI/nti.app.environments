@@ -152,6 +152,13 @@ class IStripeCheckoutSessionCompletedEvent(IStripeEvent):
     https://stripe.com/docs/api/events/types#event_types-checkout.session.completed
     """
 
+class IStripeInvoicePaidEvent(IStripeEvent):
+    """
+    Dispatched when an invoice is paid.
+
+    https://stripe.com/docs/api/events/types#event_types-invoice.paid
+    """
+
 
 def iface_name_for_event_type(type):
     return 'IStripe'+''.join(map(lambda x:x.capitalize(), type.split('.')))+'Event'
