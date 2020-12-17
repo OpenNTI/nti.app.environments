@@ -23,8 +23,12 @@ from nti.app.environments.auth import ACT_DELETE, ACT_UPDATE
 from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import IStandardLicense
 from nti.app.environments.models.interfaces import IDedicatedEnvironment
+from nti.app.environments.models.interfaces import IRestrictedLicense
+from nti.app.environments.models.interfaces import ISiteUsage
 from nti.app.environments.models.interfaces import SITE_STATUS_ACTIVE
 from nti.app.environments.models.interfaces import SITE_STATUS_OPTIONS
+
+from nti.app.environments.stripe.interfaces import IStripeSubscription
 
 from nti.app.environments.common import formatDateToLocal
 
@@ -84,7 +88,6 @@ def make_specific_table(tableClassName, container, request, **kwargs):
         the_table.update()
 
     return the_table
-
 
 class DefaultColumnHeader(header.SortingColumnHeader):
 
@@ -350,6 +353,37 @@ class SiteURLColumn(column.LinkColumn):
     def getLinkContent(self, item):
         return self.getValue(item)
 
+class SiteOwnerColumn(EmailColumn):
+
+    weight = 1
+    header = 'Owner'
+
+    def getLinkURL(self, item):
+        return super(SiteOwnerColumn, self).getLinkURL(item.owner)
+
+    def getLinkContent(self, item):
+        return super(SiteOwnerColumn, self).getLinkContent(item.owner)
+
+class SiteBillingColumn(column.LinkColumn):
+
+    weight = 2
+    header = 'Billing'
+    attrName = 'billing'
+
+    def getValue(self, obj):
+        sub = IStripeSubscription(obj, None)
+        return sub.id if sub and sub.id else ''
+
+    def getSortKey(self, item):
+        return self.getValue(item)
+
+    def getLinkURL(self, item):
+        sub = self.getValue(item)
+        return f'https://dashboard.stripe.com/subscriptions/{sub}' if sub else ''
+
+    def getLinkContent(self, item):
+        return self.getValue(item)
+
 
 class SiteLicenseColumn(column.GetAttrColumn):
 
@@ -358,7 +392,12 @@ class SiteLicenseColumn(column.GetAttrColumn):
     attrName = 'license'
 
     def getValue(self, obj):
-        return obj.license.license_name
+        license_dn = [obj.license.license_name]
+
+        if IRestrictedLicense.providedBy(obj.license):
+            license_dn.append(obj.license.frequency)
+
+        return ' - '.join(license_dn)
 
 
 class SiteStatusColumn(column.GetAttrColumn):
@@ -376,6 +415,68 @@ class SiteSetupStateColumn(column.GetAttrColumn):
 
     def getValue(self, obj):
         return obj.setup_state.state_name if obj.setup_state else ''
+
+class SiteUsageAttrColumn(column.GetAttrColumn):
+
+    weight = 5
+
+    def getValue(self, obj):
+        res = super(SiteUsageAttrColumn, self).getValue(ISiteUsage(obj))
+        if res is None:
+            return ''
+        return res
+
+    def getSortKey(self, item):
+        try:
+            return int(self.getValue(item))
+        except ValueError:
+            return -1
+
+
+class SiteUsageAdminColumn(SiteUsageAttrColumn):
+
+    attrName = 'admin_count'
+
+    header = 'Admin Seats'
+
+
+    def renderCell(self, item):
+        usage = ISiteUsage(item).admin_count
+        try:
+            limit = item.license.seats
+        except AttributeError:
+            limit = '∞'
+        return f'{usage} / {limit}'
+
+class SiteUsageInstructorColumn(SiteUsageAttrColumn):
+
+    attrName = 'instructor_count'
+
+    header = 'Instructor Addons'
+
+    def renderCell(self, item):
+        usage = ISiteUsage(item).instructor_count
+        try:
+            limit = item.license.additional_instructor_seats
+        except AttributeError:
+            limit = '∞'
+
+        if limit == None:
+            limit = 0
+        
+        return f'{usage} / {limit}'
+
+class SiteLicenseAlertColumn(column.Column):
+
+    weight = 10
+
+    def renderCell(self, item):
+        alerts = self.table.alerts
+        issues = alerts[item.id]['Issues']
+        return '<br/>'.join(issues)
+
+    def renderHeadCell(self):
+        return 'Issues'
 
 
 class SiteCreatedColumn(CreatedColumn):
@@ -425,7 +526,19 @@ class DashboardRenewalsTable(BaseSitesTable):
 
     @Lazy
     def _raw_filter(self):
-        return lambda x: bool(IStandardLicense.providedBy(x.license) and x.status == SITE_STATUS_ACTIVE)
+        return lambda x: bool(not ITrialLicense.providedBy(x.license) \
+                              and x.status == SITE_STATUS_ACTIVE)
+
+
+class DashboardLicenseAuditTable(BaseSitesTable):
+
+    def __init__(self, context, request, alerts={}):
+        super(DashboardLicenseAuditTable, self).__init__(context, request)
+        self.alerts = alerts
+
+    @Lazy
+    def _raw_values(self):
+        return [self.context[k] for k in self.alerts]
 
 
 class SiteURLAliasColumn(SiteURLColumn):
@@ -453,7 +566,13 @@ class SiteDaysToRenewColumn(column.Column):
     header = 'Days to Renewal'
 
     def renderCell(self, item):
-        return (item.license.end_date - self.table._current_time).days
+        if IStandardLicense.providedBy(item.license):
+            return (item.license.end_date - self.table._current_time).days
+        return ''
+
+    def getSortKey(self, item):
+        rendered = self.renderCell(item)
+        return rendered or -1
 
 
 class RolePrincipalsTable(BaseTable, _FilterMixin):

@@ -300,7 +300,11 @@
             <h3>Site Usage <a class="historical-usage" target="_blank" tal:attributes="href site.usage.historical"><i class="icofont-chart-bar-graph"></i></a></h3>
             <metal:block tal:omit-tag="" tal:condition="site.usage.usage|nothing">
 		<p>Site Admin Count: <span tal:content="site.usage.usage.admin_count"></span></p>
+		<p>Admins: <span tal:condition="site.usage.usage.admin_usernames"
+				 tal:content="python:', '.join(site.usage.usage.admin_usernames)"></span></p>
 		<p>Instructor Count: <span tal:content="site.usage.usage.instructor_count"></span></p>
+		<p>Instructors: <span tal:condition="site.usage.usage.instructor_usernames"
+				      tal:content="python:', '.join(site.usage.usage.instructor_usernames)"></span></p>
 		<p>Total User Count: <span tal:content="site.usage.usage.user_count"></span></p>
 		<p>Course Count: <span tal:content="site.usage.usage.course_count"></span></p>
 		<p>SCORM Package Count: <span tal:content="site.usage.usage.scorm_package_count"></span></p>

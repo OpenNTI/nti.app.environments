@@ -4,7 +4,10 @@ import urllib.parse
 from datetime import datetime
 from datetime import timedelta
 
+from pyramid.config import not_
+
 from pyramid.view import view_config
+from pyramid.view import view_defaults
 
 from pyramid import httpexceptions as hexc
 
@@ -46,6 +49,7 @@ from nti.app.environments.auth import OPS_ROLE
 
 from nti.app.environments.interfaces import ISiteDomainPolicy
 from nti.app.environments.interfaces import IOnboardingSettings
+from nti.app.environments.interfaces import ISiteLinks
 
 from nti.app.environments.models.adapters import get_site_usage
 
@@ -96,9 +100,12 @@ from nti.app.environments.views.base import BaseTemplateView
 from nti.app.environments.views.base import BaseView
 from nti.app.environments.views.base import TableViewMixin
 
+from nti.app.environments.views.base_csv import CSVBaseView
+
 from nti.app.environments.views._table_utils import CustomersTable
 from nti.app.environments.views._table_utils import RolePrincipalsTable
 from nti.app.environments.views._table_utils import SitesTable
+from nti.app.environments.views._table_utils import DashboardLicenseAuditTable
 from nti.app.environments.views._table_utils import DashboardTrialSitesTable
 from nti.app.environments.views._table_utils import DashboardRenewalsTable
 from nti.app.environments.views._table_utils import make_specific_table
@@ -654,12 +661,12 @@ class TrialSitesDigestEmailView(BaseView):
         })
         return result
 
-@view_config(renderer='rest',
-             request_method='GET',
-             context=ILMSSitesContainer,
-             permission=ACT_AUTOMATED_REPORTS,
-             name="license_audit")
-class LicenseAuditView(BaseView):
+@view_defaults(renderer='rest',
+               request_method='GET',
+               context=ILMSSitesContainer,
+               permission=ACT_AUTOMATED_REPORTS,
+               name="license_audit")
+class LicenseAuditView(CSVBaseView):
     """
     Loop through ACTIVE sites and check their licenses.
     For IStandardLicense we check if the license date is within
@@ -683,9 +690,13 @@ class LicenseAuditView(BaseView):
     def query_usage(self):
         return is_true(self.request.params.get('query_usage'))
 
+    @Lazy
+    def default_threshold(self):
+        return int(self.request.params.get(f'threshold_days', self.DEFAULT_THRESHOLD_DAYS))
+
     def threshold_for_license(self, license):
         ln = license.license_name
-        return int(self.request.params.get(f'{ln}_threshold_days', self.DEFAULT_THRESHOLD_DAYS))
+        return int(self.request.params.get(f'{ln}_threshold_days', self.default_threshold))
 
     def audit_site(self, siteid):
         site = self.sites[siteid]
@@ -736,18 +747,109 @@ class LicenseAuditView(BaseView):
 
         return audit if issues else None
 
-    def __call__(self):
-
+    def _do_generate_alerts(self):
         failed_sites = {}
 
         for sid in self.sites:
             res = self.audit_site(sid)
             if res:
                 failed_sites[sid] = res
+        return failed_sites
 
+    def header(self, params=None):
+        return ["id", "dns", "License",
+                "Seats", "Instructor Addon Seats",
+                "Issues", "End Date", "Admins", "Instructors", "Admin Count", "Instructor Count"]
+
+    def filename(self):
+        return 'license_audit.csv'
+
+    def records(self, params):
+        return self._do_generate_alerts().values()
+
+    def row_data_for_record(self, record):
+        site = record['Site']
+        usage = ISiteUsage(site)
+        license = site.license
+        links = component.queryMultiAdapter((site, self.request), ISiteLinks)
+        data = [site.id, links.preferred_dns, license.license_name]
+        seats = ''
+        addons = ''
+        if IRestrictedLicense.providedBy(license):
+            seats = license.seats
+            addons = license.additional_instructor_seats or ''
+        data.extend([seats, addons])
+        data.append(', '.join(record['Issues']))
+
+        end_date = ''
+        if IStandardLicense.providedBy(license):
+            end_date = license.end_date
+        data.append(end_date)
+
+        admins = ''
+        if usage.admin_usernames:
+            admins = ', '.join(usage.admin_usernames)
+
+        instructors = ''
+        if usage.instructor_usernames:
+            instructors = ', '.join(usage.instructor_usernames)
+
+        admin_count = usage.admin_count if usage.admin_count != None else ''
+        instructor_count = usage.instructor_count if usage.instructor_count != None else ''
+
+        data.extend([admins, instructors, admin_count, instructor_count])
+        
+        return {k[0]:k[1] for k in zip(self.header(), data)}
+
+    @view_config(request_param="format=csv",
+                 accept='text/csv')
+    def csv(self):
+        return self()
+        
+    @view_config(accept='application/json',
+                 request_param=not_("format=csv"))
+    def json(self):
+        failed_sites = self._do_generate_alerts()
         result = LocatedExternalDict()
         result.__name__ = self.request.view_name
         result.__parent__ = self.context
         result[ITEMS] = failed_sites
         result[TOTAL] = len(failed_sites)
         return result
+
+@view_config(route_name='dashboards',
+             renderer='../templates/admin/dashboard_license_audit.pt',
+             request_method='GET',
+             context=DashboardsResource,
+             permission=ACT_READ,
+             name='license_audit')
+class DashboardLicenseAuditView(BaseTemplateView, LicenseAuditView):
+
+    DEFAULT_THRESHOLD_DAYS = 0
+
+    @property
+    def sites(self):
+        return get_sites_folder(request=self.request)
+
+    def __call__(self):
+
+        failed_sites = {}
+        for sid in self.sites:
+            res = self.audit_site(sid)
+            if res:
+                failed_sites[sid] = res
+
+        table = make_specific_table(DashboardLicenseAuditTable,
+                                    self.sites,
+                                    self.request,
+                                    alerts=failed_sites)
+
+        export = self.request.resource_url(self.sites,
+                                           '@@license_audit',
+                                           query={'threshold_days': self.DEFAULT_THRESHOLD_DAYS,
+                                                  'format':'csv'})
+        
+        return {
+            'table': table,
+            'audit_export_url': export
+        }
