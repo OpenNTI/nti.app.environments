@@ -151,6 +151,7 @@ function getStandardSelectors() {
 
 function getNonStandardSelectors() {
     return [['.start_group_item', '.site_license_start_date'],
+	    ['.end_group_item', '.site_license_end_date'],
             ['.frequency_group_item', '.site_license_frequency'],
             ['.seats_group_item', '.site_license_seats', '.site_license_additional_instructor_seats']];
 }
@@ -226,8 +227,8 @@ function getLicenseDataByView(view_selector, original) {
             data[field] = tmp ? tmp : null;
         });
     } else {
-        var names = ['start_date', 'frequency', 'seats', 'additional_instructor_seats'];
-        var klasses = ['.site_license_start_date', '.site_license_frequency', '.site_license_seats', '.site_license_additional_instructor_seats'];
+        var names = ['start_date', 'end_date', 'frequency', 'seats', 'additional_instructor_seats'];
+        var klasses = ['.site_license_start_date', '.site_license_end_date', '.site_license_frequency', '.site_license_seats', '.site_license_additional_instructor_seats'];
         names.forEach(function(field, index){
             var tmp = original ? $(view.find(klasses[index])).attr('original_value'): $(view.find(klasses[index])).val().trim();
             data[field] = tmp ? tmp : null;

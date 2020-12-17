@@ -183,9 +183,7 @@
             <div id="view_license">
                 <p>Type: <span class="site_license_type" tal:content="site.license.type" original_value="${site.license.type}"></span></p>
                 <p>Start Date: <span class="site_license_start_date" tal:content="site.license.start_date" original_value="${site.license.start_date}"></span></p>
-                <metal:block tal:omit-tag="" tal:condition="exists:site.license.end_date">
-                    <p>End Date: <span class="site_license_end_date" tal:content="site.license.end_date" original_value="${site.license.end_date}"></span></p>
-                </metal:block>
+                <p>End Date: <span class="site_license_end_date" tal:content="site.license.end_date" original_value="${site.license.end_date}"></span></p>
                 <metal:block tal:omit-tag="" tal:condition="exists:site.license.frequency">
                     <p>Frequency: <span class="site_license_frequency" tal:content="site.license.frequency" original_value="${site.license.frequency}"></span></p>
                 </metal:block>
@@ -201,7 +199,7 @@
                 </metal:block>
             </div>
             <div id="edit_license" style="display:none;">
-                 <div class="form-group">
+                <div class="form-group">
                     <div class="form-group-item">
                         <label>Type</label>
                         <select class="site_license_type" onchange="onLicenseChange()">
@@ -244,7 +242,7 @@
                         <button type="button" class="btn btnCustom" onclick="saveLicenseView(this, '${site.license.edit_link}');">Save</button>
                         <button type="button" class="btn btnCustom" onclick="cancelLicenseEditView();">Cancel</button>
                     </div>
-                 </div><!-- end form group-->
+                </div><!-- end form group-->
             </div> <!-- end edit license-->
         </div>
 	<div class="site-item">

@@ -73,7 +73,7 @@ function onLicenseChange() {
     } else if (value === "starter" || value === "growth") {
         document.getElementById("site_license_details").style.display = "flex";
         document.getElementById("site_license_start_date").style.display = "inline-block";
-        document.getElementById("site_license_end_date").style.display = "none";
+        document.getElementById("site_license_end_date").style.display = "inline-block";
         document.getElementById("site_license_frequency").style.display = "inline-block";
         document.getElementById("site_license_seats").style.display = "inline-block";
 	document.getElementById("site_license_additional_instructor_seats").style.display = "inline-block";

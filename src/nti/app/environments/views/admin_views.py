@@ -244,6 +244,7 @@ class SiteDetailView(BaseTemplateView):
         edit_link = self.request.resource_url(self.context, '@@license') if self.request.has_permission(ACT_EDIT_SITE_LICENSE, self.context) else None
         result = {'type': lic.license_name,
                   'start_date': formatDateToLocal(lic.start_date),
+                  'end_date': formatDateToLocal(lic.end_date),
                   'edit_link': edit_link,
                   'lastModified': formatDateToLocal(lic.lastModified)}
         if ITrialLicense.providedBy(lic) or IEnterpriseLicense.providedBy(lic):
