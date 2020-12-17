@@ -10,6 +10,7 @@ from nti.schema.field import Object
 from nti.schema.field import ValidTextLine
 from nti.schema.field import Integral
 from nti.schema.field import Mapping
+from nti.schema.field import Number
 
 class IStripeKey(interface.Interface):
 
@@ -80,6 +81,22 @@ class IStripeSubscriptionBilling(interface.Interface):
         """
         Get the next invoice for this subscription.
         """
+
+class IStripeInvoice(interface.Interface):
+    """
+    A Stripe billing invoice object
+    """
+    id = ValidTextLine(title='The invoice identifier',
+                       required=True)
+
+    subscription = ValidTextLine(title='The subscription this invoice was prepared for, if any.',
+                                 required=False)
+
+    period_start = Number(title='Start of the usage period during which invoice items were added to this invoice.',
+                          required=False)
+
+    period_end = Number(title='End of the usage period during which invoice items were added to this invoice.',
+                          required=False)
 
 class IStripeCheckoutSession(interface.Interface):
 

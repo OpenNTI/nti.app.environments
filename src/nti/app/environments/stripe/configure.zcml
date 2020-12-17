@@ -69,6 +69,10 @@
 	  <implements interface=".interfaces.IStripeBillingPortalSession" />
 	</class>
 
+	<class class="stripe.api_resources.invoice.Invoice">
+	  <implements interface=".interfaces.IStripeInvoice" />
+	</class>
+
 	<class class="stripe.api_resources.subscription.Subscription">
 	  <implements interface=".interfaces.IStripeSubscription" />
 	</class>
