@@ -330,9 +330,8 @@ class SiteDetailView(BaseTemplateView):
         if billing is None:
             return None
 
-        sub = billing.get_subscription(sub)
-
         try:
+            sub = billing.get_subscription(sub)
             upcoming = billing.get_upcoming_invoice(sub)
         except InvalidRequestError:
             logger.exception('Unable to get upcoming invoice')
