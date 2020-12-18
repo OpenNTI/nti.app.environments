@@ -92,12 +92,6 @@ class IStripeInvoice(interface.Interface):
     subscription = ValidTextLine(title='The subscription this invoice was prepared for, if any.',
                                  required=False)
 
-    period_start = Number(title='Start of the usage period during which invoice items were added to this invoice.',
-                          required=False)
-
-    period_end = Number(title='End of the usage period during which invoice items were added to this invoice.',
-                          required=False)
-
 class IStripeCheckoutSession(interface.Interface):
 
     id = ValidTextLine(title='The session identifier')

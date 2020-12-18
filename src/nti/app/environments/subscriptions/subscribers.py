@@ -1,21 +1,89 @@
 import datetime
 
+from stripe.error import InvalidRequestError
+
 from zope import component
 
+from nti.app.environments.models.interfaces import SITE_STATUS_ACTIVE
 from nti.app.environments.models.interfaces import ISiteLicenseFactory
 from nti.app.environments.models.interfaces import ITrialLicense
 
 from nti.app.environments.stripe.interfaces import IStripeKey
 from nti.app.environments.stripe.interfaces import IStripeCustomer
 from nti.app.environments.stripe.interfaces import IStripeCheckoutSessionCompletedEvent
+from nti.app.environments.stripe.interfaces import IStripeInvoicePaidEvent
 from nti.app.environments.stripe.interfaces import IStripeSubscription
 from nti.app.environments.stripe.interfaces import IStripeSubscriptionBilling
 
 from nti.app.environments.subscriptions.interfaces import ICheckoutSessionStorage
 
+from nti.app.environments.subscriptions.license import stripe_subcription_factory
+
 from nti.app.environments.models.utils import get_onboarding_root
+from nti.app.environments.models.utils import get_sites_folder
 
 logger = __import__('logging').getLogger(__name__)
+
+@component.adapter(IStripeInvoicePaidEvent)
+def _invoice_paid(event):
+    """
+    Process an invoice paid event by finding the site associated with the
+    subscription and moving the end date forward to the period end
+    """
+    invoice = event.data.object
+
+    # We only care about invoices tied to subscriptions
+    # with a period end date. We ignore other invoices as we know they
+    # wont be ones we care about
+    if not invoice.subscription:
+        logger.debug('Ignoring invoice.paid event for %s without an associated subscription', invoice.id)
+        return
+
+    try:
+        billing = IStripeSubscriptionBilling(component.getUtility(IStripeKey))
+        subscription = billing.get_subscription(invoice.subscription)
+    except InvalidRequestError:
+        logger.exception('Unable to lookup stripe subscription %s for %s', invoice.subscription, invoice.id)
+        return
+    
+
+    # Find the site associated with the subscription. We probably
+    # want an index for this at some point, right now we have few sites (hundreds)
+    # and this is infrequent so we can just iterate.
+    site_to_update = None
+    for site in get_sites_folder(get_onboarding_root()).values():
+        # we only care about active sites
+        if site.status != SITE_STATUS_ACTIVE:
+            continue
+
+        # look for the IStripeSubscription, we don't use the adapter
+        # as we don't want to optimistically create these objects
+        sub = stripe_subcription_factory(site, create=False)
+        if sub and sub.id == subscription.id:
+            site_to_update = site
+            break
+
+    if site_to_update is None:
+        logger.debug('Unable to find site associated with subscription %s', subscription.id)
+        return
+
+    # We found an active site associated with the subscription tied to this invoice
+    # Roll the end date on the associated license to the the subscription's current_period_end.
+    # Stripe guide implies adding wiggle room for failed payment retries, etc. That's probably
+    # a good idea if we are automating access based on this date. Right now we use it to drive
+    # alerts and dashboards and we probably want attention drawn to late/failed payments so we
+    # provide no wiggle room.
+    new_end_date = datetime.datetime.utcfromtimestamp(subscription.current_period_end)
+    logger.info('Updating %s license end date from %s to %s because of paid invoice %s',
+                site.id,
+                site.license.end_date,
+                new_end_date,
+                invoice.id)
+    site.license.end_date = new_end_date
+    
+
+        
+    
 
 @component.adapter(IStripeCheckoutSessionCompletedEvent)
 def _checkout_session_completed(event):
