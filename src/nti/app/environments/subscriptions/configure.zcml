@@ -12,6 +12,7 @@
 
 	<adapter factory=".customer.stripe_customer_factory" />
 	<adapter factory=".license.stripe_subcription_factory" />
+	<adapter factory=".license._lookup_site_for_subscription" />
 
 	<adapter name="stripe_customer"
 		 for="nti.app.environments.models.interfaces.ICustomer pyramid.interfaces.IRequest"

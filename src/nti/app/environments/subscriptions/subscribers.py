@@ -7,6 +7,7 @@ from zope import component
 from nti.app.environments.models.interfaces import SITE_STATUS_ACTIVE
 from nti.app.environments.models.interfaces import ISiteLicenseFactory
 from nti.app.environments.models.interfaces import ITrialLicense
+from nti.app.environments.models.interfaces import ILMSSite
 
 from nti.app.environments.stripe.interfaces import IStripeKey
 from nti.app.environments.stripe.interfaces import IStripeCustomer
@@ -17,10 +18,7 @@ from nti.app.environments.stripe.interfaces import IStripeSubscriptionBilling
 
 from nti.app.environments.subscriptions.interfaces import ICheckoutSessionStorage
 
-from nti.app.environments.subscriptions.license import stripe_subcription_factory
-
 from nti.app.environments.models.utils import get_onboarding_root
-from nti.app.environments.models.utils import get_sites_folder
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -39,31 +37,18 @@ def _invoice_paid(event):
         logger.debug('Ignoring invoice.paid event for %s without an associated subscription', invoice.id)
         return
 
-    try:
-        billing = IStripeSubscriptionBilling(component.getUtility(IStripeKey))
-        subscription = billing.get_subscription(invoice.subscription)
-    except InvalidRequestError:
-        logger.exception('Unable to lookup stripe subscription %s for %s', invoice.subscription, invoice.id)
-        return
+    # reify the subscription if needed
+    if not IStripeSubscription.providedBy(invoice.subscription):
+        try:
+            billing = IStripeSubscriptionBilling(component.getUtility(IStripeKey))
+            subscription = billing.get_subscription(invoice.subscription)
+        except InvalidRequestError:
+            logger.exception('Unable to reify stripe subscription %s for %s', invoice.subscription, invoice.id)
+            return
     
 
-    # Find the site associated with the subscription. We probably
-    # want an index for this at some point, right now we have few sites (hundreds)
-    # and this is infrequent so we can just iterate.
-    site_to_update = None
-    for site in get_sites_folder(get_onboarding_root()).values():
-        # we only care about active sites
-        if site.status != SITE_STATUS_ACTIVE:
-            continue
-
-        # look for the IStripeSubscription, we don't use the adapter
-        # as we don't want to optimistically create these objects
-        sub = stripe_subcription_factory(site, create=False)
-        if sub and sub.id == subscription.id:
-            site_to_update = site
-            break
-
-    if site_to_update is None:
+    site = component.queryAdapter(subscription, ILMSSite)
+    if site is None or site.status != SITE_STATUS_ACTIVE:
         logger.debug('Unable to find site associated with subscription %s', subscription.id)
         return
 

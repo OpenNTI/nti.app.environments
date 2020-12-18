@@ -21,6 +21,9 @@ from nti.app.environments.models.interfaces import LICENSE_FREQUENCY_YEARLY
 from nti.app.environments.models.sites import StarterLicense
 from nti.app.environments.models.sites import GrowthLicense
 
+from nti.app.environments.models.utils import get_onboarding_root
+from nti.app.environments.models.utils import get_sites_folder
+
 from nti.app.environments.stripe.interfaces import IStripeSubscription
 from nti.app.environments.stripe.billing import MinimalStripeSubscription
 
@@ -64,6 +67,20 @@ def make_factory(factory):
 starter_factory = make_factory(StarterLicense)
 growth_factory = make_factory(GrowthLicense)
 
+@component.adapter(IStripeSubscription)
+@interface.implementer(ILMSSite)
+def _lookup_site_for_subscription(subscription):
+    # Find the site associated with the subscription. We probably
+    # want an index for this at some point, right now we have few sites (hundreds)
+    # and this is infrequent so we can just iterate.
+
+    for site in get_sites_folder(get_onboarding_root()).values():
+        # look for the IStripeSubscription, we don't use the adapter
+        # as we don't want to optimistically create these objects
+        sub = stripe_subcription_factory(site, create=False)
+        if sub and sub.id == subscription.id:
+            return site
+    return None
 
 @EqHash('id')
 @interface.implementer(IPrice)
