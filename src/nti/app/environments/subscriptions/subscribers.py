@@ -82,9 +82,6 @@ def _invoice_paid(event):
     site.license.end_date = new_end_date
     
 
-        
-    
-
 @component.adapter(IStripeCheckoutSessionCompletedEvent)
 def _checkout_session_completed(event):
     session = event.data.object
