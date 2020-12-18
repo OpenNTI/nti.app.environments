@@ -73,7 +73,6 @@ def _lookup_site_for_subscription(subscription):
     # Find the site associated with the subscription. We probably
     # want an index for this at some point, right now we have few sites (hundreds)
     # and this is infrequent so we can just iterate.
-
     for site in get_sites_folder(get_onboarding_root()).values():
         # look for the IStripeSubscription, we don't use the adapter
         # as we don't want to optimistically create these objects

@@ -38,16 +38,17 @@ def _invoice_paid(event):
         return
 
     # reify the subscription if needed
-    if not IStripeSubscription.providedBy(invoice.subscription):
+    subscription = invoice.subscription
+    if not IStripeSubscription.providedBy(subscription):
         try:
             billing = IStripeSubscriptionBilling(component.getUtility(IStripeKey))
-            subscription = billing.get_subscription(invoice.subscription)
+            subscription = billing.get_subscription(subscription)
         except InvalidRequestError:
             logger.exception('Unable to reify stripe subscription %s for %s', invoice.subscription, invoice.id)
             return
     
 
-    site = component.queryAdapter(subscription, ILMSSite)
+    site = component.queryAdapter(invoice.subscription, ILMSSite)
     if site is None or site.status != SITE_STATUS_ACTIVE:
         logger.debug('Unable to find site associated with subscription %s', subscription.id)
         return
