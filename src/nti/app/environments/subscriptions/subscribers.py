@@ -48,7 +48,7 @@ def _invoice_paid(event):
             return
     
 
-    site = component.queryAdapter(invoice.subscription, ILMSSite)
+    site = component.queryAdapter(subscription, ILMSSite)
     if site is None or site.status != SITE_STATUS_ACTIVE:
         logger.debug('Unable to find site associated with subscription %s', subscription.id)
         return
