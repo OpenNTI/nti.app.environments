@@ -43,7 +43,7 @@ MessageFactory = zope_i18nmessageid.MessageFactory('nti.app.environments')
 _ = MessageFactory
 
 
-SHARED_ENV_NAMES = ('alpha', 'test', 'prod', 'assoc', 'hrpros')
+SHARED_ENV_NAMES = ('alpha', 'test', 'prod', 'assoc', 'hrpros', 'publicstragegies')
 
 
 SITE_STATUS_PENDING = 'PENDING'
