@@ -10,6 +10,7 @@ from nti.schema.field import Object
 from nti.schema.field import ValidTextLine
 from nti.schema.field import Integral
 from nti.schema.field import Mapping
+from nti.schema.field import Number
 
 class IStripeKey(interface.Interface):
 
@@ -81,6 +82,16 @@ class IStripeSubscriptionBilling(interface.Interface):
         Get the next invoice for this subscription.
         """
 
+class IStripeInvoice(interface.Interface):
+    """
+    A Stripe billing invoice object
+    """
+    id = ValidTextLine(title='The invoice identifier',
+                       required=True)
+
+    subscription = ValidTextLine(title='The subscription this invoice was prepared for, if any.',
+                                 required=False)
+
 class IStripeCheckoutSession(interface.Interface):
 
     id = ValidTextLine(title='The session identifier')
@@ -150,6 +161,13 @@ class IStripeCheckoutSessionCompletedEvent(IStripeEvent):
     Dispatched when a checkout session has completed.
 
     https://stripe.com/docs/api/events/types#event_types-checkout.session.completed
+    """
+
+class IStripeInvoicePaidEvent(IStripeEvent):
+    """
+    Dispatched when an invoice is paid.
+
+    https://stripe.com/docs/api/events/types#event_types-invoice.paid
     """
 
 

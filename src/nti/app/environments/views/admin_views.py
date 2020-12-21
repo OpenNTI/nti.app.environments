@@ -71,7 +71,6 @@ from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import IStarterLicense
 from nti.app.environments.models.interfaces import IGrowthLicense
 from nti.app.environments.models.interfaces import IEnterpriseLicense
-from nti.app.environments.models.interfaces import IStandardLicense
 from nti.app.environments.models.interfaces import IRestrictedLicense
 from nti.app.environments.models.interfaces import ISiteUsage
 from nti.app.environments.models.interfaces import SITE_STATUS_ACTIVE
@@ -245,6 +244,7 @@ class SiteDetailView(BaseTemplateView):
         edit_link = self.request.resource_url(self.context, '@@license') if self.request.has_permission(ACT_EDIT_SITE_LICENSE, self.context) else None
         result = {'type': lic.license_name,
                   'start_date': formatDateToLocal(lic.start_date),
+                  'end_date': formatDateToLocal(lic.end_date),
                   'edit_link': edit_link,
                   'lastModified': formatDateToLocal(lic.lastModified)}
         if ITrialLicense.providedBy(lic) or IEnterpriseLicense.providedBy(lic):
@@ -330,9 +330,8 @@ class SiteDetailView(BaseTemplateView):
         if billing is None:
             return None
 
-        sub = billing.get_subscription(sub)
-
         try:
+            sub = billing.get_subscription(sub)
             upcoming = billing.get_upcoming_invoice(sub)
         except InvalidRequestError:
             logger.exception('Unable to get upcoming invoice')
@@ -669,7 +668,7 @@ class TrialSitesDigestEmailView(BaseView):
 class LicenseAuditView(CSVBaseView):
     """
     Loop through ACTIVE sites and check their licenses.
-    For IStandardLicense we check if the license date is within
+    We check if the license date is within
     x days based on provided query params. For IRestrictedLicense
     we poll their usage and compare that to the configured seats.
 
@@ -717,10 +716,9 @@ class LicenseAuditView(CSVBaseView):
 
         audit = {}
 
-        if IStandardLicense.providedBy(site.license):
-            days_threshold = self.threshold_for_license(site.license)
-            if self.now > site.license.end_date - timedelta(days=days_threshold):
-                issues.append(('site.license.end_date past threshold of %i days' % days_threshold))
+        days_threshold = self.threshold_for_license(site.license)
+        if self.now > site.license.end_date - timedelta(days=days_threshold):
+            issues.append(('site.license.end_date past threshold of %i days' % days_threshold))
 
 
         usage = ISiteUsage(site)

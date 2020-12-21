@@ -24,6 +24,7 @@ from nti.app.environments.views.tests import ensure_free_txn
 
 from nti.app.environments.stripe.interfaces import iface_for_event
 from nti.app.environments.stripe.interfaces import IStripeCheckoutSessionCompletedEvent
+from nti.app.environments.stripe.interfaces import IStripeInvoicePaidEvent
 from nti.app.environments.stripe.interfaces import IStripeEvent
 from nti.app.environments.stripe.interfaces import IWebhookSigningSecret
 
@@ -206,6 +207,23 @@ class TestStripeWebhooks(BaseAppTest):
 
         assert_that(eventtesting.getEvents(IStripeCheckoutSessionCompletedEvent), has_length(1))
 
+INVOICE_PAID_EVENT = {
+    "id": "evt_1GlEeIJSl3QXdEfxphYmtYDf",
+    "object": "event",
+    "api_version": "2020-03-02",
+    "created": 1590068486,
+    "data": {
+        "object": {}
+    },
+    "livemode": False,
+    "pending_webhooks": 0,
+    "request": {
+        "id": None,
+        "idempotency_key": None
+    },
+    "type": "invoice.paid"
+}
+
 
 class TestEventIface(unittest.TestCase):
 
@@ -214,4 +232,8 @@ class TestEventIface(unittest.TestCase):
                     is_(IStripeEvent))
         assert_that(iface_for_event(convert_to_stripe_object(SESSION_COMPLETED_EVENT)),
                     is_(IStripeCheckoutSessionCompletedEvent))
+
+    def test_iface_for_invoice_paid(self):
+        assert_that(iface_for_event(convert_to_stripe_object(INVOICE_PAID_EVENT)),
+                    is_(IStripeInvoicePaidEvent))
         

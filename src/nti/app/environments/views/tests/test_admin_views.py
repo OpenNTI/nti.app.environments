@@ -243,6 +243,7 @@ class TestLicenseAuditView(BaseAppTest):
         for id, usage in (('overlimit', 99), ('good', 3)):
             site = sites[id]
             site.license = StarterLicense(start_date=self.now-timedelta(days=7),
+                                          end_date=self.now+timedelta(days=7),
                                           frequency='yearly',
                                           seats=5)
 

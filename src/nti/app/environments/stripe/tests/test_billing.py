@@ -20,6 +20,7 @@ from ..interfaces import IStripeCustomer
 from ..interfaces import IStripeKey
 from ..interfaces import IStripeBillingPortal
 from ..interfaces import IStripeBillingPortalSession
+from ..interfaces import IStripeInvoice
 from ..interfaces import IStripeSubscription
 from ..interfaces import IStripeSubscriptionBilling
 
@@ -114,5 +115,13 @@ class TestSubscriptionBilling(unittest.TestCase):
 
         resp = self.billing.get_upcoming_invoice(self.mock_sub)
         assert_that(resp.id, is_('in_G2Y5GBeHnCLKVh'))
+
+class TestInvoice(unittest.TestCase):
+
+    layer = BaseConfiguringLayer
+
+    def test_invoice_provides(self):
+        inv_resp = convert_to_stripe_object(INVOICE_JSON)
+        assert_that(inv_resp, provides(IStripeInvoice))
 
 

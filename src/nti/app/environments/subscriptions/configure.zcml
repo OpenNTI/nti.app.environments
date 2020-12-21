@@ -12,6 +12,7 @@
 
 	<adapter factory=".customer.stripe_customer_factory" />
 	<adapter factory=".license.stripe_subcription_factory" />
+	<adapter factory=".license._lookup_site_for_subscription" />
 
 	<adapter name="stripe_customer"
 		 for="nti.app.environments.models.interfaces.ICustomer pyramid.interfaces.IRequest"
@@ -44,6 +45,7 @@
 		 name="prod_HPUxMKa4uXXHuN"/>
 
 	<subscriber handler=".subscribers._checkout_session_completed" />
+	<subscriber handler=".subscribers._invoice_paid" />
 
 	<include package="." file="meta.zcml" />
 

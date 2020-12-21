@@ -21,7 +21,6 @@ from z3c.table.interfaces import IBatchProvider
 from nti.app.environments.auth import ACT_DELETE, ACT_UPDATE
 
 from nti.app.environments.models.interfaces import ITrialLicense
-from nti.app.environments.models.interfaces import IStandardLicense
 from nti.app.environments.models.interfaces import IDedicatedEnvironment
 from nti.app.environments.models.interfaces import IRestrictedLicense
 from nti.app.environments.models.interfaces import ISiteUsage
