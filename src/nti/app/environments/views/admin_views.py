@@ -779,9 +779,7 @@ class LicenseAuditView(CSVBaseView):
         data.extend([seats, addons])
         data.append(', '.join(record['Issues']))
 
-        end_date = ''
-        if IStandardLicense.providedBy(license):
-            end_date = license.end_date
+        end_date = license.end_date or ''
         data.append(end_date)
 
         admins = ''
