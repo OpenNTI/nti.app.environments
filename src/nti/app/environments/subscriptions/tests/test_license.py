@@ -67,11 +67,13 @@ class TestLicenseFactory(unittest.TestCase):
 
     def setUp(self):
         self.now = datetime.datetime.utcnow().replace(microsecond=0) #Drop the partial seconds as we lose them in our timestamp we generate
+        self.period_end = self.now + datetime.timedelta(days=30)
         self.subscription = Subscription()
         self.subscription.start_date = calendar.timegm(self.now.utctimetuple())
         self.subscription.quantity = 10
         self.subscription.plan = Plan()
         self.subscription.plan.interval = 'month'
+        self.subscription.current_period_end = calendar.timegm(self.period_end.utctimetuple())
         
     
     def test_starter_factory(self):
@@ -80,6 +82,7 @@ class TestLicenseFactory(unittest.TestCase):
         assert_that(license.seats, is_(10))
         assert_that(license.frequency, is_(LICENSE_FREQUENCY_MONTHLY))
         assert_that(license.start_date, is_(self.now))
+        assert_that(license.end_date, is_(self.period_end))
 
     def test_growth_factory(self):
         self.subscription.plan.interval = 'year'
@@ -89,6 +92,7 @@ class TestLicenseFactory(unittest.TestCase):
         assert_that(license.seats, is_(10))
         assert_that(license.frequency, is_(LICENSE_FREQUENCY_YEARLY))
         assert_that(license.start_date, is_(self.now))
+        assert_that(license.end_date, is_(self.period_end))
 
 
 SUB = {
