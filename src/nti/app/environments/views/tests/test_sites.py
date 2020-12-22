@@ -1306,7 +1306,7 @@ class TestSiteLoginView(BaseAppTest):
 
         factory = IBearerTokenFactory(site)
 
-        decoded = jwt.decode(result, factory.secret)
+        decoded = jwt.decode(result, factory.secret, algorithms=[factory.algorithm])
         assert_that(decoded, has_entries({'login': 'test@nextthought.com',
                                   'realname': 'test user',
                                   'email': 'test@nextthought.com',

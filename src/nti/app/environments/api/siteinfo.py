@@ -65,7 +65,7 @@ class BearerTokenFactory(object):
         jwt_token = jwt.encode(payload,
                                self.secret,
                                algorithm=self.algorithm)
-        return jwt_token.decode('utf8')
+        return jwt_token
 
 @component.adapter(ILMSSite)
 def _bearer_factory_for_site(unused_site):
