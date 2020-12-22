@@ -566,7 +566,7 @@ class SiteDaysToRenewColumn(column.Column):
 
     def renderCell(self, item):
         license = item.license
-        return (item.license.end_date - self.table._current_time).days if license.end_date else ''
+        return (license.end_date - self.table._current_time).days if license.end_date else ''
 
     def getSortKey(self, item):
         rendered = self.renderCell(item)
