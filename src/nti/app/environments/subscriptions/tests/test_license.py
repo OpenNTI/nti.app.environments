@@ -66,9 +66,9 @@ class TestLicenseFactory(unittest.TestCase):
     layer = BaseConfiguringLayer
 
     def setUp(self):
-        self.now = datetime.datetime.now(timezone.utc)
+        self.now = datetime.datetime.utcnow().replace(microsecond=0) #Drop the partial seconds as we lose them in our timestamp we generate
         self.subscription = Subscription()
-        self.subscription.start_date = self.now.timestamp()
+        self.subscription.start_date = calendar.timegm(self.now.utctimetuple())
         self.subscription.quantity = 10
         self.subscription.plan = Plan()
         self.subscription.plan.interval = 'month'
