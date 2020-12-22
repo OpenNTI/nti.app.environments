@@ -56,7 +56,11 @@ def make_factory(factory):
 
     def _f(subscription):
         license = factory()
+        
         license.start_date = datetime.datetime.utcfromtimestamp(subscription.start_date)
+        if subscription.current_period_end:
+            license.end_date = datetime.datetime.utcfromtimestamp(subscription.current_period_end)
+
         if IRestrictedLicense.providedBy(license):
             license.seats = subscription.quantity
             license.frequency = _FREQUENCY_MAP.get(subscription.plan.interval)
