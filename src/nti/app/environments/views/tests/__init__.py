@@ -91,6 +91,7 @@ class DummyCookieHelper(object):
 TEST_USERS = {
     'admin001': ['role:nti.roles.admin'],
     'manager001': ['role:nti.roles.account-management'],
+    'ops001': ['role:nti.roles.ops-management'],
     'user001': [],
     'user001@example.com': [],
     'user002@example.com': []

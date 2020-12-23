@@ -14,6 +14,7 @@ from nti.app.environments.models.interfaces import IOnboardingRoot
 
 
 ACT_READ = 'zope.View'
+ACT_LIST = 'nti.actions.list'
 ACT_CREATE = 'nti.actions.create'
 ACT_UPDATE = 'nti.actions.update'
 ACT_DELETE = 'nti.actions.delete'

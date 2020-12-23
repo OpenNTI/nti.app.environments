@@ -12,7 +12,10 @@
 			 title="A role for admin." />
 
 	<sp:role id="role:nti.roles.account-management"
-			 title="A role for operations or sales." />
+			 title="A role for sales." />
+
+	<sp:role id="role:nti.roles.ops-management"
+			 title="A role for operations." />
 
 	<sp:role id="role:nti.roles.automated-reports"
 			 title="A role for reports view." />
