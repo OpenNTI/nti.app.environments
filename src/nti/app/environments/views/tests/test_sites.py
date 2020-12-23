@@ -1045,6 +1045,42 @@ class TestSiteCSVExportView(BaseAppTest):
         result = self.testapp.get(url, status=200, extra_environ=self._make_environ(username='admin001'))
         assert_that(result.body.splitlines(), has_length(3))
 
+class TestSiteContainerListView(BaseAppTest):
+
+    @with_test_app()
+    def test_sites_basic_list(self):
+        with ensure_free_txn():
+            with mock.patch('nti.app.environments.models.utils.get_onboarding_root') as mock_get_onboarding_root:
+                mock_get_onboarding_root.return_value = self._root()
+                customers = self._root().get('customers')
+                customers.addCustomer(PersistentCustomer(email='user001@example.com', name="testname"))
+                sites = self._root().get('sites')
+                sites.addSite(PersistentSite(dns_names=['xx.nextthought.io'],
+                                                 owner = customers.getCustomer('user001@example.com'),
+                                                 license=TrialLicense(start_date=datetime.datetime(2020, 1, 28),
+                                                                      end_date=datetime.datetime(2020, 1, 9))), siteId='S001')
+
+        # Only admins, account managers, and operations accounts can call this
+        url = '/onboarding/sites/'
+        # Unauthed goes to login
+        self.testapp.get(url, status=302, 
+                         extra_environ=self._make_environ(username=None))
+
+        # Non internal people 403
+        self.testapp.get(url, status=403,
+                         extra_environ=self._make_environ(username='user001@example.com'))
+
+        self.testapp.get(url, status=200,
+                         extra_environ=self._make_environ(username='admin001'))
+
+        self.testapp.get(url, status=200,
+                         extra_environ=self._make_environ(username='manager001'))
+
+        res = self.testapp.get(url, status=200,
+                               extra_environ=self._make_environ(username='ops001'))
+
+        assert_that(res.json, has_entries('Total', 1))
+
 class TestSitesListForCustomerView(BaseAppTest):
 
     @with_test_app()

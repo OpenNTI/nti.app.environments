@@ -33,6 +33,7 @@ from nti.wref.interfaces import IWeakRef
 from nti.app.environments.auth import ADMIN_ROLE
 from nti.app.environments.auth import ACCOUNT_MANAGEMENT_ROLE
 from nti.app.environments.auth import OPS_ROLE
+from nti.app.environments.auth import ACT_LIST
 from nti.app.environments.auth import ACT_READ
 from nti.app.environments.auth import ACT_REQUEST_TRIAL_SITE
 from nti.app.environments.auth import ACT_SITE_LOGIN
@@ -263,8 +264,8 @@ class SitesFolder(CaseInsensitiveCheckingLastModifiedBTreeContainer):
                 (Deny, Everyone, ACT_STRIPE_LINK_SUBSCRIPTION),
                 (Deny, Everyone, ACT_STRIPE_MANAGE_SUBSCRIPTION),
                 (Allow, ADMIN_ROLE, ALL_PERMISSIONS),
-                (Allow, ACCOUNT_MANAGEMENT_ROLE, (ACT_READ, ACT_REQUEST_TRIAL_SITE)),
-                (Allow, OPS_ROLE, (ACT_READ, ACT_REQUEST_TRIAL_SITE, ACT_SITE_LOGIN, ACT_SITE_JWT_TOKEN))]
+                (Allow, ACCOUNT_MANAGEMENT_ROLE, (ACT_READ, ACT_LIST, ACT_REQUEST_TRIAL_SITE)),
+                (Allow, OPS_ROLE, (ACT_READ, ACT_LIST, ACT_REQUEST_TRIAL_SITE, ACT_SITE_LOGIN, ACT_SITE_JWT_TOKEN))]
 
     def addSite(self, site, siteId=None):
         siteId = site.__name__ or siteId or _generate_site_id()

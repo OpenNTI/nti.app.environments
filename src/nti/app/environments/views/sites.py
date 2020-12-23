@@ -24,6 +24,7 @@ from nti.app.environments.auth import ACT_CREATE
 from nti.app.environments.auth import ACT_DELETE
 from nti.app.environments.auth import ACT_EDIT_SITE_ENVIRONMENT
 from nti.app.environments.auth import ACT_EDIT_SITE_LICENSE
+from nti.app.environments.auth import ACT_LIST
 from nti.app.environments.auth import ACT_READ
 from nti.app.environments.auth import ACT_REQUEST_TRIAL_SITE
 from nti.app.environments.auth import ACT_UPDATE
@@ -177,6 +178,20 @@ class ResolveSiteView(SiteBaseView):
             return hexc.HTTPNotFound()
         return hexc.HTTPSeeOther(location=self.request.resource_url(site, '@@details'))
 
+    
+@view_config(renderer='rest',
+             context=ILMSSitesContainer,
+             request_method='GET',
+             permission=ACT_LIST)
+class SiteContainerListView(SiteBaseView):
+
+    def __call__(self):
+        result = LocatedExternalDict()
+        result.__parent__ = self.context.__parent__
+        result.__name__ = self.context.__name__
+        result[ITEMS] = items = [x for x in self.context.values()]
+        result[ITEM_COUNT] = result[TOTAL] = len(self.context)
+        return result
 
 
 @view_config(renderer='json',

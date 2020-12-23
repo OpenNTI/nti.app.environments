@@ -663,7 +663,7 @@ class TrialSitesDigestEmailView(BaseView):
 @view_defaults(renderer='rest',
                request_method='GET',
                context=ILMSSitesContainer,
-               permission=ACT_AUTOMATED_REPORTS,
+               permission=ACT_READ,
                name="license_audit")
 class LicenseAuditView(CSVBaseView):
     """
