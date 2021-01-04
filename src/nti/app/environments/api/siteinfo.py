@@ -113,7 +113,7 @@ class NTClient(object):
         if not target.startswith('http'):
             assert target[0] == '/'
             target = 'https://%s%s' % (self._preferred_hostname, target)
-            
+
         return target
 
     def _logo_url(self, resp):
@@ -182,7 +182,7 @@ class NTClient(object):
         url = self.make_url(target)
         logger.info('Requesting information from platform at url %s', url)
         return self.session.get(url, *args, **kwargs)
-            
+
 
 def _object_with_fields(iterable, default=None, **kwargs):
     """
@@ -193,7 +193,7 @@ def _object_with_fields(iterable, default=None, **kwargs):
             if o[k] != v:
                 return False
         return True
-        
+
     return next((o for o in iterable if _matches(o, kwargs)), default)
 
 def get_workspace(service, workspace):
@@ -355,7 +355,7 @@ class SiteUsageUpdater(object):
             raise MissingTargetException('Service missing SiteAdmins link on SiteAdmin workspace')
 
         # Currently this api doesn't page, this gets more complicated when it starts paging
-        resp = self.client.get(site_admins_link)
+        resp = self.client.get(site_admins_link, params={'deactivated': "false"})
         resp.raise_for_status()
         return set(x['Username'] for x in resp.json()['Items'])
 
@@ -366,7 +366,7 @@ class SiteUsageUpdater(object):
         """
         if not self.course_audit_info:
             return None
-        
+
         instructor_usernames = set()
         for catalog_id, usage_info in self.course_audit_info['Items'].items():
             roles = usage_info.get('roles', {})
@@ -391,7 +391,7 @@ class SiteUsageUpdater(object):
         resp = self.client.get(instances, params={'batchStart': 0, 'batchSize': 1})
         resp.raise_for_status()
         return resp.json()['Total']
-        
+
 
     def __call__(self):
         logger.info('Updating usage information for site %s', self.site)
@@ -403,7 +403,7 @@ class SiteUsageUpdater(object):
         usage.instructor_usernames = frozenset(self.site_instructor_usernames) if self.site_instructor_usernames is not None else None
         usage.scorm_package_count = self.scorm_package_count
         logger.info('Updated usage information for site %s', self.site)
-        
+
         return usage
 
 @interface.provider(ISiteUsageUpdater)
