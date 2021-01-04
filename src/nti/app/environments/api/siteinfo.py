@@ -355,7 +355,7 @@ class SiteUsageUpdater(object):
             raise MissingTargetException('Service missing SiteAdmins link on SiteAdmin workspace')
 
         # Currently this api doesn't page, this gets more complicated when it starts paging
-        resp = self.client.get(site_admins_link, params={'deactivated': "false"})
+        resp = self.client.get(site_admins_link, params={'deactivated': 'false'})
         resp.raise_for_status()
         return set(x['Username'] for x in resp.json()['Items'])
 
