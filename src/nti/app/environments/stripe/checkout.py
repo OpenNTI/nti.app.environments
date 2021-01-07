@@ -39,3 +39,19 @@ class StripeCheckout(object):
             api_key=self._keys.secret_key
         )
         return session
+
+    def generate_setup_session(self,
+                               cancel_url,
+                               success_url,
+                               customer=None,
+                               **kwargs):
+        session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            mode='setup',
+            customer=customer.customer_id if customer else None,
+            success_url=success_url,
+            cancel_url=cancel_url,
+            api_key=self._keys.secret_key,
+            **kwargs
+        )
+        return session

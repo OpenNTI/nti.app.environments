@@ -82,6 +82,17 @@ class IStripeSubscriptionBilling(interface.Interface):
         Get the next invoice for this subscription.
         """
 
+    def update_subscription_payment_method(subscription, payment_method):
+        """
+        Update the default payment method for the provided description to the
+        provided payment method.
+        """
+
+    def update_customer_default_payment_method(customer, payment_method):
+        """
+        Updates the default invoice payment method on the provided customer.
+        """
+
 class IStripeInvoice(interface.Interface):
     """
     A Stripe billing invoice object
@@ -105,6 +116,8 @@ class IStripeSubscriptionItem(interface.Interface):
                         required=True,
                         default=1)
 
+
+
 class IStripeCheckout(interface.Interface):
 
     def generate_subscription_session(subscription_items,
@@ -121,6 +134,35 @@ class IStripeCheckout(interface.Interface):
 
         The returned IStripeCheckoutSession.id can be used to launch a client side stripe
         checkout flow. See: https://stripe.com/docs/payments/checkout/set-up-a-subscription
+        """
+
+    def generate_setup_session(cancel_url,
+                               success_url,
+                               customer=None,
+                               client_reference_id=None,
+                               **kwargs):
+        """
+        Start a checkout session in setup mode to collect a payment
+        intent. This session can be used, for example to create a
+        payment intent for association with a customer, or with a
+        subscription. Suggested kwargs are specified in the signature,
+        additional kwargs are passed directly to stripe.Session.create
+
+        The returned IStripeCheckoutSession.id can be used to launch a
+        client side stripe checkout flow. See:
+        https://stripe.com/docs/payments/checkout/subscriptions/update-payment-details
+        """
+
+class IStripeSetupIntent(interface.Interface):
+
+    id = ValidTextLine(title='The intent identifier',
+                       required=True)
+
+class IStripePayments(interface.Interface):
+
+    def get_setup_intent(intent):
+        """
+        Returns an IStripeSetupIntent for the corresponding id
         """
 
 class IStripeEventData(interface.Interface):

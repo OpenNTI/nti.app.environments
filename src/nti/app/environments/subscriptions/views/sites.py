@@ -176,10 +176,11 @@ class ManageSubscriptionPage(BaseView):
         if self.site.status != SITE_STATUS_ACTIVE:
             raise hexc.HTTPNotFound()
 
+        subscription = IStripeSubscription(self.site, None)
+
         billing_link = None
-        sc = IStripeCustomer(self.site.owner, None)
-        if sc and self.request.has_permission(ACT_STRIPE_MANAGE_BILLING, sc):
-            billing_link = self.request.resource_url(sc, '@@manage_billing', query={'return': self.request.url})
+        if subscription.id:
+            billing_link = self.request.resource_url(self.context, '@@manage_payment')
         
         return {
             'stripe_pk': self.stripe_key.publishable_key,
@@ -199,6 +200,7 @@ class _Plan(object):
     def __init__(self, p, q):
         self.plan = p
         self.quantity = q
+
     
 @view_config(renderer='templates/trigger_checkout.pt',
              permission=ACT_STRIPE_MANAGE_SUBSCRIPTION,
@@ -230,6 +232,50 @@ class SubscriptionCheckout(BaseView):
             raise hexc.HTTPBadRequest('Plan allows at most %i seats' % product.max_seats)
         
         return _Plan(price.stripe_plan_id, seats)
+
+    @view_config(renderer='templates/trigger_checkout.pt',
+                 permission=ACT_STRIPE_MANAGE_SUBSCRIPTION,
+                 request_method='POST',
+                 context=IStripeSubscription,
+                 name='manage_payment')
+    def manage_payment(self):
+        if self.stripe_key is None:
+            raise hexc.HTTPNotFound()
+
+        if self.site.status != SITE_STATUS_ACTIVE:
+            raise hexc.HTTPNotFound()
+
+        subscription = IStripeSubscription(self.site)
+        if not subscription.id:
+            logger.warn('Site does not have a subscription to manage payment of %s', subscription.id)
+            raise hexc.HTTPBadRequest()
+
+        owner = self.site.owner
+
+        checkout_storage = ICheckoutSessionStorage(get_onboarding_root(self.request))
+        checkout_item = checkout_storage.track_session(owner, self.site)
+        
+        stripe_customer = component.queryAdapter(owner, IStripeCustomer)
+        assert stripe_customer.customer_id
+
+        checkout = IStripeCheckout(self.stripe_key)
+
+        setup_intent_data = {'metadata': {'subscription_id': subscription.id}}
+
+        return_url = self.request.resource_url(self.context, '@@manage')
+        session = checkout.generate_setup_session(return_url,
+                                                  return_url,
+                                                  client_reference_id=checkout_item.id,
+                                                  customer=stripe_customer,
+                                                  setup_intent_data=setup_intent_data
+        )
+        
+        return {
+            'stripe_pk': self.stripe_key.publishable_key,
+            'stripe_checkout_session': session.id
+        }
+        
+        
     
     def __call__(self):
         if self.stripe_key is None:

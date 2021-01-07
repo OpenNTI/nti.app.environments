@@ -79,7 +79,7 @@ SESSION_JSON = {
 
 SUBSCRIPTION_ITEM = namedtuple('SubscriptionItem', ['plan', 'quantity'])
 
-class TestSubscriptionCheckout(unittest.TestCase):
+class TestCheckout(unittest.TestCase):
 
     layer = BaseConfiguringLayer
 
@@ -139,4 +139,37 @@ class TestSubscriptionCheckout(unittest.TestCase):
                                                     customer=customer,
                                                     customer_email=email,
                                                     metadata=metadata)
+
         
+    @fudge.patch('stripe.checkout.Session.create')
+    def test_setup_session(self, mock_create_session):
+
+        cancel_url = 'https://example.com/cancel'
+        success_url = 'https://example.com/success'
+
+        expected_kwargs = dict(payment_method_types=['card'],
+                               mode='setup',
+                               customer=None,
+                               cancel_url=cancel_url,
+                               success_url=success_url,
+                               client_reference_id='id1234',
+                               api_key=self.key.secret_key)
+        mock_create_session.expects_call().with_args(**expected_kwargs).returns(self.session)
+            
+        resp = self.checkout.generate_setup_session(cancel_url,
+                                                    success_url,
+                                                    customer=None,
+                                                    client_reference_id='id1234')
+
+        assert_that(resp, verifiably_provides(IStripeCheckoutSession))
+
+        # If we pass a customer that goes along as well
+        customer = IStripeCustomer('cust_1234')
+        expected_kwargs['customer'] = customer.customer_id
+
+        mock_create_session.expects_call().with_args(**expected_kwargs).returns(self.session)
+            
+        resp = self.checkout.generate_setup_session(cancel_url,
+                                                    success_url,
+                                                    customer=customer,
+                                                    client_reference_id='id1234')

@@ -13,6 +13,7 @@ from nti.app.environments.stripe.interfaces import IStripeKey
 from nti.app.environments.stripe.interfaces import IStripeCustomer
 from nti.app.environments.stripe.interfaces import IStripeCheckoutSessionCompletedEvent
 from nti.app.environments.stripe.interfaces import IStripeInvoicePaidEvent
+from nti.app.environments.stripe.interfaces import IStripePayments
 from nti.app.environments.stripe.interfaces import IStripeSubscription
 from nti.app.environments.stripe.interfaces import IStripeSubscriptionBilling
 
@@ -66,26 +67,9 @@ def _invoice_paid(event):
                 new_end_date,
                 invoice.id)
     site.license.end_date = new_end_date
-    
 
-@component.adapter(IStripeCheckoutSessionCompletedEvent)
-def _checkout_session_completed(event):
-    session = event.data.object
-    
-    checkout_storage = ICheckoutSessionStorage(get_onboarding_root())
-    checkout = checkout_storage.find_session(session.client_reference_id)
 
-    if checkout is None:
-        logger.warn('No checkout info for %s', session.client_reference_id)
-        return
-
-    if checkout.completed:
-        logger.debug('Checkout session % already handled', session.client_reference_id)
-        return
-
-    checkout.completed = datetime.datetime.utcnow()
-
-    
+def _do_handle_subscription_session_completed(session, checkout):
     stripe_customer_id = session.customer
     stripe_subscription_id = session.subscription
     logger.info('Customer %s completed checkout session %s. New subscription is %s',
@@ -138,7 +122,64 @@ def _checkout_session_completed(event):
                 logger.info('Skipping license update because site is not on a trial')
                         
 
-            
+    # notify internally that we had a payment
+
+
+def _do_handle_setup_session_completed(session, checkout):
+    payments = IStripePayments(component.getUtility(IStripeKey))
+    
+    setup_intent_id = session.setup_intent
+    setup_intent = payments.get_setup_intent(setup_intent_id)
+
+    payment_method_id = setup_intent.payment_method
+
+    # We have two options here. We can update the default invoice payment
+    # method for the customer, or we can update the default payment method
+    # on the subscription
+    # https://stripe.com/docs/payments/checkout/subscriptions/update-payment-details#set-default-payment-method
+
+    billing = IStripeSubscriptionBilling(component.getUtility(IStripeKey))
+
+    # If our SetupIntent has a subscription_id entry in the metadata
+    # we will update the payment info on the subscription, otherwise
+    # we update the default payment for the customer on all future invoices.
+    subscription_id = setup_intent.metadata.get('subscription_id')
+    customer_id = setup_intent.customer
+    if subscription_id:
+        logger.info('Updating default payment method for subscription %s', subscription_id)
+        billing.update_subscription_payment_method(subscription_id, payment_method_id)
+    elif customer_id:
+        logger.info('Updating default payment method for customer %s', customer_id)
+        billing.update_customer_default_payment_method(customer_id, payment_method_id)
+    else:
+        logger.warn('Unknown target for setup intent %s', setup_intent_id)
+
     
 
-    # notify internally that we had a payment
+@component.adapter(IStripeCheckoutSessionCompletedEvent)
+def _checkout_session_completed(event):
+    session = event.data.object
+    
+    checkout_storage = ICheckoutSessionStorage(get_onboarding_root())
+    checkout = checkout_storage.find_session(session.client_reference_id)
+
+    if checkout is None:
+        logger.warn('No checkout info for %s', session.client_reference_id)
+        return
+
+    if checkout.completed:
+        logger.debug('Checkout session % already handled', session.client_reference_id)
+        return
+
+    checkout.completed = datetime.datetime.utcnow()
+
+    if session.mode == 'subscription':
+        logger.info('Handling %s checkout session for %s', session.mode, session.client_reference_id)
+        _do_handle_subscription_session_completed(session, checkout)
+    elif session.mode == 'setup':
+        logger.info('Handling %s checkout session for %s', session.mode, session.client_reference_id)
+        _do_handle_setup_session_completed(session, checkout)
+    else:
+        logger.warn('Received an unexpected checkout session mode %s for %s', session.mode, session.client_reference_id)
+    
+    

@@ -13,6 +13,10 @@
 		 for="str"
 		 provides=".interfaces.IStripeCustomer"/>
 
+	<adapter factory=".billing.MinimalStripeSubscription"
+		 for="str"
+		 provides=".interfaces.IStripeSubscription"/>
+
 	<adapter factory=".billing.StripeBillingPortal"
 		 for=".interfaces.IStripeKey"
 		 provides=".interfaces.IStripeBillingPortal"/>
@@ -24,6 +28,10 @@
 	<adapter factory=".billing.StripeSubscriptionBilling"
 		 for=".interfaces.IStripeKey"
 		 provides=".interfaces.IStripeSubscriptionBilling"/>
+
+	<adapter factory=".billing.StripePayments"
+		 for=".interfaces.IStripeKey"
+		 provides=".interfaces.IStripePayments"/>
 
 	<include package="." file="meta.zcml" />
 
@@ -75,6 +83,10 @@
 
 	<class class="stripe.api_resources.subscription.Subscription">
 	  <implements interface=".interfaces.IStripeSubscription" />
+	</class>
+
+	<class class="stripe.api_resources.setup_intent.SetupIntent">
+	  <implements interface=".interfaces.IStripeSetupIntent" />
 	</class>
 
 	
