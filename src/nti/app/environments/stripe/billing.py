@@ -12,28 +12,10 @@ from nti.schema.eqhash import EqHash
 
 import stripe
 
-from .interfaces import IStripeBillingPortalSession
-from .interfaces import IStripeBillingPortal
 from .interfaces import IStripeCustomer
 from .interfaces import IStripeSubscription
 from .interfaces import IStripeSubscriptionBilling
-
-@interface.implementer(IStripeBillingPortal)
-class StripeBillingPortal(object):
-    
-    def __init__(self, keys):
-        self._keys = keys
-
-    def generate_session(self, customer, return_url):
-        
-        resp = stripe.billing_portal.Session.create(
-            customer=customer.customer_id,
-            return_url=return_url,
-            api_key = self._keys.secret_key
-        )
-        
-        return resp
-
+from .interfaces import IStripePayments
 
 @EqHash('id')
 @interface.implementer(IStripeSubscription, IContained)
@@ -60,4 +42,33 @@ class StripeSubscriptionBilling(object):
     def get_upcoming_invoice(self, subscription):
         resp = stripe.Invoice.upcoming(subscription=getattr(subscription, 'id', subscription),
                                        api_key=self._keys.secret_key)
+        return resp
+
+    def update_subscription_payment_method(self, subscription, payment_method):
+        resp = stripe.Subscription.modify(
+            getattr(subscription, 'id', subscription),
+            default_payment_method=getattr(payment_method, 'id', payment_method),
+            api_key=self._keys.secret_key
+        )
+        return resp
+
+    def update_customer_default_payment_method(self, customer, payment_method):
+        resp = stripe.Customer.modify(
+            getattr(customer, 'customer_id', customer),
+            invoice_settings={
+                'default_payment_method': getattr(payment_method, 'id', payment_method)
+            },
+            api_key=self._keys.secret_key
+        )
+        return resp
+
+@interface.implementer(IStripePayments)
+class StripePayments(object):
+
+    def __init__(self, keys):
+        self._keys = keys
+
+    def get_setup_intent(self, intent):
+        resp = stripe.SetupIntent.retrieve(getattr(intent, 'id', intent),
+                                           api_key=self._keys.secret_key)
         return resp

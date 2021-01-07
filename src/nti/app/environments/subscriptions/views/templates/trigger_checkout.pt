@@ -2,11 +2,6 @@
 <html>
     <head>
 	<script src="https://js.stripe.com/v3"></script>
-	<script>
-	 window.plans = {
-	     'Starter - Yearly': 
-	 }
-	</script>
     </head>
     <body>
 	<script>

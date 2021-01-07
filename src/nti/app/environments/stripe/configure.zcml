@@ -13,9 +13,9 @@
 		 for="str"
 		 provides=".interfaces.IStripeCustomer"/>
 
-	<adapter factory=".billing.StripeBillingPortal"
-		 for=".interfaces.IStripeKey"
-		 provides=".interfaces.IStripeBillingPortal"/>
+	<adapter factory=".billing.MinimalStripeSubscription"
+		 for="str"
+		 provides=".interfaces.IStripeSubscription"/>
 
 	<adapter factory=".checkout.StripeCheckout"
 		 for=".interfaces.IStripeKey"
@@ -24,6 +24,10 @@
 	<adapter factory=".billing.StripeSubscriptionBilling"
 		 for=".interfaces.IStripeKey"
 		 provides=".interfaces.IStripeSubscriptionBilling"/>
+
+	<adapter factory=".billing.StripePayments"
+		 for=".interfaces.IStripeKey"
+		 provides=".interfaces.IStripePayments"/>
 
 	<include package="." file="meta.zcml" />
 
@@ -65,16 +69,16 @@
 	  <implements interface=".interfaces.IStripeCheckoutSession" />
 	</class>
 
-	<class class="stripe.api_resources.billing_portal.session.Session">
-	  <implements interface=".interfaces.IStripeBillingPortalSession" />
-	</class>
-
 	<class class="stripe.api_resources.invoice.Invoice">
 	  <implements interface=".interfaces.IStripeInvoice" />
 	</class>
 
 	<class class="stripe.api_resources.subscription.Subscription">
 	  <implements interface=".interfaces.IStripeSubscription" />
+	</class>
+
+	<class class="stripe.api_resources.setup_intent.SetupIntent">
+	  <implements interface=".interfaces.IStripeSetupIntent" />
 	</class>
 
 	
