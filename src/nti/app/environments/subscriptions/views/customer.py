@@ -14,7 +14,6 @@ from nti.app.environments.stripe.interfaces import IStripeCustomer
 
 from nti.app.environments.views.base import BaseView
 
-from nti.app.environments.stripe.interfaces import IStripeBillingPortal
 from nti.app.environments.stripe.interfaces import IStripeKey
 from nti.app.environments.stripe.interfaces import IStripeCheckout
 
@@ -59,7 +58,6 @@ class ManageBillingView(BaseView):
     def __call__(self):
 
         key = component.getUtility(IStripeKey)
-        portal = IStripeBillingPortal(key)
 
         return_url = self.request.params.get('return')
         if not return_url:

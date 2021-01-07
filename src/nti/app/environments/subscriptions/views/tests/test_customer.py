@@ -1,9 +1,12 @@
 from hamcrest import assert_that
 from hamcrest import is_
 from hamcrest import has_entry
+from hamcrest import contains_string
 
 import fudge
 from fudge.inspector import arg
+
+import json
 
 from stripe.util import convert_to_stripe_object
 
@@ -41,21 +44,50 @@ class TestStripeCustomerView(BaseAppTest):
         resp = resp.json_body
         assert_that(resp, has_entry('customer_id', 'cus1234'))
 
-SESSION_EXAMPLE = {
-    "id": "bps_1GkZmRJSl3QXdEfxVVbCVU3I",
-    "object": "billing_portal.session",
-    "created": 1589911387,
-    "customer": "cus_HJCALoxCODL3uv",
-    "livemode": True,
-    "return_url": "https://example.com/account",
-    "url": "https://billing.stripe.com/session/{SESSION_SECRET}"
-}
+
+SESSION_JSON = """{
+  "id": "cs_test_LVpQ7aF5yIQILeZXUTV9o9IqLchDPCkfnENiVsR3YE3tIAPuy4qvdeHj",
+  "object": "checkout.session",
+  "allow_promotion_codes": null,
+  "amount_subtotal": null,
+  "amount_total": null,
+  "billing_address_collection": null,
+  "cancel_url": "https://example.com/cancel",
+  "client_reference_id": null,
+  "currency": null,
+  "customer": null,
+  "customer_email": null,
+  "livemode": false,
+  "locale": null,
+  "metadata": {},
+  "mode": "payment",
+  "payment_intent": "pi_1GqiTLJSl3QXdEfxVFCgmpNl",
+  "payment_method_types": [
+    "card"
+  ],
+  "payment_status": "unpaid",
+  "setup_intent": null,
+  "shipping": null,
+  "shipping_address_collection": null,
+  "submit_type": null,
+  "subscription": null,
+  "success_url": "https://example.com/success",
+  "total_details": null,
+  "line_items": [
+    {
+      "price": "price_H5ggYwtDq4fbrJ",
+      "quantity": 2
+    }
+  ]
+}"""
+
+SESSION_EXAMPLE = convert_to_stripe_object(json.loads(SESSION_JSON))
         
 class TestManageBillingView(BaseAppTest):
 
     @with_test_app()
-    @fudge.patch('nti.app.environments.stripe.billing.StripeBillingPortal.generate_session')
-    def test_manage_billing(self, mock_generate_session):
+    @fudge.patch('nti.app.environments.stripe.checkout.StripeCheckout.generate_setup_session')
+    def test_manage_billing(self, mock_setup_session):
         email = '123@gmail.com'
         with ensure_free_txn():
             customers = self._root().get('customers')
@@ -65,39 +97,25 @@ class TestManageBillingView(BaseAppTest):
             IStripeCustomer(customer).customer_id = 'cus_1234'
 
         url = f'/onboarding/customers/{email}/stripe_customer/@@manage_billing'
+        return_url = f'http://localhost/onboarding/customers/{email}/@@details'
 
         # In this case only the customer can access this view
-        self.testapp.post(url,
-                          status=403,
-                          extra_environ=self._make_environ(username='admin001'))
+        self.testapp.get(url,
+                         status=403,
+                         extra_environ=self._make_environ(username='admin001'))
 
-        mock_generate_session.expects_call().with_args(arg.has_attr(customer_id='cus_1234'),
-                                                       arg.contains(email)).returns(convert_to_stripe_object(SESSION_EXAMPLE))
+        mock_setup_session.expects_call().with_args(return_url,
+                                                    return_url,
+                                                    client_reference_id=arg.any(),
+                                                    customer=arg.has_attr(customer_id='cus_1234')).returns(SESSION_EXAMPLE)
 
-        resp = self.testapp.post(url,
-                                 status=303,
-                                 extra_environ=self._make_environ(username=email))
+        resp = self.testapp.get(url,
+                                status=200,
+                                extra_environ=self._make_environ(username=email))
 
+        assert_that(resp.text, contains_string('pk_test_gsyBVYVrN6NNdMDxj6rGX3hc'))
+        assert_that(resp.text, contains_string(SESSION_EXAMPLE.id))
 
-    @with_test_app()
-    @fudge.patch('nti.app.environments.stripe.billing.StripeBillingPortal.generate_session')
-    def test_manage_billing(self, mock_generate_session):
-        email = '123@gmail.com'
-        with ensure_free_txn():
-            customers = self._root().get('customers')
-            customer = PersistentCustomer(email=email,
-                                          name="testname")
-            customers.addCustomer(customer)
-            IStripeCustomer(customer).customer_id = 'cus_1234'
-
-        url = f'/onboarding/customers/{email}/stripe_customer/@@manage_billing?return=https%3A%2F%2Fexample.com%2Freturn'
-
-        mock_generate_session.expects_call().with_args(arg.has_attr(customer_id='cus_1234'),
-                                                       'https://example.com/return').returns(convert_to_stripe_object(SESSION_EXAMPLE))
-
-        resp = self.testapp.post(url,
-                                 status=303,
-                                 extra_environ=self._make_environ(username=email))    
 
 
 
