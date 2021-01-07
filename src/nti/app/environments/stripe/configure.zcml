@@ -17,10 +17,6 @@
 		 for="str"
 		 provides=".interfaces.IStripeSubscription"/>
 
-	<adapter factory=".billing.StripeBillingPortal"
-		 for=".interfaces.IStripeKey"
-		 provides=".interfaces.IStripeBillingPortal"/>
-
 	<adapter factory=".checkout.StripeCheckout"
 		 for=".interfaces.IStripeKey"
 		 provides=".interfaces.IStripeCheckout"/>
@@ -71,10 +67,6 @@
 
 	<class class="stripe.api_resources.checkout.session.Session">
 	  <implements interface=".interfaces.IStripeCheckoutSession" />
-	</class>
-
-	<class class="stripe.api_resources.billing_portal.session.Session">
-	  <implements interface=".interfaces.IStripeBillingPortalSession" />
 	</class>
 
 	<class class="stripe.api_resources.invoice.Invoice">

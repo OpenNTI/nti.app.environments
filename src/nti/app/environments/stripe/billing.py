@@ -12,29 +12,10 @@ from nti.schema.eqhash import EqHash
 
 import stripe
 
-from .interfaces import IStripeBillingPortalSession
-from .interfaces import IStripeBillingPortal
 from .interfaces import IStripeCustomer
 from .interfaces import IStripeSubscription
 from .interfaces import IStripeSubscriptionBilling
 from .interfaces import IStripePayments
-
-@interface.implementer(IStripeBillingPortal)
-class StripeBillingPortal(object):
-    
-    def __init__(self, keys):
-        self._keys = keys
-
-    def generate_session(self, customer, return_url):
-        
-        resp = stripe.billing_portal.Session.create(
-            customer=customer.customer_id,
-            return_url=return_url,
-            api_key = self._keys.secret_key
-        )
-        
-        return resp
-
 
 @EqHash('id')
 @interface.implementer(IStripeSubscription, IContained)
