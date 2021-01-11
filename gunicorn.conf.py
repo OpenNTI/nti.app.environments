@@ -13,7 +13,7 @@ bind = [":6543", "unix:var/pserve.sock"]
 # specified
 workers = "1" or multiprocessing.cpu_count() * 2 + 1
 worker_class = "gevent"
-access_log = "-"
+accesslog = "-"
 timeout = 1800
 preload_app = False
 
