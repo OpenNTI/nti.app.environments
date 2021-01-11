@@ -139,7 +139,10 @@ function positiveFloatOnly(e) {
 
 
 function getValue(id) {
-    var val = document.getElementById(id).value.trim();
+    var val = document.getElementById(id);
+    if(val){
+	val = val.value.trim();
+    }
     return val ? val : null;
 }
 
