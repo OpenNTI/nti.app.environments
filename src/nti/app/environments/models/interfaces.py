@@ -308,8 +308,14 @@ class ISiteLicense(interface.Interface):
     end_date = DateTime(title='The datetime this license ends.',
                         required=True)
 
+class IRestrictedScorm(interface.Interface):
 
-class ITrialLicense(ISiteLicense):
+    max_scorm_packages = Int(title="The number of scorm packages we allow.",
+                             required=True,
+                             readonly=True, #Right now this is readonly, although that could change in the future
+                             min=0)
+
+class ITrialLicense(IRestrictedScorm, ISiteLicense):
     """
     A temporary trial license used for evaluation.
     """
@@ -319,7 +325,6 @@ class IEnterpriseLicense(ISiteLicense):
     """
     An enterprise level license.
     """
-
 
 class IRestrictedLicense(ISiteLicense):
 
@@ -338,13 +343,13 @@ class IRestrictedLicense(ISiteLicense):
                                       min=1)
 
 
-class IStarterLicense(IRestrictedLicense):
+class IStarterLicense(IRestrictedScorm, IRestrictedLicense):
     """
     A starter level license.
     """
 
 
-class IGrowthLicense(IRestrictedLicense):
+class IGrowthLicense(IRestrictedScorm, IRestrictedLicense):
     """
     A growth level license.
     """

@@ -292,6 +292,44 @@ class TestLicenseAuditView(BaseAppTest):
         assert_that(resp, has_entries('Items', has_key('overlimit')))
 
     @with_test_app()
+    def test_scorm_alerts(self):
+        with ensure_free_txn():
+            self._init_data()
+
+            # for this test we only care about the site with id 'good' so blast the rest
+            # Which is a trial license
+            root = self._root()
+            sites = root.get('sites')
+            for key in tuple(sites):
+                if key != 'good':
+                    del sites[key]
+        
+        # No issues
+        resp = self.testapp.get(self.url,
+                                status=200,
+                                extra_environ=self._make_environ(username='admin001'))
+        resp = resp.json
+        assert_that(resp, has_entries('Items', has_length(0)))
+
+        # Now let's give it more scorm usage than it's limit
+        with ensure_free_txn():
+            root = self._root()
+            sites = root.get('sites')
+            site = sites['good']
+            ISiteUsage(site).scorm_package_count = site.license.max_scorm_packages + 1
+
+        # Now we have an alert about usage
+        resp = self.testapp.get(self.url,
+                                status=200,
+                                extra_environ=self._make_environ(username='admin001'))
+        resp = resp.json
+        assert_that(resp, has_entries('Items', has_length(1)))
+        assert_that(resp, has_entries('Items', has_key('good')))    
+
+        
+        
+
+    @with_test_app()
     def test_instructor_admin_alert_interaction(self):
         with ensure_free_txn():
             self._init_data()

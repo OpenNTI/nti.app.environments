@@ -60,6 +60,7 @@ from nti.app.environments.models.interfaces import IOnboardingRoot
 from nti.app.environments.models.interfaces import ICustomersContainer
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ILMSSitesContainer
+from nti.app.environments.models.interfaces import IRestrictedScorm
 from nti.app.environments.models.interfaces import ISetupStatePending
 from nti.app.environments.models.interfaces import ISetupStateSuccess
 from nti.app.environments.models.interfaces import ISetupStateFailure
@@ -734,8 +735,13 @@ class LicenseAuditView(CSVBaseView):
             allowed_instructors = max(site.license.seats - usage.admin_count, 0)
             allowed_instructors += (site.license.additional_instructor_seats or 0)
             if usage.instructor_count > allowed_instructors:
-               issues.append(('Instructor count %i exceeds limit %i' % (usage.instructor_count, allowed_instructors))) 
-            
+               issues.append(('Instructor count %i exceeds limit %i' % (usage.instructor_count, allowed_instructors)))
+
+        
+        if IRestrictedScorm.providedBy(site.license):
+            if usage.scorm_package_count != None and usage.scorm_package_count > site.license.max_scorm_packages:
+                issues.append(('Scorm package count %i exceeds limit %i' % (usage.scorm_package_count,
+                                                                            site.license.max_scorm_packages)))
 
         if issues:
             audit['Site'] = site
@@ -757,7 +763,7 @@ class LicenseAuditView(CSVBaseView):
     def header(self, params=None):
         return ["id", "dns", "License",
                 "Seats", "Instructor Addon Seats",
-                "Issues", "End Date", "Admins", "Instructors", "Admin Count", "Instructor Count"]
+                "Issues", "End Date", "Admins", "Instructors", "Admin Count", "Instructor Count", "Scorm Package Limit", "Scorm Package Usage"]
 
     def filename(self):
         return 'license_audit.csv'
@@ -794,6 +800,13 @@ class LicenseAuditView(CSVBaseView):
         instructor_count = usage.instructor_count if usage.instructor_count != None else ''
 
         data.extend([admins, instructors, admin_count, instructor_count])
+
+        scorm_package_limit = ''
+        scorm_package_usage = ''
+        if IRestrictedScorm.providedBy(site.license):
+            scorm_package_limit = site.license.max_scorm_packages
+            scorm_package_usage = usage.scorm_package_count if usage.scorm_package_count != None else ''
+        data.extend([scorm_package_limit, scorm_package_usage])
         
         return {k[0]:k[1] for k in zip(self.header(), data)}
 
