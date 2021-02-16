@@ -436,7 +436,7 @@ class SiteUsageAdminColumn(SiteUsageAttrColumn):
 
     attrName = 'admin_count'
 
-    header = 'Admin Seats'
+    header = 'Admins'
 
 
     def renderCell(self, item):
@@ -451,12 +451,32 @@ class SiteUsageInstructorColumn(SiteUsageAttrColumn):
 
     attrName = 'instructor_count'
 
-    header = 'Instructor Addons'
+    header = 'Instructors'
 
     def renderCell(self, item):
         usage = ISiteUsage(item).instructor_count
         try:
             limit = item.license.additional_instructor_seats
+        except AttributeError:
+            limit = '∞'
+
+        if limit == None:
+            limit = 0
+        
+        return f'{usage} / {limit}'
+
+class SiteUsageScormColumn(SiteUsageAttrColumn):
+
+    attrName = 'scorm_package_count'
+
+    header = 'Scorm'
+
+    weight = 7
+
+    def renderCell(self, item):
+        usage = ISiteUsage(item).scorm_package_count or 0
+        try:
+            limit = item.license.max_scorm_packages
         except AttributeError:
             limit = '∞'
 

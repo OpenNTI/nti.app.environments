@@ -85,6 +85,9 @@ class DedicatedEnvironment(SchemaConfigured, PersistentCreatedModDateTrackingObj
         PersistentCreatedModDateTrackingObject.__init__(self)
 
 
+SMALL_SCORM_PACKAGE_LIMIT = 10
+ZERO_SCORM_PACKAGE_LIMIT = 0
+
 @interface.implementer(ITrialLicense)
 class TrialLicense(SchemaConfigured, PersistentCreatedModDateTrackingObject, Contained):
 
@@ -93,6 +96,10 @@ class TrialLicense(SchemaConfigured, PersistentCreatedModDateTrackingObject, Con
     license_name = u'trial'
 
     mimeType = mime_type = 'application/vnd.nextthought.app.environments.triallicense'
+
+    @property
+    def max_scorm_packages(self):
+        return SMALL_SCORM_PACKAGE_LIMIT
 
     def __init__(self, *args, **kwargs):
         SchemaConfigured.__init__(self, *args, **kwargs)
@@ -122,6 +129,10 @@ class StarterLicense(SchemaConfigured, PersistentCreatedModDateTrackingObject, C
 
     mimeType = mime_type = 'application/vnd.nextthought.app.environments.starterlicense'
 
+    @property
+    def max_scorm_packages(self):
+        return ZERO_SCORM_PACKAGE_LIMIT
+
     def __init__(self, *args, **kwargs):
         SchemaConfigured.__init__(self, *args, **kwargs)
         PersistentCreatedModDateTrackingObject.__init__(self)
@@ -135,6 +146,10 @@ class GrowthLicense(SchemaConfigured, PersistentCreatedModDateTrackingObject, Co
     license_name = u'growth'
 
     mimeType = mime_type = 'application/vnd.nextthought.app.environments.growthlicense'
+
+    @property
+    def max_scorm_packages(self):
+        return SMALL_SCORM_PACKAGE_LIMIT
 
     def __init__(self, *args, **kwargs):
         SchemaConfigured.__init__(self, *args, **kwargs)

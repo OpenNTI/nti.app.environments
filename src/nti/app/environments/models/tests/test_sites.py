@@ -138,7 +138,8 @@ class TestSites(BaseTest):
         inst = TrialLicense(start_date=_start,
                             end_date=_end)
         assert_that(inst, has_properties({'start_date': _start,
-                                          'end_date': _end}))
+                                          'end_date': _end,
+                                          'max_scorm_packages': 10}))
         errors = getValidationErrors(ITrialLicense, inst)
         assert_that(errors, has_length(0))
 
@@ -168,6 +169,8 @@ class TestSites(BaseTest):
                                           'end_date': _end}))
         errors = getValidationErrors(IEnterpriseLicense, inst)
         assert_that(errors, has_length(0))
+
+        
 
         result = to_external_object(inst)
         assert_that(result, has_entries({'Class': 'EnterpriseLicense',
@@ -200,7 +203,8 @@ class TestSites(BaseTest):
         assert_that(inst, has_properties({'start_date': _start,
                                           'end_date': _end,
                                           'frequency': 'monthly',
-                                          'seats': 1}))
+                                          'seats': 1,
+                                          'max_scorm_packages': 0}))
         errors = getValidationErrors(IStarterLicense, inst)
         assert_that(errors, has_length(0))
 
@@ -237,7 +241,8 @@ class TestSites(BaseTest):
         assert_that(inst, has_properties({'start_date': _start,
                                           'end_date': _end,
                                           'frequency': 'monthly',
-                                          'seats': 2}))
+                                          'seats': 2,
+                                          'max_scorm_packages': 10}))
         errors = getValidationErrors(IGrowthLicense, inst)
         assert_that(errors, has_length(0))
 

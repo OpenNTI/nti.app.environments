@@ -239,6 +239,11 @@
 			 provides="z3c.table.interfaces.IColumn"
 			 name="site_usage_instructor_count" />
 
+	<adapter factory="._table_utils.SiteUsageScormColumn"
+			 for="* * ._table_utils.DashboardLicenseAuditTable"
+			 provides="z3c.table.interfaces.IColumn"
+			 name="site_usage_scorm" />
+
 	<adapter factory="._table_utils.SiteUsageInstructorColumn"
 			 for="* * ._table_utils.DashboardLicenseAuditTable"
 			 provides="z3c.table.interfaces.IColumn"
