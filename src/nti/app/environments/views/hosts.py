@@ -11,6 +11,7 @@ from nti.app.environments.auth import ACT_DELETE
 
 from nti.app.environments.models.interfaces import IHost
 from nti.app.environments.models.interfaces import IHostsContainer
+from nti.app.environments.models.interfaces import SITE_STATUS_OPTIONS
 
 from nti.app.environments.models.utils import get_sites_folder
 
@@ -71,6 +72,7 @@ class HostDetailView(BaseTemplateView, TableViewMixin):
         table = make_specific_table(SitesForHostTable, sites, self.request, host=self.context)
         return {'hosts_list_link': self.request.resource_url(self.context.__parent__, '@@list'),
                 'host': self.context,
+                'site_status_options': SITE_STATUS_OPTIONS,
                 'table': table,
                 'format_date': formatDateToLocal}
 
