@@ -2,20 +2,21 @@
     <title metal:fill-slot="title">
         Host Detail
     </title>
-	<metal:block metal:fill-slot="css">
+    <metal:block metal:fill-slot="css">
         <link href="/static/css/modal.css" rel="stylesheet">
         <link href="/static/css/table.css" rel="stylesheet">
+	<link href="/static/css/select.css" rel="stylesheet">
         <style>
-            .host-info {
-                border: 1px solid #ced4da;
-                border-radius: 4px;
-                padding: 16px 16px;
-            }
-            <metal:block tal:omit-tag="" tal:condition="not:is_deletion_allowed|nothing">
-                .nti_delete {
-                    display: none;
-                }
-            </metal:block>
+         .host-info {
+             border: 1px solid #ced4da;
+             border-radius: 4px;
+             padding: 16px 16px;
+         }
+         <metal:block tal:omit-tag="" tal:condition="not:is_deletion_allowed|nothing">
+         .nti_delete {
+             display: none;
+         }
+         </metal:block>
         </style>
     </metal:block>
     <metal:block metal:fill-slot="content">
@@ -30,22 +31,59 @@
 
         <h1 style="margin-top: 32px;">Sites</h1>
         <div class="toolbar">
-            <input type="text" id='search' name="search" placeHolder="Search" class="search-input" onkeypress="return search(event);"/>
+	    <input type="text" id='search' name="search" placeHolder="Search" class="search-input" onkeypress="return search(event);"/>
+	    <div class="drop-select" id="filter_by_license">
+                <div class="drop-toggle">
+                    <div class="drop-btn">Nothing selected</div>
+                </div>
+                <div class="drop-menu">
+                    <div class="drop-item nothing" value=""><span class="text"></span></div>
+                    <div class="drop-item" value="none"><span class="text">none</span></div>
+                    <div class="drop-item" value="trial"><span class="text">trial</span></div>
+                    <div class="drop-item" value="starter"><span class="text">starter</span></div>
+                    <div class="drop-item" value="growth"><span class="text">growth</span></div>
+                    <div class="drop-item" value="enterprise"><span class="text">enterprise</span></div>
+                </div>
+            </div>
+            <div class="drop-select" id="filter_by_state">
+                <div class="drop-toggle">
+                    <div class="drop-btn">Nothing selected</div>
+                </div>
+                <div class="drop-menu">
+                    <div class="drop-item nothing" value=""><span class="text"></span></div>
+                    <div class="drop-item" value="none"><span class="text">none</span></div>
+                    <div class="drop-item" value="pending"><span class="text">pending</span></div>
+                    <div class="drop-item" value="success"><span class="text">success</span></div>
+                    <div class="drop-item" value="failed"><span class="text">failed</span></div>
+                </div>
+            </div>
+            <div class="drop-select" id="filter_by_status">
+                <div class="drop-toggle">
+                    <div class="drop-btn">Nothing selected</div>
+                </div>
+                <div class="drop-menu">
+                    <div class="drop-item nothing" value=""><span class="text"></span></div>
+                    <metal:block tal:omit-tag="" tal:repeat="option site_status_options">
+                        <div class="drop-item" value="${option}"><span class="text">${option}</span></div>
+                    </metal:block>
+                </div>
+            </div>
+            
         </div>
 
-		<table tal:condition="python: len(table._raw_values)" tal:replace="structure python: table.render()" />
-		<div tal:condition="python: not len(table._raw_values)">
-			No sites.
-		</div>
+	<table tal:condition="python: len(table._raw_values)" tal:replace="structure python: table.render()" />
+	<div tal:condition="python: not len(table._raw_values)">
+	    No sites.
+	</div>
 
-	    <div class="table-pagination" tal:define="table table" >
+	<div class="table-pagination" tal:define="table table" >
             <div class="pagination-detail" tal:condition="python: len(table._raw_values)">
                 Total: ${len(table._raw_values)}.
             </div>
             <div class="pagination" tal:condition="python: len(table.context) > table.batchSize">
                 <span tal:replace="structure python: table.renderBatch()"/>
             </div>
-	    </div>
+	</div>
 
         <div class="margin-top: 16px;">
             <button class="btn btnCustom" onclick="window.location='${hosts_list_link}';">
@@ -54,22 +92,58 @@
         </div>
     </metal:block>
     <metal:block metal:fill-slot="script">
-        <script>
-            function search(e) {
-                // When a enter key pressed, query the server.
-                if (e.which == 13 || e.keyCode == 13) {
-                    var search = $('#search').val().trim();
-                    var url = updateUrlParameter('search', search);
-                    window.location.href = url;
-                }
-            }
+        <script src="/static/js/select.js"></script>
+	<script src="/static/js/hosts.js"></script>
+            <script>
+             // When the user clicks anywhere outside of the modal, close it
+             window.onclick = function(event) {
+                 var ids = ["deletingModal", "newModal"];
+                 for(var i=0; i<ids.length; i++) {
+                     var modal = document.getElementById(ids[i]);
+                     if (event.target == modal) {
+                         modal.style.display = "none";
+                     }
+                 }
+             }
 
-            $( document ).ready(function() {
-                var term = getUrlParameter('search');
-                if(term){
-                    $('#search').val(term);
-                }
-            });
-        </script>
+             function search(e) {
+                 // When a enter key pressed, query the server.
+                 if (e.which == 13 || e.keyCode == 13) {
+                     var search = $('#search').val().trim();
+                     var url = updateUrlParameter('search', search);
+                     window.location.href = url;
+                 }
+             }
+
+             $( document ).ready(function() {
+                 var email = getUrlParameter('search');
+                 if(email){
+                     $('#search').val(email);
+                 }
+
+                 // update filterBy dropdown selects
+                 updateDropSelects([['setup_state', '#filter_by_state'],
+                                    ['license_type', '#filter_by_license'],
+                                    ['status', '#filter_by_status']]);
+             });
+
+             $('#filter_by_state .drop-btn').on('CustomSelectChanged', function(e) {
+                 var filterBy = updateFilterBy(["setup_state", $(this).attr('value') || ''])
+                 var url = updateUrlParameter('filterBy', filterBy);
+                 window.location.href = url;
+             });
+
+             $('#filter_by_status .drop-btn').on('CustomSelectChanged', function(e) {
+                 var filterBy = updateFilterBy(["status", $(this).attr('value') || ''])
+                 var url = updateUrlParameter('filterBy', filterBy);
+                 window.location.href = url;
+             });
+
+             $('#filter_by_license .drop-btn').on('CustomSelectChanged', function(e) {
+                 var filterBy = updateFilterBy(["license_type", $(this).attr('value') || ''])
+                 var url = updateUrlParameter('filterBy', filterBy);
+                 window.location.href = url;
+             });
+            </script>
     </metal:block>
 </metal:block>
