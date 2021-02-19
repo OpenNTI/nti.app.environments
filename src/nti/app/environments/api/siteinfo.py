@@ -46,10 +46,11 @@ class BearerTokenFactory(object):
         self.issuer = issuer
         self.default_ttl = default_ttl
 
-    def make_bearer_token(self, username, realname=None, email=None, ttl=_default_timeout_marker):
+    def make_bearer_token(self, username, audience, realname=None, email=None, ttl=_default_timeout_marker):
 
         payload = {
            'login': username,
+           'aud': audience,
            'realname': realname,
            'email': email,
            'create': "true",
