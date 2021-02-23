@@ -70,15 +70,14 @@ class BearerTokenFactory(object):
         return jwt_token
 
 @component.adapter(ILMSSite)
-def _bearer_factory_for_site(unused_site):
+def _bearer_factory_for_site(site):
     """
-    Create an IBearerTokenFactory for the site. Right
-    now this isn't dependent on the site, but it's easy
-    to imagine it being dependent on the site in the future
+    Create an IBearerTokenFactory for the site.
     """
     settings = component.getUtility(IOnboardingSettings)
     return BearerTokenFactory(settings.get('jwt_secret', '$Id$'),
                               settings.get('jwt_issuer', None),
+                              site,
                               settings.get('jwt_timeout', 30))
 
 class NTClient(object):
