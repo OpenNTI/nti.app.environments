@@ -41,16 +41,17 @@ class BearerTokenFactory(object):
 
     algorithm = 'HS256'
 
-    def __init__(self, secret, issuer, default_ttl=None):
+    def __init__(self, secret, issuer, site, default_ttl=None):
         self.secret = secret
         self.issuer = issuer
+        self.site = site
         self.default_ttl = default_ttl
 
-    def make_bearer_token(self, username, audience, realname=None, email=None, ttl=_default_timeout_marker):
+    def make_bearer_token(self, username, realname=None, email=None, ttl=_default_timeout_marker):
 
         payload = {
            'login': username,
-           'aud': audience,
+           'aud': self.site.id,
            'realname': realname,
            'email': email,
            'create': "true",
