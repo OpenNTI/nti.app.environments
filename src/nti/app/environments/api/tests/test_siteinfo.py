@@ -99,19 +99,20 @@ class TestPlatformJsonObjects(unittest.TestCase):
 
 
 class TestBearerTokenFactory(unittest.TestCase):
-
     def setUp(self):
-        self.factory = BearerTokenFactory('secret', 'nti', default_ttl=60)
+        self.site = PersistentSite()
+        self.site.id = 'site'
+        self.factory = BearerTokenFactory('secret', 'nti', self.site, default_ttl=60)
 
     def tearDown(self):
         del self.factory
         
     def test_jwt_only_username(self):
-        token = self.factory.make_bearer_token('admin@nextthought.com', 'nextthought.com')
-        decoded = jwt.decode(token, self.factory.secret, audience='nextthought.com', algorithms=[self.factory.algorithm])
+        token = self.factory.make_bearer_token('admin@nextthought.com')
+        decoded = jwt.decode(token, self.factory.secret, audience=self.site.id, algorithms=[self.factory.algorithm])
         
         assert_that(decoded, has_entries({'login': 'admin@nextthought.com',
-                                          'aud': 'nextthought.com',
+                                          'aud': self.site.id,
                                           'realname': None,
                                           'email': None,
                                           'create': "true",
@@ -120,13 +121,14 @@ class TestBearerTokenFactory(unittest.TestCase):
                                           "exp": is_not(None)}))
 
     def test_jwt_full(self):
+        site = PersistentSite()
         token = self.factory.make_bearer_token('admin@nextthought.com',
-                                               'nextthought.com',
                                                realname="Larry Bird",
                                                email="larry.bird@nt.com")
-        decoded = jwt.decode(token, self.factory.secret, audience='nextthought.com', algorithms=[self.factory.algorithm])
+        decoded = jwt.decode(token, self.factory.secret, audience=self.site.id, algorithms=[self.factory.algorithm])
         
         assert_that(decoded, has_entries({'login': 'admin@nextthought.com',
+                                          'aud': self.site.id,
                                           'realname': "Larry Bird",
                                           'email': "larry.bird@nt.com",
                                           'create': "true",
@@ -136,19 +138,17 @@ class TestBearerTokenFactory(unittest.TestCase):
 
     def test_jwt_no_ttl(self):
         token = self.factory.make_bearer_token('admin@nextthought.com',
-                                               'nextthought.com',
                                                realname="Larry Bird",
                                                email="larry.bird@nt.com",
                                                ttl=None)
-        decoded = jwt.decode(token, self.factory.secret, audience='nextthought.com', algorithms=[self.factory.algorithm])
+        decoded = jwt.decode(token, self.factory.secret, audience=self.site.id, algorithms=[self.factory.algorithm])
         assert_that(decoded, is_not(has_key('ttl')))
 
     def test_jwt_ttl_works(self):
         token = self.factory.make_bearer_token('admin@nextthought.com',
-                                               'nextthought.com',
                                                realname="Larry Bird",
                                                email="larry.bird@nt.com",
                                                ttl=-10)
         # ttl in the past forces expiration
-        assert_that(calling(jwt.decode).with_args(token, self.factory.secret, audience='nextthought.com', algorithms=[self.factory.algorithm]),
+        assert_that(calling(jwt.decode).with_args(token, self.factory.secret, audience=self.site.id, algorithms=[self.factory.algorithm]),
                     raises(jwt.exceptions.ExpiredSignatureError))
