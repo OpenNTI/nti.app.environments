@@ -1334,6 +1334,7 @@ class TestSiteLoginView(BaseAppTest):
     def testSiteLoginView(self, mock_realname):
         mock_realname.return_value = 'test user'
         site = PersistentSite(dns_names=['xx.nextthought.io'],
+                              id='site',
                               license=TrialLicense(start_date=datetime.datetime(2020, 1, 1),
                                                    end_date=datetime.datetime(2020, 1, 9)))
 
@@ -1342,7 +1343,7 @@ class TestSiteLoginView(BaseAppTest):
 
         factory = IBearerTokenFactory(site)
 
-        decoded = jwt.decode(result, factory.secret, algorithms=[factory.algorithm])
+        decoded = jwt.decode(result, factory.secret, audience=site.id, algorithms=[factory.algorithm])
         assert_that(decoded, has_entries({'login': 'test@nextthought.com',
                                   'realname': 'test user',
                                   'email': 'test@nextthought.com',
