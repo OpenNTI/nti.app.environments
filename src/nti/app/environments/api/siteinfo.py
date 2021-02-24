@@ -41,7 +41,7 @@ class BearerTokenFactory(object):
 
     algorithm = 'HS256'
 
-    def __init__(self, secret, issuer, site, default_ttl=None):
+    def __init__(self, site, secret, issuer, default_ttl=None):
         self.secret = secret
         self.issuer = issuer
         self.site = site
@@ -75,9 +75,9 @@ def _bearer_factory_for_site(site):
     Create an IBearerTokenFactory for the site.
     """
     settings = component.getUtility(IOnboardingSettings)
-    return BearerTokenFactory(settings.get('jwt_secret', '$Id$'),
+    return BearerTokenFactory(site,
+                              settings.get('jwt_secret', '$Id$'),
                               settings.get('jwt_issuer', None),
-                              site,
                               settings.get('jwt_timeout', 30))
 
 class NTClient(object):

@@ -101,7 +101,7 @@ class TestPlatformJsonObjects(unittest.TestCase):
 class TestBearerTokenFactory(unittest.TestCase):
     def setUp(self):
         self.site = PersistentSite(id='site')
-        self.factory = BearerTokenFactory('secret', 'nti', self.site, default_ttl=60)
+        self.factory = BearerTokenFactory(self.site, 'secret', 'nti', default_ttl=60)
 
     def tearDown(self):
         del self.factory
