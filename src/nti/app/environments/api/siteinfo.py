@@ -42,16 +42,18 @@ class BearerTokenFactory(object):
     algorithm = 'HS256'
 
     def __init__(self, site, secret, issuer, default_ttl=None):
+        self.site = site
         self.secret = secret
         self.issuer = issuer
-        self.site = site
         self.default_ttl = default_ttl
 
     def make_bearer_token(self, username, realname=None, email=None, ttl=_default_timeout_marker):
 
+        assert self.site.ds_site_id is not None, "ds_site_id is required for JWT token creation."
+
         payload = {
            'login': username,
-           'aud': self.site.id,
+           'aud': self.site.ds_site_id,
            'realname': realname,
            'email': email,
            'create': "true",
