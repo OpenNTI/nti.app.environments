@@ -155,7 +155,6 @@ class TestBearerTokenFactory(unittest.TestCase):
 
     def test_jwt_no_id(self):
         no_id_site = PersistentSite()
-        caught_error = True
         no_id_factory = BearerTokenFactory(no_id_site, 'secret', 'nti', default_ttl=60)
 
         assert_that(calling(no_id_factory.make_bearer_token).with_args('admin@nextthought.com', realname="Larry Bird", email="larry.bird@nt.com"),raises(MissingDataserverSiteIdException))
