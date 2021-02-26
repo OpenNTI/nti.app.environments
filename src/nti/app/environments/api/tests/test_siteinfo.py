@@ -22,6 +22,8 @@ from nti.app.environments.api.siteinfo import get_link
 
 from nti.app.environments.models.sites import PersistentSite
 
+from nti.app.environments.api.interfaces import MissingDataserverSiteIdException
+
 
 class TestSiteInfo(unittest.TestCase):
 
@@ -153,9 +155,9 @@ class TestBearerTokenFactory(unittest.TestCase):
 
     def test_jwt_no_id(self):
         no_id_site = PersistentSite()
-        try:
-            no_id_factory = BearerTokenFactory(no_id_site, 'secret', 'nti', default_ttl=60)
-        
-        except AssertionError:
-            "Site without ds_site_id was caught correctly."
+        caught_error = True
+        no_id_factory = BearerTokenFactory(no_id_site, 'secret', 'nti', default_ttl=60)
+
+        assert_that(calling(no_id_factory.make_bearer_token).with_args('admin@nextthought.com', realname="Larry Bird", email="larry.bird@nt.com"),raises(MissingDataserverSiteIdException))
+
         

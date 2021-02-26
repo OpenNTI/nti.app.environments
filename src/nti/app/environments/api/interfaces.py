@@ -27,6 +27,12 @@ class ISiteUsageUpdater(interface.Interface):
         the given client.
         """
 
+class MissingDataserverSiteIdException(Exception):
+    """
+    An exception raised when the site used for JWT creation does not have
+    a value assigned to ds_site_id
+    """
+
 class PlatformException(Exception):
     """
     An exception raised when an error occurs interacting with the platform

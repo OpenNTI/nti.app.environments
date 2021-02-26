@@ -16,6 +16,7 @@ from nti.app.environments.api.interfaces import IBearerTokenFactory
 from nti.app.environments.api.interfaces import ISiteUsageUpdater
 from nti.app.environments.api.interfaces import AuthenticatedSessionRequiredException
 from nti.app.environments.api.interfaces import MissingTargetException
+from nti.app.environments.api.interfaces import MissingDataserverSiteIdException
 
 from nti.app.environments.models.interfaces import ISetupStateSuccess
 from nti.app.environments.models.interfaces import ILMSSite
@@ -49,7 +50,8 @@ class BearerTokenFactory(object):
 
     def make_bearer_token(self, username, realname=None, email=None, ttl=_default_timeout_marker):
 
-        assert self.site.ds_site_id is not None, "ds_site_id is required for JWT token creation."
+        if self.site.ds_site_id is None:
+            raise MissingDataserverSiteIdException
 
         payload = {
            'login': username,
