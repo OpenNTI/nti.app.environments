@@ -16,6 +16,7 @@ from nti.app.environments.api.interfaces import IBearerTokenFactory
 from nti.app.environments.api.interfaces import ISiteUsageUpdater
 from nti.app.environments.api.interfaces import AuthenticatedSessionRequiredException
 from nti.app.environments.api.interfaces import MissingTargetException
+from nti.app.environments.api.interfaces import MissingDataserverSiteIdException
 
 from nti.app.environments.models.interfaces import ISetupStateSuccess
 from nti.app.environments.models.interfaces import ILMSSite
@@ -41,15 +42,20 @@ class BearerTokenFactory(object):
 
     algorithm = 'HS256'
 
-    def __init__(self, secret, issuer, default_ttl=None):
+    def __init__(self, site, secret, issuer, default_ttl=None):
+        self.site = site
         self.secret = secret
         self.issuer = issuer
         self.default_ttl = default_ttl
 
     def make_bearer_token(self, username, realname=None, email=None, ttl=_default_timeout_marker):
 
+        if self.site.ds_site_id is None:
+            raise MissingDataserverSiteIdException
+
         payload = {
            'login': username,
+           'aud': self.site.ds_site_id,
            'realname': realname,
            'email': email,
            'create': "true",
@@ -68,14 +74,13 @@ class BearerTokenFactory(object):
         return jwt_token
 
 @component.adapter(ILMSSite)
-def _bearer_factory_for_site(unused_site):
+def _bearer_factory_for_site(site):
     """
-    Create an IBearerTokenFactory for the site. Right
-    now this isn't dependent on the site, but it's easy
-    to imagine it being dependent on the site in the future
+    Create an IBearerTokenFactory for the site.
     """
     settings = component.getUtility(IOnboardingSettings)
-    return BearerTokenFactory(settings.get('jwt_secret', '$Id$'),
+    return BearerTokenFactory(site,
+                              settings.get('jwt_secret', '$Id$'),
                               settings.get('jwt_issuer', None),
                               settings.get('jwt_timeout', 30))
 
