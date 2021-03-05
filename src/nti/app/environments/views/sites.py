@@ -12,11 +12,15 @@ from urllib.parse import urlencode
 
 from zope import component
 
+from zope.authentication.interfaces import PrincipalLookupError
+
 from zope.cachedescriptors.property import Lazy
 
 from zope.container.interfaces import InvalidItemType
 
 from zope.event import notify
+
+from zope.principalregistry.principalregistry import principalRegistry
 
 from nti.app.environments.api.interfaces import IBearerTokenFactory
 
@@ -844,7 +848,18 @@ class JWTTokenViewMixin(object):
 
     def _get_realname(self):
         # Based on the session configuration, realname shouldn't expire.
-        return self.request.session.get('login.realname')
+        name = self.request.session.get('login.realname')
+
+        # If we don't have something from the session (populated on login)
+        # See if we have something in the principalRegistry we can use.
+        # TODO abstract this away so we don't care where the Principal came from.
+        if not name:
+            try:
+                prin = principalRegistry.getPrincipal(self.request.authenticated_userid)
+                name = prin.title
+            except PrincipalLookupError:
+                pass
+        return name
 
     def _get_jwt_token(self, username=None, timeout=None):
         username = username or self.request.authenticated_userid
