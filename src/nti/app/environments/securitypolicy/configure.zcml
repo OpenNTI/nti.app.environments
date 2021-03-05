@@ -23,13 +23,13 @@
 	<!-- principals -->
 	<sp:principal id="automated.reports@nextthought.com"
 				  login="automated.reports@nextthought.com"
-				  title="A user that is able to run automated reports."
+				  title="Automated Reports"
 				  password_manager="SHA1"
 				  password="{SHA}AwBXpqbU5eDEjd8wbUaq8J0JRXI=" />
 
 	<sp:principal id="ops-lifecycle-helper@nextthought.com"
 				  login="ops-lifecycle-helper@nextthought.com"
-				  title="An operation's user for checking lifecycle information"
+				  title="Operations Helper"
 				  password_manager="SHA1"
 				  password="{SHA}IB+jmiRTUCvCM0/AuTFnzpQiR4c=" />
 
