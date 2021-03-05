@@ -947,4 +947,6 @@ class GoToSite(BaseView):
         pref_dns = site_links.preferred_dns if site_links else None
         if not pref_dns:
             raise hexc.HTTPNotFound()
-        return hexc.HTTPSeeOther(location=f'https://{pref_dns}')
+        full_path = urljoin(f'https://{pref_dns}', self.request.subpath)
+        full_path = urljoin(full_path, self.request.params)
+        return hexc.HTTPSeeOther(location=full_path)
