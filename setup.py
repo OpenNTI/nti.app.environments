@@ -15,7 +15,7 @@ requires = [
     'Paste',
     'python-dateutil',
     'plaster_pastedeploy',
-    'pyramid',
+    'pyramid < 2.0',
     'pyramid_chameleon',
     'pyramid_debugtoolbar',
     'waitress',
