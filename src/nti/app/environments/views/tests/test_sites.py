@@ -1395,14 +1395,15 @@ class TestSiteLoginView(BaseAppTest):
         url = '/onboarding/sites/S001/@@GoToSite'
         result = self.testapp.get(url, status=303).location
         assert_that(result, equal_to("https://example.com"))
-
         url = '/onboarding/sites/S001/@@GoToSite/app/siteadmin/config'
         result = self.testapp.get(url, status=303).location
         assert_that(result, equal_to("https://example.com/app/siteadmin/config"))
-
         url = '/onboarding/sites/S001/@@GoToSite?query=all'
         result = self.testapp.get(url, status=303).location
         assert_that(result, equal_to("https://example.com?query=all"))
+        url = '/onboarding/sites/S001/@@GoToSite/app/siteadmin/config?query=all'
+        result = self.testapp.get(url, status=303).location
+        assert_that(result, equal_to("https://example.com/app/siteadmin/config?query=all"))
 
 class TestRedirectToSiteDetails(BaseAppTest):
 
