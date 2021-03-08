@@ -953,15 +953,13 @@ class GoToSite(BaseView):
         # Convert the subpath list into a string separated by '/'
         subpath = "/".join(str(x) for x in self.request.subpath)
         full_path = urljoin(full_path, subpath)
-        print(self.request.subpath)
 
         # Get the url parts from the full path
         url_parts = list(urlparse.urlparse(full_path))
         query = dict(urlparse.parse_qs(url_parts[4]))
 
         # Update the url parts to include the params, then unparse to get the full path
-        params = self.request.params
-        query.update(params)
+        query.update(self.request.params)
         url_parts[4] = urlencode(query)
         full_path = urlparse.urlunparse(url_parts)
 
