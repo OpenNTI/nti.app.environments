@@ -20,6 +20,7 @@ from hamcrest import starts_with
 from hamcrest import calling
 from hamcrest import raises
 from hamcrest import not_none
+from hamcrest import equal_to
 
 from pyramid import httpexceptions as hexc
 
@@ -1374,6 +1375,35 @@ class TestSiteLoginView(BaseAppTest):
         self.testapp.get(url, status=403, extra_environ=self._make_environ(username='user001@example.com'))
         self.testapp.get(url, status=403, extra_environ=self._make_environ(username='manager001'))
         self.testapp.get(url, status=303, extra_environ=self._make_environ(username='admin001'))
+
+    @with_test_app()
+    @mock.patch('nti.app.environments.models.utils.get_onboarding_root')
+    def test_go_to(self, mock_onboarding_root):
+        mock_onboarding_root.return_value = root = self._root()
+        with ensure_free_txn():
+            customer = root.get('customers').addCustomer(PersistentCustomer(email='user001@example.com',
+                                                                            name="testname"))
+
+            root.get('sites').addSite(PersistentSite(license=TrialLicense(start_date=datetime.datetime(2019, 12, 12, 0, 0, 0),
+                                                                     end_date=datetime.datetime(2019, 12, 13, 0, 0, 0)),
+                                                environment=SharedEnvironment(name='test'),
+                                                created=datetime.datetime(2019, 12, 11, 0, 0, 0),
+                                                status='ACTIVE',
+                                                dns_names=['example.com'],
+                                                owner=customer, ds_site_id='site'), siteId='S001')
+
+        url = '/onboarding/sites/S001/@@GoToSite'
+        result = self.testapp.get(url, status=303).location
+        assert_that(result, equal_to("https://example.com"))
+        url = '/onboarding/sites/S001/@@GoToSite/app/siteadmin/config'
+        result = self.testapp.get(url, status=303).location
+        assert_that(result, equal_to("https://example.com/app/siteadmin/config"))
+        url = '/onboarding/sites/S001/@@GoToSite?query=all'
+        result = self.testapp.get(url, status=303).location
+        assert_that(result, equal_to("https://example.com?query=all"))
+        url = '/onboarding/sites/S001/@@GoToSite/app/siteadmin/config?query=all'
+        result = self.testapp.get(url, status=303).location
+        assert_that(result, equal_to("https://example.com/app/siteadmin/config?query=all"))
 
 class TestRedirectToSiteDetails(BaseAppTest):
 

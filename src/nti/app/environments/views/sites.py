@@ -9,6 +9,7 @@ from pyramid.view import view_config
 
 from urllib.parse import urljoin
 from urllib.parse import urlencode
+import urllib.parse as urlparse
 
 from zope import component
 
@@ -947,4 +948,19 @@ class GoToSite(BaseView):
         pref_dns = site_links.preferred_dns if site_links else None
         if not pref_dns:
             raise hexc.HTTPNotFound()
-        return hexc.HTTPSeeOther(location=f'https://{pref_dns}')
+        full_path = f'https://{pref_dns}'
+
+        # Convert the subpath list into a string separated by '/'
+        subpath = "/".join(str(x) for x in self.request.subpath)
+        full_path = urljoin(full_path, subpath)
+
+        # Get the url parts from the full path
+        url_parts = list(urlparse.urlparse(full_path))
+        query = dict(urlparse.parse_qs(url_parts[4]))
+
+        # Update the url parts to include the params, then unparse to get the full path
+        query.update(self.request.params)
+        url_parts[4] = urlencode(query)
+        full_path = urlparse.urlunparse(url_parts)
+
+        return hexc.HTTPSeeOther(location=full_path)
