@@ -267,10 +267,17 @@ class SiteDetailView(BaseTemplateView):
             return tpl.format(urllib.parse.quote('search index="dedicated_environments" host="%s.nti" earliest=-1d' % self.context.id, safe=''))
         return None
 
+    def _monitor_link(self, env):
+        if IDedicatedEnvironment.providedBy(env):
+            return f"https://alerts.nextthought.io/d/q2qY3CGGk/lms-dedicated-environment?refresh=10s&orgId=1&var-Site=<{self.context.id}>"
+        else:
+            return None
+
     def _format_env(self, env=None):
         formatted_env = {'env': env,
                          'lastModified': formatDateToLocal(env.lastModified),
-                         'splunk_link': self._splunk_link(env)}
+                         'splunk_link': self._splunk_link(env),
+                         'monitor_link': self._monitor_link(env)}
 
         if self.context.status == SITE_STATUS_ACTIVE:
             formatted_env['pendo_account_link'] = self.request.resource_url(self.context, '@@pendo_account_link')
