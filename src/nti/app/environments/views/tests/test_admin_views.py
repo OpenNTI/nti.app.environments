@@ -26,6 +26,9 @@ from nti.app.environments.models.sites import PersistentSite
 from nti.app.environments.models.sites import TrialLicense
 from nti.app.environments.models.sites import StarterLicense
 from nti.app.environments.models.sites import SharedEnvironment
+from nti.app.environments.models.sites import DedicatedEnvironment
+
+from nti.app.environments.models.hosts import PersistentHost
 
 from nti.app.environments.views.admin_views import SitesListView
 from nti.app.environments.views.admin_views import SiteDetailView
@@ -138,7 +141,52 @@ class TestAdminViews(BaseAppTest):
                                                  'dns_names': ['x', 'y'],
                                                  'license': has_entries({'type': 'trial', 'start_date': '2019-12-11 18:00:00', 'end_date': '2019-12-12 18:00:00',
                                                              'edit_link': None}),
-                                                 'environment': has_entries({'type': 'shared'}),
+                                                 'environment': has_entries({'type': 'shared', 'monitor_link': None}),
+                                                 'environment_edit_link': None,
+                                                 'creator': None,
+                                                 'client_name': 'x',
+                                                 'site_edit_link': None,
+                                                 'lastModified': not_none()
+                                             })}))
+
+    @with_test_app()
+    @mock.patch('nti.app.environments.views.admin_views.SiteDetailView._site_extra_info')
+    @mock.patch('nti.app.environments.models.wref.get_customers_folder')
+    def testSiteDetailViewDedicatedEnvironment(self, mock_customers, mock_info):
+        mock_info.return_value = {}
+        siteId = 'Sxxx'
+        with ensure_free_txn():
+            mock_customers.return_value = customers = self._root().get('customers')
+            customer = customers.addCustomer(PersistentCustomer(email='123@gmail.com',
+                                                                name="testname",
+                                                                hubspot_contact=HubspotContact(contact_vid='vid001')))
+
+            sites = self._root().get('sites')
+            site = sites.addSite(PersistentSite(license=TrialLicense(start_date=datetime.datetime(2019, 12, 12, 0, 0, 0),
+                                                                     end_date=datetime.datetime(2019, 12, 13, 0, 0, 0)),
+                                                environment=DedicatedEnvironment(pod_id='123456', host=PersistentHost(host_name='host.app', capacity=100)),
+                                                status='ACTIVE',
+                                                dns_names=['x', 'y'],
+                                                owner=customer), siteId=siteId)
+
+        url = '/onboarding/sites/{}/@@details'.format(siteId)
+        params = {}
+        self.testapp.get(url, params=params, status=302, extra_environ=self._make_environ(username=None))
+        self.testapp.get(url, params=params, status=403, extra_environ=self._make_environ(username='user001'))
+        result = self.testapp.get(url, params=params, status=200, extra_environ=self._make_environ(username='admin001'))
+        assert_that(b'Site Detail' in result.body, is_(True))
+        with ensure_free_txn():
+            view = SiteDetailView(site, self.request)
+            result = view()
+            assert_that(result, has_entries({'sites_list_link': 'http://example.com/onboarding/sites/@@list',
+                                             'site': has_entries({'created': not_none(),
+                                                 'owner': {'owner': customer, 'detail_url': 'http://example.com/onboarding/customers/123@gmail.com/@@details'},
+                                                 'site_id': siteId,
+                                                 'status': 'ACTIVE',
+                                                 'dns_names': ['x', 'y'],
+                                                 'license': has_entries({'type': 'trial', 'start_date': '2019-12-11 18:00:00', 'end_date': '2019-12-12 18:00:00',
+                                                             'edit_link': None}),
+                                                 'environment': has_entries({'type': 'dedicated', 'monitor_link': f'https://alerts.nextthought.io/d/q2qY3CGGk/lms-dedicated-environment?refresh=10s&orgId=1&var-Site=<{siteId}>'}),
                                                  'environment_edit_link': None,
                                                  'creator': None,
                                                  'client_name': 'x',
