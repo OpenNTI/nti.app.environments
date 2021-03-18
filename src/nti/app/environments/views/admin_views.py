@@ -1,5 +1,6 @@
 import time
 import urllib.parse
+from urllib.parse import quote_plus
 
 from datetime import datetime
 from datetime import timedelta
@@ -270,7 +271,7 @@ class SiteDetailView(BaseTemplateView):
     def _monitor_link(self, env):
         if IDedicatedEnvironment.providedBy(env):
             return f"https://alerts.nextthought.io/d/q2qY3CGGk/lms-dedicated-environment?refresh=10s&orgId=1" \
-                   f"&var-Site={urllib.parse.quote_plus(self.context.id)}"
+                   f"&var-Site={quote_plus(self.context.id)}"
         else:
             return None
 
