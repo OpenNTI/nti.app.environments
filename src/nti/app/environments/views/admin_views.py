@@ -269,7 +269,8 @@ class SiteDetailView(BaseTemplateView):
 
     def _monitor_link(self, env):
         if IDedicatedEnvironment.providedBy(env):
-            return f"https://alerts.nextthought.io/d/q2qY3CGGk/lms-dedicated-environment?refresh=10s&orgId=1&var-Site=<{self.context.id}>"
+            return f"https://alerts.nextthought.io/d/q2qY3CGGk/lms-dedicated-environment?refresh=10s&orgId=1" \
+                   f"&var-Site={urllib.parse.quote_plus(self.context.id)}"
         else:
             return None
 
