@@ -3,7 +3,7 @@ from zope import interface
 
 from ZODB.interfaces import IDatabase
 
-from nti.transactions.transactions import TransactionLoop
+from nti.transactions.loop import TransactionLoop
 
 logger = __import__('logging').getLogger(__name__)
 
