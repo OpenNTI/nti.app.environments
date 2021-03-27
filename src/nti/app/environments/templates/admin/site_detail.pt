@@ -127,8 +127,8 @@
 		            <metal:block tal:omit-tag="" tal:condition="site.environment.pendo_account_link|nothing">
                         <a href="${site.environment.pendo_account_link}" target="_blank" style="margin-right: 16px;">Pendo</a>
                     </metal:block>
-                    <metal:block tal:omit-tag="" tal:condition="site.environment.monitoring_link|nothing">
-                        <a href="${site.environment.monitoring_link}" target="_blank" style="margin-right: 16px;">Monitoring</a>
+                    <metal:block tal:omit-tag="" tal:condition="site.environment.monitor_link|nothing">
+                        <a href="${site.environment.monitor_link}" target="_blank" style="margin-right: 16px;">Monitoring</a>
                     </metal:block>
                 </metal:block>
                 <metal:block tal:omit-tag="" tal:condition="site.environment_edit_link|nothing">
