@@ -70,7 +70,7 @@
 		</div>
 
 	    <div class="table-pagination" tal:define="table table" >
-            <div class="pagination-detail" tal:condition="python: len(table._raw_values)">
+            <div class="pagination-detail" tal:condition="python: len(table.rows)">
                 Total: ${len(table._raw_values)}.
             </div>
             <div class="pagination" tal:condition="python: len(table.context) > table.batchSize">
