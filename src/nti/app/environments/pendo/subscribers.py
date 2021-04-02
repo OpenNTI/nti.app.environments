@@ -90,9 +90,11 @@ def _publish_to_pendo(success, siteid):
 
 def _send_site_status_to_pendo(site):
     sid = site.id
-    transaction.get().addAfterCommitHook(
-            _publish_to_pendo, args=(sid,), kws=None
-    )
+    dsid = site.ds_site_id
+    if dsid is not None:
+        transaction.get().addAfterCommitHook(
+                _publish_to_pendo, args=(sid,), kws=None
+        )
 
 @component.adapter(ILMSSite, IObjectModifiedEvent)
 def _on_site_modified(site, event):
