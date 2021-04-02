@@ -21,6 +21,8 @@ from zope.container.interfaces import InvalidItemType
 
 from zope.event import notify
 
+from zope.lifecycleevent import modified
+
 from zope.principalregistry.principalregistry import principalRegistry
 
 from nti.app.environments.api.interfaces import IBearerTokenFactory
@@ -309,6 +311,7 @@ class RequestTrialSiteView(SiteBaseView, ObjectCreateUpdateViewMixin):
             site.creator = self.request.authenticated_userid
             self.sites_folder.addSite(site)
             site = self.updateObjectWithExternal(site, self.readInput())
+            modified(site)
             # send email, etc.
             notify(TrialSiteCreatedEvent(site))
 
