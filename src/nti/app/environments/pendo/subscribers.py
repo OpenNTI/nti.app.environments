@@ -82,7 +82,11 @@ def _publish_to_pendo(success, siteid):
             # guarentee anything about the order we are executing in. 
             sites = get_sites_folder(root)
             site = sites[siteid]
-            PendoSiteStatusPublisher(site)()
+            try:
+                PendoSiteStatusPublisher(site)()
+            except ValueError:
+                logger.warn("ds_site_id not found for site with id: %s", siteid)
+
 
         tx_runner(_do_publish, side_effect_free=True)
 
@@ -90,11 +94,9 @@ def _publish_to_pendo(success, siteid):
 
 def _send_site_status_to_pendo(site):
     sid = site.id
-    dsid = site.ds_site_id
-    if dsid is not None:
-        transaction.get().addAfterCommitHook(
-                _publish_to_pendo, args=(sid,), kws=None
-        )
+    transaction.get().addAfterCommitHook(
+            _publish_to_pendo, args=(sid,), kws=None
+    )
 
 @component.adapter(ILMSSite, IObjectModifiedEvent)
 def _on_site_modified(site, event):
