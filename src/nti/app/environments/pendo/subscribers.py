@@ -23,6 +23,8 @@ from nti.app.environments.models.interfaces import ISiteLicense
 from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import ILMSSite
 
+from nti.app.environments.pendo.interfaces import MissingPendoAccount
+
 from nti.app.environments.models.utils import get_sites_folder
 
 logger = __import__('logging').getLogger(__name__)
@@ -84,7 +86,7 @@ def _publish_to_pendo(success, siteid):
             site = sites[siteid]
             try:
                 PendoSiteStatusPublisher(site)()
-            except ValueError:
+            except MissingPendoAccount:
                 logger.warn("ds_site_id not found for site with id: %s", siteid)
 
 
