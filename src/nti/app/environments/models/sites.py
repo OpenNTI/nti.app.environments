@@ -237,10 +237,7 @@ class PersistentSite(SchemaConfigured, PersistentCreatedModDateTrackingObject, C
         PersistentCreatedModDateTrackingObject.__init__(self)
         self.parent_site = parent_site
 
-    def __str__(self):
-        return str(self.site_id)
-
-    def __repr__(self):
+    def _p_repr(self):
         return repr(f"PersistentSite({self.site_id})")
 
     def _get_owner(self):
