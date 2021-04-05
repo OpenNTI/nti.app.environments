@@ -19,6 +19,7 @@ from zope.event import notify
 
 from zope.lifecycleevent import IObjectAddedEvent
 from zope.lifecycleevent import IObjectRemovedEvent
+from zope.lifecycleevent import modified
 
 from nti.app.environments.hubspot import get_hubspot_client
 
@@ -445,6 +446,7 @@ def _on_site_setup_finished(event):
 
     if not site.ds_site_id:
         site.ds_site_id = setup_info.ds_site_id
+        modified(site)
 
     if not setup_info.host:
         return

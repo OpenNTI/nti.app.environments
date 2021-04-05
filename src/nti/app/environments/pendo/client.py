@@ -9,6 +9,8 @@ from .interfaces import IPendoClient
 
 from nti.app.environments.interfaces import IOnboardingSettings
 
+from nti.app.environments.pendo.interfaces import MissingPendoAccount
+
 logger = __import__('logging').getLogger(__name__)
 
 @interface.implementer(IPendoClient)
@@ -22,7 +24,7 @@ class PendoV1Client(object):
         if not isinstance(account, str):
             account = IPendoAccount(account).account_id
         if not account:
-            raise ValueError('Must provide an account id or IPendoAccount with an account_id', account)
+            raise MissingPendoAccount('Must provide an account id or IPendoAccount with an account_id', account)
         return account
 
     def update_metadata_set(self, kind, group, payload):
