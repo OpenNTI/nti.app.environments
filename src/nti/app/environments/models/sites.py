@@ -237,6 +237,9 @@ class PersistentSite(SchemaConfigured, PersistentCreatedModDateTrackingObject, C
         PersistentCreatedModDateTrackingObject.__init__(self)
         self.parent_site = parent_site
 
+    def _p_repr(self):
+        return repr(f"PersistentSite({self.site_id})")
+
     def _get_owner(self):
         owner = self._owner_ref() if self._owner_ref else None
         if find_interface(owner, ICustomersContainer, strict=False) is None:
