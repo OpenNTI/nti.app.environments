@@ -18,8 +18,11 @@ from zope.publisher.skinnable import applySkin
 from zope.event import notify
 
 from zope.lifecycleevent import IObjectAddedEvent
+from zope.lifecycleevent import IObjectModifiedEvent
 from zope.lifecycleevent import IObjectRemovedEvent
 from zope.lifecycleevent import modified
+
+from nti.app.environments.api.siteinfo import NTClient
 
 from nti.app.environments.hubspot import get_hubspot_client
 
@@ -465,6 +468,24 @@ def _on_site_setup_finished(event):
     host = get_or_create_host(hosts_folder, setup_info.host)
     event = HostKnownSitesEvent(host, peer_envs)
     notify(event)
+
+
+def _get_ds_site_id_from_host(site):
+    if not site.ds_site_id and site.status is 'ACTIVE':
+        host_info = NTClient(site).dataserver_ping()
+        if host_info:
+            site.ds_site_id = host_info['Site']
+        else:
+            logger.warn("Could not set ds_site_id for %s as no host was found.", site)
+
+
+@component.adapter(ILMSSite, IObjectAddedEvent)
+def _add_ds_site_id_from_host(site, unused_event):
+    _get_ds_site_id_from_host(site)
+
+@component.adapter(ILMSSite, IObjectModifiedEvent)
+def _update_ds_site_id_from_host(site, unused_event):
+    _get_ds_site_id_from_host(site)
 
 
 @component.adapter(IHostKnownSitesEvent)

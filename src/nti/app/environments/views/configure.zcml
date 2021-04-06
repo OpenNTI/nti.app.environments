@@ -30,6 +30,8 @@
 	<subscriber handler=".subscribers._setup_newly_created_site" />
 	<subscriber handler=".subscribers._on_site_setup_finished" />
 	<subscriber handler=".subscribers._notify_user_for_site_setup_finished" />
+	<subscriber handler=".subscribers._add_ds_site_id_from_host" />
+	<subscriber handler=".subscribers._update_ds_site_id_from_host" />
 
 	<!-- decorators -->
 	<subscriber factory=".decorators.CustomerSitesLinkDecorator"
