@@ -471,6 +471,9 @@ def _on_site_setup_finished(event):
 
 
 def _get_ds_site_id_from_host(site):
+    """
+    Tries to pull the ds_site_id from the dataserver for that site.
+    """
     if not site.ds_site_id and site.status is 'ACTIVE':
         ping = NTClient(site).dataserver_ping()
         if ping:
@@ -481,10 +484,16 @@ def _get_ds_site_id_from_host(site):
 
 @component.adapter(ILMSSite, IObjectAddedEvent)
 def _add_ds_site_id_from_host(site, unused_event):
+    """
+    When a new site is added and the ds_site_id is not set, try to get it from the host.
+    """
     _get_ds_site_id_from_host(site)
 
 @component.adapter(ILMSSite, IObjectModifiedEvent)
 def _update_ds_site_id_from_host(site, unused_event):
+    """
+    When a new site is updated and the ds_site_id is not set, try to get it from the host.
+    """
     _get_ds_site_id_from_host(site)
 
 
