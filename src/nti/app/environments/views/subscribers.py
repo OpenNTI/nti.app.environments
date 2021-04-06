@@ -472,9 +472,9 @@ def _on_site_setup_finished(event):
 
 def _get_ds_site_id_from_host(site):
     if not site.ds_site_id and site.status is 'ACTIVE':
-        host_info = NTClient(site).dataserver_ping()
-        if host_info:
-            site.ds_site_id = host_info['Site']
+        ping = NTClient(site).dataserver_ping()
+        if ping:
+            site.ds_site_id = ping['Site']
         else:
             logger.warn("Could not set ds_site_id for %s as no host was found.", site)
 
