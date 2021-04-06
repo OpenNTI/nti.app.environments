@@ -331,7 +331,7 @@ class RequestTrialSiteView(SiteBaseView, ObjectCreateUpdateViewMixin):
              permission=ACT_UPDATE)
 class SiteUpdateView(SiteBaseView, ObjectCreateUpdateViewMixin):
 
-    _allowed_fields = ('status', 'dns_names', 'owner', 'parent_site')
+    _allowed_fields = ('status', 'dns_names', 'owner', 'parent_site', 'ds_site_id')
 
     def readInput(self):
         incoming = super(SiteUpdateView, self).readInput()
