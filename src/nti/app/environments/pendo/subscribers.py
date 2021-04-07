@@ -31,26 +31,29 @@ logger = __import__('logging').getLogger(__name__)
 
 UNLIMITED_SEATS = 65535
 
+def make_pendo_status_payload(site):
+    payload = {}
+    payload[PENDO_SITE_STATUS] = site.status
+
+    license = site.license
+        
+    payload[PENDO_SITE_LICENSE_TYPE] = license.license_name
+    payload[PENDO_SITE_LICENSE_FREQUENCY] = getattr(license, 'frequency', 'unknown')
+    payload[PENDO_SITE_LICENSE_SEATS] = getattr(license, 'seats', UNLIMITED_SEATS)
+    payload[PENDO_SITE_LICENSE_INSTRUCTOR_ADDON_SEATS] = getattr(license, 'additional_instructor_seats', 0)
+
+    if ITrialLicense.providedBy(license):
+        payload[PENDO_SITE_TRIAL_ENDDATE] = serialize_datetime(license.end_date)
+        
+    return payload
+
 class PendoSiteStatusPublisher(object):
 
     def __init__(self, site):
         self._site = site
 
     def _build_payload(self):
-        payload = {}
-        payload[PENDO_SITE_STATUS] = self._site.status
-
-        license = self._site.license
-        
-        payload[PENDO_SITE_LICENSE_TYPE] = license.license_name
-        payload[PENDO_SITE_LICENSE_FREQUENCY] = getattr(license, 'frequency', 'unknown')
-        payload[PENDO_SITE_LICENSE_SEATS] = getattr(license, 'seats', UNLIMITED_SEATS)
-        payload[PENDO_SITE_LICENSE_INSTRUCTOR_ADDON_SEATS] = getattr(license, 'additional_instructor_seats', 0)
-
-        if ITrialLicense.providedBy(license):
-            payload[PENDO_SITE_TRIAL_ENDDATE] = serialize_datetime(license.end_date)
-        
-        return payload
+        return make_pendo_status_payload(self._site)
     
     def __call__(self):
         logger.info('Will publish site status information to pendo for site %s', self._site)
