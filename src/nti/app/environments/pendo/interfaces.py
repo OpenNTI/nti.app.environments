@@ -14,6 +14,11 @@ class IPendoAccount(interface.Interface):
 
     account_web_url = HTTPURL(title='The url to the account page')
 
+class MissingPendoAccount(Exception):
+    """
+    An exception raised when account_id has not been assigned a value.
+    """
+
 class IPendoClient(interface.Interface):
     def set_metadata_for_accounts(metadata):
         """
@@ -21,7 +26,9 @@ class IPendoClient(interface.Interface):
         or object adaptable to IPendoAccount to a dictionary of pendo fields to values.
         """
 
-class MissingPendoAccount(Exception):
-    """
-    An exception raised when account_id has not been assigned a value.
-    """
+    def send_track_event(event, account, visitor, timestamp=None, properties=None, context={}):
+        """
+        Manually track an event for the provided visitor
+        
+        https://support.pendo.io/hc/en-us/articles/360032294291-Track-Events-Configuration
+        """

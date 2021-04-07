@@ -16,9 +16,11 @@ logger = __import__('logging').getLogger(__name__)
 @interface.implementer(IPendoClient)
 class PendoV1Client(object):
 
-    def __init__(self, key):
+    def __init__(self, key, track_key=None):
         self.session = requests.Session()
         self.session.headers.update({'X-PENDO-INTEGRATION-KEY': key})
+
+        self.track_key = track_key
 
     def _account_id(self, account):
         if not isinstance(account, str):
@@ -57,6 +59,33 @@ class PendoV1Client(object):
                     'values': values} for (account, values) in metadata.items()]
         return self.update_metadata_set('account', 'custom', payload)
 
+    def send_track_event(self, event, account, visitor, timestamp=None, properties=None, context={}):
+        if not self.track_key:
+            raise ValueError('No Pendo track key provided')
+
+        account_id = self._account_id()
+
+        payload = {
+            'type': 'track',
+            'event': event,
+            'visitorId': visitor,
+            'accountId': account_id,
+            'timestamp': timestamp or int(time.time() * 1000),
+            'properties': properties,
+            'context': context or {}
+        }
+
+        logger.info('Sending pendo track event %s for %s in %s.', event, account_id, visitor)
+        start = time.time()
+        resp = self.session.post('https://app.pendo.io/data/track',
+                                 json=payload,
+                                 headers={'X-PENDO-INTEGRATION-KEY': self.track_key})
+        resp.raise_for_status()
+        logger.info('Sending pendo track event %s for %s in %s. Took %s seconds',
+                    event, account_id, visitor, time.time() - start)
+        result = resp.json()
+        return result
+
 class _NoopPendoClient(PendoV1Client):
 
     def update_metadata_set(self, kind, group, payload):
@@ -64,6 +93,8 @@ class _NoopPendoClient(PendoV1Client):
                   f'https://app.pendo.io/api/v1/metadata/{kind}/{group}/value',
                   payload)
 
+    def send_track_event(self, event, account, visitor, timestamp=None, properties=None, context={}):
+        logger.info('Simulating pendo track event %s for %s in %s.', event, account, visitor)
 
 def _dev_pendo_client():
     return _NoopPendoClient('secret')
@@ -74,4 +105,5 @@ def _live_pendo_client():
         key = settings['pendo_integration_key']
     except KeyError:
         return None
-    return PendoV1Client(key)
+    track_key = settings.get('pendo_track_key', None)
+    return PendoV1Client(key, track_key=track_key)

@@ -26,7 +26,7 @@ requires = [
     'ZODB',
     'nti.app.pyramid_zope',
     'nti.containers @ git+ssh://git@github.com/NextThought/nti.containers',
-    'nti.mailer @ git+ssh://git@github.com/NextThought/nti.mailer@113d856',
+    'nti.mailer @ git+ssh://git@github.com/NextThought/nti.mailer',
     'nti.base @ git+ssh://git@github.com/NextThought/nti.base',
     'nti.dublincore @ git+ssh://git@github.com/NextThought/nti.dublincore',
     'nti.links @ git+ssh://git@github.com/NextThought/nti.links',

@@ -8,16 +8,23 @@
 	<include package="zope.component" />
 	<include package="zope.security" />
 
-	<adapter factory=".account.PendoAccount"
-		 for="nti.app.environments.models.interfaces.ILMSSite"
-		 provides=".interfaces.IPendoAccount"/>
-
+	<configure zcml:condition="have prod">
+	  <adapter factory=".account.PendoAccount"
+		   for="nti.app.environments.models.interfaces.ILMSSite"
+		   provides=".interfaces.IPendoAccount"/>
+	</configure>
 	<configure zcml:condition="not-have prod">
+	  <adapter factory=".account._test_pendo_account"
+		   for="nti.app.environments.models.interfaces.ILMSSite"
+		   provides=".interfaces.IPendoAccount"/>
+	</configure>
+	
+	<configure zcml:condition="have devmode">
           <utility
               factory=".client._dev_pendo_client"
 	      provides=".interfaces.IPendoClient"/>
 	</configure>
-	<configure zcml:condition="have prod">
+	<configure zcml:condition="not-have devmode">
           <utility
               factory=".client._live_pendo_client"
 	      provides=".interfaces.IPendoClient"/>

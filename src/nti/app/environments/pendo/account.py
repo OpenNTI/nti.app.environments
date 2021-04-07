@@ -36,7 +36,8 @@ class PendoAccount(object):
         # up approrpiately.
         # TODO remove this when possible
         client = NTClient(self._site)
-        return client.dataserver_ping()['Site']
+        pong = client.dataserver_ping()
+        return pong['Site'] if pong else None
 
     @Lazy
     def account_id(self):
@@ -63,3 +64,9 @@ class PendoAccount(object):
     
     def __init__(self, site):
         self._site = site
+
+
+def _test_pendo_account(site):
+    if 'nextthot.com' in site.dns_names[0]:
+        return PendoAccount(site)
+    return None
