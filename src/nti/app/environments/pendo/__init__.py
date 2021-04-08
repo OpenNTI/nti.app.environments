@@ -12,6 +12,7 @@ PENDO_SITE_LICENSE_FREQUENCY = 'sitelicensefrequency'
 PENDO_SITE_LICENSE_SEATS = 'sitelicenseseats'
 PENDO_SITE_LICENSE_INSTRUCTOR_ADDON_SEATS = 'sitelicenseinstructoraddonseats'
 PENDO_SITE_TRIAL_ENDDATE = 'sitetrialenddate'
+PENDO_SITE_STATUS_SUBSCRIBED = 'sitestatussubscribed'
 
 def make_pendo_client(key):
     return PendoV1Client(key)

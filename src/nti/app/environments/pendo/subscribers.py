@@ -12,6 +12,7 @@ from . import PENDO_SITE_LICENSE_FREQUENCY
 from . import PENDO_SITE_LICENSE_SEATS
 from . import PENDO_SITE_LICENSE_INSTRUCTOR_ADDON_SEATS
 from . import PENDO_SITE_TRIAL_ENDDATE
+from . import PENDO_SITE_STATUS_SUBSCRIBED
 
 from . import serialize_datetime
 
@@ -44,6 +45,8 @@ def make_pendo_status_payload(site):
 
     if ITrialLicense.providedBy(license):
         payload[PENDO_SITE_TRIAL_ENDDATE] = serialize_datetime(license.end_date)
+    
+    payload[PENDO_SITE_STATUS_SUBSCRIBED] = not ITrialLicense.providedBy(license)
         
     return payload
 
