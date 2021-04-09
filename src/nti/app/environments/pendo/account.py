@@ -65,8 +65,5 @@ class PendoAccount(object):
     def __init__(self, site):
         self._site = site
 
-
 def _test_pendo_account(site):
-    if 'nextthot.com' in site.dns_names[0]:
-        return PendoAccount(site)
-    return None
+    return PendoAccount(site)

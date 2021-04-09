@@ -9,28 +9,60 @@ from .interfaces import IPendoClient
 
 from nti.app.environments.interfaces import IOnboardingSettings
 
+from nti.app.environments.pendo.interfaces import InvalidPendoAccount
 from nti.app.environments.pendo.interfaces import MissingPendoAccount
+
 
 logger = __import__('logging').getLogger(__name__)
 
-@interface.implementer(IPendoClient)
-class PendoV1Client(object):
 
-    def __init__(self, key, track_key=None):
+def _resolve_account_id(account):
+    if not isinstance(account, str):
+        account = IPendoAccount(account, None)
+        account = account.account_id if account else None
+                
+    if not account:
+        raise MissingPendoAccount('Must provide an account id or IPendoAccount with an account_id', account)
+    return account
+
+class _BoundPendoClientMixin(object):
+
+    _bound_account_id = None
+    
+    def bind_account(self, account):
+        """
+        Bind the client to the provided account. Account should be a string
+        or something adaptable to an IPendoAccount
+        """
+        self._bound_account_id = None if account is None else _resolve_account_id(account)
+
+    def as_account_id(self, account):
+        """
+        Determines if the client can be used to interact with the provided pendo account.
+        account should be a string or something adaptable to an IPendoAccount
+        """
+        _account_id = _resolve_account_id(account)
+        self.check_accountid(_account_id)
+        return _account_id
+
+    def check_accountid(self, account_id):
+        if self._bound_account_id and account_id != self._bound_account_id:
+            raise InvalidPendoAccount(account_id)
+        return True
+
+@interface.implementer(IPendoClient)
+class PendoV1Client(_BoundPendoClientMixin):
+
+    def __init__(self, key):
         self.session = requests.Session()
         self.session.headers.update({'X-PENDO-INTEGRATION-KEY': key})
 
-        self.track_key = track_key
-
-    def _account_id(self, account):
-        if not isinstance(account, str):
-            account = IPendoAccount(account).account_id
-        if not account:
-            raise MissingPendoAccount('Must provide an account id or IPendoAccount with an account_id', account)
-        return account
-
     def update_metadata_set(self, kind, group, payload):
         logger.info('Updating pendo %s metadata fields for %s. Sending payload of length %i', group, kind, len(payload))
+        # Check the account in case we are bound and called directly
+        for acm in payload:
+            self.check_accountid(acm['accountId'])
+        
         start = time.time()
         resp = self.session.post(f'https://app.pendo.io/api/v1/metadata/{kind}/{group}/value', json=payload)
         resp.raise_for_status()
@@ -55,36 +87,9 @@ class PendoV1Client(object):
 
         # Pendo wants a list of objects with an accountId and values so we have to pivot our metadata
         # mapping
-        payload = [{'accountId': self._account_id(account),
+        payload = [{'accountId': self.as_account_id(account),
                     'values': values} for (account, values) in metadata.items()]
         return self.update_metadata_set('account', 'custom', payload)
-
-    def send_track_event(self, event, account, visitor, timestamp=None, properties=None, context={}):
-        if not self.track_key:
-            raise ValueError('No Pendo track key provided')
-
-        account_id = self._account_id()
-
-        payload = {
-            'type': 'track',
-            'event': event,
-            'visitorId': visitor,
-            'accountId': account_id,
-            'timestamp': timestamp or int(time.time() * 1000),
-            'properties': properties,
-            'context': context or {}
-        }
-
-        logger.info('Sending pendo track event %s for %s in %s.', event, account_id, visitor)
-        start = time.time()
-        resp = self.session.post('https://app.pendo.io/data/track',
-                                 json=payload,
-                                 headers={'X-PENDO-INTEGRATION-KEY': self.track_key})
-        resp.raise_for_status()
-        logger.info('Sending pendo track event %s for %s in %s. Took %s seconds',
-                    event, account_id, visitor, time.time() - start)
-        result = resp.json()
-        return result
 
 class _NoopPendoClient(PendoV1Client):
 
@@ -92,9 +97,6 @@ class _NoopPendoClient(PendoV1Client):
         logger.info('Simulating post to pendo %s %s',
                   f'https://app.pendo.io/api/v1/metadata/{kind}/{group}/value',
                   payload)
-
-    def send_track_event(self, event, account, visitor, timestamp=None, properties=None, context={}):
-        logger.info('Simulating pendo track event %s for %s in %s.', event, account, visitor)
 
 def _dev_pendo_client():
     return _NoopPendoClient('secret')
@@ -105,5 +107,4 @@ def _live_pendo_client():
         key = settings['pendo_integration_key']
     except KeyError:
         return None
-    track_key = settings.get('pendo_track_key', None)
-    return PendoV1Client(key, track_key=track_key)
+    return PendoV1Client(key)
