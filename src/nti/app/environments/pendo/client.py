@@ -4,6 +4,10 @@ import time
 from zope import component
 from zope import interface
 
+from zope.proxy import ProxyBase
+from zope.proxy import getProxiedObject
+from zope.proxy import non_overridable
+
 from .interfaces import IPendoAccount
 from .interfaces import IPendoClient
 
@@ -25,16 +29,13 @@ def _resolve_account_id(account):
         raise MissingPendoAccount('Must provide an account id or IPendoAccount with an account_id', account)
     return account
 
-class _BoundPendoClientMixin(object):
 
-    _bound_account_id = None
-    
-    def bind_account(self, account):
-        """
-        Bind the client to the provided account. Account should be a string
-        or something adaptable to an IPendoAccount
-        """
-        self._bound_account_id = None if account is None else _resolve_account_id(account)
+@interface.implementer(IPendoClient)
+class PendoV1Client(object):
+
+    def __init__(self, key):
+        self.session = requests.Session()
+        self.session.headers.update({'X-PENDO-INTEGRATION-KEY': key})
 
     def as_account_id(self, account):
         """
@@ -42,27 +43,11 @@ class _BoundPendoClientMixin(object):
         account should be a string or something adaptable to an IPendoAccount
         """
         _account_id = _resolve_account_id(account)
-        self.check_accountid(_account_id)
         return _account_id
-
-    def check_accountid(self, account_id):
-        if self._bound_account_id and account_id != self._bound_account_id:
-            raise InvalidPendoAccount(account_id)
-        return True
-
-@interface.implementer(IPendoClient)
-class PendoV1Client(_BoundPendoClientMixin):
-
-    def __init__(self, key):
-        self.session = requests.Session()
-        self.session.headers.update({'X-PENDO-INTEGRATION-KEY': key})
 
     def update_metadata_set(self, kind, group, payload):
         logger.info('Updating pendo %s metadata fields for %s. Sending payload of length %i', group, kind, len(payload))
-        # Check the account in case we are bound and called directly
-        for acm in payload:
-            self.check_accountid(acm['accountId'])
-        
+
         start = time.time()
         resp = self.session.post(f'https://app.pendo.io/api/v1/metadata/{kind}/{group}/value', json=payload)
         resp.raise_for_status()
@@ -97,6 +82,52 @@ class _NoopPendoClient(PendoV1Client):
         logger.info('Simulating post to pendo %s %s',
                   f'https://app.pendo.io/api/v1/metadata/{kind}/{group}/value',
                   payload)
+
+@interface.implementer(IPendoClient)
+class BoundPendoClient(ProxyBase):
+    """
+    A pendo client that restricts account operations to a certain
+    account (if provided).
+
+    This is implemented as a proxy, calling through to a provided base
+    client for the interactions with pendo.
+    """
+
+    __slots__ = ('_bound_account_id', )
+
+    def __init__(self, client):
+        super(BoundPendoClient, self).__init__(client)
+        self._bound_account_id = None
+    
+    def bind_account(self, account):
+        """
+        Bind the client to the provided account. Account should be a string
+        or something adaptable to an IPendoAccount
+        """
+        self._bound_account_id = None if account is None else _resolve_account_id(account)
+
+    @non_overridable
+    def as_account_id(self, account):
+        """
+        Determines if the client can be used to interact with the provided pendo account.
+        account should be a string or something adaptable to an IPendoAccount
+        """
+        _account_id = getProxiedObject(self).as_account_id(account)
+        self.check_accountid(_account_id)
+        return _account_id
+
+    def check_accountid(self, account_id):
+        if self._bound_account_id and account_id != self._bound_account_id:
+            raise InvalidPendoAccount(account_id)
+        return True
+
+    @non_overridable
+    def update_metadata_set(self, kind, group, payload):
+        # Check the account in case we are bound and called directly
+        for acm in payload:
+            self.check_accountid(acm['accountId'])
+        return getProxiedObject(self).update_metadata_set(kind, group, payload)
+        
 
 def _dev_pendo_client():
     return _NoopPendoClient('secret')
