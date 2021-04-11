@@ -97,7 +97,7 @@ class BoundPendoClient(ProxyBase):
 
     def __init__(self, client):
         super(BoundPendoClient, self).__init__(client)
-        self._bound_account_id = None
+        self.bind_account(None)
     
     def bind_account(self, account):
         """
@@ -128,7 +128,6 @@ class BoundPendoClient(ProxyBase):
             self.check_accountid(acm['accountId'])
         return getProxiedObject(self).update_metadata_set(kind, group, payload)
         
-
 def _dev_pendo_client():
     return _NoopPendoClient('secret')
 
@@ -139,3 +138,27 @@ def _live_pendo_client():
     except KeyError:
         return None
     return PendoV1Client(key)
+
+def _pendo_client_for_site(site):
+    pendo = component.getUtility(IPendoClient)
+    client = BoundPendoClient(pendo)
+    client.bind_account(site)
+    return client
+
+def _pendo_client_for_test_site(site):
+    """
+    Return a pendo client for the site, but only
+    if this is a test site. This is registered as an adapter
+    when running in the asci-test environment. That system
+    frequently tracks sites that line up with production sites,
+    so we don't want to overwrite prod data, but we do need to
+    sync sites created in that installation because product management
+    uses those sites to test and validate their pendo guide flows.
+
+    The hueristic we use here is to key off the domain name. We use
+    the domain *.nextthot.com for sites generated out of asci-test
+    so this function only returns client for sites that match that.
+    """
+    if [x for x in site.dns_names or [] if x.endswith('nextthot.com')]:
+        return _pendo_client_for_site(site)
+    return None

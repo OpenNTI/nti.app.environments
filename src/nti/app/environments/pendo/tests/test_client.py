@@ -10,13 +10,20 @@ import fudge
 
 from zope import interface
 
+from nti.testing.matchers import verifiably_provides
+
+from nti.app.environments.models.sites import PersistentSite
+
 from nti.app.environments.tests import BaseConfiguringLayer
 
 from .. import make_pendo_client
 
 from ..client import BoundPendoClient
+from ..client import _pendo_client_for_site
+from ..client import _pendo_client_for_test_site
 
 from ..interfaces import IPendoAccount
+from ..interfaces import IPendoClient
 from ..interfaces import InvalidPendoAccount
 from ..interfaces import MissingPendoAccount
 
@@ -123,3 +130,36 @@ class TestBoundPendoClient(TestPendoClient):
 
         assert_that(calling(self.client.update_metadata_set).with_args('account', 'custom', payload),
                     raises(InvalidPendoAccount))
+
+class TestPendoForSite(unittest.TestCase):
+
+    layer = BaseConfiguringLayer
+
+    def setUp(self):
+        site = PersistentSite()
+        site.ds_site_id = 'mysite'
+        site.id = 'mysiteid'
+        self.site = site
+
+    def test_adapter(self):
+        client = IPendoClient(self.site)
+        assert_that(client, verifiably_provides(IPendoClient))
+        assert_that(client.check_accountid(IPendoAccount(self.site).account_id),
+                    is_(True))
+
+    def test_pendo_client_for_site(self):
+        client = _pendo_client_for_site(self.site)
+        assert_that(client, verifiably_provides(IPendoClient))
+        assert_that(client.check_accountid(IPendoAccount(self.site).account_id),
+                    is_(True))
+
+    def test_pendo_client_for_test_site(self):
+        self.site.dns_names = ['client.nextthought.io']
+        client = _pendo_client_for_test_site(self.site)
+        assert_that(client, is_(None))
+
+        self.site.dns_names = ['client.nextthot.com']
+        client = _pendo_client_for_test_site(self.site)
+        assert_that(client, verifiably_provides(IPendoClient))
+        assert_that(client.check_accountid(IPendoAccount(self.site).account_id),
+                    is_(True))
