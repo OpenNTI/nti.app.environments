@@ -88,7 +88,8 @@ def _push_to_pendo(siteids, root, key, dry_run=False):
     sites = get_sites_folder(root)
     for siteid in siteids:
         site = sites[siteid]
-        if not IPendoAccount(site).account_id:
+        account = component.queryAdapter(site, IPendoAccount)
+        if account is None or not account.account_id:
             continue
         payload_for_site = _pendo_usage_entry(site)
 

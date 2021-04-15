@@ -60,8 +60,7 @@ class PendoSiteStatusPublisher(object):
     
     def __call__(self):
         logger.info('Will publish site status information to pendo for site %s', self._site)
-
-        pendo = component.queryUtility(IPendoClient)
+        pendo = component.queryAdapter(self._site, IPendoClient)
         if pendo is None:
             logger.warn('No pendo client installed. Not publishing to pendo')
             return
