@@ -8,21 +8,21 @@
 	<include package="zope.component" />
 	<include package="zope.security" />
 
-	
-	<adapter factory=".account.PendoAccount"
-		   for="nti.app.environments.models.interfaces.ILMSSite"
-		   provides=".interfaces.IPendoAccount"/>
 
 	<configure zcml:condition="have asci-test">
-	  <adapter factory=".client._pendo_client_for_test_site"
+	  <adapter factory=".account._test_pendo_account"
 		   for="nti.app.environments.models.interfaces.ILMSSite"
-		   provides=".interfaces.IPendoClient"/>
+		   provides=".interfaces.IPendoAccount"/>
 	</configure>
 	<configure zcml:condition="not-have asci-test">
-	  <adapter factory=".client._pendo_client_for_site"
+	  <adapter factory=".account.PendoAccount"
 		   for="nti.app.environments.models.interfaces.ILMSSite"
-		   provides=".interfaces.IPendoClient"/>
+		   provides=".interfaces.IPendoAccount"/>
 	</configure>
+
+	<adapter factory=".client._pendo_client_for_site"
+		 for="nti.app.environments.models.interfaces.ILMSSite"
+		 provides=".interfaces.IPendoClient"/>
 	
 	<configure zcml:condition="have devmode">
           <utility

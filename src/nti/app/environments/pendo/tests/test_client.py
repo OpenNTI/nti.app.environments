@@ -20,7 +20,6 @@ from .. import make_pendo_client
 
 from ..client import BoundPendoClient
 from ..client import _pendo_client_for_site
-from ..client import _pendo_client_for_test_site
 
 from ..interfaces import IPendoAccount
 from ..interfaces import IPendoClient
@@ -149,17 +148,6 @@ class TestPendoForSite(unittest.TestCase):
 
     def test_pendo_client_for_site(self):
         client = _pendo_client_for_site(self.site)
-        assert_that(client, verifiably_provides(IPendoClient))
-        assert_that(client.check_accountid(IPendoAccount(self.site).account_id),
-                    is_(True))
-
-    def test_pendo_client_for_test_site(self):
-        self.site.dns_names = ['client.nextthought.io']
-        client = _pendo_client_for_test_site(self.site)
-        assert_that(client, is_(None))
-
-        self.site.dns_names = ['client.nextthot.com']
-        client = _pendo_client_for_test_site(self.site)
         assert_that(client, verifiably_provides(IPendoClient))
         assert_that(client.check_accountid(IPendoAccount(self.site).account_id),
                     is_(True))
