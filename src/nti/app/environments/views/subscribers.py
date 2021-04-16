@@ -483,14 +483,14 @@ def _maybe_sync_dssiteid(site):
 
 
 @component.adapter(ILMSSite, IObjectAddedEvent)
-def _add_ds_site_id_from_host(site, unused_event):
+def _maybe_sync_dssiteid_on_site_add(site, unused_event):
     """
     When a new site is added and the ds_site_id is not set, try to get it from the host.
     """
     _maybe_sync_dssiteid(site)
 
 @component.adapter(ILMSSite, IObjectModifiedEvent)
-def _update_ds_site_id_from_host(site, unused_event):
+def _maybe_sync_dssiteid_on_site_modify(site, unused_event):
     """
     When a new site is updated and the ds_site_id is not set, try to get it from the host.
     """
