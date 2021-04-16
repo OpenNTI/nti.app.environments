@@ -31,6 +31,8 @@ from nti.app.environments.pendo import PENDO_USAGE_TOTAL_USER_COUNT
 
 from nti.app.environments.pendo.interfaces import IPendoAccount
 
+from nti.app.environments.pendo.subscribers import make_pendo_status_payload
+
 from nti.app.environments.utils import run_as_onboarding_main
 
 from nti.externalization import to_external_object
@@ -86,9 +88,18 @@ def _push_to_pendo(siteids, root, key, dry_run=False):
     sites = get_sites_folder(root)
     for siteid in siteids:
         site = sites[siteid]
-        if not IPendoAccount(site).account_id:
+        account = component.queryAdapter(site, IPendoAccount)
+        if account is None or not account.account_id:
             continue
         payload_for_site = _pendo_usage_entry(site)
+
+        # Also go ahead and push up the status related information now.
+        # We do this on demand as the site is updated in a subscriber, but pendo
+        # won't accept the data until the account has been created, and that only
+        # happens once the user loads the snippet by way of our client application.
+        # So it's likely that we aren't able to sync status for new trials until
+        # this script runs... This sucks and is a big drawback
+        payload_for_site.update(make_pendo_status_payload(site))
         if payload_for_site:
             payload[site] = payload_for_site
 
