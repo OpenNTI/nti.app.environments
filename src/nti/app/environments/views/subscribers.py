@@ -474,7 +474,7 @@ def _maybe_sync_dssiteid(site):
     """
     Tries to pull the ds_site_id from the dataserver for that site.
     """
-    if not site.ds_site_id and site.status is 'ACTIVE':
+    if not site.ds_site_id and site.status == SITE_STATUS_ACTIVE:
         ping = NTClient(site).dataserver_ping()
         if ping:
             site.ds_site_id = ping['Site']
