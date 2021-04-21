@@ -476,7 +476,7 @@ def _maybe_sync_dssiteid(site):
     """
     if not site.ds_site_id and site.status == SITE_STATUS_ACTIVE:
         ping = NTClient(site).dataserver_ping()
-        if ping:
+        if ping and ping['Site']:
             site.ds_site_id = ping['Site']
         else:
             logger.warn("Could not set ds_site_id for %s as no host was found.", site)

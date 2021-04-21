@@ -8,11 +8,14 @@ from hamcrest import calling
 from hamcrest import raises
 from hamcrest import not_none
 from hamcrest import assert_that
+from hamcrest import equal_to
 from hamcrest import has_entries
 
 from pyramid import exceptions as hexc
 
 from zope import component
+
+from zope.lifecycleevent import modified
 
 from zope.schema._bootstrapinterfaces import ConstraintNotSatisfied
 from zope.schema._bootstrapinterfaces import RequiredMissing
@@ -102,6 +105,34 @@ class TestUtils(BaseAppTest):
 
         site.setup_state = SetupStateSuccess(task_state='ok', site_info=SiteInfo(site_id='S001', dns_name='xx.nextthought.io'))
         assert_that(query_setup_async_result(site), is_(None))
+
+    @with_test_app()
+    @mock.patch('nti.app.environments.api.siteinfo.requests.Session')
+    def test_ds_site_id_sync(self, mock_session):
+        with mock.patch('nti.app.environments.models.utils.get_onboarding_root') as mock_get_onboarding_root:
+            json_body = {'Site': '1234'}
+            mock_get_onboarding_root.return_value = self._root()
+            sites = self._root().get('sites')
+            site_id = 's001'
+            site = PersistentSite(dns_names=['xx.nextthought.io'], id=site_id, status=SITE_STATUS_ACTIVE)
+
+            # validate ds_site_id updates when site is added
+            mock_session.return_value = mock.MagicMock(get=mock.MagicMock(return_value=mock.MagicMock(status_code=200,
+                                                                                                      json=mock.MagicMock(
+                                                                                                          return_value=json_body))))
+            sites.addSite(site)
+            assert_that(sites[site_id].ds_site_id, equal_to(json_body['Site']), 'ds_site_id was not synced on site add.')
+
+            json_body = {'Site': '4321'}
+
+            # validate ds_site_id updates when site is modified
+            mock_session.return_value = mock.MagicMock(get=mock.MagicMock(return_value=mock.MagicMock(status_code=200,
+                                                                                                      json=mock.MagicMock(
+                                                                                                          return_value=json_body))))
+            sites[site_id].ds_site_id = None
+            modified(sites[site_id])
+            assert_that(sites[site_id].ds_site_id, equal_to(json_body['Site']), 'ds_site_id was not synced on site modify.')
+
 
     @mock.patch('nti.app.environments.api.siteinfo.requests.Session.get')
     def test_fetch_site_invitation(self, mock_get):
