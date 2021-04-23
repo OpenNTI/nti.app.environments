@@ -184,6 +184,22 @@ function cancelLicenseEditView() {
     clearMessages('.success-edit-license', '.error-edit-license');
 }
 
+function updateLicenceEndDate(me, days) {
+    // get date from view license
+    const view = $('#view_license')
+    let end = new Date($(view.find("span")[2]).text().replace(' ', 'T'))
+    console.log(end)
+
+    // add 'days' to end date
+    end.setDate(end.getDate() + days)
+
+    // update editable field with new date
+    const date_string = end.toISOString().replace('T', ' ').split('.')[0]
+    const edit = $('#edit_license');
+    $(edit.find('.site_license_end_date')).val(date_string)
+
+}
+
 function onLicenseChange () {
     var edit = $('#edit_license');
     var _type = $(edit.find('.site_license_type')).val(),
