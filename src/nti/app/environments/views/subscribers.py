@@ -435,6 +435,8 @@ def _on_site_setup_finished(event):
         and site.status == SITE_STATUS_PENDING:
         site.status = SITE_STATUS_ACTIVE
 
+    logger.info('Site setup finished for %s', site)
+
     _store_site_setup_stats(site.setup_state)
     _update_site_status_stats(site.__parent__.values())
 
@@ -445,6 +447,7 @@ def _on_site_setup_finished(event):
     setup_info = site.setup_state.site_info
 
     if not site.ds_site_id:
+        logger.info('Updating ds_site_id for %s to %s', site, setup_info.ds_site_id)
         site.ds_site_id = setup_info.ds_site_id
         modified(site)
 
