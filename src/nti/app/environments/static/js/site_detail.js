@@ -156,6 +156,12 @@ function getNonStandardSelectors() {
             ['.seats_group_item', '.site_license_seats', '.site_license_additional_instructor_seats']];
 }
 
+function getTrialSpecificSelectors() {
+    return [['.start_group_item', '.site_license_start_date'],
+        ['.end_group_item', '.site_license_end_date'],
+        ['.extend_group_item','.extend_license_end_date']];
+}
+
 function showLicenseEditView() {
     var view = $('#view_license');
     view.css('display', 'none');
@@ -167,14 +173,21 @@ function showLicenseEditView() {
     $(edit.find('.site_license_type')[0]).val(_type);
 
     var standard = getStandardSelectors(),
-        nonstandard = getNonStandardSelectors();
+        nonstandard = getNonStandardSelectors(),
+        trial = getTrialSpecificSelectors();
 
-    if (_type === 'trial' || _type === 'enterprise') {
+    if (_type === 'enterprise') {
         hideEditGroupItems(nonstandard, edit);
+        hideEditGroupItems(trial, edit);
         showEditGroupItems(standard, edit, view);
     } else if (_type === 'starter' || _type === 'growth') {
         hideEditGroupItems(standard, edit);
+        hideEditGroupItems(trial, edit);
         showEditGroupItems(nonstandard, edit, view);
+    } else if (_type === 'trial') {
+        hideEditGroupItems(nonstandard, edit);
+        hideEditGroupItems(standard, edit)
+        showEditGroupItems(trial, edit, view)
     }
 }
 
@@ -211,10 +224,15 @@ function onLicenseChange () {
     var edit = $('#edit_license');
     var _type = $(edit.find('.site_license_type')).val(),
         standard = getStandardSelectors(),
-        nonstandard = getNonStandardSelectors();
+        nonstandard = getNonStandardSelectors(),
+        trial = getTrialSpecificSelectors();
 
-    if (_type === "trial" || _type === "enterprise") {
+    if (_type === "enterprise") {
         nonstandard.forEach(function(selector){
+            $(edit.find(selector[0])).css('display', 'none');
+            $(edit.find(selector[1])).css('display', 'none');
+        });
+        trial.forEach(function(selector){
             $(edit.find(selector[0])).css('display', 'none');
             $(edit.find(selector[1])).css('display', 'none');
         });
@@ -223,11 +241,28 @@ function onLicenseChange () {
             $(edit.find(selector[1])).css('display', 'inline-block');
         });
     } else if (_type === "starter" || _type ==="growth") {
-        standard.forEach(function(selector){
+        standard.forEach(function (selector) {
+            $(edit.find(selector[0])).css('display', 'none');
+            $(edit.find(selector[1])).css('display', 'none');
+        });
+        trial.forEach(function (selector) {
+            $(edit.find(selector[0])).css('display', 'none');
+            $(edit.find(selector[1])).css('display', 'none');
+        });
+        nonstandard.forEach(function (selector) {
+            $(edit.find(selector[0])).css('display', 'block');
+            $(edit.find(selector[1])).css('display', 'inline-block');
+        });
+    } else if (_type === "trial") {
+        standard.forEach(function (selector) {
             $(edit.find(selector[0])).css('display', 'none');
             $(edit.find(selector[1])).css('display', 'none');
         });
         nonstandard.forEach(function(selector){
+            $(edit.find(selector[0])).css('display', 'none');
+            $(edit.find(selector[1])).css('display', 'none');
+        });
+        trial.forEach(function (selector) {
             $(edit.find(selector[0])).css('display', 'block');
             $(edit.find(selector[1])).css('display', 'inline-block');
         });
