@@ -220,6 +220,13 @@
                         <label>End Date</label>
                         <input type="text" class="site_license_end_date"/>
                     </div>
+                    <div class="form-group-item extend_group_item">
+                        <label>Move end date</label>
+                        <button type="button" class="btn btnCustom" onclick="updateLicenceEndDate(this, 1)">1 day</button>
+                        <button type="button" class="btn btnCustom" onclick="updateLicenceEndDate(this, 3)">3 days</button>
+                        <button type="button" class="btn btnCustom" onclick="updateLicenceEndDate(this, 7)">1 week</button>
+                        <button type="button" class="btn btnCustom" onclick="updateLicenceEndDate(this, 14)">2 weeks</button>
+                    </div>
                     <div class="form-group-item frequency_group_item">
                         <label>Frequency</label>
                         <select class="site_license_frequency">
