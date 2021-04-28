@@ -201,7 +201,6 @@ function updateLicenceEndDate(me, days) {
     // get date from view license
     const view = $('#view_license')
     let end = new Date($(view.find("span")[2]).text().replace(' ', 'T'))
-    console.log(end)
 
     // add 'days' to end date
     let new_time = days * 24
