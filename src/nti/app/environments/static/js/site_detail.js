@@ -191,10 +191,17 @@ function updateLicenceEndDate(me, days) {
     console.log(end)
 
     // add 'days' to end date
-    end.setDate(end.getDate() + days)
+    let new_time = days * 24
+    end.setHours(end.getHours() + new_time)
 
-    // update editable field with new date
-    const date_string = end.toISOString().replace('T', ' ').split('.')[0]
+    // format date
+    const y = end.getFullYear()
+    const m = ('0' + (end.getMonth() + 1)).slice(-2)
+    const d = ('0' + end.getDate()).slice(-2)
+    const t = end.toTimeString().split(' ')[0]
+    const date_string = y + '-' + m + '-' + d + ' ' + t
+
+    // update license end date
     const edit = $('#edit_license');
     $(edit.find('.site_license_end_date')).val(date_string)
 
