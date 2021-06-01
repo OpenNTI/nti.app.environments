@@ -103,6 +103,31 @@ class TestSiteCreationView(BaseAppTest):
     @with_test_app()
     @mock.patch('nti.app.environments.models.wref.get_customers_folder')
     @mock.patch('nti.app.environments.views.subscribers._store_task_results')
+    def test_site_creation_stores_by_id(self, mock_store, mock_customers):
+        mock_store.return_value = True
+        url = '/onboarding/sites'
+        siteid = 'provided_id1'
+        params = self._params(site_id=siteid)
+        admin_env = self._make_environ(username='admin001')
+       
+        with ensure_free_txn():
+            sites = self._root().get('sites')
+            assert_that(sites, has_length(0))
+            getOrCreateCustomer(self._root().get('customers'), 'test@gmail.com', 'Test Name', 'Organization')
+            mock_customers.return_value = self._root().get('customers')
+
+        result = self.testapp.post_json(url,
+                                        params=params,
+                                        status=201, extra_environ=admin_env)
+
+        
+        site = sites[siteid]
+        assert_that(site, has_properties('id', siteid,
+                                         '__name__', siteid))
+
+    @with_test_app()
+    @mock.patch('nti.app.environments.models.wref.get_customers_folder')
+    @mock.patch('nti.app.environments.views.subscribers._store_task_results')
     def test_site(self, mock_store, mock_customers):
         mock_store.return_value = True
         url = '/onboarding/sites'

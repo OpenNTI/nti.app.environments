@@ -214,10 +214,8 @@ class SiteCreationView(SiteBaseView, ObjectCreateUpdateViewMixin):
 
     def __call__(self):
         try:
-            site = PersistentSite()
-            site.creator = self.request.authenticated_userid
+            site = self.createObjectWithExternal(self.readInput())
             self.context.addSite(site)
-            site = self.updateObjectWithExternal(site, self.readInput())
             self.request.response.status = 201
             logger.info("%s created a new site, site id: %s.",
                         self.request.authenticated_userid,
