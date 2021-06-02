@@ -225,7 +225,10 @@ def _update_site_status_stats(all_sites):
 
 @component.adapter(ILMSSite, IObjectModifiedFromExternalEvent)
 def _update_stats_on_site_updated(lms_site, event):
-    if 'status' in event.external_value:
+    # On initial creation this event gets fired, but we may not have a
+    # container yet. Bypass for now and let the subscriber on
+    # ILMSSiteCreatedEvent handle it for the add case.
+    if 'status' in event.external_value and lms_site.__parent__:
         _update_site_status_stats(lms_site.__parent__.values())
 
 

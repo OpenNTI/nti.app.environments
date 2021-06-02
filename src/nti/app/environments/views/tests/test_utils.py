@@ -147,6 +147,7 @@ class TestUtils(BaseAppTest):
             sites['S004'].status = SITE_STATUS_INACTIVE
             
         site = sites['S001']
+        site.ds_site_id=site.__name__
 
         # state is not success
         site.setup_state = SetupStatePending(task_state='ok')
@@ -234,6 +235,7 @@ class TestUtils(BaseAppTest):
         # test many
         for site_id in ('S002', 'S003'):
             site = sites[site_id]
+            site.ds_site_id = site_id
             site.setup_state = SetupStateSuccess(task_state='ok',
                                                  invitation_active = True,
                                                  site_info=SiteInfo(site_id=site_id,
