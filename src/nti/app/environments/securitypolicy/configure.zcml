@@ -27,6 +27,12 @@
 				  password_manager="SHA1"
 				  password="{SHA}AwBXpqbU5eDEjd8wbUaq8J0JRXI=" />
 
+	<sp:principal id="qa-prod-verification@nextthought.com"
+				  login="qa-prod-verification@nextthought.com"
+				  title="QAProd Verification"
+				  password_manager="SHA1"
+				  password="{SHA}FOYip3Bo9NZ1c2nDiiaFLBVhsU0=" />
+
 	<sp:principal id="ops-lifecycle-helper@nextthought.com"
 				  login="ops-lifecycle-helper@nextthought.com"
 				  title="Operations Helper"
