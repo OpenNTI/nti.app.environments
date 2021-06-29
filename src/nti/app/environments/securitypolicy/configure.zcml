@@ -66,6 +66,9 @@
 	<sp:grant role="role:nti.roles.account-management"
 			  principal="ops-lifecycle-helper@nextthought.com" />
 
+	<sp:grant role="role:nti.roles.account-management"
+			  principal="qa-prod-verification@nextthought.com" />
+
 	<sp:grant role="role:nti.roles.admin"
 			  principal="alex.yang@nextthought.com" />
 
