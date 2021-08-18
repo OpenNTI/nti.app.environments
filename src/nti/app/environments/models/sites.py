@@ -333,7 +333,7 @@ _CONVERTERS = (
 )
 
 @interface.implementer(ISiteOperationalExtraData)
-class SiteOperationalExtraData(PersistentMapping):
+class SiteOperationalExtraData(Contained, PersistentMapping):
 
     _key_field = ValidTextLine(max_length=44)
     _key_field.__name__ = 'SiteOperationalExtraDataKey'

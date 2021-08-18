@@ -12,6 +12,8 @@ from zope.cachedescriptors.property import Lazy
 
 from zope.location.interfaces import LocationError
 
+from zope.location.location import LocationProxy
+
 from zope.traversing.interfaces import IPathAdapter, ITraversable
 
 from nti.app.environments.auth import ADMIN_ROLE
@@ -20,6 +22,8 @@ from nti.app.environments.auth import ACT_CREATE
 from nti.app.environments.auth import is_admin_or_manager
 
 from nti.app.environments.models.interfaces import ICustomer
+from nti.app.environments.models.interfaces import ILMSSite
+from nti.app.environments.models.interfaces import ISiteOperationalExtraData
 
 from nti.app.environments.models.utils import does_customer_have_sites,\
     get_sites_folder
@@ -77,3 +81,34 @@ class SitesCollectionTraversable(object):
 @component.adapter(ICustomer, IRequest)
 def CustomerSitesPathAdapter(context, request):
     return SitesCollection(context, request)
+
+@interface.implementer(IPathAdapter)
+@component.adapter(ILMSSite, IRequest)
+def SiteOperationalExtraDataPathAdapter(context, request):
+    extras = ISiteOperationalExtraData(context)
+    return LocationProxy(extras, context, 'operational_extras')
+
+class SiteOperationalExtra(Contained):
+
+    @property
+    def __name__(self):
+        return self.key
+
+    @property
+    def value(self):
+        return self.__parent__[self.key]
+    
+    def __init__(self, parent, key):
+        self.__parent__ = parent
+        self.key = key
+
+@interface.implementer(ITraversable)
+@component.adapter(ISiteOperationalExtraData, IRequest)
+class SiteOperationalExtraDataTraverser(object):
+
+    def __init__(self, context, request=None):
+        self.context = context
+        self.request = request
+
+    def traverse(self, key, _):
+        return SiteOperationalExtra(self.context, key)
