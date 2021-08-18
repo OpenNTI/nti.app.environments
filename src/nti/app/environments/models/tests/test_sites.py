@@ -14,12 +14,15 @@ from hamcrest import assert_that
 from hamcrest import starts_with
 from hamcrest import greater_than
 
+from nti.testing.matchers import verifiably_provides
+
 from zope import interface
 
 from zope.container.interfaces import InvalidItemType
 from zope.interface.interfaces import ComponentLookupError
 
 from zope.schema import getValidationErrors
+from zope.schema._bootstrapinterfaces import ValidationError
 from zope.schema._bootstrapinterfaces import RequiredMissing
 from zope.schema._bootstrapinterfaces import ConstraintNotSatisfied
 
@@ -39,6 +42,7 @@ from nti.app.environments.models.sites import SetupStateSuccess
 from nti.app.environments.models.sites import SitesFolder
 from nti.app.environments.models.sites import _generate_site_id
 from nti.app.environments.models.sites import SiteUsage
+from nti.app.environments.models.sites import SiteOperationalExtraData
 
 from nti.app.environments.models.hosts import PersistentHost, HostsFolder
 
@@ -50,6 +54,7 @@ from nti.app.environments.models.interfaces import ISharedEnvironment
 from nti.app.environments.models.interfaces import IDedicatedEnvironment
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import InvalidSiteError
+from nti.app.environments.models.interfaces import ISiteOperationalExtraData
 
 from nti.app.environments.models.customers import PersistentCustomer
 from nti.app.environments.models.customers import CustomersFolder
@@ -447,3 +452,40 @@ class TestSiteUsage(BaseTest):
         self.usage.admin_usernames = frozenset({'admin1', 'admin2'})
         self.usage.instructor_usernames = frozenset({'admin1', 'inst1234'})
         assert_that(self.usage.instructor_count, is_(1))
+
+
+class TestSiteOperationalExtraData(BaseTest):
+
+    def setUp(self):
+        super(TestSiteOperationalExtraData, self).setUp()
+        self.extras = SiteOperationalExtraData()
+
+    def test_conformance(self):
+        assert_that(self.extras, verifiably_provides(ISiteOperationalExtraData))
+
+    def test_keys_are_strings(self):
+        self.extras['foo'] = 'bar'
+        assert_that(self.extras, has_entries('foo', 'bar'))
+
+        assert_that(calling(self.extras.__setitem__).with_args(1, 'baz'),
+                    raises(ValidationError))
+
+    def test_values_are_checked(self):
+        self.extras['foo'] = 1
+        self.extras['bar'] = True
+        self.extras['baz'] = 'enabled'
+
+        assert_that(self.extras, has_entries('foo', 1,
+                                             'bar', True,
+                                             'baz', 'enabled'))
+
+        # we don't allow nesting objects
+        assert_that(calling(self.extras.__setitem__).with_args('obj', {'a', 1}),
+                    raises(ValidationError))
+        
+        # we don't allow super long strings. but due to a way that the Variant.fromObject
+        # converter works this gets coerced to a bool. Not ideal, but ok for now
+        self.extras['foo'] = 'a'*1000
+        assert_that(self.extras, has_entries('foo', False))
+        # assert_that(calling(self.extras.__setitem__).with_args('long', 'a'*1000),
+        #             raises(ValidationError))

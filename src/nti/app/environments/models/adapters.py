@@ -1,6 +1,8 @@
 from zope import component
 from zope import interface
 
+from zope.annotation import factory as an_factory
+
 from zope.annotation.interfaces import IAnnotations
 
 from nti.externalization.interfaces import IExternalReferenceResolver
@@ -10,8 +12,10 @@ from nti.app.environments.models.interfaces import ICustomer
 from nti.app.environments.models.interfaces import ISiteUsage
 from nti.app.environments.models.interfaces import InvalidSiteError
 from nti.app.environments.models.interfaces import ISiteAuthTokenContainer
+from nti.app.environments.models.interfaces import ISiteOperationalExtraData
 
 from nti.app.environments.models.sites import SiteUsage
+from nti.app.environments.models.sites import SiteOperationalExtraData
 
 from nti.app.environments.models.utils import get_sites_folder
 from nti.app.environments.models.utils import get_hosts_folder
@@ -21,6 +25,7 @@ from nti.traversal.traversal import find_interface
 
 SITE_USAGE_ANNOTATION_KEY = 'SiteUsage'
 SITE_AUTHTOKEN_CONTAINER_ANNOTATION_KEY = 'SiteAuthTokenContainer'
+SITE_OPERATIONAL_EXTRA_DATA_ANNOTATION_KEY = 'SiteOperationalExtraData'
 
 
 @interface.implementer(IExternalReferenceResolver)
@@ -68,6 +73,13 @@ def site_usage_factory(site, create=True):
             result.__parent__ = site
     return result
 
+@component.adapter(ILMSSite)
+@interface.implementer(ISiteOperationalExtraData)
+def _extra_data_factory():
+    return SiteOperationalExtraData()
+
+OperationalExtraDataFactory = an_factory(_extra_data_factory,
+                                         SITE_OPERATIONAL_EXTRA_DATA_ANNOTATION_KEY)
 
 def get_site_usage(site):
     return site_usage_factory(site, create=False)

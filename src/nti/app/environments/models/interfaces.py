@@ -18,6 +18,8 @@ from zope.i18n import translate
 
 import zope.i18nmessageid as zope_i18nmessageid
 
+from zope.interface.common.mapping import IMapping
+
 from zope.interface.interfaces import IObjectEvent
 
 from nti.i18n.locales.interfaces import ICcTLDInformation
@@ -621,3 +623,11 @@ class ISiteUsage(IContained, ILastModified):
 
     scorm_package_count = Int(title="The total number of scorm packages in a site",
                               required=False)
+
+class ISiteOperationalExtraData(IMapping):
+    """
+    A mapping object that stores additional operation data
+    used when managing a site. Typically usage is as an adapter
+    from an ISite. Implementations may choose to limit the type
+    or amount of data stored here.
+    """
