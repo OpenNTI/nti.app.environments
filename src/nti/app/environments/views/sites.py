@@ -396,7 +396,7 @@ class SiteOpsExtraDataView(BaseView):
     @view_config(request_method='PUT',
                  context=SiteOperationalExtra)
     def set_key(self):
-        self.context.__parent__[self.context.key] = self.request.text.strip()
+        self.context.__parent__[self.context.key] = self.request.json_body
         return self.get_key()
 
     @view_config(request_method='GET')
