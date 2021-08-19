@@ -1525,6 +1525,11 @@ class TestOperationalExtraData(BaseAppTest):
         res = self.testapp.get(edurl, status=200, extra_environ=self.admin).json_body
         assert_that(res, has_entries('foo', False, 'bar', 'enabled', 'baz', 100))
 
+        # The values we can send are restricted
+        self.testapp.put_json(edurl, params={'foo': {'nestsed': 1}},
+                              status=422, extra_environ=self.admin)
+
+
     @with_test_app()
     @mock.patch('nti.app.environments.models.utils.get_onboarding_root')
     def test_get_extra_data_by_key(self, mock_onboarding_root):

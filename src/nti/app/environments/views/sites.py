@@ -24,6 +24,8 @@ from zope.event import notify
 
 from zope.principalregistry.principalregistry import principalRegistry
 
+from zope.schema._bootstrapinterfaces import ValidationError
+
 from nti.app.environments.api.interfaces import IBearerTokenFactory
 
 from nti.app.environments.auth import ACT_CREATE
@@ -396,7 +398,11 @@ class SiteOpsExtraDataView(BaseView):
     @view_config(request_method='PUT',
                  context=SiteOperationalExtra)
     def set_key(self):
-        self.context.__parent__[self.context.key] = self.request.json_body
+        try:
+            self.context.__parent__[self.context.key] = self.request.json_body
+        except ValidationError as err:
+            raise_json_error(hexc.HTTPUnprocessableEntity, err)
+            
         return self.get_key()
 
     @view_config(request_method='GET')
@@ -409,8 +415,12 @@ class SiteOpsExtraDataView(BaseView):
 
     @view_config(request_method='PUT')
     def update(self):
-        self.context.update({k:v for k,v in self.body_params.items() \
-                             if k not in self._disallowed_keys})
+        try:
+            self.context.update({k:v for k,v in self.body_params.items() \
+                                 if k not in self._disallowed_keys})
+        except ValidationError as err:
+            raise_json_error(hexc.HTTPUnprocessableEntity, err)
+
         return self.get()
 
 @view_config(renderer='rest',
