@@ -6,6 +6,7 @@ from .interfaces import IHubspotClient
 
 HUBSPOT_FIELD_ASCI_PHONE = 'nti_asci_customer_phone_number'
 HUBSPOT_FIELD_ASCI_SITE_GOTO = 'nti_asci_site_goto_url'
+HUBSPOT_FIELD_ASCI_SITE_GOTO_INTRO_COURSE = 'nti_asci_site_goto_intro_course_url'
 HUBSPOT_FIELD_ASCI_SITE_DETAILS = 'nti_asci_internal_site_details'
 HUBSPOT_FIELD_ASCI_SITE_COMPLETED = 'nti_asci_setup_completed'
 
