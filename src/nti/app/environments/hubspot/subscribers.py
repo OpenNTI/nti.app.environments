@@ -17,6 +17,7 @@ from . import HUBSPOT_FIELD_ASCI_PHONE
 from . import HUBSPOT_FIELD_ASCI_SITE_COMPLETED
 from . import HUBSPOT_FIELD_ASCI_SITE_DETAILS
 from . import HUBSPOT_FIELD_ASCI_SITE_GOTO
+from . import HUBSPOT_FIELD_ASCI_SITE_GOTO_INTRO_COURSE
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -113,3 +114,30 @@ def _sync_setup_completed_to_hubspot(event):
     }
 
     hubspot_client.update_contact_with_properties(customer.email, props)
+
+def push_intro_course_to_hubspot(site, course):
+    hubspot_client = get_hubspot_client()
+    if hubspot_client is None:
+        logger.warn('No configured hubspot client. Not syncing')
+        return
+    
+    customer = site.owner
+
+    # TODO We're making an assumption in the hubspot data that there is only one site per customer here.
+    # That's true right now for external users, but not for internal users.
+    if len(list(get_sites_with_owner(customer))) > 1:
+        logger.warn('Customer %s already has sites. Not overwriting hubspot info', customer.email)
+        return
+    
+    logger.info('Updating hubspot with onboarding course link')
+
+    request = get_current_request()
+
+    url = request.resource_url(site, '@@GoToSite', 'app', 'id', course['NTIID'])
+
+    props = {
+        HUBSPOT_FIELD_ASCI_SITE_GOTO_INTRO_COURSE: url
+    }
+    
+    hubspot_client.update_contact_with_properties(customer.email, props)
+    

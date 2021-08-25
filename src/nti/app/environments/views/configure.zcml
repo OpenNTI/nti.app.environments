@@ -31,6 +31,13 @@
 	<subscriber handler=".subscribers._on_site_setup_finished" />
 	<subscriber handler=".subscribers._notify_user_for_site_setup_finished" />
 
+	<!-- Setup subscriber to install trial content when we are outside of tests.
+	     Better is probably a layer of indirection that makes this easier 
+	     to run syncronously during tests.-->
+	<configure zcml:condition="not-have tests">
+	  <subscriber handler=".subscribers._install_trial_site_content" />
+	</configure>
+
 	<!-- decorators -->
 	<subscriber factory=".decorators.CustomerSitesLinkDecorator"
 			for="nti.app.environments.models.interfaces.ICustomer pyramid.interfaces.IRequest"

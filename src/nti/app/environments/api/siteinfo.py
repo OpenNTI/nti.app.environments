@@ -17,6 +17,7 @@ from nti.app.environments.api.interfaces import ISiteUsageUpdater
 from nti.app.environments.api.interfaces import AuthenticatedSessionRequiredException
 from nti.app.environments.api.interfaces import MissingTargetException
 from nti.app.environments.api.interfaces import MissingDataserverSiteIdException
+from nti.app.environments.api.interfaces import ISiteContentInstaller
 
 from nti.app.environments.models.interfaces import ISetupStateSuccess
 from nti.app.environments.models.interfaces import ILMSSite
@@ -414,3 +415,37 @@ class SiteUsageUpdater(object):
 @interface.provider(ISiteUsageUpdater)
 def update_site_usage_info(site, client):
     return SiteUsageUpdater(site, client)()
+
+@interface.implementer(ISiteContentInstaller)
+@component.adapter(ILMSSite)
+class SiteContentInstaller(object):
+
+    DEFAULT_ADMIN_KEY = 'DefaultAPIImported'
+    DEFAULT_WRITE_OUT = True
+
+    def __init__(self, site):
+        self.site = site
+
+    def install_course_archive(self, archive):
+        # TODO get the username from an adapter on the system principle?
+        token = IBearerTokenFactory(self.site).make_bearer_token('admin@nextthought.com')
+        client = NTClient(self.site, bearer=token)
+
+        import_url = client.make_url('/dataserver2/CourseAdmin/@@ImportCourse')
+        
+        data = {
+            'writeout': self.DEFAULT_WRITE_OUT,
+            'admin': self.DEFAULT_ADMIN_KEY,
+            'key': archive.name
+        }
+
+        files = {
+            'filename': open(archive.absolute_path, 'rb')
+        }
+
+        logger.info('Importing course to site %s', self.site)
+        resp = client.session.post(import_url, files=files, data=data)
+        resp.raise_for_status()
+        resp = resp.json()
+        logger.info('Course import completed to %s in %s seconds', self.site, resp['Elapsed'])
+        return resp['Course']

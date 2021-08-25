@@ -49,3 +49,16 @@ class MissingTargetException(PlatformException):
     Raised when an expected target (workspace, collection, link, etc.)
     can't be found.
     """
+
+class ISiteContentInstaller(interface.Interface):
+    """
+    Something that can install IInstallableCourseArchive in a site.
+    Typically this would be adapted from an ILMSSite
+    """
+
+    def install_course_archive(archive):
+        """
+        Install the provided archive and return the json course
+        that was created.
+        """
+        pass

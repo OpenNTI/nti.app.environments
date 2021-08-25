@@ -21,10 +21,14 @@ from zope.lifecycleevent import IObjectAddedEvent
 from zope.lifecycleevent import IObjectRemovedEvent
 from zope.lifecycleevent import modified
 
-from nti.app.environments.hubspot import get_hubspot_client
+from nti.app.environments.api.interfaces import ISiteContentInstaller
+
+from nti.app.environments.hubspot.subscribers import push_intro_course_to_hubspot
 
 from nti.app.environments.interfaces import ITransactionRunner
 from nti.app.environments.interfaces import IOnboardingSettings
+
+from nti.app.environments.hubspot import get_hubspot_client
 
 from nti.app.environments.models.interfaces import SITE_STATUS_ACTIVE
 from nti.app.environments.models.interfaces import SITE_STATUS_PENDING
@@ -35,6 +39,7 @@ from nti.app.environments.models.interfaces import SETUP_STATE_STATUS_OPTIONS
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ICustomer
 from nti.app.environments.models.interfaces import ISetupStateSuccess
+from nti.app.environments.models.interfaces import IInstallableCourseArchive
 from nti.app.environments.models.interfaces import IHostKnownSitesEvent
 from nti.app.environments.models.interfaces import ILMSSiteCreatedEvent
 from nti.app.environments.models.interfaces import ILMSSiteUpdatedEvent
@@ -44,6 +49,7 @@ from nti.app.environments.models.interfaces import IHostLoadUpdatedEvent
 from nti.app.environments.models.interfaces import ICustomerVerifiedEvent
 from nti.app.environments.models.interfaces import INewLMSSiteCreatedEvent
 from nti.app.environments.models.interfaces import ITrialLMSSiteCreatedEvent
+from nti.app.environments.models.interfaces import ITrialLicense
 
 from nti.app.environments.models.customers import HubspotContact
 
@@ -434,10 +440,6 @@ def _on_site_setup_finished(event):
     """
     site = event.site
 
-    if      ISetupStateSuccess.providedBy(site.setup_state) \
-        and site.status == SITE_STATUS_PENDING:
-        site.status = SITE_STATUS_ACTIVE
-
     logger.info('Site setup finished for %s', site)
 
     _store_site_setup_stats(site.setup_state)
@@ -448,11 +450,6 @@ def _on_site_setup_finished(event):
         return
 
     setup_info = site.setup_state.site_info
-
-    if not site.ds_site_id:
-        logger.info('Updating ds_site_id for %s to %s', site, setup_info.ds_site_id)
-        site.ds_site_id = setup_info.ds_site_id
-        modified(site)
 
     if not setup_info.host:
         return
@@ -533,3 +530,65 @@ def _notify_user_for_site_setup_finished(event):
 
     notifier = SiteSetUpFinishedEmailNotifier(site)
     notifier.notify()
+
+
+
+def _install_trial_site_content_in_site(success, siteid):
+    if not success:
+        return
+    
+    logger.info("Dispatching course installation for site %s", siteid)
+
+    # TODO Right now we spawn a greenlet to deal with this. It might be
+    # good to do something a bit more durable like using a celery worker.
+    # We aren't setup to do app layer tasks that interact with the db yet though.
+    # A spawned greenlet should probably be fine for now.
+
+    tx_runner = component.getUtility(ITransactionRunner)
+    
+    def _install():
+        def _do_install(root):
+            site = get_sites_folder(root)[siteid]
+            # We install the content we have registered as an intro course. In the future
+            # we could allow different courses to have different intro content by
+            # inspecting the site details and querying appropriately.
+            archive = component.queryUtility(IInstallableCourseArchive, name='intro', default=None)
+            if archive is not None:
+                logger.info('Installing archive %s for site %s', archive, site)
+                installer = ISiteContentInstaller(site)
+                installed = None
+                try:
+                    installed = installer.install_course_archive(archive)
+                    logger.info('Installed archive %s for site %s', archive, site)
+                except Exception as e:
+                    logger.exception('Unable to install archive %s for site %s', archive, site)
+                if installed:
+                    push_intro_course_to_hubspot(site, installed) #TODO fire an event here instead
+            else:
+                logger.warn('No intro content found to install. Testing?')
+
+        tx_runner(_do_install)
+
+    gevent.spawn(_install)
+
+@component.adapter(ILMSSiteSetupFinished)
+def _install_trial_site_content(event):
+    """
+    Make sure we install the default content for the newly created site.
+    Note this isn't idempotent, but neither are any of our other subscribers
+    so that's probably ok?
+    """
+    site = event.site
+    
+    if    not ISetupStateSuccess.providedBy(site.setup_state) \
+       or not ITrialLicense.providedBy(site.license):
+        return
+
+    # Make sure we do this after the current transaction commits
+    transaction.get().addAfterCommitHook(
+        _install_trial_site_content_in_site,
+        args=(site.id,),
+        kws=None
+    )
+
+    

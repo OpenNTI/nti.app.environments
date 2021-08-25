@@ -4,12 +4,15 @@ from zope import component
 
 from zope.event import notify
 
+from zope.lifecycleevent import modified
+
 from nti.environments.management.interfaces import ICeleryApp
 from nti.environments.management.interfaces import ISetupEnvironmentTask
 
 from nti.app.environments.models.interfaces import ISetupStatePending
 from nti.app.environments.models.interfaces import ISetupStateSuccess
 from nti.app.environments.models.interfaces import SITE_STATUS_ACTIVE
+from nti.app.environments.models.interfaces import SITE_STATUS_PENDING
 
 from nti.app.environments.models.events import SiteSetupFinishedEvent
 from nti.app.environments.models.events import SiteOwnerCompletedSetupEvent
@@ -76,6 +79,32 @@ def _mark_site_setup_finished(site, result):
 
     # Overwrite with our new state
     site.setup_state = state
+
+    # Interacting with the site almost always requires an accurate state
+    # state and an appropriate ds id, so do that here, rather than in a subscriber on
+    # ILMSSiteSetupFinished. That let's those subscribers rely on the
+    # state being complete. This used to happen in a ILMSSiteSetupFinished subscriber
+    # which creates ordering issues.
+
+    if ISetupStateSuccess.providedBy(site.setup_state):
+        changed = False
+        if site.status == SITE_STATUS_PENDING:
+            site.status = SITE_STATUS_ACTIVE
+            changed = True
+
+        setup_info = site.setup_state.site_info
+            
+        # TODO At this point this should never be set, right?
+        if not site.ds_site_id and setup_info.ds_site_id:
+            logger.info('Updating ds_site_id for %s to %s', site, setup_info.ds_site_id)
+            site.ds_site_id = setup_info.ds_site_id
+            changed = True
+
+        if changed:
+            modified(site)
+
+    logger.info('Notifying setup finished for %s', site)
+    
     notify(SiteSetupFinishedEvent(site))
 
 

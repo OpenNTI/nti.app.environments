@@ -12,6 +12,10 @@
 		 for="nti.app.environments.models.interfaces.ILMSSite"
 		 provides=".interfaces.IBearerTokenFactory"/>
 
+	<adapter factory=".siteinfo.SiteContentInstaller"
+		 for="nti.app.environments.models.interfaces.ILMSSite"
+		 provides=".interfaces.ISiteContentInstaller"/>
+
 	<utility component=".siteinfo.update_site_usage_info" />
 
 

@@ -35,8 +35,11 @@
 	      provides=".interfaces.IPendoClient"/>
 	</configure>
 
-	<subscriber handler=".subscribers._on_site_modified" />
-	<subscriber handler=".subscribers._on_site_license_modified" />
+	<!-- Don't push to pendo during tests -->
+	<configure zcml:condition="not-have tests">
+	  <subscriber handler=".subscribers._on_site_modified" />
+	  <subscriber handler=".subscribers._on_site_license_modified" />
+	</configure>
 
 
 </configure>

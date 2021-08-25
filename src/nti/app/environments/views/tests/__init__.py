@@ -43,7 +43,7 @@ class BaseAppTest(unittest.TestCase):
             'new_site_request_notification_email': 'test@example.com',
             'site_setup_failure_notification_email': 'test@example.com',
             'nti.environments.management.config': os.path.join(os.path.dirname(tests.__file__), 'test.ini'),
-            'zcml.features': 'devmode'
+            'zcml.features': 'devmode tests'
         }
         self.statsd = FakeStatsDClient()
         statsd_client_stack.push(self.statsd)
