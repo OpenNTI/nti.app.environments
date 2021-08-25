@@ -1,3 +1,4 @@
+import os
 import uuid
 
 from persistent.mapping import PersistentMapping
@@ -19,6 +20,8 @@ from zope.schema.fieldproperty import FieldPropertyStoredThroughField
 from nti.containers.containers import CaseInsensitiveCheckingLastModifiedBTreeContainer
 
 from nti.dublincore.datastructures import PersistentCreatedModDateTrackingObject
+
+from nti.externalization.persistence import NoPickle
 
 from nti.property.property import alias
 from nti.property.property import LazyOnClass
@@ -46,6 +49,8 @@ from nti.app.environments.auth import ACT_REQUEST_TRIAL_SITE
 from nti.app.environments.auth import ACT_SITE_LOGIN
 from nti.app.environments.auth import ACT_SITE_JWT_TOKEN
 
+from nti.app.environments.interfaces import IOnboardingSettings
+
 from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ISiteUsage
 from nti.app.environments.models.interfaces import ISetupState
@@ -62,6 +67,7 @@ from nti.app.environments.models.interfaces import ISetupStatePending
 from nti.app.environments.models.interfaces import ISetupStateSuccess
 from nti.app.environments.models.interfaces import ISetupStateFailure
 from nti.app.environments.models.interfaces import ISiteOperationalExtraData
+from nti.app.environments.models.interfaces import IInstallableCourseArchive
 
 from nti.app.environments.subscriptions.auth import ACT_STRIPE_MANAGE_SUBSCRIPTION
 from nti.app.environments.subscriptions.auth import ACT_STRIPE_LINK_SUBSCRIPTION
@@ -368,3 +374,17 @@ class SiteOperationalExtraData(Contained, PersistentMapping):
         key, value = self._transform(key, value)
         return super(SiteOperationalExtraData, self).__setitem__(key, value)
         
+@NoPickle
+@interface.implementer(IInstallableCourseArchive)
+class NonPeristentFileSystemBackedInstallableCourseArchive(object):
+
+    createDirectFieldProperties(IInstallableCourseArchive, omit='absolute_path')
+
+    @property
+    def absolute_path(self):
+        settings = component.getUtility(IOnboardingSettings)
+        return os.path.join(settings['installable_content_archive_dir'], self.filename)
+    
+    def __init__(self, name=None, filename=None):
+        self.name = name
+        self.filename = filename

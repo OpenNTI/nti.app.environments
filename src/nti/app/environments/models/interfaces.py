@@ -631,3 +631,20 @@ class ISiteOperationalExtraData(IMapping):
     from an ISite. Implementations may choose to limit the type
     or amount of data stored here.
     """
+
+class IInstallableCourseArchive(interface.Interface):
+    """
+    Something that represents a course archive which
+    can be installed into a course. Implementations should be registered
+    as named utilities by their 'name' field.
+    """
+
+    name = ValidTextLine(title="The name of the archive",
+                         required=True)
+
+    filename = ValidTextLine(title="The file name of the archive",
+                             required=True)
+
+    absolute_path = ValidTextLine(title="The on disk absolute path to the archive file",
+                                  required=True)
+

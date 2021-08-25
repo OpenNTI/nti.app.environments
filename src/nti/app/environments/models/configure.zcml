@@ -2,10 +2,13 @@
 <configure	xmlns="http://namespaces.zope.org/zope"
 			xmlns:i18n="http://namespaces.zope.org/i18n"
 			xmlns:zcml="http://namespaces.zope.org/zcml"
-            xmlns:ext="http://nextthought.com/ntp/ext">
+			xmlns:ext="http://nextthought.com/ntp/ext"
+			xmlns:onboarding="http://nextthought.com/ntp/onboarding">
 
 	<include package="zope.component" file="meta.zcml" />
 	<include package="zope.component" />
+
+	<include package="." file="meta.zcml" />
 
 	<class class=".customers.PersistentCustomer">
 	    <implements interface="zope.annotation.interfaces.IAttributeAnnotatable" />
@@ -95,5 +98,12 @@
 
     <subscriber handler=".sites._attach_license_to_site"
 		for=".interfaces.ISiteLicense .interfaces.ILMSSite nti.schema.interfaces.IBeforeSchemaFieldAssignedEvent"/>
+
+
+    <!-- Installable archived -->
+    <configure zcml:condition="have installablecontent">
+      <onboarding:registerInstallableContentArchive name="intro"
+						    filename="INTRO.zip" />
+    </configure>
 
 </configure>
