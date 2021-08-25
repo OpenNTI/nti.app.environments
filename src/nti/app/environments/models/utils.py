@@ -1,5 +1,7 @@
 from pyramid.threadlocal import get_current_request
 
+from nti.traversal.traversal import find_interface
+
 from nti.app.environments.models import CUSTOMERS
 from nti.app.environments.models import SITES
 from nti.app.environments.models import HOSTS
@@ -30,6 +32,7 @@ def get_hosts_folder(onboarding_root=None, request=None):
 
 
 def get_sites_with_owner(owner, sites=None, onboarding_root=None, request=None):
+    onboarding_root = onboarding_root or find_interface(owner, IOnboardingRoot, strict=None)
     sites = get_sites_folder(onboarding_root, request).values() if sites is None else sites
     for site in sites:
         if site.owner == owner:
@@ -37,5 +40,6 @@ def get_sites_with_owner(owner, sites=None, onboarding_root=None, request=None):
 
 
 def does_customer_have_sites(owner, sites=None, onboarding_root=None, request=None):
+    onboarding_root = onboarding_root or find_interface(owner, IOnboardingRoot, strict=None)
     sites = get_sites_with_owner(owner, sites, onboarding_root, request)
     return next(sites, None) is not None
