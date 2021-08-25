@@ -14,6 +14,6 @@ class CustomerWeakRef(object):
     def __init__(self, ob):
         self.email = ob.email
 
-    def __call__(self):
-        folder = get_customers_folder()
+    def __call__(self, root=None):
+        folder = get_customers_folder(onboarding_root=root)
         return folder.getCustomer(self.email)

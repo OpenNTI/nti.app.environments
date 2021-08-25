@@ -40,6 +40,8 @@ from nti.schema.schema import SchemaConfigured
 
 from nti.wref.interfaces import IWeakRef
 
+from nti.app.environments.models import IOnboardingRoot
+
 from nti.app.environments.auth import ADMIN_ROLE
 from nti.app.environments.auth import ACCOUNT_MANAGEMENT_ROLE
 from nti.app.environments.auth import OPS_ROLE
@@ -255,7 +257,15 @@ class PersistentSite(SchemaConfigured, PersistentCreatedModDateTrackingObject, C
         return repr(f"PersistentSite({self.site_id})")
 
     def _get_owner(self):
-        owner = self._owner_ref() if self._owner_ref else None
+        # Resolving our IWeakRef for our owner involves getting the customers folder
+        # which in turns requires an IOnboardingRoot. If not provided we look for
+        # one in the current request. That means this doesn't work outside the context
+        # of a request (i.e. in a seperate transaction runner). Find our root, and provide
+        # that if we can. There is an assumption here about the implementation of the IWeakRef
+        # we have here. That's probably ok? We use a similar tightly coupled pattern with the
+        # ICachingWeakRef in other places.
+        root = find_interface(self, IOnboardingRoot, strict=False)
+        owner = self._owner_ref(root=root) if self._owner_ref else None
         if find_interface(owner, ICustomersContainer, strict=False) is None:
             return None
         return owner
