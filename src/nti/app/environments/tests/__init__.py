@@ -25,7 +25,8 @@ class BaseTest(unittest.TestCase):
             'google_client_secret': 'yyy',
             'hubspot_api_key': 'zzz',
             'hubspot_portal_id': 'kkk',
-            'nti.environments.management.config': os.path.join(os.path.dirname(tests.__file__), 'test.ini')
+            'nti.environments.management.config': os.path.join(os.path.dirname(tests.__file__), 'test.ini'),
+            'zcml.features': 'devmode tests'
         }
         configure_settings(settings)
 
@@ -49,7 +50,7 @@ class BaseConfiguringLayer(ZopeComponentLayer, ConfiguringLayerMixin):
             'hubspot_portal_id': 'kkk',
             'nti.environments.management.config': os.path.join(os.path.dirname(tests.__file__), 'test.ini'),
             'zodbconn.uri': 'memory://',
-            'zcml.features': 'devmode'
+            'zcml.features': 'devmode tests'
         }
 
         cls.__config = configure_settings(settings)
