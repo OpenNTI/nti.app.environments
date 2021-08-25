@@ -12,6 +12,7 @@ from hamcrest import has_length
 from hamcrest import has_item
 from hamcrest import has_items
 from hamcrest import has_entries
+from hamcrest import has_key
 from hamcrest import has_property
 from hamcrest import has_properties
 from hamcrest import instance_of
@@ -21,6 +22,7 @@ from hamcrest import calling
 from hamcrest import raises
 from hamcrest import not_none
 from hamcrest import equal_to
+from hamcrest import not_
 
 from pyramid import httpexceptions as hexc
 
@@ -1460,3 +1462,151 @@ class TestRedirectToSiteDetails(BaseAppTest):
                          status=303, extra_environ=self._make_environ(username=None))
         self.testapp.get(url, params={'search': 'example.com'},
                          status=303, extra_environ=self._make_environ(username=None))
+
+class TestOperationalExtraData(BaseAppTest):
+
+    def setUp(self):
+        super(TestOperationalExtraData, self).setUp()
+        self.owner = self._make_environ(username='user001@example.com')
+        self.admin = self._make_environ(username='admin001')
+
+    def _make_site(self,
+                   root,
+                   customer="user001@example.com",
+                   site=None):
+        
+        customer = root.get('customers').addCustomer(PersistentCustomer(email=customer,
+                                                                        name="testname"))
+
+        if site is None:
+            site = PersistentSite(license=TrialLicense(start_date=datetime.datetime(2019, 12, 12, 0, 0, 0),
+                                                       end_date=datetime.datetime(2019, 12, 13, 0, 0, 0)),
+                                  environment=SharedEnvironment(name='test'),
+                                  created=datetime.datetime(2019, 12, 11, 0, 0, 0),
+                                  status='ACTIVE',
+                                  dns_names=['example.com'],
+                                  owner=customer)
+            site.ds_site_id = 's001'
+
+        root.get('sites').addSite(site, siteId=site.ds_site_id)
+
+    @with_test_app()
+    @mock.patch('nti.app.environments.models.utils.get_onboarding_root')
+    def test_update_fetch_extra_data(self, mock_onboarding_root):
+        mock_onboarding_root.return_value = root = self._root()
+        with ensure_free_txn():
+            self._make_site(root)
+
+        edurl = '/onboarding/sites/s001/operational_extras'
+
+        # Only admins can fetch this information.
+        self.testapp.get(edurl, status=403, extra_environ=self.owner)
+
+        res = self.testapp.get(edurl, status=200, extra_environ=self.admin).json_body
+        assert_that(res, is_({'href': '/onboarding/sites/s001/operational_extras'}))
+
+        extras = {
+            'foo': True,
+            'bar': 'enabled',
+            'baz': 100
+        }
+
+        # We can put data to it as an admin
+        self.testapp.put_json(edurl, params=extras, status=403, extra_environ=self.owner)
+        res = self.testapp.put_json(edurl, params=extras, status=200, extra_environ=self.admin).json
+
+        assert_that(res, has_entries('foo', True, 'bar', 'enabled', 'baz', 100))
+
+        # We can edit by putting data as well. note omitted keys are left alone
+        res = self.testapp.put_json(edurl, params={'foo': False}, status=200, extra_environ=self.admin).json
+        assert_that(res, has_entries('foo', False, 'bar', 'enabled', 'baz', 100))
+
+        # Of course we can get all the values we set
+        res = self.testapp.get(edurl, status=200, extra_environ=self.admin).json_body
+        assert_that(res, has_entries('foo', False, 'bar', 'enabled', 'baz', 100))
+
+        # The values we can send are restricted
+        self.testapp.put_json(edurl, params={'foo': {'nestsed': 1}},
+                              status=422, extra_environ=self.admin)
+
+
+    @with_test_app()
+    @mock.patch('nti.app.environments.models.utils.get_onboarding_root')
+    def test_get_extra_data_by_key(self, mock_onboarding_root):
+        mock_onboarding_root.return_value = root = self._root()
+        with ensure_free_txn():
+            self._make_site(root)
+
+        edurl = '/onboarding/sites/s001/operational_extras'
+
+        extras = {
+            'foo': True,
+            'bar': 'enabled',
+            'baz': 100
+        }
+
+        res = self.testapp.put_json(edurl, params=extras, status=200, extra_environ=self.admin).json
+
+        # Admins can also fetch the data by key
+        keyurl = edurl+'/foo'
+        
+        self.testapp.get(keyurl, status=403, extra_environ=self.owner)
+        res = self.testapp.get(keyurl, status=200, extra_environ=self.admin)
+
+        assert_that(res.json, is_(True)) #json equivalent of True
+
+        # Keys that dont exist will 404
+        self.testapp.get(edurl+'/doesnotexist', status=404, extra_environ=self.admin)
+
+    @with_test_app()
+    @mock.patch('nti.app.environments.models.utils.get_onboarding_root')
+    def test_update_extra_data_by_key(self, mock_onboarding_root):
+        mock_onboarding_root.return_value = root = self._root()
+        with ensure_free_txn():
+            self._make_site(root)
+
+        edurl = '/onboarding/sites/s001/operational_extras'
+
+        extras = {
+            'foo': 'disabled',
+            'bar': 'enabled',
+            'baz': 100
+        }
+
+        res = self.testapp.put_json(edurl, params=extras, status=200, extra_environ=self.admin).json
+
+        # Admins can edit keys using put
+        keyurl = edurl+'/foo'
+
+        self.testapp.put(keyurl, params='false', status=403, extra_environ=self.owner)
+        self.testapp.put(keyurl, params='false', status=200, extra_environ=self.admin)
+
+        res = self.testapp.get(edurl, status=200, extra_environ=self.admin).json_body
+        assert_that(res, has_entries('foo', False, 'bar', 'enabled', 'baz', 100))
+
+    @with_test_app()
+    @mock.patch('nti.app.environments.models.utils.get_onboarding_root')
+    def test_pop_extra_data_by_key(self, mock_onboarding_root):
+        mock_onboarding_root.return_value = root = self._root()
+        with ensure_free_txn():
+            self._make_site(root)
+
+        edurl = '/onboarding/sites/s001/operational_extras'
+
+        extras = {
+            'foo': True,
+            'bar': 'enabled',
+            'baz': 100
+        }
+
+        res = self.testapp.put_json(edurl, params=extras, status=200, extra_environ=self.admin).json
+
+        # Admins can pop keys using delete
+        keyurl = edurl+'/foo'
+
+        self.testapp.delete(keyurl, status=403, extra_environ=self.owner)
+        self.testapp.delete(keyurl, status=204, extra_environ=self.admin)
+
+        res = self.testapp.get(edurl, status=200, extra_environ=self.admin).json_body
+        assert_that(res, has_entries('bar', 'enabled', 'baz', 100))
+        assert_that(res, not_(has_key('foo')))

@@ -6,6 +6,7 @@ import os
 from pyramid import httpexceptions as hexc
 
 from pyramid.view import view_config
+from pyramid.view import view_defaults
 
 from urllib.parse import urljoin
 from urllib.parse import urlencode
@@ -22,6 +23,8 @@ from zope.container.interfaces import InvalidItemType
 from zope.event import notify
 
 from zope.principalregistry.principalregistry import principalRegistry
+
+from zope.schema._bootstrapinterfaces import ValidationError
 
 from nti.app.environments.api.interfaces import IBearerTokenFactory
 
@@ -58,6 +61,7 @@ from nti.app.environments.models.interfaces import SITE_STATUS_PENDING
 from nti.app.environments.models.interfaces import SITE_STATUS_UNKNOWN
 from nti.app.environments.models.interfaces import checkEmailAddress
 from nti.app.environments.models.interfaces import ISetupStateSuccess
+from nti.app.environments.models.interfaces import ISiteOperationalExtraData
 
 from nti.app.environments.models.sites import DedicatedEnvironment
 from nti.app.environments.models.sites import EnterpriseLicense
@@ -76,6 +80,8 @@ from nti.app.environments.common import formatDateToLocal
 from nti.app.environments.common import parseDate
 
 from nti.app.environments.tasks.setup import query_setup_state
+
+from nti.app.environments.views.traversal import SiteOperationalExtra
 
 from nti.app.environments.views.utils import raise_json_error
 from nti.app.environments.views.utils import is_dns_name_available
@@ -364,6 +370,58 @@ class SiteUpdateView(SiteBaseView, ObjectCreateUpdateViewMixin):
         self._log(external)
         return {}
 
+
+@view_defaults(renderer='rest',
+               context=ISiteOperationalExtraData,
+               permission=ACT_UPDATE)
+class SiteOpsExtraDataView(BaseView):
+
+    _disallowed_keys = ('href', )
+
+    @view_config(request_method='GET',
+                 context=SiteOperationalExtra)
+    def get_key(self):
+        try:
+            return self.context.value
+        except:
+            raise hexc.HTTPNotFound()
+
+    @view_config(request_method='DELETE',
+                 context=SiteOperationalExtra)
+    def delete_key(self):
+        try:
+            del self.context.__parent__[self.context.key]
+        except KeyError:
+            raise hexc.HTTPNotFound()
+        return hexc.HTTPNoContent()
+
+    @view_config(request_method='PUT',
+                 context=SiteOperationalExtra)
+    def set_key(self):
+        try:
+            self.context.__parent__[self.context.key] = self.request.json_body
+        except ValidationError as err:
+            raise_json_error(hexc.HTTPUnprocessableEntity, err)
+            
+        return self.get_key()
+
+    @view_config(request_method='GET')
+    def get(self):
+        result = LocatedExternalDict()
+        result.__parent__ = self.context.__parent__
+        result.__name__ = self.context.__name__
+        result.update(self.context)
+        return result
+
+    @view_config(request_method='PUT')
+    def update(self):
+        try:
+            self.context.update({k:v for k,v in self.body_params.items() \
+                                 if k not in self._disallowed_keys})
+        except ValidationError as err:
+            raise_json_error(hexc.HTTPUnprocessableEntity, err)
+
+        return self.get()
 
 @view_config(renderer='rest',
              context=ILMSSite,

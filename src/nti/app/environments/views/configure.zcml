@@ -66,6 +66,15 @@
 		 factory=".traversal.CustomerSitesPathAdapter"
 		 provides="zope.traversing.interfaces.IPathAdapter"/>
 
+	<adapter name="operational_extras"
+		 for="nti.app.environments.models.interfaces.ILMSSite pyramid.interfaces.IRequest"
+		 factory=".traversal.SiteOperationalExtraDataPathAdapter"
+		 provides="zope.traversing.interfaces.IPathAdapter"/>
+
+	<adapter for="nti.app.environments.models.interfaces.ISiteOperationalExtraData pyramid.interfaces.IRequest"
+		 factory=".traversal.SiteOperationalExtraDataTraverser"
+		 provides="zope.traversing.interfaces.ITraversable" />
+
 	<adapter for="nti.app.environments.stripe.interfaces.IStripeSubscription pyramid.interfaces.IRequest"
 		 factory="nti.app.environments.views.interfaces.IEndUserBrowserRequest"
 		 provides="zope.publisher.interfaces.ISkinType" />

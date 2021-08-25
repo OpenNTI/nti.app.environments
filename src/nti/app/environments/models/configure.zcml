@@ -27,6 +27,10 @@
 			 for=".interfaces.ILMSSite"
 			 provides=".interfaces.ISiteUsage" />
 
+	<adapter factory=".adapters.OperationalExtraDataFactory"
+             provides=".interfaces.ISiteOperationalExtraData"
+             for=".interfaces.ILMSSite" />
+
 	<adapter factory=".adapters.site_from_license"
 			 for=".interfaces.ISiteLicense"
 			 provides=".interfaces.ILMSSite" />

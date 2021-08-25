@@ -1,5 +1,7 @@
 import uuid
 
+from persistent.mapping import PersistentMapping
+
 from pyramid.security import Allow
 from pyramid.security import Deny
 from pyramid.security import ALL_PERMISSIONS
@@ -20,6 +22,11 @@ from nti.dublincore.datastructures import PersistentCreatedModDateTrackingObject
 
 from nti.property.property import alias
 from nti.property.property import LazyOnClass
+
+from nti.schema.field import Int
+from nti.schema.field import Bool
+from nti.schema.field import ValidTextLine
+from nti.schema.field import Variant
 
 from nti.schema.interfaces import IBeforeSchemaFieldAssignedEvent
 
@@ -54,6 +61,7 @@ from nti.app.environments.models.interfaces import ILMSSitesContainer
 from nti.app.environments.models.interfaces import ISetupStatePending
 from nti.app.environments.models.interfaces import ISetupStateSuccess
 from nti.app.environments.models.interfaces import ISetupStateFailure
+from nti.app.environments.models.interfaces import ISiteOperationalExtraData
 
 from nti.app.environments.subscriptions.auth import ACT_STRIPE_MANAGE_SUBSCRIPTION
 from nti.app.environments.subscriptions.auth import ACT_STRIPE_LINK_SUBSCRIPTION
@@ -317,3 +325,46 @@ class SiteUsage(SchemaConfigured, PersistentCreatedModDateTrackingObject, Contai
     def __init__(self, *args, **kwargs):
         SchemaConfigured.__init__(self, *args, **kwargs)
         PersistentCreatedModDateTrackingObject.__init__(self)
+
+_CONVERTERS = (
+    ('fromUnicode', str), #we only care about py3
+    ('fromBytes', bytes),
+    ('fromObject', object)
+)
+
+@interface.implementer(ISiteOperationalExtraData)
+class SiteOperationalExtraData(Contained, PersistentMapping):
+
+    _key_field = ValidTextLine(max_length=44)
+    _key_field.__name__ = 'SiteOperationalExtraDataKey'
+    
+    _value_field = Variant([Int(), ValidTextLine(max_length=144), Bool()]) # order here matters because of Varient.fromObject.
+    _value_field.__name__ = 'SiteOperationalExtraDataValue'
+
+    def _transform_field(self, field, val):
+        bound_field = field.bind(self)
+        for meth_name_kind in _CONVERTERS:
+            if isinstance(val, meth_name_kind[1]):
+                meth = getattr(field, meth_name_kind[0], None)
+                if meth is not None:
+                    val = meth(val)
+                    break
+        else:
+            # Here if we do not break out of the loop.
+            field.validate(val)
+    
+        return val
+
+    def _transform(self, key, value):
+        if self._key_field:
+            key = self._transform_field(self._key_field, key)
+
+        if self._value_field:
+            value = self._transform_field(self._value_field, value)
+        
+        return key, value
+
+    def __setitem__(self, key, value):
+        key, value = self._transform(key, value)
+        return super(SiteOperationalExtraData, self).__setitem__(key, value)
+        

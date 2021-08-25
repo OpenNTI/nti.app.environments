@@ -8,7 +8,10 @@ from zope.annotation.interfaces import IAnnotations
 
 from nti.app.environments.tests import BaseTest
 from nti.app.environments.models.adapters import site_usage_factory
+
 from nti.app.environments.models.interfaces import ISiteUsage
+from nti.app.environments.models.interfaces import ISiteOperationalExtraData
+
 from nti.app.environments.models.sites import PersistentSite
 
 
@@ -22,3 +25,10 @@ class TestAdapters(BaseTest):
         assert_that(usage, verifiably_provides(ISiteUsage))
         assert_that(usage.__name__, is_('SiteUsage'))
         assert_that(usage.__parent__, is_(site))
+
+    def test_site_extra_data_factory(self):
+        site = PersistentSite()
+        ed = ISiteOperationalExtraData(site)
+        assert_that(ed, verifiably_provides(ISiteOperationalExtraData))
+        assert_that(ed.__name__, is_('SiteOperationalExtraData'))
+        assert_that(ed.__parent__, is_(site))
