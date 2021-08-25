@@ -434,10 +434,6 @@ def _on_site_setup_finished(event):
     """
     site = event.site
 
-    if      ISetupStateSuccess.providedBy(site.setup_state) \
-        and site.status == SITE_STATUS_PENDING:
-        site.status = SITE_STATUS_ACTIVE
-
     logger.info('Site setup finished for %s', site)
 
     _store_site_setup_stats(site.setup_state)
@@ -448,11 +444,6 @@ def _on_site_setup_finished(event):
         return
 
     setup_info = site.setup_state.site_info
-
-    if not site.ds_site_id:
-        logger.info('Updating ds_site_id for %s to %s', site, setup_info.ds_site_id)
-        site.ds_site_id = setup_info.ds_site_id
-        modified(site)
 
     if not setup_info.host:
         return
