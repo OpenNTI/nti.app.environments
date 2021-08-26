@@ -42,7 +42,8 @@ class ConfiguredScriptsLayer(ScriptsTestingLayer):
             'hubspot_api_key': 'zzz',
             'hubspot_portal_id': 'kkk',
             'nti.environments.management.config': os.path.join(os.path.dirname(tests.__file__), 'test.ini'),
-            'zodbconn.uri': 'memory://'
+            'zodbconn.uri': 'memory://',
+            'application_url': 'http://localhost:6543'
         }
 
         configure_settings(settings)

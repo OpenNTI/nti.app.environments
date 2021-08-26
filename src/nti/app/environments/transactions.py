@@ -1,3 +1,5 @@
+from pyramid.threadlocal import RequestContext
+
 from zope import component
 from zope import interface
 
@@ -9,6 +11,8 @@ logger = __import__('logging').getLogger(__name__)
 
 from .interfaces import IOnboardingServer
 from .interfaces import ITransactionRunner
+
+from .appserver import _make_dummy_request
 
 
 # transaction >= 2 < 2.1.1 needs text; Transaction 1 wants
@@ -49,7 +53,15 @@ class _RunInTransaction(TransactionLoop):
     def run_handler(self, *args, **kwargs): # pylint:disable=arguments-differ
         server = component.getUtility(IOnboardingServer)
         root = server.root_onboarding_folder(self._connection)
-        return self.handler(root, *args, **kwargs)
+
+        # Sigh, it's useful to be able to do things like generate app urls
+        # outside the context of the request using things such as
+        # request.resource_url. Mock a request so we have access to this stuff.
+        # This isn't a great approach, but not sure what else to do without
+        # having to duplicate all that stuff
+        request = _make_dummy_request(component, root)
+        with RequestContext(request):
+            return self.handler(root, *args, **kwargs)
 
     def setUp(self):
         # After the transaction manager has been put into explicit

@@ -149,7 +149,7 @@ def spawn_sites_setup_state_watchdog(registry):
 
 def _make_dummy_request(registry, root):
     base_url = registry.getUtility(IOnboardingSettings)['application_url']
-    req_factory = component.queryUtility(IRequestFactory, default=Request)
+    req_factory = registry.queryUtility(IRequestFactory, default=Request)
     request = req_factory.blank('/', base_url=base_url)
     request.registry = registry
 
