@@ -452,6 +452,7 @@ class SiteContentInstaller(object):
             resp = client.session.post(import_url, files=files, data=data)
         resp.raise_for_status()
         resp = resp.json()
+        elapsed =  resp['Elapsed']
         course = resp['Course']
 
         # titlePrefix argument is new, prior versions always prefix with
@@ -472,5 +473,5 @@ class SiteContentInstaller(object):
                     logger.exception('Unable to update title to remove [COPIED] prefix')
         
         
-        logger.info('Course import completed to %s in %s seconds', self.site, resp['Elapsed'])
+        logger.info('Course import completed to %s in %s seconds', self.site, elapsed)
         return course
