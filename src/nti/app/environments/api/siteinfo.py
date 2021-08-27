@@ -416,6 +416,9 @@ class SiteUsageUpdater(object):
 def update_site_usage_info(site, client):
     return SiteUsageUpdater(site, client)()
 
+
+_COPIED_PREFIX = '[COPIED] '
+
 @interface.implementer(ISiteContentInstaller)
 @component.adapter(ILMSSite)
 class SiteContentInstaller(object):
@@ -432,20 +435,41 @@ class SiteContentInstaller(object):
         client = NTClient(self.site, bearer=token)
 
         import_url = client.make_url('/dataserver2/CourseAdmin/@@ImportCourse')
-        
-        data = {
-            'writeout': self.DEFAULT_WRITE_OUT,
-            'admin': self.DEFAULT_ADMIN_KEY,
-            'key': archive.name
-        }
 
-        files = {
-            'filename': open(archive.absolute_path, 'rb')
-        }
+        with open(archive.absolute_path, 'rb') as af:
+            data = {
+                'writeout': self.DEFAULT_WRITE_OUT,
+                'admin': self.DEFAULT_ADMIN_KEY,
+                'key': archive.name,
+                'titlePrefix': ''
+            }
 
-        logger.info('Importing course to site %s', self.site)
-        resp = client.session.post(import_url, files=files, data=data)
+            files = {
+                'filename': af
+            }
+
+            logger.info('Importing course to site %s', self.site)
+            resp = client.session.post(import_url, files=files, data=data)
         resp.raise_for_status()
         resp = resp.json()
+        course = resp['Course']
+
+        # titlePrefix argument is new, prior versions always prefix with
+        # "[COPIED] ". Strip that here
+        # TOOD remove after titlePrefix code is deployed 8/2021
+        catalog_link = get_link(course, 'CourseCatalogEntry')
+        if catalog_link:
+            title = catalog_link['title']
+            if title.startswith(_COPIED_PREFIX):
+                data = {'title': title[len(_COPIED_PREFIX)]}
+                logger.info('Updating title to remove [COPIED] prefix')
+                try:
+                    resp = client.session.put(catalog_link['href'], json=data)
+                    resp.raise_for_status()
+                except requests.exceptions.RequestException as ex:
+                    # Meh, if that errors it errors, they have a slightly odd title
+                    logger.exception('Unable to update title to remove [COPIED] prefix')
+        
+        
         logger.info('Course import completed to %s in %s seconds', self.site, resp['Elapsed'])
-        return resp['Course']
+        return course
