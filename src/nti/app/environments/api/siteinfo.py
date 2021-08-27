@@ -461,7 +461,7 @@ class SiteContentInstaller(object):
         if catalog_link:
             title = catalog_link['title']
             if title.startswith(_COPIED_PREFIX):
-                data = {'title': title[len(_COPIED_PREFIX)]}
+                data = {'title': title[len(_COPIED_PREFIX):]}
                 logger.info('Updating title to remove [COPIED] prefix')
                 try:
                     resp = client.session.put(catalog_link['href'], json=data)
