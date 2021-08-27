@@ -464,7 +464,8 @@ class SiteContentInstaller(object):
                 data = {'title': title[len(_COPIED_PREFIX):]}
                 logger.info('Updating title to remove [COPIED] prefix')
                 try:
-                    resp = client.session.put(catalog_link['href'], json=data)
+                    href = client.make_url(catalog_link)
+                    resp = client.session.put(href, json=data)
                     resp.raise_for_status()
                 except requests.exceptions.RequestException as ex:
                     # Meh, if that errors it errors, they have a slightly odd title
