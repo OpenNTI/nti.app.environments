@@ -27,6 +27,20 @@ from nti.app.environments.api.interfaces import MissingDataserverSiteIdException
 
 class TestSiteInfo(unittest.TestCase):
 
+    def test_default_accept_header(self):
+        site = PersistentSite()
+        site.dns_names = ['myhost']
+        
+        client = NTClient(site)
+
+        href = client.make_url('/dataserver2')
+
+        req = requests.Request('GET', href)
+        prepped = client.session.prepare_request(req)
+
+        assert_that(prepped.headers, has_entries('Accept', 'application/json'))
+        
+
     @mock.patch('nti.app.environments.api.siteinfo.requests.Session')
     def test_fetch_site_info(self, mock_session):
         mock_resp = mock.MagicMock(status_code=409,
