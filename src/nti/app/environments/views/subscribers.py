@@ -531,7 +531,24 @@ def _notify_user_for_site_setup_finished(event):
     notifier = SiteSetUpFinishedEmailNotifier(site)
     notifier.notify()
 
-
+def _do_install_trial_site_content_in_site(site):
+    # We install the content we have registered as an intro course. In the future
+    # we could allow different courses to have different intro content by
+    # inspecting the site details and querying appropriately.
+    archive = component.queryUtility(IInstallableCourseArchive, name='intro', default=None)
+    if archive is not None:
+        logger.info('Installing archive %s for site %s', archive, site)
+        installer = ISiteContentInstaller(site)
+        installed = None
+        try:
+            installed = installer.install_course_archive(archive)
+            logger.info('Installed archive %s for site %s', archive, site)
+        except Exception as e:
+            logger.exception('Unable to install archive %s for site %s', archive, site)
+        if installed:
+            push_intro_course_to_hubspot(site, installed) #TODO fire an event here instead
+    else:
+        logger.warn('No intro content found to install. Testing?')
 
 def _install_trial_site_content_in_site(success, siteid):
     if not success:
@@ -549,23 +566,8 @@ def _install_trial_site_content_in_site(success, siteid):
     def _install():
         def _do_install(root):
             site = get_sites_folder(root)[siteid]
-            # We install the content we have registered as an intro course. In the future
-            # we could allow different courses to have different intro content by
-            # inspecting the site details and querying appropriately.
-            archive = component.queryUtility(IInstallableCourseArchive, name='intro', default=None)
-            if archive is not None:
-                logger.info('Installing archive %s for site %s', archive, site)
-                installer = ISiteContentInstaller(site)
-                installed = None
-                try:
-                    installed = installer.install_course_archive(archive)
-                    logger.info('Installed archive %s for site %s', archive, site)
-                except Exception as e:
-                    logger.exception('Unable to install archive %s for site %s', archive, site)
-                if installed:
-                    push_intro_course_to_hubspot(site, installed) #TODO fire an event here instead
-            else:
-                logger.warn('No intro content found to install. Testing?')
+            
+            _do_install_trial_site_content_in_site(site)
 
         tx_runner(_do_install)
 
