@@ -93,6 +93,12 @@ class NTClient(object):
         if bearer is not None:
             self.session.headers.update({'Authorization': f'Bearer {bearer}'})
 
+        # The last DS release changed the /dataserver2/SiteAdmins call to return
+        # csv if no accept header is present. That was a backwards incompatible change
+        # that we probably need fixed, in the meantime we'll explicitly ask for json
+        # for all requests to the dataserver by default.
+        self.session.headers.update({'Accept': 'application/json'})
+
     @property
     def _preferred_hostname(self):
         return self.site.dns_names[0]
