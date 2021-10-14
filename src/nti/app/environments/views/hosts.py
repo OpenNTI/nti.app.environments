@@ -1,9 +1,11 @@
 from pyramid import httpexceptions as hexc
 
 from pyramid.view import view_config
+from pyramid.view import view_defaults
 
 from zope.cachedescriptors.property import Lazy
 
+from nti.app.environments.auth import ACT_LIST
 from nti.app.environments.auth import ACT_READ
 from nti.app.environments.auth import ACT_UPDATE
 from nti.app.environments.auth import ACT_CREATE
@@ -25,6 +27,14 @@ from nti.app.environments.views.utils import raise_json_error
 from nti.app.environments.views._table_utils import make_specific_table
 from nti.app.environments.views._table_utils import SitesForHostTable
 from nti.app.environments.views._table_utils import HostsTable
+
+from nti.externalization.interfaces import LocatedExternalDict
+from nti.externalization.interfaces import StandardExternalFields
+
+ITEMS = StandardExternalFields.ITEMS
+TOTAL = StandardExternalFields.TOTAL
+ITEM_COUNT = StandardExternalFields.ITEM_COUNT
+LINKS = StandardExternalFields.LINKS
 
 from nti.traversal.traversal import find_interface
 
@@ -76,6 +86,25 @@ class HostDetailView(BaseTemplateView, TableViewMixin):
                 'table': table,
                 'format_date': formatDateToLocal}
 
+@view_defaults(renderer='rest')
+class HostsListJSONView(BaseView):
+
+    @view_config(request_method='GET',
+                 permission=ACT_READ,
+                 context=IHost)
+    def get_host(self):
+        return self.context
+
+    @view_config(request_method='GET',
+                 permission=ACT_LIST,
+                 context=IHostsContainer)
+    def list_hosts(self):
+        result = LocatedExternalDict()
+        result.__parent__ = self.context.__parent__
+        result.__name__ = self.context.__name__
+        result[ITEMS] = [x for x in self.context.values()]
+        result[ITEM_COUNT] = result[TOTAL] = len(self.context)
+        return result
 
 @view_config(renderer='rest',
              request_method='POST',

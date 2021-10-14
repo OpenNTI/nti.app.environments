@@ -1,6 +1,7 @@
 from hamcrest import assert_that
 from hamcrest import has_entries
 from hamcrest import is_
+from hamcrest import contains
 
 from nti.app.environments.views.tests import BaseAppTest
 from nti.app.environments.views.tests import with_test_app
@@ -64,3 +65,27 @@ class TestHosts(BaseAppTest):
         self.testapp.get(url, status=302, extra_environ=self._make_environ(username=None))
         self.testapp.get(url, status=403, extra_environ=self._make_environ(username='user001'))
         self.testapp.get(url, status=200, extra_environ=self._make_environ(username='admin001'))
+
+    @with_test_app()
+    def testFetchJsonViews(self):
+        url = '/onboarding/hosts/'
+
+        # Create a host
+        params = {'host_name': 'okc', 'capacity': 10, 'MimeType': 'application/vnd.nextthought.app.environments.host'}
+        self.testapp.post_json(url, params=params, status=201, extra_environ=self._make_environ(username='admin001'))
+
+        # We can get a list if we are an admin
+        self.testapp.get(url, status=302, extra_environ=self._make_environ(username=None))
+        self.testapp.get(url, status=403, extra_environ=self._make_environ(username='user001'))
+        res = self.testapp.get(url, status=200, extra_environ=self._make_environ(username='admin001')).json
+        assert_that(res, has_entries('Total', 1,
+                                     'Items', contains(has_entries('host_name', 'okc'))))
+
+        # We can get it directly by id
+        hostid = res['Items'][0]['id']
+
+        url = url+hostid
+        self.testapp.get(url, status=302, extra_environ=self._make_environ(username=None))
+        self.testapp.get(url, status=403, extra_environ=self._make_environ(username='user001'))
+        res = self.testapp.get(url, status=200, extra_environ=self._make_environ(username='admin001')).json
+        assert_that(res, has_entries('host_name', 'okc'))
