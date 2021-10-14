@@ -32,6 +32,8 @@ class IOnboardingSettings(interface.Interface):
       3) Email related:
           a) new_site_request_notification_email, who an email should be sent to when a new site is created.
           b) site_setup_failure_notification_email, who an email should be sent to when a site setup failed.
+    4) splunk_dedicated_environment_index
+    5) monitoring_dedicated_environment_dashboard
     """
 
 

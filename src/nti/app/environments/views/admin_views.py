@@ -122,6 +122,8 @@ from nti.externalization.interfaces import StandardExternalFields
 ITEMS = StandardExternalFields.ITEMS
 TOTAL = StandardExternalFields.TOTAL
 
+_ALERTS_DEDICATED_ENVIRONMENT_DASHBOARD = 'https://alerts.nextthought.io/d/q2qY3CGGk/lms-dedicated-environment'
+
 logger = __import__('logging').getLogger(__name__)
 
 def _host_options(onboarding):
@@ -259,19 +261,35 @@ class SiteDetailView(BaseTemplateView):
             return result
         raise ValueError("Unknown license type.")
 
+    @Lazy
+    def _settings(self):
+        return component.getUtility(IOnboardingSettings)
+
     def _splunk_link(self, env):
-        tpl = 'https://splunk.nextthought.com/en-US/app/search/search?q={}'
+        tpl = 'https://splunk.nextthought.com/en-US/app/search/search?q=%s'
+        query = None
         if ISharedEnvironment.providedBy(env):
             name = self._shared_env_names.get(env.name)
-            return tpl.format(urllib.parse.quote('search index="%s" earliest=-1d' % name, safe='')) if name else None
+            query = 'search index="%s" earliest=-1d' % name if name else None
         elif IDedicatedEnvironment.providedBy(env):
-            return tpl.format(urllib.parse.quote('search index="dedicated_environments" host="%s.nti" earliest=-1d' % self.context.id, safe=''))
-        return None
+            index = self._settings.get('splunk_dedicated_environment_index', 'dedicated_environments')
+            query = f'search index="{index}" host="{self.context.id}.nti" earliest=-1d'
+        return tpl % urllib.parse.quote(query, safe='') if query else None
 
     def _monitor_link(self, env):
         if IDedicatedEnvironment.providedBy(env):
-            return f"https://alerts.nextthought.io/d/q2qY3CGGk/lms-dedicated-environment?refresh=10s&orgId=1" \
-                   f"&var-Site={quote_plus(self.context.id)}"
+            base = self._settings.get('monitoring_dedicated_environment_dashboard',
+                                      _ALERTS_DEDICATED_ENVIRONMENT_DASHBOARD)
+            params = {
+                'refresh': '10s',
+                'orgId': "1",
+                'var-Site': self.context.id
+            }
+            url_parts = list(urllib.parse.urlparse(base))
+            query = dict(urllib.parse.parse_qsl(url_parts[4]))
+            query.update(params)
+            url_parts[4] = urllib.parse.urlencode(query)
+            return urllib.parse.urlunparse(url_parts)
         else:
             return None
 
