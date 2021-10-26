@@ -26,7 +26,10 @@ from zope.principalregistry.principalregistry import principalRegistry
 
 from zope.schema._bootstrapinterfaces import ValidationError
 
+from nti.app.environments.api.siteinfo import NTClient
+
 from nti.app.environments.api.interfaces import IBearerTokenFactory
+from nti.app.environments.api.interfaces import ISiteUsageUpdater
 
 from nti.app.environments.auth import ACT_CREATE
 from nti.app.environments.auth import ACT_DELETE
@@ -39,6 +42,8 @@ from nti.app.environments.auth import ACT_UPDATE
 from nti.app.environments.auth import ACT_SITE_LOGIN
 from nti.app.environments.auth import ACT_SITE_JWT_TOKEN
 from nti.app.environments.auth import is_admin_or_manager
+from nti.app.environments.auth import ACT_VIEW_SITE_USAGE
+
 
 from nti.app.environments.interfaces import ISitesCollection
 from nti.app.environments.interfaces import ISiteDomainPolicy
@@ -57,11 +62,13 @@ from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.models.interfaces import ILMSSitesContainer
 from nti.app.environments.models.interfaces import IOnboardingRoot
 from nti.app.environments.models.interfaces import ISharedEnvironment
+from nti.app.environments.models.interfaces import SITE_STATUS_ACTIVE
 from nti.app.environments.models.interfaces import SITE_STATUS_PENDING
 from nti.app.environments.models.interfaces import SITE_STATUS_UNKNOWN
 from nti.app.environments.models.interfaces import checkEmailAddress
 from nti.app.environments.models.interfaces import ISetupStateSuccess
 from nti.app.environments.models.interfaces import ISiteOperationalExtraData
+from nti.app.environments.models.interfaces import ISiteUsage
 
 from nti.app.environments.models.sites import DedicatedEnvironment
 from nti.app.environments.models.sites import EnterpriseLicense
@@ -1020,3 +1027,26 @@ class GoToSite(BaseView):
         full_path = urlparse.urlunparse(url_parts)
 
         return hexc.HTTPSeeOther(location=full_path)
+
+@view_config(renderer='rest',
+             context=ILMSSite,
+             request_method='GET',
+             name="SiteUsage",
+             permission=ACT_VIEW_SITE_USAGE)
+class SiteUsageView(BaseView, JWTTokenViewMixin):
+
+    def __call__(self):
+        update = self.request.params.get('update', False)
+        usage = ISiteUsage(self.context)
+        
+        if update: # should we require a different permission here
+            if self.context.status != SITE_STATUS_ACTIVE:
+                raise hexc.HTTPUnprocessableEntity('Can only update usage for active sites.')
+            client = NTClient(self.context,
+                              bearer=self._get_jwt_token(timeout=10*60))
+            updater = component.getUtility(ISiteUsageUpdater)
+            usage = updater(self.context, client)
+            self.request.environ['nti.request_had_transaction_side_effects'] = True
+        
+        return usage
+        

@@ -25,6 +25,7 @@ ACT_EDIT_SITE_ENVIRONMENT = 'nti.app.environments.actions.edit_site_environment'
 ACT_REQUEST_TRIAL_SITE = 'nti.app.environments.actions.request_trial_site'
 ACT_SITE_LOGIN = 'nti.app.environments.actions.site_login'
 ACT_SITE_JWT_TOKEN = 'nti.app.environments.actions.site_jwt_token'
+ACT_VIEW_SITE_USAGE = 'nti.app.environments.actions.view_site_usage'
 
 ADMIN_ROLE = 'role:nti.roles.admin'
 ACCOUNT_MANAGEMENT_ROLE = 'role:nti.roles.account-management'

@@ -50,6 +50,7 @@ from nti.app.environments.auth import ACT_READ
 from nti.app.environments.auth import ACT_REQUEST_TRIAL_SITE
 from nti.app.environments.auth import ACT_SITE_LOGIN
 from nti.app.environments.auth import ACT_SITE_JWT_TOKEN
+from nti.app.environments.auth import ACT_VIEW_SITE_USAGE
 
 from nti.app.environments.interfaces import IOnboardingSettings
 
@@ -306,8 +307,16 @@ class SitesFolder(CaseInsensitiveCheckingLastModifiedBTreeContainer):
                 (Deny, Everyone, ACT_STRIPE_LINK_SUBSCRIPTION),
                 (Deny, Everyone, ACT_STRIPE_MANAGE_SUBSCRIPTION),
                 (Allow, ADMIN_ROLE, ALL_PERMISSIONS),
-                (Allow, ACCOUNT_MANAGEMENT_ROLE, (ACT_READ, ACT_LIST, ACT_REQUEST_TRIAL_SITE)),
-                (Allow, OPS_ROLE, (ACT_READ, ACT_LIST, ACT_REQUEST_TRIAL_SITE, ACT_SITE_LOGIN, ACT_SITE_JWT_TOKEN))]
+                (Allow, ACCOUNT_MANAGEMENT_ROLE, (ACT_READ,
+                                                  ACT_LIST,
+                                                  ACT_REQUEST_TRIAL_SITE,
+                                                  ACT_VIEW_SITE_USAGE)),
+                (Allow, OPS_ROLE, (ACT_READ,
+                                   ACT_LIST,
+                                   ACT_REQUEST_TRIAL_SITE,
+                                   ACT_SITE_LOGIN,
+                                   ACT_SITE_JWT_TOKEN,
+                                   ACT_VIEW_SITE_USAGE))]
 
     def addSite(self, site, siteId=None):
         siteId = site.__name__ or siteId or _generate_site_id()
