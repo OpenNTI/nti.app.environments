@@ -1610,3 +1610,51 @@ class TestOperationalExtraData(BaseAppTest):
         res = self.testapp.get(edurl, status=200, extra_environ=self.admin).json_body
         assert_that(res, has_entries('bar', 'enabled', 'baz', 100))
         assert_that(res, not_(has_key('foo')))
+
+class TestSiteUsageAPI(BaseAppTest):
+
+    def setUp(self):
+        super(TestSiteUsageAPI, self).setUp()
+        self.owner = self._make_environ(username='user001@example.com')
+        self.admin = self._make_environ(username='admin001')
+        self.manager = self._make_environ(username='manager001')
+        self.ops = self._make_environ(username='ops001')
+
+    def _make_site(self,
+                   root,
+                   customer="user001@example.com",
+                   site=None):
+        
+        customer = root.get('customers').addCustomer(PersistentCustomer(email=customer,
+                                                                        name="testname"))
+
+        if site is None:
+            site = PersistentSite(license=TrialLicense(start_date=datetime.datetime(2019, 12, 12, 0, 0, 0),
+                                                       end_date=datetime.datetime(2019, 12, 13, 0, 0, 0)),
+                                  environment=SharedEnvironment(name='test'),
+                                  created=datetime.datetime(2019, 12, 11, 0, 0, 0),
+                                  status='ACTIVE',
+                                  dns_names=['example.com'],
+                                  owner=customer)
+            site.ds_site_id = 's001'
+
+        root.get('sites').addSite(site, siteId=site.ds_site_id)
+
+    @with_test_app()
+    @mock.patch('nti.app.environments.models.utils.get_onboarding_root')
+    def test_fetch_usage_api(self, mock_onboarding_root):
+        mock_onboarding_root.return_value = root = self._root()
+        with ensure_free_txn():
+            site = self._make_site(root)
+
+        url = '/onboarding/sites/s001/@@SiteUsage'
+
+        # Only admins, ops, accountmanagement can fetch this information.
+        self.testapp.get(url, status=403, extra_environ=self.owner)
+        self.testapp.get(url, status=200, extra_environ=self.admin)
+        self.testapp.get(url, status=200, extra_environ=self.manager)
+        res = self.testapp.get(url, status=200, extra_environ=self.ops).json
+
+        assert_that(res, has_entries('MimeType', 'application/vnd.nextthought.app.environments.siteusage'))
+        
+        
