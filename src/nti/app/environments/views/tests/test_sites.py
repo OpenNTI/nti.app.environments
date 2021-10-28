@@ -494,7 +494,7 @@ class TestRequestTrialSiteView(BaseAppTest):
         assert_that((result.end_date - result.start_date).days, is_(14))
 
     @with_test_app()
-    @mock.patch('nti.app.environments.views.notification._mailer')
+    @mock.patch('nti.app.environments.notification._mailer')
     @mock.patch('nti.app.environments.views.utils._is_dns_name_available')
     @mock.patch('nti.app.environments.views.base.get_hubspot_client')
     @mock.patch('nti.app.environments.views.sites.is_admin_or_manager')
@@ -610,7 +610,7 @@ class TestCreateNewTrialSiteView(BaseAppTest):
 
     @with_test_app()
     @mock.patch('nti.app.environments.tasks.setup.query_setup_async_result')
-    @mock.patch('nti.app.environments.views.notification._mailer')
+    @mock.patch('nti.app.environments.notification._mailer')
     @mock.patch('nti.app.environments.views.base.get_hubspot_client')
     @mock.patch('nti.app.environments.views.sites.is_admin_or_manager')
     @mock.patch('nti.app.environments.views.utils._is_dns_name_available')
@@ -1161,7 +1161,7 @@ class TestQuerySetupState(BaseAppTest):
 
     @with_test_app()
     @mock.patch('nti.app.environments.tasks.setup.query_setup_async_result')
-    @mock.patch('nti.app.environments.views.notification._mailer')
+    @mock.patch('nti.app.environments.notification._mailer')
     def testQuerySetupState(self, mock_mailer, mock_async_result):
         mock_mailer = mock.MagicMock()
         mock_mailer.queue_simple_html_text_email = lambda *args, **kwargs: None
@@ -1251,7 +1251,7 @@ class TestSetupFailure(BaseAppTest):
 
     @with_test_app()
     @mock.patch('nti.app.environments.tasks.setup.query_setup_async_result')
-    @mock.patch('nti.app.environments.views.notification._mailer')
+    @mock.patch('nti.app.environments.notification._mailer')
     @mock.patch('nti.app.environments.views.utils._is_dns_name_available')
     @mock.patch('nti.app.environments.views.base.get_hubspot_client')
     @mock.patch('nti.app.environments.views.sites.is_admin_or_manager')
