@@ -24,6 +24,7 @@ from nti.app.environments.views.tests import ensure_free_txn
 
 from nti.app.environments.stripe.interfaces import iface_for_event
 from nti.app.environments.stripe.interfaces import IStripeCheckoutSessionCompletedEvent
+from nti.app.environments.stripe.interfaces import IStripeCustomerSubscriptionUpdatedEvent
 from nti.app.environments.stripe.interfaces import IStripeInvoicePaidEvent
 from nti.app.environments.stripe.interfaces import IStripeInvoiceUpcomingEvent
 from nti.app.environments.stripe.interfaces import IStripeEvent
@@ -347,6 +348,21 @@ INVOICE_UPCOMING_EVENT = {
 }
 
 
+CUSTOMER_SUBSCRIPTION_UPDATED_EVENT = {
+    'id': 'evt_0Jpi6ufWolyj2wJcANLK4c2n',
+    'object': 'event',
+    'api_version': '2020-08-27',
+    'created': 1635464056,
+    'data': {'object': {},
+             'previous_attributes': {'default_payment_method': 'pm_0JIlE8fWolyj2wJcwsIYWoqE'}},
+    'livemode': False,
+    'pending_webhooks': 3,
+    'request': {'id': 'req_xP3E0Pyc9bEFc8',
+                'idempotency_key': '2bea6123-31b0-49d9-b560-ac5d3e5ad228'},
+    'type': 'customer.subscription.updated'
+}
+
+
 class TestEventIface(unittest.TestCase):
 
     def test_iface_for_event(self):
@@ -362,3 +378,7 @@ class TestEventIface(unittest.TestCase):
     def test_iface_for_invoice_upcoming(self):
         assert_that(iface_for_event(convert_to_stripe_object(INVOICE_UPCOMING_EVENT)),
                     is_(IStripeInvoiceUpcomingEvent))
+
+    def test_iface_for_subscription_updated(self):
+        assert_that(iface_for_event(convert_to_stripe_object(CUSTOMER_SUBSCRIPTION_UPDATED_EVENT)),
+                    is_(IStripeCustomerSubscriptionUpdatedEvent))
