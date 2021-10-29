@@ -15,6 +15,7 @@ from nti.app.environments.models.interfaces import ILMSSite
 from nti.app.environments.stripe.interfaces import IStripeKey
 from nti.app.environments.stripe.interfaces import IStripeCustomer
 from nti.app.environments.stripe.interfaces import IStripeCheckoutSessionCompletedEvent
+from nti.app.environments.stripe.interfaces import IStripeCustomerSubscriptionUpdatedEvent
 from nti.app.environments.stripe.interfaces import IStripeInvoicePaidEvent
 from nti.app.environments.stripe.interfaces import IStripeInvoiceUpcomingEvent
 from nti.app.environments.stripe.interfaces import IStripePayments
@@ -24,6 +25,7 @@ from nti.app.environments.stripe.interfaces import IStripeSubscriptionBilling
 from nti.app.environments.subscriptions.interfaces import ICheckoutSessionStorage
 
 from nti.app.environments.subscriptions.notification import SubscriptionUpcomingInvoiceInternalNotifier
+from nti.app.environments.subscriptions.notification import SubscriptionStatusUpdatedNotifier
 
 from nti.app.environments.models.utils import get_onboarding_root
 
@@ -239,3 +241,31 @@ def _notify_internally_for_upcoming_renewal(event):
 
     if _should_notify_of_upcoming_invoice(invoice, site):
         _do_notify_of_upcoming_invoice(invoice, site)
+
+
+@component.adapter(IStripeCustomerSubscriptionUpdatedEvent)
+def _notify_subscription_status_payment_issue(event):
+    """
+    Notify internally when subscriptions move out of the active state.
+    Most frequently this is to states past-due and unpaid.
+
+    See https://stripe.com/docs/api/subscriptions/object#subscription_object-status
+    and https://stripe.com/docs/billing/subscriptions/overview
+    """
+    subscription = event.data.object
+    previous_attrs = event.data.previous_attributes
+
+    # We care about updates for subscriptions we are tracking, that
+    # are updated because the "status" field changed
+
+    # It's cheaper for us to see if this is a status change we might care about first
+    # if status isn't changed, or it changed to active we don't care
+    if 'status' not in previous_attrs \
+       or subscription.status == 'active':
+        return
+
+    # So status changed, and it isn't active. is it a subscription we care about?
+    site = component.queryAdapter(subscription, ILMSSite)
+    if site is not None:
+        notifier = SubscriptionStatusUpdatedNotifier(site, subscription)
+        notifier.notify()

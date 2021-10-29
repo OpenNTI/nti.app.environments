@@ -170,6 +170,12 @@ class IStripeEvent(interface.Interface):
 
     data = Object(IStripeEventData, title='The data relevant to this event')
 
+class IStripeUpdatedEvent(IStripeEvent):
+    """
+    A Stripe event whose data includes information about what changed
+    """
+    data = Object(IStripeEventWithChangedData, title='The data relevant to this event')
+
 # There are tens of events that could be triggered. We want to notify events so subscribers
 # can register for their type. We start definning the types here we need now
 # but perhaps we can autogenerate interfaces and implementations from a list of strings like
@@ -196,6 +202,12 @@ class IStripeInvoiceUpcomingEvent(IStripeEvent):
     https://stripe.com/docs/api/events/types#event_types-invoice.upcoming
     """
 
+class IStripeCustomerSubscriptionUpdatedEvent(IStripeUpdatedEvent):
+    """
+    Dispatched when a subscription is updated
+
+    https://stripe.com/docs/api/events/types#event_types-customer.subscription.updated
+    """
 
 def iface_name_for_event_type(type):
     return 'IStripe'+''.join(map(lambda x:x.capitalize(), type.split('.')))+'Event'
