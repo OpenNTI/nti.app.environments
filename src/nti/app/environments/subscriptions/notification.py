@@ -32,7 +32,7 @@ class SubscriptionUpcomingInvoiceInternalNotifier(BaseEmailNotifier):
 
     def _recipients(self):
         settings = component.getUtility(IOnboardingSettings)
-        setting = settings['internal_subscription_notification_recipients']
+        setting = settings.get('internal_subscription_notification_recipients', '')
         return setting.split(',') if setting else []
 
 
