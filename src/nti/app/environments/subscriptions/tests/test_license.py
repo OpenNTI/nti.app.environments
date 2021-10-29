@@ -31,6 +31,7 @@ from nti.app.environments.models.interfaces import ILMSSite
 
 from nti.app.environments.models.sites import PersistentSite
 from nti.app.environments.models.sites import StarterLicense
+from nti.app.environments.models.sites import EnterpriseLicense
 
 from nti.app.environments.stripe.interfaces import IStripeSubscription
 from nti.app.environments.stripe.interfaces import iface_for_event
@@ -191,4 +192,67 @@ class TestPaidInvoiceHandling(BaseAppTest):
         notify(event)
         
 
-    
+INVOICE_UPCOMING_EVENT = {
+    "id": "evt_1GlEeIJSl3QXdEfxphYmtYDf",
+    "object": "event",
+    "api_version": "2020-03-02",
+    "created": 1590068486,
+    "data": {
+        "object": INV
+    },
+    "livemode": False,
+    "pending_webhooks": 0,
+    "request": {
+        "id": None,
+        "idempotency_key": None
+    },
+    "type": "invoice.upcoming"
+}    
+
+class TestInvoiceUpcomingHandling(BaseAppTest):
+
+    @with_test_app()
+    @fudge.patch('nti.app.environments.subscriptions.license.get_onboarding_root')
+    @fudge.patch('nti.app.environments.subscriptions.notification.SubscriptionUpcomingInvoiceInternalNotifier.notify')
+    def test_invoice_paid_moves_end_date(self, mock_get_root, notifier):
+        mock_get_root.is_callable().returns(self._root())
+        
+        sites = self._root()['sites']
+        site1 = sites.addSite(PersistentSite())
+        end_date = datetime.datetime(2020, 1, 11, 0, 0, 0)
+        site1.license = StarterLicense(start_date=datetime.datetime(2019, 12, 11, 0, 0, 0),
+                                       end_date=end_date,
+                                       frequency='monthly',
+                                       seats=3,
+                                       additional_instructor_seats=2)
+        # A site's subscription finds itself
+        sub = IStripeSubscription(site1)
+        IStripeSubscription(site1).id = 'sub_site1'
+
+        # An event with no subscription is ignored
+        event = convert_to_stripe_object(INVOICE_UPCOMING_EVENT)
+        event.data.object.subscription = None
+        interface.alsoProvides(event, iface_for_event(event))
+        notify(event)
+
+        # An event with a subscription we don't understand is ignored
+        event = convert_to_stripe_object(INVOICE_UPCOMING_EVENT)
+        interface.alsoProvides(event, iface_for_event(event))
+        event.data.object.subscription.id = 'unknown'
+        notify(event)
+
+        # If the subscription lines up with our site, but it's monthly
+        # we also ignore that
+        event.data.object.subscription.id = 'sub_site1'
+        notify(event)
+
+        # But yearly and enterprise our notifier gets called
+        notifier.expects_call().times_called(2)
+        site1.license.frequency = 'yearly'
+        notify(event)
+
+        # Enterprise our notifier also gets called
+        site1.license = EnterpriseLicense(start_date=datetime.datetime(2019, 12, 13, 0, 0, 0),
+                                          end_date=datetime.datetime(2019, 12, 13, 0, 0, 0))
+        notify(event)
+        

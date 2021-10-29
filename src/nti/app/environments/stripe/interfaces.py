@@ -189,6 +189,13 @@ class IStripeInvoicePaidEvent(IStripeEvent):
     https://stripe.com/docs/api/events/types#event_types-invoice.paid
     """
 
+class IStripeInvoiceUpcomingEvent(IStripeEvent):
+    """
+    Dispatched when an invoice is upcoming
+
+    https://stripe.com/docs/api/events/types#event_types-invoice.upcoming
+    """
+
 
 def iface_name_for_event_type(type):
     return 'IStripe'+''.join(map(lambda x:x.capitalize(), type.split('.')))+'Event'
