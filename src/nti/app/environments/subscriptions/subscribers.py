@@ -5,6 +5,9 @@ from stripe.error import InvalidRequestError
 from zope import component
 
 from nti.app.environments.models.interfaces import SITE_STATUS_ACTIVE
+from nti.app.environments.models.interfaces import LICENSE_FREQUENCY_YEARLY
+from nti.app.environments.models.interfaces import IEnterpriseLicense
+from nti.app.environments.models.interfaces import IRestrictedLicense
 from nti.app.environments.models.interfaces import ISiteLicenseFactory
 from nti.app.environments.models.interfaces import ITrialLicense
 from nti.app.environments.models.interfaces import ILMSSite
@@ -13,11 +16,14 @@ from nti.app.environments.stripe.interfaces import IStripeKey
 from nti.app.environments.stripe.interfaces import IStripeCustomer
 from nti.app.environments.stripe.interfaces import IStripeCheckoutSessionCompletedEvent
 from nti.app.environments.stripe.interfaces import IStripeInvoicePaidEvent
+from nti.app.environments.stripe.interfaces import IStripeInvoiceUpcomingEvent
 from nti.app.environments.stripe.interfaces import IStripePayments
 from nti.app.environments.stripe.interfaces import IStripeSubscription
 from nti.app.environments.stripe.interfaces import IStripeSubscriptionBilling
 
 from nti.app.environments.subscriptions.interfaces import ICheckoutSessionStorage
+
+from nti.app.environments.subscriptions.notification import SubscriptionUpcomingInvoiceInternalNotifier
 
 from nti.app.environments.models.utils import get_onboarding_root
 
@@ -181,5 +187,55 @@ def _checkout_session_completed(event):
         _do_handle_setup_session_completed(session, checkout)
     else:
         logger.warn('Received an unexpected checkout session mode %s for %s', session.mode, session.client_reference_id)
-    
-    
+
+
+def _should_notify_of_upcoming_invoice(invoice, site):
+    """
+    They only want notifications for "yearly", we'll translate that to
+    subscriptions we are managing for enterprise sites or IRestrictedLicense
+    with a frequency of LICENSE_FREQUENCY_YEARLY
+    """
+    license = site.license
+    if IEnterpriseLicense.providedBy(license):
+        return True
+    return IRestrictedLicense.providedBy(license) \
+        and license.frequency == LICENSE_FREQUENCY_YEARLY
+
+def _do_notify_of_upcoming_invoice(invoice, site):
+    logger.info('Sending internal notification of upcoming invoice for %s', site)
+    notifier = SubscriptionUpcomingInvoiceInternalNotifier(site, invoice=invoice)
+    notifier.notify()
+
+
+@component.adapter(IStripeInvoiceUpcomingEvent)
+def _notify_internally_for_upcoming_renewal(event):
+    """
+    When we receive an upcoming invoice notification for an annual
+    subscription we are managing, notify sales internally.
+    """
+    invoice = event.data.object
+    subscription_id = invoice.subscription
+
+    # If this is an invoice not tied to a subscription we don't care about it
+    if not subscription_id:
+        logger.debug('Ignoring upcoming invoice %s not tied to a subscription', invoice.id)
+        return
+
+    minimal_subscription = IStripeSubscription(subscription_id)
+
+    # Look to see if we can resolve this subscription to a site
+    site = component.queryAdapter(minimal_subscription, ILMSSite)
+    if site is None:
+        # At this point all subscriptions should be managed by us, so lets
+        # treat this as a warning. We'll ignore this more quietly if we
+        # start having subscriptions for other "products" e.g. courses
+
+        logger.warn('Upcoming invoice for subscription %s not associated with a site',
+                    subscription_id)
+        return
+
+    logger.info('Site %s has an upcoming invoice for subscription %s',
+                site, subscription_id)
+
+    if _should_notify_of_upcoming_invoice(invoice, site):
+        _do_notify_of_upcoming_invoice(invoice, site)

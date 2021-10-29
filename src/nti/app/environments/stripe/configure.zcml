@@ -36,7 +36,7 @@
 		publishable_key="pk_test_gsyBVYVrN6NNdMDxj6rGX3hc"
 		secret_key="PVgnADEbRCpXLSV1EQ8La0FDNRFEAzMMRmlpOQ1nNA4=" />
 	  <stripe:registerWebhookSecret
-	      secret="whsec_LulnYuA9QeNmS4DII4h97fv78x30Enpc"
+	      secret="whsec_MxWxdmn48vMDW1pB6HPq0QJ6dzqUf0Tx"
 	      name="default" />
 	  <stripe:registerWebhookSecret
 	      secret="OVsLETc3CSQCJhlyFQcHekwcbV9WAw=="
