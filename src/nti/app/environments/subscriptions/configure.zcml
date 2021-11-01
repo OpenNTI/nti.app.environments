@@ -47,6 +47,7 @@
 	<subscriber handler=".subscribers._checkout_session_completed" />
 	<subscriber handler=".subscribers._invoice_paid" />
 	<subscriber handler=".subscribers._notify_internally_for_upcoming_renewal" />
+	<subscriber handler=".subscribers._notify_subscription_status_payment_issue" />
 
 	<include package="." file="meta.zcml" />
 
